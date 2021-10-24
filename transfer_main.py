@@ -8,6 +8,7 @@ import torchvision.utils as vutils
 import numpy as np
 import matplotlib.pyplot as plt
 from loaders import dataset_loader
+from trainers import transfer_trainer
 import constants
 
 parser = OptionParser()
@@ -28,7 +29,7 @@ parser.add_option('--g_lr', type=float, help="LR", default="0.00002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.00005")
 parser.add_option('--batch_size', type=int, help="batch_size", default="128")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
-parser.add_option('--comments', type=str, help="comments for bookmarking", default="Vanilla CycleGAN.")
+parser.add_option('--comments', type=str, help="comments for bookmarking", default="Vanilla FFAGAN.")
 
 #--img_to_load=-1 --load_previous=1
 #Update config if on COARE
@@ -72,15 +73,40 @@ def main(argv):
     # Create the dataloader
     train_loader = dataset_loader.load_color_train_dataset(constants.DATASET_PLACES_PATH, constants.DATASET_WEATHER_SUNNY_PATH, opts)
     test_loader = dataset_loader.load_color_test_dataset(constants.DATASET_PLACES_PATH, constants.DATASET_WEATHER_SUNNY_PATH, opts)
+
     index = 0
+    start_epoch = 0
+    iteration = 0
 
     # Plot some training images
     if (constants.server_config == 0):
         _, a_batch, b_batch = next(iter(train_loader))
 
-        print("Loading images")
         show_images(a_batch, "Training - A Images")
         show_images(b_batch, "Training - B Images")
+
+    trainer = transfer_trainer.TransferTrainer(device, opts.batch_size, opts.g_lr, opts.d_lr, opts.num_blocks)
+    trainer.update_penalties(opts.adv_weight, opts.identity_weight, opts.likeness_weight, opts.cycle_weight, opts.smoothness_weight, opts.comments)
+
+    print("Starting Training Loop...")
+    for epoch in range(start_epoch, constants.num_epochs):
+        # For each batch in the dataloader
+        for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader)):
+            _, a_batch, b_batch = train_data
+            a_tensor = a_batch.to(device)
+            b_tensor = b_batch.to(device)
+
+            trainer.train(a_tensor, b_tensor)
+            if (i % 100 == 0):
+                trainer.save_states(epoch, iteration)
+
+                view_batch, test_a_batch, test_b_batch = next(iter(test_loader))
+                test_a_tensor =  test_a_batch.to(device)
+                test_b_tensor = test_b_batch.to(device)
+                trainer.visdom_report(iteration, a_tensor, b_tensor, test_a_tensor, test_b_tensor)
+
+                iteration = iteration + 1
+
 
 if __name__ == "__main__":
     main(sys.argv)

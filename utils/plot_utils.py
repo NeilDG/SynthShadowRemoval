@@ -40,7 +40,7 @@ class VisdomReporter:
         if(constants.server_config == 2):
             return
 
-        img_group = vutils.make_grid(img_tensor[:constants.display_size], nrow = 8, padding=2, normalize=True).cpu()
+        img_group = vutils.make_grid(img_tensor[:16], nrow = 8, padding=2, normalize=True).cpu()
         if hash(caption) not in self.image_windows:
             self.image_windows[hash(caption)] = self.vis.images(img_group, opts = dict(caption = caption + " " + str(constants.ITERATION)))
         else:

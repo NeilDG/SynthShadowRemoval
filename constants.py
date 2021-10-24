@@ -8,7 +8,7 @@ DATASET_WEATHER_SUNNY_PATH = "E:/SynthWeather Dataset/sunny/"
 DATASET_WEATHER_NIGHT_PATH = "E:/SynthWeather Dataset/night/"
 DATASET_WEATHER_CLOUDY_PATH = "E:/SynthWeather Dataset/cloudy/"
 
-PATCH_IMAGE_SIZE = (32, 32)
+PATCH_IMAGE_SIZE = (64, 64)
 TEST_IMAGE_SIZE = (256, 256)
 
 #========================================================================#
