@@ -17,9 +17,11 @@ GENERATOR_KEY = "generator"
 DISCRIMINATOR_KEY = "discriminator"
 
 STYLE_TRANSFER_VERSION = "places2sunnyweather_v1.00"
+FFA_TRANSFER_VERSION = "synthplaces2sunny_v1.00"
 
 ITERATION = "1"
 STYLE_TRANSFER_CHECKPATH = 'checkpoint/' + STYLE_TRANSFER_VERSION + "_" + ITERATION + '.pt'
+FFA_TRANSFER_CHECKPATH = 'checkpoint/' + FFA_TRANSFER_VERSION + "_" + ITERATION + '.pt'
 
 # dictionary keys
 G_LOSS_KEY = "g_loss"

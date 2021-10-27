@@ -19,10 +19,13 @@ from utils import plot_utils
 
 class TransferTrainer:
 
-    def __init__(self, gpu_device, batch_size, g_lr, d_lr, num_blocks):
+    def __init__(self, gpu_device, opts):
         self.gpu_device = gpu_device
-        self.g_lr = g_lr
-        self.d_lr = d_lr
+        self.g_lr = opts.g_lr
+        self.d_lr = opts.d_lr
+        num_blocks = opts.num_blocks
+        self.use_bce = opts.use_bce
+
         self.G_A = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         self.G_B = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         self.D_A = cycle_gan.Discriminator().to(self.gpu_device)  # use CycleGAN's discriminator
@@ -67,7 +70,7 @@ class TransferTrainer:
         self.caption_dict[constants.D_B_REAL_LOSS_KEY] = "D(B) real loss per iteration"
         self.caption_dict[constants.CYCLE_LOSS_KEY] = "Cycle loss per iteration"
 
-    def update_penalties(self, adv_weight, id_weight, likeness_weight, cycle_weight, smoothness_weight, comments):
+    def update_penalties(self, adv_weight, id_weight, likeness_weight, cycle_weight, smoothness_weight):
         # what penalties to use for losses?
         self.adv_weight = adv_weight
         self.id_weight = id_weight
@@ -79,7 +82,6 @@ class TransferTrainer:
         HYPERPARAMS_PATH = "checkpoint/" + constants.STYLE_TRANSFER_VERSION + "_" + constants.ITERATION + ".config"
         with open(HYPERPARAMS_PATH, "w") as f:
             print("Version: ", constants.STYLE_TRANSFER_CHECKPATH, file=f)
-            print("Comment: ", comments, file=f)
             print("Learning rate for G: ", str(self.g_lr), file=f)
             print("Learning rate for D: ", str(self.d_lr), file=f)
             print("====================================", file=f)
@@ -91,10 +93,12 @@ class TransferTrainer:
             print("====================================", file=f)
 
     def adversarial_loss(self, pred, target):
-        loss = nn.L1Loss()
-        return loss(pred, target)
-        # loss = nn.BCEWithLogitsLoss()
-        # return loss(pred, target)
+        if(self.use_bce == 0):
+            loss = nn.L1Loss()
+            return loss(pred, target)
+        else:
+            loss = nn.BCEWithLogitsLoss()
+            return loss(pred, target)
 
     def identity_loss(self, pred, target):
         loss = nn.L1Loss()
@@ -115,28 +119,28 @@ class TransferTrainer:
 
         return loss(pred_blur, target_blur)
 
-    def train(self, dirty_tensor, clean_tensor):
+    def train(self, a_tensor, b_tensor):
         with amp.autocast():
-            clean_like = self.G_A(dirty_tensor)
-            dirty_like = self.G_B(clean_tensor)
+            a2b = self.G_A(a_tensor)
+            b2a = self.G_B(b_tensor)
 
             self.D_A.train()
             self.D_B.train()
             self.optimizerD.zero_grad()
 
-            prediction = self.D_A(clean_tensor)
+            prediction = self.D_A(b_tensor)
             real_tensor = torch.ones_like(prediction)
             fake_tensor = torch.zeros_like(prediction)
 
-            D_A_real_loss = self.adversarial_loss(self.D_A(clean_tensor), real_tensor) * self.adv_weight
-            D_A_fake_loss = self.adversarial_loss(self.D_A(clean_like.detach()), fake_tensor) * self.adv_weight
+            D_A_real_loss = self.adversarial_loss(self.D_A(b_tensor), real_tensor) * self.adv_weight
+            D_A_fake_loss = self.adversarial_loss(self.D_A(a2b.detach()), fake_tensor) * self.adv_weight
 
-            prediction = self.D_B(dirty_tensor)
+            prediction = self.D_B(a_tensor)
             real_tensor = torch.ones_like(prediction)
             fake_tensor = torch.zeros_like(prediction)
 
-            D_B_real_loss = self.adversarial_loss(self.D_B(dirty_tensor), real_tensor) * self.adv_weight
-            D_B_fake_loss = self.adversarial_loss(self.D_B(dirty_like.detach()), fake_tensor) * self.adv_weight
+            D_B_real_loss = self.adversarial_loss(self.D_B(a_tensor), real_tensor) * self.adv_weight
+            D_B_fake_loss = self.adversarial_loss(self.D_B(b2a.detach()), fake_tensor) * self.adv_weight
 
             errD = D_A_real_loss + D_A_fake_loss + D_B_real_loss + D_B_fake_loss
             # errD.backward()
@@ -150,26 +154,26 @@ class TransferTrainer:
             self.G_B.train()
             self.optimizerG.zero_grad()
 
-            identity_like = self.G_A(clean_tensor)
-            clean_like = self.G_A(dirty_tensor)
+            identity_like = self.G_A(b_tensor)
+            a2b = self.G_A(a_tensor)
 
-            A_identity_loss = self.identity_loss(identity_like, clean_tensor) * self.id_weight
-            A_likeness_loss = self.likeness_loss(clean_like, clean_tensor) * self.likeness_weight
-            A_smoothness_loss = self.smoothness_loss(clean_like, clean_tensor) * self.smoothness_weight
-            A_cycle_loss = self.cycle_loss(self.G_B(self.G_A(dirty_tensor)), dirty_tensor) * self.cycle_weight
+            A_identity_loss = self.identity_loss(identity_like, b_tensor) * self.id_weight
+            A_likeness_loss = self.likeness_loss(a2b, b_tensor) * self.likeness_weight
+            A_smoothness_loss = self.smoothness_loss(a2b, b_tensor) * self.smoothness_weight
+            A_cycle_loss = self.cycle_loss(self.G_B(self.G_A(a_tensor)), a_tensor) * self.cycle_weight
 
-            identity_like = self.G_B(dirty_tensor)
-            dirty_like = self.G_B(clean_tensor)
-            B_identity_loss = self.identity_loss(identity_like, dirty_tensor) * self.id_weight
-            B_likeness_loss = self.likeness_loss(dirty_like, dirty_tensor) * self.likeness_weight
-            B_smoothness_loss = self.smoothness_loss(dirty_like, dirty_tensor) * self.smoothness_weight
-            B_cycle_loss = self.cycle_loss(self.G_A(self.G_B(clean_tensor)), clean_tensor) * self.cycle_weight
+            identity_like = self.G_B(a_tensor)
+            b2a = self.G_B(b_tensor)
+            B_identity_loss = self.identity_loss(identity_like, a_tensor) * self.id_weight
+            B_likeness_loss = self.likeness_loss(b2a, a_tensor) * self.likeness_weight
+            B_smoothness_loss = self.smoothness_loss(b2a, a_tensor) * self.smoothness_weight
+            B_cycle_loss = self.cycle_loss(self.G_A(self.G_B(b_tensor)), b_tensor) * self.cycle_weight
 
-            prediction = self.D_A(clean_like)
+            prediction = self.D_A(a2b)
             real_tensor = torch.ones_like(prediction)
             A_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            prediction = self.D_B(dirty_like)
+            prediction = self.D_B(b2a)
             real_tensor = torch.ones_like(prediction)
             B_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 

@@ -29,7 +29,8 @@ parser.add_option('--g_lr', type=float, help="LR", default="0.00002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.00005")
 parser.add_option('--batch_size', type=int, help="batch_size", default="128")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
-parser.add_option('--comments', type=str, help="comments for bookmarking", default="Vanilla FFAGAN.")
+parser.add_option('--version_name', type=str, help="version_name")
+parser.add_option('--weather', type=str, help="Weather choice", default = "sunny")
 
 #--img_to_load=-1 --load_previous=1
 #Update config if on COARE
@@ -39,8 +40,13 @@ def update_config(opts):
     constants.STYLE_TRANSFER_CHECKPATH = 'checkpoint/' + constants.STYLE_TRANSFER_VERSION + "_" + constants.ITERATION + '.pt'
 
     if(constants.server_config == 1):
-        print("Using COARE configuration.")
+        print("Using COARE configuration ", opts.version_name)
+        constants.STYLE_TRANSFER_VERSION = opts.version_name
+        constants.STYLE_TRANSFER_CHECKPATH = 'checkpoint/' + constants.STYLE_TRANSFER_VERSION + "_" + constants.ITERATION + '.pt'
         constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/"
+        constants.DATASET_WEATHER_SUNNY_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset/sunny/"
+        constants.DATASET_WEATHER_NIGHT_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset/night/"
+        constants.DATASET_WEATHER_CLOUDY_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset/cloudy/"
 
     elif (constants.server_config == 2):
         print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", constants.STYLE_TRANSFER_CHECKPATH)
@@ -70,9 +76,19 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
+    if(opts.weather == "sunny"):
+        weather_path = constants.DATASET_WEATHER_SUNNY_PATH
+    elif(opts.weather == "night"):
+        weather_path = constants.DATASET_WEATHER_NIGHT_PATH
+    elif(opts.weather == "cloudy"):
+        weather_path = constants.DATASET_WEATHER_CLOUDY_PATH
+    else:
+        print("Cannot determine weather choice. Defaulting to sunny")
+        weather_path = constants.DATASET_WEATHER_SUNNY_PATH
+
     # Create the dataloader
-    train_loader = dataset_loader.load_color_train_dataset(constants.DATASET_PLACES_PATH, constants.DATASET_WEATHER_SUNNY_PATH, opts)
-    test_loader = dataset_loader.load_color_test_dataset(constants.DATASET_PLACES_PATH, constants.DATASET_WEATHER_SUNNY_PATH, opts)
+    train_loader = dataset_loader.load_color_train_dataset(constants.DATASET_PLACES_PATH, weather_path, opts)
+    test_loader = dataset_loader.load_color_test_dataset(constants.DATASET_PLACES_PATH, weather_path, opts)
 
     index = 0
     start_epoch = 0
@@ -85,8 +101,8 @@ def main(argv):
         show_images(a_batch, "Training - A Images")
         show_images(b_batch, "Training - B Images")
 
-    trainer = transfer_trainer.TransferTrainer(device, opts.batch_size, opts.g_lr, opts.d_lr, opts.num_blocks)
-    trainer.update_penalties(opts.adv_weight, opts.identity_weight, opts.likeness_weight, opts.cycle_weight, opts.smoothness_weight, opts.comments)
+    trainer = transfer_trainer.TransferTrainer(device, opts)
+    trainer.update_penalties(opts.adv_weight, opts.identity_weight, opts.likeness_weight, opts.cycle_weight, opts.smoothness_weight)
 
     print("Starting Training Loop...")
     for epoch in range(start_epoch, constants.num_epochs):
