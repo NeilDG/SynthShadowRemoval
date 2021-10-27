@@ -1,13 +1,15 @@
 #!/bin/bash
-#SBATCH -J WEATHER_DB
-#SBATCH --partition=debug
-#SBATCH --qos=240c-1h_debug
+#SBATCH -J WEATHER_5
+#SBATCH --partition=gpu
+#SBATCH --qos=12c-1h_2gpu
+#SBATCH --cpus-per-task=6
+#SBATCH -G 1
 #SBATCH --ntasks=1
-#SBATCH --output=script_debug.out
+#SBATCH --output=script_6.out
 #SBATCH --mail-user=neil.delgallego@dlsu.edu.ph
 #SBATCH --mail-type=END
 
-ITERATION=2
+ITERATION=1
 
 echo "CUDA_DEVICE=/dev/nvidia/$CUDA_VISIBLE_DEVICES"
 nvidia-smi
@@ -23,7 +25,7 @@ srun python transfer_main.py \
 --server_config=1 \
 --num_workers=6 \
 --batch_size=1024 \
---num_blocks=0 --likeness_weight=1.0 use_bce=1 \
+--num_blocks=0 --likeness_weight=1.0 use_bce=0 \
 --version_name="places2cloudy_v1.00" --weather="cloudy" \
 --img_to_load=-1 --load_previous=0
 

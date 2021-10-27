@@ -1,9 +1,11 @@
 #!/bin/bash
-#SBATCH -J WEATHER_DB
-#SBATCH --partition=debug
-#SBATCH --qos=240c-1h_debug
+#SBATCH -J WEATHER_6
+#SBATCH --partition=gpu
+#SBATCH --qos=12c-1h_2gpu
+#SBATCH --cpus-per-task=6
+#SBATCH -G 1
 #SBATCH --ntasks=1
-#SBATCH --output=script_debug.out
+#SBATCH --output=script_7.out
 #SBATCH --mail-user=neil.delgallego@dlsu.edu.ph
 #SBATCH --mail-type=END
 
