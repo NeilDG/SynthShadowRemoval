@@ -502,16 +502,20 @@ def produce_pseudo_albedo_images():
                 print("Prediction of %s from discriminator: %f. Saved styled image: %s" % (img_name, prediction[i].item(), img_name))
 
 def main():
-    PATH_A = "D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/sunny_1_001.mp4"
-    SAVE_PATH_A = constants.DATASET_WEATHER_SUNNY_PATH
-    create_img_from_video_data(PATH_A, SAVE_PATH_A, 0)
+    # PATH_A = "D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/sunny_1_001.mp4"
+    # SAVE_PATH_A = constants.DATASET_WEATHER_SUNNY_PATH
+    # create_img_from_video_data(PATH_A, SAVE_PATH_A, 0)
+    #
+    # PATH_A = "D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/night_1_001.mp4"
+    # SAVE_PATH_A = constants.DATASET_WEATHER_NIGHT_PATH
+    # create_img_from_video_data(PATH_A, SAVE_PATH_A, 0)
+    #
+    # PATH_A = "D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/cloudy_1_001.mp4"
+    # SAVE_PATH_A = constants.DATASET_WEATHER_CLOUDY_PATH
+    # create_img_from_video_data(PATH_A, SAVE_PATH_A, 0)
 
-    PATH_A = "D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/night_1_001.mp4"
-    SAVE_PATH_A = constants.DATASET_WEATHER_NIGHT_PATH
-    create_img_from_video_data(PATH_A, SAVE_PATH_A, 0)
-
-    PATH_A = "D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/cloudy_1_001.mp4"
-    SAVE_PATH_A = constants.DATASET_WEATHER_CLOUDY_PATH
+    PATH_A = "D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/default_1_001.mp4"
+    SAVE_PATH_A = constants.DATASET_WEATHER_DEFAULT_PATH
     create_img_from_video_data(PATH_A, SAVE_PATH_A, 0)
 
     #create_hazy_data(0)

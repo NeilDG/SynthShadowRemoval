@@ -4,6 +4,7 @@
 import os
 from model import ffa_gan as ffa
 from model import vanilla_cycle_gan as cycle_gan
+from model import unet_gan
 import constants
 import torch
 import torch.cuda.amp as amp
@@ -15,7 +16,7 @@ import torch.nn as nn
 from utils import plot_utils
 
 
-class FFATrainer:
+class PairedTrainer:
 
     def __init__(self, gpu_device, opts):
         self.gpu_device = gpu_device
@@ -24,8 +25,15 @@ class FFATrainer:
         self.use_bce = opts.use_bce
         num_blocks = opts.num_blocks
         batch_size = opts.batch_size
+        net_config = opts.net_config
 
-        self.G_A = ffa.FFA(gps=3, blocks=num_blocks).to(self.gpu_device)
+        if(net_config == 1):
+            self.G_A = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
+        elif(net_config == 2):
+            self.G_A = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
+        else:
+            self.G_A = ffa.FFA(gps=3, blocks=num_blocks).to(self.gpu_device)
+
         self.D_A = cycle_gan.Discriminator().to(self.gpu_device)  # use CycleGAN's discriminator
 
         self.visdom_reporter = plot_utils.VisdomReporter()
@@ -129,9 +137,9 @@ class FFATrainer:
 
     def test(self, a_tensor):
         with torch.no_grad():
-            clean_like = self.G(a_tensor)
+            a2b = self.G_A(a_tensor)
 
-        return clean_like
+        return a2b
 
     def visdom_report(self, iteration, a_tensor, b_tensor, a_test, b_test, unseen_tensor):
         with torch.no_grad():
@@ -140,7 +148,7 @@ class FFATrainer:
             test_a2b = self.G_A(a_test)
             test_unseen2b = self.G_A(unseen_tensor)
 
-            self.visdom_reporter.plot_finegrain_loss("dehazing_loss", iteration, self.losses_dict, self.caption_dict)
+            self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict)
             self.visdom_reporter.plot_image(a_tensor, "Training A images")
             self.visdom_reporter.plot_image(a2b, "Training A2B images")
             self.visdom_reporter.plot_image(b_tensor, "B images")

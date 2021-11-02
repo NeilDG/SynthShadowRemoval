@@ -28,12 +28,10 @@ def assemble_unpaired_data(path_a, num_image_to_load=-1, force_complete=False):
 
 def load_color_train_dataset(path_a, path_c, opts):
     a_list = assemble_unpaired_data(path_a, opts.img_to_load / 2)
-    c_list = assemble_unpaired_data(path_c, len(a_list), True)
-
-    print("Length of images: %d, %d." % (len(a_list), len(c_list)))
+    print("Length of images: %d" % len(a_list))
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.ColorTransferDataset(a_list, c_list, 1),
+        image_dataset.ColorTransferDataset(a_list, path_c, 1),
         batch_size=opts.batch_size,
         num_workers=opts.num_workers,
         shuffle=True
@@ -43,12 +41,10 @@ def load_color_train_dataset(path_a, path_c, opts):
 
 def load_color_test_dataset(path_a, path_c, opts):
     a_list = assemble_unpaired_data(path_a, opts.img_to_load / 2)
-    c_list = assemble_unpaired_data(path_c, len(a_list), True)
-
-    print("Length of images: %d, %d." % (len(a_list), len(c_list)))
+    print("Length of images: %d" % len(a_list))
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.ColorTransferDataset(a_list, c_list, 2),
+        image_dataset.ColorTransferDataset(a_list, path_c, 2),
         batch_size=16,
         num_workers=2,
         shuffle=True

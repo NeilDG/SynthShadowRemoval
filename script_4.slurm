@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J WEATHER_4
+#SBATCH -J WEATH_4
 #SBATCH --partition=gpu
 #SBATCH --qos=12c-1h_2gpu
 #SBATCH --cpus-per-task=6
@@ -20,13 +20,14 @@ module load cuda/10.1_cudnn-7.6.5
 
 source activate NeilGAN_V2
 
-srun python transfer_main.py \
+srun python paired_main.py \
 --iteration=$ITERATION \
 --server_config=1 \
 --num_workers=6 \
---batch_size=1024 \
---num_blocks=0 --likeness_weight=1.0 use_bce=1 \
---version_name="places2night_v1.00" --weather="night" \
+--batch_size=512 \
+--num_blocks=10 --net_config=1 \
+--likeness_weight=10.0 use_bce=1 \
+--version_name="synthplaces2night_v1.00" --weather="night" \
 --img_to_load=-1 --load_previous=0
 
 conda deactivate

@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J WEATHER_DB
+#SBATCH -J WEATH_DB
 #SBATCH --partition=debug
 #SBATCH --qos=240c-1h_debug
 #SBATCH --ntasks=1
@@ -18,13 +18,14 @@ module load cuda/10.1_cudnn-7.6.5
 
 source activate NeilGAN_V2
 
-srun python transfer_main.py \
+srun python paired_main.py \
 --iteration=$ITERATION \
 --server_config=1 \
 --num_workers=6 \
---batch_size=1024 \
---num_blocks=0 --likeness_weight=1.0 use_bce=1 \
---version_name="places2cloudy_v1.00" --weather="cloudy" \
+--batch_size=512 \
+--num_blocks=10 --net_config=1 \
+--likeness_weight=1.0 use_bce=1 \
+--version_name="synthplaces2sunny_v1.00" --weather="sunny" \
 --img_to_load=-1 --load_previous=0
 
 conda deactivate

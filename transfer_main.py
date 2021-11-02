@@ -104,6 +104,15 @@ def main(argv):
     trainer = transfer_trainer.TransferTrainer(device, opts)
     trainer.update_penalties(opts.adv_weight, opts.identity_weight, opts.likeness_weight, opts.cycle_weight, opts.smoothness_weight)
 
+    if (opts.load_previous):
+        checkpoint = torch.load(constants.STYLE_TRANSFER_CHECKPATH, map_location=device)
+        start_epoch = checkpoint['epoch'] + 1
+        iteration = checkpoint['iteration'] + 1
+        trainer.load_saved_state(checkpoint)
+
+        print("Loaded checkpt: %s Current epoch: %d" % (constants.STYLE_TRANSFER_CHECKPATH, start_epoch))
+        print("===================================================")
+
     print("Starting Training Loop...")
     for epoch in range(start_epoch, constants.num_epochs):
         # For each batch in the dataloader

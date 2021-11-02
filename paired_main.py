@@ -8,7 +8,7 @@ import torchvision.utils as vutils
 import numpy as np
 import matplotlib.pyplot as plt
 from loaders import dataset_loader
-from trainers import ffa_trainer
+from trainers import paired_trainer
 import constants
 
 parser = OptionParser()
@@ -17,16 +17,13 @@ parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
 parser.add_option('--load_previous', type=int, help="Load previous?", default=0)
 parser.add_option('--iteration', type=int, help="Style version?", default="1")
-parser.add_option('--identity_weight', type=float, help="Weight", default="0.0")
 parser.add_option('--adv_weight', type=float, help="Weight", default="1.0")
-parser.add_option('--likeness_weight', type=float, help="Weight", default="0.0")
-parser.add_option('--smoothness_weight', type=float, help="Weight", default="0.0")
-parser.add_option('--cycle_weight', type=float, help="Weight", default="10.0")
+parser.add_option('--likeness_weight', type=float, help="Weight", default="10.0")
 parser.add_option('--num_blocks', type=int)
 parser.add_option('--net_config', type=int)
 parser.add_option('--use_bce', type=int)
 parser.add_option('--g_lr', type=float, help="LR", default="0.00002")
-parser.add_option('--d_lr', type=float, help="LR", default="0.00005")
+parser.add_option('--d_lr', type=float, help="LR", default="0.00002")
 parser.add_option('--batch_size', type=int, help="batch_size", default="128")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--version_name', type=str, help="version_name")
@@ -37,13 +34,14 @@ parser.add_option('--weather', type=str, help="Weather choice", default = "sunny
 def update_config(opts):
     constants.server_config = opts.server_config
     constants.ITERATION = str(opts.iteration)
+    constants.STYLE_TRANSFER_VERSION = opts.version_name
     constants.STYLE_TRANSFER_CHECKPATH = 'checkpoint/' + constants.STYLE_TRANSFER_VERSION + "_" + constants.ITERATION + '.pt'
 
     if(constants.server_config == 1):
         print("Using COARE configuration ", opts.version_name)
-        constants.STYLE_TRANSFER_VERSION = opts.version_name
-        constants.STYLE_TRANSFER_CHECKPATH = 'checkpoint/' + constants.STYLE_TRANSFER_VERSION + "_" + constants.ITERATION + '.pt'
         constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/"
+        constants.DATASET_WEATHER_DEFAULT_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset/default/"
+        constants.DATASET_WEATHER_STYLED_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset/styled/"
         constants.DATASET_WEATHER_SUNNY_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset/sunny/"
         constants.DATASET_WEATHER_NIGHT_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset/night/"
         constants.DATASET_WEATHER_CLOUDY_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset/cloudy/"
@@ -87,8 +85,8 @@ def main(argv):
         weather_path = constants.DATASET_WEATHER_SUNNY_PATH
 
     # Create the dataloader
-    train_loader = dataset_loader.load_color_train_dataset(constants.DATASET_PLACES_PATH, weather_path, opts)
-    test_loader = dataset_loader.load_color_test_dataset(constants.DATASET_PLACES_PATH, weather_path, opts)
+    train_loader = dataset_loader.load_color_train_dataset(constants.DATASET_WEATHER_STYLED_PATH, weather_path, opts)
+    test_loader = dataset_loader.load_color_test_dataset(constants.DATASET_WEATHER_STYLED_PATH, weather_path, opts)
 
     index = 0
     start_epoch = 0
@@ -101,8 +99,17 @@ def main(argv):
         show_images(a_batch, "Training - A Images")
         show_images(b_batch, "Training - B Images")
 
-    trainer = ffa_trainer.FFATrainer(device, opts)
+    trainer = paired_trainer.PairedTrainer(device, opts)
     trainer.update_penalties(opts.adv_weight, opts.likeness_weight)
+
+    if (opts.load_previous):
+        checkpoint = torch.load(constants.FFA_TRANSFER_CHECKPATH, map_location=device)
+        start_epoch = checkpoint['epoch'] + 1
+        iteration = checkpoint['iteration'] + 1
+        trainer.load_saved_state(checkpoint)
+
+        print("Loaded checkpt: %s Current epoch: %d" % (constants.FFA_TRANSFER_CHECKPATH, start_epoch))
+        print("===================================================")
 
     print("Starting Training Loop...")
     for epoch in range(start_epoch, constants.num_epochs):
@@ -113,13 +120,13 @@ def main(argv):
             b_tensor = b_batch.to(device)
 
             trainer.train(a_tensor, b_tensor)
-            if (i % 100 == 0):
+            if (i % 300 == 0):
                 trainer.save_states(epoch, iteration)
 
                 view_batch, test_a_batch, test_b_batch = next(iter(test_loader))
                 test_a_tensor =  test_a_batch.to(device)
                 test_b_tensor = test_b_batch.to(device)
-                trainer.visdom_report(iteration, a_tensor, b_tensor, test_a_tensor, test_b_tensor)
+                trainer.visdom_report(iteration, a_tensor, b_tensor, test_a_tensor, test_b_tensor, test_b_tensor)
 
                 iteration = iteration + 1
 

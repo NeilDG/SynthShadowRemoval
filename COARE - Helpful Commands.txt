@@ -40,6 +40,7 @@ clear
 
 //Check all
 squeue -a
+squeue -u neil.delgallego
 
 //For cancelling job
 scancel <jobid>

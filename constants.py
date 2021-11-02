@@ -7,6 +7,8 @@ DATASET_DIV2K_PATH = "E:/DIV2K_train_HR/"
 DATASET_WEATHER_SUNNY_PATH = "E:/SynthWeather Dataset/sunny/"
 DATASET_WEATHER_NIGHT_PATH = "E:/SynthWeather Dataset/night/"
 DATASET_WEATHER_CLOUDY_PATH = "E:/SynthWeather Dataset/cloudy/"
+DATASET_WEATHER_STYLED_PATH = "E:/SynthWeather Dataset/styled/"
+DATASET_WEATHER_DEFAULT_PATH = "E:/SynthWeather Dataset/default/"
 
 PATCH_IMAGE_SIZE = (64, 64)
 TEST_IMAGE_SIZE = (256, 256)
