@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH -J WEATHER_6
+#SBATCH -J RM_6
 #SBATCH --partition=gpu
 #SBATCH --qos=12c-1h_2gpu
 #SBATCH --cpus-per-task=6
 #SBATCH -G 1
 #SBATCH --ntasks=1
-#SBATCH --output=script_7.out
+#SBATCH --output=script_6.out
 #SBATCH --mail-user=neil.delgallego@dlsu.edu.ph
 #SBATCH --mail-type=END
 
@@ -20,13 +20,14 @@ module load cuda/10.1_cudnn-7.6.5
 
 source activate NeilGAN_V2
 
-srun python transfer_main.py \
+srun python render_maps_main.py \
 --iteration=$ITERATION \
 --server_config=1 \
 --num_workers=6 \
---batch_size=1024 \
---num_blocks=0 --likeness_weight=1.0 use_bce=1 \
---version_name="places2cloudy_v1.00" --weather="cloudy" \
+--batch_size=256 \
+--num_blocks=6 --net_config=1 \
+--l1_weight=0.0 --lpip_weight=10.0 --ssim_weight=0.0 --use_bce=1 \
+--version_name="rgb2normal_v1.01" --map_choice="normal" \
 --img_to_load=-1 --load_previous=0
 
 conda deactivate

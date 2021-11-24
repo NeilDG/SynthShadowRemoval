@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH -J RM_3
+#SBATCH -J RM_7
 #SBATCH --partition=gpu
 #SBATCH --qos=12c-1h_2gpu
 #SBATCH --cpus-per-task=6
 #SBATCH -G 1
 #SBATCH --ntasks=1
-#SBATCH --output=script_4.out
+#SBATCH --output=script_7.out
 #SBATCH --mail-user=neil.delgallego@dlsu.edu.ph
 #SBATCH --mail-type=END
 
@@ -27,7 +27,7 @@ srun python render_maps_main.py \
 --batch_size=512 \
 --num_blocks=0 --net_config=2 \
 --l1_weight=0.0 --lpip_weight=10.0 --ssim_weight=0.0 --use_bce=0 \
---version_name="rgb2albedo_v1.03" --map_choice="albedo" \
+--version_name="rgb2normal_v1.03" --map_choice="normal" \
 --img_to_load=-1 --load_previous=0
 
 conda deactivate
