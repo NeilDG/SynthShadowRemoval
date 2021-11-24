@@ -102,7 +102,7 @@ def main(argv):
         show_images(b_batch, "Training - B Images")
 
     trainer = transfer_trainer.TransferTrainer(device, opts)
-    trainer.update_penalties(opts.adv_weight, opts.identity_weight, opts.likeness_weight, opts.cycle_weight, opts.smoothness_weight)
+    trainer.update_penalties(opts.adv_weight, opts.identity_weight, opts.l1_weight, opts.cycle_weight, opts.smoothness_weight)
 
     if (opts.load_previous):
         checkpoint = torch.load(constants.STYLE_TRANSFER_CHECKPATH, map_location=device)

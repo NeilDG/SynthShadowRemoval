@@ -25,6 +25,7 @@ conda update python
 #pip install kornia
 #pip install opencv-python
 pip install --upgrade pillow
+pip install lpips
 conda list
 
 conda deactivate

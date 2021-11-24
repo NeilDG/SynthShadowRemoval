@@ -50,37 +50,34 @@ def unsharp_mask(div2k_img):
     
     return unsharp_image
 
-def create_data_from_video(video_path, save_path, filename_format, img_size, patch_size, offset, repeats):
+def create_data_from_video(video_path, save_path, filename_format, img_size, offset):
     vidcap = cv2.VideoCapture(video_path)
     count = offset
     success = True
 
     final_op = transforms.Compose([transforms.ToPILImage(),
-                                   transforms.RandomHorizontalFlip(),
                                    transforms.Resize(img_size),
-                                   transforms.RandomCrop(patch_size),
                                    transforms.ToTensor()])
 
     while success:
         success, image = vidcap.read()
         if (success):
             w, h, c = np.shape(image)
-            image = cv2.resize(image, (int(h / 4), int(w / 4)), interpolation=cv2.INTER_CUBIC)
+            # image = cv2.resize(image, (int(h / 4), int(w / 4)), interpolation=cv2.INTER_CUBIC)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-            for i in range(repeats):
-                file_name = save_path + filename_format % count
+            file_name = save_path + filename_format % count
 
-                new_img = final_op(image).numpy()
-                new_img = np.moveaxis(new_img, -1, 0)
-                new_img = np.moveaxis(new_img, -1, 0)
+            new_img = final_op(image).numpy()
+            new_img = np.moveaxis(new_img, -1, 0)
+            new_img = np.moveaxis(new_img, -1, 0)
 
-                #plt.imshow(new_img)
-                #plt.show()
+            #plt.imshow(new_img)
+            #plt.show()
 
-                cv2.imwrite(file_name, cv2.cvtColor(cv2.convertScaleAbs(new_img, alpha=255.0), cv2.COLOR_BGR2RGB))
-                print("Saved: ", file_name)
-                count = count + 1
+            cv2.imwrite(file_name, cv2.cvtColor(cv2.convertScaleAbs(new_img, alpha=255.0), cv2.COLOR_BGR2RGB))
+            print("Saved: ", file_name)
+            count = count + 1
 
 def create_img_data(dataset_path, save_path, filename_format, img_size, patch_size, repeats):
     img_list = assemble_img_list(dataset_path)
@@ -514,9 +511,16 @@ def main():
     # SAVE_PATH_A = constants.DATASET_WEATHER_CLOUDY_PATH
     # create_img_from_video_data(PATH_A, SAVE_PATH_A, 0)
 
-    PATH_A = "D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/default_1_001.mp4"
-    SAVE_PATH_A = constants.DATASET_WEATHER_DEFAULT_PATH
-    create_img_from_video_data(PATH_A, SAVE_PATH_A, 0)
+    # PATH_A = "D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/segment_1_001.mp4"
+    # SAVE_PATH_A = constants.DATASET_WEATHER_SEGMENT_PATH
+    # create_img_from_video_data(PATH_A, SAVE_PATH_A, 0)
+
+    #create_data_from_video("E:/VEMON Dataset/vemon videos/574.mp4", "E:/VEMON Dataset/frames/", "vemon_%d.png", (256, 256), 0)
+    create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/default_005.mp4", "E:/SynthWeather Dataset 2/default/", "synth_%d.png", (256, 256), 0)
+    create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/albedo_005.mp4", "E:/SynthWeather Dataset 2/albedo/", "synth_%d.png", (256, 256), 0)
+    create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/normal_005.mp4", "E:/SynthWeather Dataset 2/normal/", "synth_%d.png", (256, 256), 0)
+    create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/specular_005.mp4", "E:/SynthWeather Dataset 2/specular/", "synth_%d.png", (256, 256), 0)
+    create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/smoothness_005.mp4", "E:/SynthWeather Dataset 2/smoothness/", "synth_%d.png", (256, 256), 0)
 
     #create_hazy_data(0)
     # produce_color_images("E:/Synth Hazy 4/clean/", "E:/Synth Hazy 4/clean - styled/",  "synth2places_v1.15_1.pt", net_config = 3)

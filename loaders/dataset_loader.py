@@ -26,12 +26,12 @@ def assemble_unpaired_data(path_a, num_image_to_load=-1, force_complete=False):
 
     return a_list
 
-def load_color_train_dataset(path_a, path_c, opts):
-    a_list = assemble_unpaired_data(path_a, opts.img_to_load / 2)
+def load_map_train_dataset(path_a, path_c, opts):
+    a_list = assemble_unpaired_data(path_a, opts.img_to_load)
     print("Length of images: %d" % len(a_list))
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.ColorTransferDataset(a_list, path_c, 1),
+        image_dataset.MapDataset(a_list, path_c, 1),
         batch_size=opts.batch_size,
         num_workers=opts.num_workers,
         shuffle=True
@@ -39,14 +39,67 @@ def load_color_train_dataset(path_a, path_c, opts):
 
     return data_loader
 
-def load_color_test_dataset(path_a, path_c, opts):
+def load_map_test_dataset(path_a, path_c, opts):
+    a_list = assemble_unpaired_data(path_a, opts.img_to_load)
+    print("Length of images: %d" % len(a_list))
+
+    data_loader = torch.utils.data.DataLoader(
+        image_dataset.MapDataset(a_list, path_c, 2),
+        batch_size=4,
+        num_workers=1,
+        shuffle=True
+    )
+
+    return data_loader
+
+def load_color_train_dataset(path_a, path_c, path_segment, opts):
     a_list = assemble_unpaired_data(path_a, opts.img_to_load / 2)
     print("Length of images: %d" % len(a_list))
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.ColorTransferDataset(a_list, path_c, 2),
-        batch_size=16,
-        num_workers=2,
+        image_dataset.ColorTransferDataset(a_list, path_c, path_segment, 1),
+        batch_size=opts.batch_size,
+        num_workers=opts.num_workers,
+        shuffle=True
+    )
+
+    return data_loader
+
+def load_color_test_dataset(path_a, path_c, path_segment, opts):
+    a_list = assemble_unpaired_data(path_a, opts.img_to_load / 2)
+    print("Length of images: %d" % len(a_list))
+
+    data_loader = torch.utils.data.DataLoader(
+        image_dataset.ColorTransferDataset(a_list, path_c, path_segment, 2),
+        batch_size=4,
+        num_workers=1,
+        shuffle=True
+    )
+
+    return data_loader
+
+def load_single_train_dataset(path_a, opts):
+    a_list = assemble_unpaired_data(path_a, opts.img_to_load)
+
+    print("Length of images: %d" % len(a_list))
+
+    data_loader = torch.utils.data.DataLoader(
+        image_dataset.RealWorldTrainDataset(a_list),
+        batch_size=opts.batch_size,
+        num_workers=opts.num_workers,
+        shuffle=True
+    )
+
+    return data_loader
+
+def load_single_test_dataset(path_a, opts):
+    a_list = assemble_unpaired_data(path_a, opts.img_to_load)
+    print("Length of images: %d" % len(a_list))
+
+    data_loader = torch.utils.data.DataLoader(
+        image_dataset.RealWorldDataset(a_list),
+        batch_size=4,
+        num_workers=1,
         shuffle=True
     )
 

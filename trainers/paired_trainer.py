@@ -1,20 +1,17 @@
 # -*- coding: utf-8 -*-
-# FFA Net trainer. used for training.
+# Paired trainer used for training.
 
-import os
 from model import ffa_gan as ffa
 from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
 import constants
 import torch
 import torch.cuda.amp as amp
-import random
 import itertools
 import numpy as np
-import matplotlib.pyplot as plt
 import torch.nn as nn
 from utils import plot_utils
-
+import lpips
 
 class PairedTrainer:
 
@@ -23,8 +20,12 @@ class PairedTrainer:
         self.g_lr = opts.g_lr
         self.d_lr = opts.d_lr
         self.use_bce = opts.use_bce
+        self.use_lpips = opts.use_lpips
+        self.use_mask = opts.use_mask
+        self.lpips_loss = lpips.LPIPS(net = 'vgg').to(self.gpu_device)
+
         num_blocks = opts.num_blocks
-        batch_size = opts.batch_size
+        self.batch_size = opts.batch_size
         net_config = opts.net_config
 
         if(net_config == 1):
@@ -39,8 +40,8 @@ class PairedTrainer:
         self.visdom_reporter = plot_utils.VisdomReporter()
         self.optimizerG = torch.optim.Adam(itertools.chain(self.G_A.parameters()), lr=self.g_lr)
         self.optimizerD = torch.optim.Adam(itertools.chain(self.D_A.parameters()), lr=self.d_lr)
-        self.schedulerG = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG, patience=100000 / batch_size, threshold=0.00005)
-        self.schedulerD = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD, patience=100000 / batch_size, threshold=0.00005)
+        self.schedulerG = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG, patience=100000 / self.batch_size, threshold=0.00005)
+        self.schedulerD = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD, patience=100000 / self.batch_size, threshold=0.00005)
         self.initialize_dict()
 
         self.fp16_scaler = amp.GradScaler()  # for automatic mixed precision
@@ -72,8 +73,14 @@ class PairedTrainer:
             return loss(pred, target)
 
     def likeness_loss(self, pred, target):
-        loss = nn.L1Loss()
-        return loss(pred, target)
+        if(self.use_lpips == 0):
+            loss = nn.L1Loss()
+            return loss(pred, target)
+        else:
+            result = torch.squeeze(self.lpips_loss(pred, target))
+            result = torch.mean(result)
+            return result
+
 
     def update_penalties(self,  adv_weight, likeness_weight):
         # what penalties to use for losses?
@@ -81,17 +88,21 @@ class PairedTrainer:
         self.likeness_weight = likeness_weight
 
         # save hyperparameters for bookeeping
-        HYPERPARAMS_PATH = "checkpoint/" + constants.FFA_TRANSFER_VERSION + "_" + constants.ITERATION + ".config"
+        HYPERPARAMS_PATH = "checkpoint/" + constants.STYLE_TRANSFER_VERSION + "_" + constants.ITERATION + ".config"
         with open(HYPERPARAMS_PATH, "w") as f:
-            print("Version: ", constants.FFA_TRANSFER_CHECKPATH, file=f)
+            print("Version: ", constants.STYLE_TRANSFER_CHECKPATH, file=f)
             print("Learning rate for G: ", str(self.g_lr), file=f)
             print("Learning rate for D: ", str(self.d_lr), file=f)
             print("====================================", file=f)
             print("Adv weight: ", str(self.adv_weight), file=f)
             print("Likeness weight: ", str(self.likeness_weight), file=f)
 
-    def train(self, a_tensor, b_tensor):
+    def train(self, a_tensor, b_tensor, train_masks):
         with amp.autocast():
+            if(self.use_mask == 1):
+                a_tensor = torch.mul(a_tensor, train_masks)
+                b_tensor = torch.mul(b_tensor, train_masks)
+
             a2b = self.G_A(a_tensor)
             self.D_A.train()
             self.optimizerD.zero_grad()
@@ -141,24 +152,43 @@ class PairedTrainer:
 
         return a2b
 
-    def visdom_report(self, iteration, a_tensor, b_tensor, a_test, b_test, unseen_tensor):
+    def visdom_plot(self, iteration):
+        self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict)
+
+    def visdom_visualize(self, iteration, a_tensor, b_tensor, train_masks, a_test, b_test, test_masks):
         with torch.no_grad():
             # report to visdom
-            a2b = self.G_A(a_tensor)
-            test_a2b = self.G_A(a_test)
-            test_unseen2b = self.G_A(unseen_tensor)
+            if (self.use_mask == 1):
+                a_tensor = torch.mul(a_tensor, train_masks)
+                a_test_input = torch.mul(a_test, test_masks)
+                b_tensor = torch.mul(b_tensor, train_masks)
+                b_test = torch.mul(b_test, test_masks)
+                a2b = self.G_A(a_tensor)
+                test_a2b = self.G_A(a_test_input)
+                a_test = (a_test * 0.5) + 0.5
+                test_a2b = torch.mul((test_a2b * 0.5) + 0.5, test_masks)
+                a2b_full = torch.mul(a_test, 1.0 - test_masks) + test_a2b
+            else:
+                a2b = self.G_A(a_tensor)
+                test_a2b = self.G_A(a_test)
+                a2b_full = test_a2b
 
-            self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict)
-            self.visdom_reporter.plot_image(a_tensor, "Training A images")
-            self.visdom_reporter.plot_image(a2b, "Training A2B images")
-            self.visdom_reporter.plot_image(b_tensor, "B images")
+            self.visdom_reporter.plot_image(a_tensor, "Training A images - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(a2b, "Training A2B images - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(b_tensor, "B images - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
 
-            self.visdom_reporter.plot_image(a_test, "Test A images")
-            self.visdom_reporter.plot_image(test_a2b, "Test A2B images")
-            self.visdom_reporter.plot_image(b_test, "Test B images")
+            self.visdom_reporter.plot_image(a_test, "Test A images - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(test_a2b, "Test A2B images - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(b_test, "Test B images - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
 
-            self.visdom_reporter.plot_image(unseen_tensor, "Unseen Images")
-            self.visdom_reporter.plot_image(test_unseen2b, "Unseen 2 B Images")
+            self.visdom_reporter.plot_image(a2b_full, "Test A2B-Full images - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
+
+    def visdom_infer(self, rw_tensor):
+        with torch.no_grad():
+            rw2b = self.G_A(rw_tensor)
+            self.visdom_reporter.plot_image(rw_tensor, "Real World images - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(rw2b, "Real World A2B images - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
+
 
     def load_saved_state(self, checkpoint):
         self.G_A.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
@@ -188,5 +218,5 @@ class PairedTrainer:
         save_dict[constants.GENERATOR_KEY + "scheduler"] = schedulerG_state_dict
         save_dict[constants.DISCRIMINATOR_KEY + "scheduler"] = schedulerD_state_dict
 
-        torch.save(save_dict, constants.FFA_TRANSFER_CHECKPATH)
+        torch.save(save_dict, constants.STYLE_TRANSFER_CHECKPATH)
         print("Saved model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))

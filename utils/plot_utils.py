@@ -107,9 +107,9 @@ class VisdomReporter:
     
         fig.legend(loc = 'lower right')
         if loss_key not in self.loss_windows:
-            self.loss_windows[loss_key] = self.vis.matplot(plt, opts = dict(caption = "Losses" + " " + str(constants)))
+            self.loss_windows[loss_key] = self.vis.matplot(plt, opts = dict(caption = "Losses" + " " + str(constants.STYLE_TRANSFER_CHECKPATH)))
         else:
-            self.vis.matplot(plt, win = self.loss_windows[loss_key], opts = dict(caption = "Losses" + " " + str(constants)))
+            self.vis.matplot(plt, win = self.loss_windows[loss_key], opts = dict(caption = "Losses" + " " + str(constants.STYLE_TRANSFER_CHECKPATH)))
           
         plt.show()
 
