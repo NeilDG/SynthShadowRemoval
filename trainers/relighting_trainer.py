@@ -15,14 +15,13 @@ from utils import plot_utils
 from custom_losses import ssim_loss
 import lpips
 
-class RenderMapsTrainer:
+class RelightingTrainer:
 
-    def __init__(self, gpu_device, opts):
+    def __init__(self, gpu_device, num_inputs, opts):
         self.gpu_device = gpu_device
         self.g_lr = opts.g_lr
         self.d_lr = opts.d_lr
         self.use_bce = opts.use_bce
-        self.use_mask = opts.use_mask
 
         self.lpips_loss = lpips.LPIPS(net = 'vgg').to(self.gpu_device)
         self.ssim_loss = ssim_loss.SSIM()
@@ -33,11 +32,9 @@ class RenderMapsTrainer:
         net_config = opts.net_config
 
         if(net_config == 1):
-            self.G_A = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
+            self.G_A = cycle_gan.Generator(input_nc=3 * num_inputs, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
         elif(net_config == 2):
-            self.G_A = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
-        else:
-            self.G_A = ffa.FFA(gps=3, blocks=num_blocks).to(self.gpu_device)
+            self.G_A = unet_gan.UnetGenerator(input_nc=3 * num_inputs, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
 
         self.D_A = cycle_gan.Discriminator().to(self.gpu_device)  # use CycleGAN's discriminator
 
@@ -108,12 +105,9 @@ class RenderMapsTrainer:
             print("Adv weight: ", str(self.adv_weight), file=f)
             print("Likeness weight: ", str(self.l1_weight), file=f)
 
-    def train(self, a_tensor, b_tensor, train_mask):
+    def train(self, a_tensor, b_tensor):
         with amp.autocast():
             a2b = self.G_A(a_tensor)
-
-            if (self.use_mask == 1):
-                a2b = torch.mul(a2b, train_mask)
 
             self.D_A.train()
             self.optimizerD.zero_grad()
@@ -161,34 +155,24 @@ class RenderMapsTrainer:
             self.losses_dict[constants.D_A_FAKE_LOSS_KEY].append(D_A_fake_loss.item())
             self.losses_dict[constants.D_A_REAL_LOSS_KEY].append(D_A_real_loss.item())
 
-    def test(self, a_tensor, train_mask):
+    def test(self, a_tensor):
         with torch.no_grad():
             a2b = self.G_A(a_tensor)
-            if (self.use_mask == 1):
-                a2b = torch.mul(a2b, train_mask)
         return a2b
 
     def visdom_plot(self, iteration):
         self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict)
 
-    def visdom_visualize(self, a_tensor, b_tensor, train_mask, a_test, b_test, test_mask):
+    def visdom_visualize(self, albedo_tensor, a_tensor, b_tensor, albedo_test_tensor, a_test, b_test):
         with torch.no_grad():
-            if (self.use_mask == 1):
-                a2b = self.G_A(a_tensor) * 0.5 + 0.5
-                a2b = torch.mul(a2b, train_mask)
+            a2b = self.G_A(a_tensor) * 0.5 + 0.5
+            test_a2b = self.G_A(a_test) * 0.5 + 0.5
 
-                test_a2b = self.G_A(a_test) * 0.5 + 0.5
-                test_a2b = torch.mul(test_a2b, test_mask)
-
-            else:
-                a2b = self.G_A(a_tensor)
-                test_a2b = self.G_A(a_test)
-
-            self.visdom_reporter.plot_image(a_tensor, "Training A images - " + constants.MAPPER_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(albedo_tensor, "Training Albedo images - " + constants.MAPPER_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(a2b, "Training A2B images - " + constants.MAPPER_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(b_tensor, "B images - " + constants.MAPPER_VERSION + constants.ITERATION)
 
-            self.visdom_reporter.plot_image(a_test, "Test A images - " + constants.MAPPER_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(albedo_test_tensor, "Training Albedo images - " + constants.MAPPER_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(test_a2b, "Test A2B images - " + constants.MAPPER_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(b_test, "Test B images - " + constants.MAPPER_VERSION + constants.ITERATION)
 
@@ -227,7 +211,7 @@ class RenderMapsTrainer:
         save_dict[constants.GENERATOR_KEY + "scheduler"] = schedulerG_state_dict
         save_dict[constants.DISCRIMINATOR_KEY + "scheduler"] = schedulerD_state_dict
 
-        torch.save(save_dict, constants.MAPPER_CHECKPATH + ".checkpt")
+        torch.save(save_dict, constants.RELIGHTING_CHECKPATH + ".checkpt")
         print("Saved model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
 
     def save_states(self, epoch, iteration):
@@ -250,5 +234,5 @@ class RenderMapsTrainer:
         save_dict[constants.GENERATOR_KEY + "scheduler"] = schedulerG_state_dict
         save_dict[constants.DISCRIMINATOR_KEY + "scheduler"] = schedulerD_state_dict
 
-        torch.save(save_dict, constants.MAPPER_CHECKPATH)
+        torch.save(save_dict, constants.RELIGHTING_CHECKPATH)
         print("Saved model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))

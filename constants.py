@@ -17,6 +17,7 @@ DATASET_ALBEDO_PATH = "E:/SynthWeather Dataset 2/albedo/"
 DATASET_NORMAL_PATH = "E:/SynthWeather Dataset 2/normal/"
 DATASET_SPECULAR_PATH = "E:/SynthWeather Dataset 2/specular/"
 DATASET_SMOOTHNESS_PATH = "E:/SynthWeather Dataset 2/smoothness/"
+DATASET_LIGHTMAP_PATH = "E:/SynthWeather Dataset 2/lightmap/"
 
 PATCH_IMAGE_SIZE = (64, 64)
 TEST_IMAGE_SIZE = (256, 256)
@@ -30,11 +31,13 @@ EMBEDDING_VERSION = "embedding_v1.00"
 STYLE_TRANSFER_VERSION = "places2sunnyweather_v1.00"
 FFA_TRANSFER_VERSION = "synthplaces2sunny_v1.01"
 MAPPER_VERSION = "rgb2albedo_v1.00"
+RELIGHTING_VERSION = "maps2rgb_v1.00"
 
 ITERATION = "1"
 STYLE_TRANSFER_CHECKPATH = 'checkpoint/' + STYLE_TRANSFER_VERSION + "_" + ITERATION + '.pt'
 EMBEDDING_CHECKPATH = 'checkpoint/' + EMBEDDING_VERSION + "_" + ITERATION + '.pt'
 MAPPER_CHECKPATH = 'checkpoint/' + MAPPER_VERSION + "_" + ITERATION + '.pt'
+RELIGHTING_CHECKPATH = 'checkpoint/' + RELIGHTING_VERSION + "_" + ITERATION + '.pt'
 
 # dictionary keys
 G_LOSS_KEY = "g_loss"
@@ -58,7 +61,7 @@ D_B_FAKE_LOSS_KEY = "d_fake_b"
 manualSeed = 999
 
 # Number of training epochs
-num_epochs = 200
+num_epochs = 300
 
 #Running on local = 0, Running on COARE = 1, Running on CCS server = 2
 server_config = 0

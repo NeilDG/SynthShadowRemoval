@@ -5,6 +5,7 @@ from torch.utils import data
 from matplotlib import pyplot as plt
 import torchvision.transforms as transforms
 import torchvision.transforms.functional
+import torch.nn.functional as F
 import constants
 import kornia
 
@@ -142,11 +143,13 @@ class MapDataset(data.Dataset):
         img_mask = cv2.inRange(img_b[:, :, 1], 0, 1)  # mask for getting zero pixels to be excluded
         img_mask = cv2.cvtColor(img_mask, cv2.COLOR_GRAY2RGB)
 
+        img_one_hot = cv2.inRange(img_b[:, :, 1], 254, 255)
+        img_one_hot = cv2.cvtColor(img_one_hot, cv2.COLOR_GRAY2RGB)
+
         img_a = self.initial_op(img_a)
         img_b = self.initial_op(img_b)
         img_mask = self.initial_op(img_mask)
-
-
+        
         if(self.transform_config == 1):
             crop_indices = transforms.RandomCrop.get_params(img_a, output_size=constants.PATCH_IMAGE_SIZE)
             i, j, h, w = crop_indices
@@ -160,6 +163,211 @@ class MapDataset(data.Dataset):
         img_mask = 1 - self.mask_op(img_mask)
 
         return file_name, img_a, img_b, img_mask
+
+    def __len__(self):
+        return len(self.image_list_a)
+
+
+class RenderSegmentDataset(data.Dataset):
+    def __init__(self, image_list_a, path_b, transform_config):
+        self.image_list_a = image_list_a
+        self.path_b = path_b
+        self.transform_config = transform_config
+
+        self.initial_op = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize((256, 256))])
+
+        if (transform_config == 1):
+            self.final_transform_op = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+            ])
+
+            self.mask_op = transforms.Compose([
+                transforms.ToTensor()
+            ])
+
+        else:
+            self.final_transform_op = transforms.Compose([
+                transforms.Resize(constants.TEST_IMAGE_SIZE),
+                transforms.ToTensor(),
+                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+            ])
+
+            self.mask_op = transforms.Compose([
+                transforms.Resize(constants.TEST_IMAGE_SIZE),
+                transforms.ToTensor()
+            ])
+
+        #load one sample
+        img_id = self.image_list_a[0]
+        path_segment = img_id.split("/")
+        file_name = path_segment[len(path_segment) - 1]
+        img_id = self.path_b + "/" + file_name
+        img_b = cv2.imread(img_id)
+
+        self.mask_red = np.stack([np.full_like(img_b[:, :, 1], 255),
+                                  np.full_like(img_b[:, :, 1], 0),
+                                  np.full_like(img_b[:, :, 1], 0)], 2)
+
+        self.mask_green = np.stack([np.full_like(img_b[:, :, 1], 0),
+                                    np.full_like(img_b[:, :, 1], 255),
+                                    np.full_like(img_b[:, :, 1], 0)], 2)
+
+        self.mask_blue = np.stack([np.full_like(img_b[:, :, 1], 0),
+                                   np.full_like(img_b[:, :, 1], 0),
+                                   np.full_like(img_b[:, :, 1], 255)], 2)
+
+    def __getitem__(self, idx):
+        img_id = self.image_list_a[idx]
+        path_segment = img_id.split("/")
+        file_name = path_segment[len(path_segment) - 1]
+
+        img_a = cv2.imread(img_id)
+        img_a = cv2.cvtColor(img_a, cv2.COLOR_BGR2RGB)  # because matplot uses RGB, openCV is BGR
+
+        img_id = self.path_b + "/" + file_name
+        img_b = cv2.imread(img_id);
+        img_b = cv2.cvtColor(img_b, cv2.COLOR_BGR2RGB)
+
+        img_segments = [None, None, None, None]
+
+        # img_segments[0] = cv2.inRange(img_b[:, :, 1], 0, 15)  # mask for getting zero pixels to be excluded
+        # img_segments[0] = cv2.cvtColor(img_segments[0], cv2.COLOR_GRAY2RGB) * self.mask_red
+        #
+        # img_segments[1] = cv2.inRange(img_b[:, :, 1], 200, 255)  # mask for getting zero pixels to be excluded
+        # img_segments[1] = cv2.cvtColor(img_segments[1], cv2.COLOR_GRAY2RGB) * self.mask_green
+        #
+        # img_segments[2] = cv2.inRange(img_b[:, :, 1], 20, 29)  # mask for getting zero pixels to be excluded
+        # img_segments[2] = cv2.cvtColor(img_segments[2], cv2.COLOR_GRAY2RGB) * self.mask_blue
+        #
+        # img_segments[3] = cv2.inRange(img_b[:, :, 1], 40, 51)  # mask for getting zero pixels to be excluded
+        # img_segments[3] = cv2.cvtColor(img_segments[3], cv2.COLOR_GRAY2RGB) * self.mask_green + cv2.cvtColor(img_segments[3], cv2.COLOR_GRAY2RGB) * self.mask_red
+        #
+        # img_one_hot = img_segments[0] + img_segments[1] + img_segments[2] + img_segments[3]
+
+        img_segments[0] = cv2.inRange(img_b[:, :, 1], 0, 15) # getting the mask of specific regions of colors. Multiplier is the class label
+        img_segments[0] = cv2.normalize(img_segments[0], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U) * 1
+
+        img_segments[1] = cv2.inRange(img_b[:, :, 1], 200, 255)
+        img_segments[1] = cv2.normalize(img_segments[1], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U) * 2
+
+        img_segments[2] = cv2.inRange(img_b[:, :, 1], 20, 29)
+        img_segments[2] = cv2.normalize(img_segments[2], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U) * 3
+
+        img_segments[3] = cv2.inRange(img_b[:, :, 1], 40, 51)
+        img_segments[3] = cv2.normalize(img_segments[3], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U) * 4
+
+        img_one_hot = img_segments[0] + img_segments[1] + img_segments[2] + img_segments[3]
+
+        img_a = self.initial_op(img_a)
+        img_b = self.initial_op(img_b)
+        #img_one_hot = self.initial_op(img_one_hot)
+
+        if (self.transform_config == 1):
+            crop_indices = transforms.RandomCrop.get_params(img_a, output_size=constants.PATCH_IMAGE_SIZE)
+            i, j, h, w = crop_indices
+
+            img_a = transforms.functional.crop(img_a, i, j, h, w)
+            img_b = transforms.functional.crop(img_b, i, j, h, w)
+            # img_one_hot = transforms.functional.crop(img_one_hot, i, j, h, w)
+            img_one_hot = img_one_hot[i: i + h, j: j + w]
+
+        img_a = self.final_transform_op(img_a)
+        img_b = self.final_transform_op(img_b)
+        img_one_hot = torch.tensor(img_one_hot, dtype = torch.float16) / 4.0
+        img_one_hot = torch.unsqueeze(img_one_hot, 0)
+        #img_one_hot = self.mask_op(img_one_hot)
+
+        return file_name, img_a, img_one_hot
+
+    def __len__(self):
+        return len(self.image_list_a)
+
+
+class RenderDataset(data.Dataset):
+    def __init__(self, image_list_a, path_b, path_c, path_d, path_e, path_f, transform_config):
+        self.image_list_a = image_list_a
+        self.path_b = path_b
+        self.path_c = path_c
+        self.path_d = path_d
+        self.path_e = path_e
+        self.path_f = path_f
+
+        self.transform_config = transform_config
+
+        self.initial_op = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize((256, 256))])
+
+        if(transform_config == 1):
+            self.final_transform_op = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+            ])
+
+        else:
+            self.final_transform_op = transforms.Compose([
+                transforms.Resize(constants.TEST_IMAGE_SIZE),
+                transforms.ToTensor(),
+                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+            ])
+
+    def __getitem__(self, idx):
+        img_id = self.image_list_a[idx]
+        path_segment = img_id.split("/")
+        file_name = path_segment[len(path_segment) - 1]
+
+        img_a = cv2.imread(img_id);
+        img_a = cv2.cvtColor(img_a, cv2.COLOR_BGR2RGB)  # because matplot uses RGB, openCV is BGR
+
+        img_id = self.path_b + "/" + file_name
+        img_b = cv2.imread(img_id);
+        img_b = cv2.cvtColor(img_b, cv2.COLOR_BGR2RGB)
+
+        img_id = self.path_c + "/" + file_name
+        img_c = cv2.imread(img_id);
+        img_c = cv2.cvtColor(img_c, cv2.COLOR_BGR2RGB)
+
+        img_id = self.path_d + "/" + file_name
+        img_d = cv2.imread(img_id);
+        img_d = cv2.cvtColor(img_d, cv2.COLOR_BGR2RGB)
+
+        img_id = self.path_e + "/" + file_name
+        img_e = cv2.imread(img_id);
+        img_e = cv2.cvtColor(img_e, cv2.COLOR_BGR2RGB)
+
+        img_id = self.path_f + "/" + file_name
+        img_f = cv2.imread(img_id);
+        img_f = cv2.cvtColor(img_f, cv2.COLOR_BGR2RGB)
+
+        img_a = self.initial_op(img_a)
+        img_b = self.initial_op(img_b)
+        img_c = self.initial_op(img_c)
+        img_d = self.initial_op(img_d)
+        img_e = self.initial_op(img_e)
+        img_f = self.initial_op(img_f)
+
+        if(self.transform_config == 1):
+            crop_indices = transforms.RandomCrop.get_params(img_a, output_size=constants.PATCH_IMAGE_SIZE)
+            i, j, h, w = crop_indices
+
+            img_a = transforms.functional.crop(img_a, i, j, h, w)
+            img_b = transforms.functional.crop(img_b, i, j, h, w)
+            img_c = transforms.functional.crop(img_c, i, j, h, w)
+            img_d = transforms.functional.crop(img_d, i, j, h, w)
+            img_e = transforms.functional.crop(img_e, i, j, h, w)
+            img_f = transforms.functional.crop(img_f, i, j, h, w)
+
+        img_a = self.final_transform_op(img_a)
+        img_b = self.final_transform_op(img_b)
+        img_c = self.final_transform_op(img_c)
+        img_d = self.final_transform_op(img_d)
+        img_e = self.final_transform_op(img_e)
+        img_f = self.final_transform_op(img_f)
+
+        return file_name, img_a, img_b, img_c, img_d, img_e, img_f
 
     def __len__(self):
         return len(self.image_list_a)

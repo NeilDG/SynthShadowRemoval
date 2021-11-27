@@ -88,7 +88,7 @@ class VisdomReporter:
         colors = ['r', 'g', 'black', 'darkorange', 'olive', 'palevioletred', 'rosybrown', 'cyan', 'slategray', 'darkmagenta', 'linen', 'chocolate']
         index = 0
         
-        x = [i for i in range(iteration, iteration + len(losses_dict[constants.D_OVERALL_LOSS_KEY]))]
+        x = [i for i in range(iteration, iteration + len(losses_dict[constants.LIKENESS_LOSS_KEY]))]
         COLS = 3; ROWS = 4
         fig, ax = plt.subplots(ROWS, COLS, sharex=True)
         fig.set_size_inches(9, 9)

@@ -9,7 +9,7 @@ import torchvision.utils as vutils
 import numpy as np
 import matplotlib.pyplot as plt
 from loaders import dataset_loader
-from trainers import render_maps_trainer
+from trainers import render_segment_trainer
 from trainers import early_stopper
 import constants
 
@@ -21,12 +21,9 @@ parser.add_option('--load_previous', type=int, help="Load previous?", default=0)
 parser.add_option('--iteration', type=int, help="Style version?", default="1")
 parser.add_option('--adv_weight', type=float, help="Weight", default="1.0")
 parser.add_option('--l1_weight', type=float, help="Weight", default="10.0")
-parser.add_option('--lpip_weight', type=float, help="Weight", default="0.0")
-parser.add_option('--ssim_weight', type=float, help="Weight", default="0.0")
 parser.add_option('--num_blocks', type=int)
 parser.add_option('--net_config', type=int)
 parser.add_option('--use_bce', type=int, default = "0")
-parser.add_option('--use_mask', type=int, default = "1")
 parser.add_option('--g_lr', type=float, help="LR", default="0.00002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.00002")
 parser.add_option('--batch_size', type=int, help="batch_size", default="128")
@@ -94,19 +91,15 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    if(opts.map_choice == "albedo"):
-        map_path = constants.DATASET_ALBEDO_PATH
-    elif(opts.map_choice == "normal"):
+    if(opts.map_choice == "normal"):
         map_path = constants.DATASET_NORMAL_PATH
     elif(opts.map_choice == "specular"):
         map_path = constants.DATASET_SPECULAR_PATH
     elif (opts.map_choice == "smoothness"):
         map_path = constants.DATASET_SMOOTHNESS_PATH
-    elif (opts.map_choice == "segmentation"):
-        map_path = constants.DATASET_WEATHER_SEGMENT_PATH
     else:
-        print("Cannot determine map choice. Defaulting to Albedo")
-        map_path = constants.DATASET_ALBEDO_PATH
+        print("Cannot determine map choice. Defaulting to smoothness")
+        map_path = constants.DATASET_SMOOTHNESS_PATH
 
     # Create the dataloader
     train_loader = dataset_loader.load_map_train_dataset(constants.DATASET_RGB_PATH, map_path, opts)
@@ -118,16 +111,15 @@ def main(argv):
 
     # Plot some training images
     if (constants.server_config == 0):
-        _, a_batch, b_batch, mask_batch = next(iter(train_loader))
+        _, a_batch, b_batch = next(iter(train_loader))
 
         show_images(a_batch, "Training - A Images")
-        show_images(b_batch, "Training - B Images")
         # show_images(mask_batch, "Training - Mask Images")
-        print(np.shape(mask_batch))
-        print(mask_batch[0])
+        print(np.shape(b_batch))
+        print(b_batch[0])
 
-    trainer = render_maps_trainer.RenderMapsTrainer(device, opts)
-    trainer.update_penalties(opts.adv_weight, opts.l1_weight, opts.lpip_weight, opts.ssim_weight)
+    trainer = render_segment_trainer.RenderSegmentTrainer(device, opts)
+    trainer.update_penalties(opts.adv_weight, opts.l1_weight)
 
     stopper_method = early_stopper.EarlyStopper(opts.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, 2000)
 
@@ -142,18 +134,16 @@ def main(argv):
 
     if(opts.test_mode == 1):
         print("Plotting test images...")
-        _, a_batch, b_batch, mask_batch = next(iter(train_loader))
+        _, a_batch, b_batch = next(iter(train_loader))
         a_tensor = a_batch.to(device)
         b_tensor = b_batch.to(device)
-        mask_tensor = mask_batch.to(device)
 
-        trainer.train(a_tensor, b_tensor, mask_tensor)
+        trainer.train(a_tensor, b_tensor)
 
-        view_batch, test_a_batch, test_b_batch, test_mask_batch = next(iter(test_loader))
+        view_batch, test_a_batch, test_b_batch = next(iter(test_loader))
         test_a_tensor = test_a_batch.to(device)
         test_b_tensor = test_b_batch.to(device)
-        test_mask_tensor = test_mask_batch.to(device)
-        trainer.visdom_visualize(a_tensor, b_tensor, mask_tensor, test_a_tensor, test_b_tensor, test_mask_tensor)
+        trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
 
         _, rw_batch = next(iter(rw_loader))
         rw_tensor = rw_batch.to(device)
@@ -164,23 +154,21 @@ def main(argv):
         for epoch in range(start_epoch, constants.num_epochs):
             # For each batch in the dataloader
             for i, (train_data, test_data, rw_data) in enumerate(zip(train_loader, test_loader, itertools.cycle(rw_loader))):
-                _, a_batch, b_batch, mask_batch = train_data
+                _, a_batch, b_batch = train_data
                 a_tensor = a_batch.to(device)
                 b_tensor = b_batch.to(device)
-                mask_tensor = mask_batch.to(device)
-                trainer.train(a_tensor, b_tensor, mask_tensor)
+                trainer.train(a_tensor, b_tensor)
                 iteration = iteration + 1
 
-                stopper_method.test(trainer, epoch, iteration, trainer.test(a_tensor, mask_tensor), b_tensor)
+                stopper_method.test(trainer, epoch, iteration, trainer.test(a_tensor), b_tensor)
 
                 if (i % 300 == 0):
                     trainer.save_states_checkpt(epoch, iteration)
-                    view_batch, test_a_batch, test_b_batch, test_mask_batch = next(iter(test_loader))
+                    view_batch, test_a_batch, test_b_batch = next(iter(test_loader))
                     test_a_tensor = test_a_batch.to(device)
                     test_b_tensor = test_b_batch.to(device)
-                    test_mask_tensor = test_mask_batch.to(device)
                     trainer.visdom_plot(iteration)
-                    trainer.visdom_visualize(a_tensor, b_tensor, mask_tensor, test_a_tensor, test_b_tensor, test_mask_tensor)
+                    trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
 
                     _, rw_batch = rw_data
                     rw_tensor = rw_batch.to(device)
