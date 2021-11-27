@@ -25,9 +25,9 @@ srun python render_maps_main.py \
 --server_config=1 \
 --num_workers=6 \
 --batch_size=256 \
---num_blocks=6 --net_config=1 \
---l1_weight=0.0 --lpip_weight=10.0 --ssim_weight=0.0 --use_bce=1 \
---version_name="rgb2albedo_v1.01" --map_choice="albedo" \
+--num_blocks=0 --net_config=2 \
+--l1_weight=0.0 --lpip_weight=10.0 --ssim_weight=0.0 --use_bce=1 --min_epochs=120 \
+--version_name="rgb2albedo_v1.07" --map_choice="albedo" \
 --img_to_load=-1 --load_previous=0
 
 conda deactivate
