@@ -12,6 +12,7 @@ import itertools
 import numpy as np
 import torch.nn as nn
 from utils import plot_utils
+from utils import tensor_utils
 from custom_losses import ssim_loss
 import lpips
 
@@ -27,8 +28,12 @@ class RenderSegmentTrainer:
 
         num_blocks = opts.num_blocks
         self.batch_size = opts.batch_size
+        net_config = opts.net_config
 
-        self.G_A = cycle_gan.Classifier(input_nc=3, num_classes=4, n_residual_blocks=num_blocks).to(self.gpu_device)
+        if(net_config == 1):
+            self.G_A = cycle_gan.Classifier(input_nc=3, num_classes=4, n_residual_blocks=num_blocks).to(self.gpu_device)
+        else:
+            self.G_A = unet_gan.UNetClassifier(num_channels=3, num_classes=4).to(self.gpu_device)
 
         self.visdom_reporter = plot_utils.VisdomReporter()
         self.optimizerG = torch.optim.Adam(itertools.chain(self.G_A.parameters()), lr=self.g_lr)
@@ -104,31 +109,18 @@ class RenderSegmentTrainer:
     def visdom_plot(self, iteration):
         self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict)
 
-    def visdom_interpret_onehot(self, b_input):
-        b_input = b_input.transpose(0, 1)
-        b_1 = 1 - (b_input[0] * 1.0)
-        b_2 = b_input[1] * 1.0
-        b_3 = b_input[2] * (29.0 / 255.0)
-        b_4 = b_input[3] * (51.0 / 255.0)
-
-        result = b_1 + b_2 + b_3 + b_4
-        # result = torch.clamp(b_1 + b_2 + b_3 + b_4, min = 0.0, max = 1.0)
-        result = torch.unsqueeze(result, 1)
-
-        return result
-
     def visdom_visualize(self, a_tensor, b_tensor, a_test, b_test):
         with torch.no_grad():
             a2b = self.G_A(a_tensor)
             a2b = torch.clamp(a2b, min=0.0, max=1.0)
-            a2b = self.visdom_interpret_onehot(a2b)
+            a2b = tensor_utils.interpret_one_hot(a2b, True)
 
             test_a2b = self.G_A(a_test)
             test_a2b = torch.clamp(test_a2b, min=0.0, max=1.0)
-            test_a2b = self.visdom_interpret_onehot(test_a2b)
+            test_a2b = tensor_utils.interpret_one_hot(test_a2b, True)
 
-            b_tensor = self.visdom_interpret_onehot(b_tensor)
-            b_test = self.visdom_interpret_onehot(b_test)
+            b_tensor = tensor_utils.interpret_one_hot(b_tensor, True)
+            b_test = tensor_utils.interpret_one_hot(b_test, True)
 
             self.visdom_reporter.plot_image(a_tensor, "Training A images - " + constants.MAPPER_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(a2b, "Training A2B images - " + constants.MAPPER_VERSION + constants.ITERATION)
@@ -142,7 +134,7 @@ class RenderSegmentTrainer:
         with torch.no_grad():
             rw2b = self.G_A(rw_tensor)
             rw2b = torch.clamp(rw2b, min=0.0, max=1.0)
-            rw2b = self.visdom_interpret_onehot(rw2b)
+            rw2b = tensor_utils.interpret_one_hot(rw2b, True)
             self.visdom_reporter.plot_image(rw_tensor, "Real World images - " + constants.MAPPER_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(rw2b, "Real World A2B images - " + constants.MAPPER_VERSION + constants.ITERATION)
 

@@ -164,7 +164,7 @@ def main(argv):
 
                 if (i % 300 == 0):
                     trainer.save_states_checkpt(epoch, iteration)
-                    view_batch, test_a_batch, test_b_batch = next(iter(test_loader))
+                    view_batch, test_a_batch, test_b_batch = test_data
                     test_a_tensor = test_a_batch.to(device)
                     test_b_tensor = test_b_batch.to(device)
                     trainer.visdom_plot(iteration)

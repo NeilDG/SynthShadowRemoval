@@ -248,16 +248,16 @@ class RenderSegmentDataset(data.Dataset):
         # img_one_hot = img_segments[0] + img_segments[1] + img_segments[2] + img_segments[3]
 
         img_segments[0] = cv2.inRange(img_b[:, :, 1], 0, 15) # getting the mask of specific regions of colors. Multiplier is the class label
-        img_segments[0] = cv2.normalize(img_segments[0], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        img_segments[0] = cv2.normalize(img_segments[0], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
 
         img_segments[1] = cv2.inRange(img_b[:, :, 1], 200, 255)
-        img_segments[1] = cv2.normalize(img_segments[1], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        img_segments[1] = cv2.normalize(img_segments[1], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
 
         img_segments[2] = cv2.inRange(img_b[:, :, 1], 20, 29)
-        img_segments[2] = cv2.normalize(img_segments[2], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        img_segments[2] = cv2.normalize(img_segments[2], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
 
         img_segments[3] = cv2.inRange(img_b[:, :, 1], 40, 51)
-        img_segments[3] = cv2.normalize(img_segments[3], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        img_segments[3] = cv2.normalize(img_segments[3], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
 
         img_a = self.initial_op(img_a)
         img_b = self.initial_op(img_b)

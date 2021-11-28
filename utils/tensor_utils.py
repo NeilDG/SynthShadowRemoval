@@ -103,6 +103,41 @@ def preprocess_batch(batch):
     batch = batch.transpose(0, 1)
     return batch
 
+def interpret_one_hot(b_input, colorize = True):
+    b_input = b_input.transpose(0, 1)
+
+    if(colorize):
+        mask_red = torch.stack([torch.full_like(b_input[0], 0.0),
+                                torch.full_like(b_input[0], 0.0),
+                                torch.full_like(b_input[0], 255.0)], 0)
+
+        mask_green = torch.stack([torch.full_like(b_input[0], 0.0),
+                                  torch.full_like(b_input[0], 255.0),
+                                  torch.full_like(b_input[0], 0.0)], 0)
+
+        mask_blue = torch.stack([torch.full_like(b_input[0], 255.0),
+                                 torch.full_like(b_input[0], 0.0),
+                                 torch.full_like(b_input[0], 0.0)], 0)
+
+        b_1 = 1 - b_input[0] * mask_red
+        b_2 = b_input[1] * mask_green
+        b_3 = b_input[2] * mask_blue
+        b_4 = b_input[3] * (mask_red + mask_green)
+
+        result = b_1 + b_2 + b_3 + b_4
+        result = result.transpose(0, 1)
+        return result
+
+    else:
+        b_1 = 1 - b_input[0]
+        b_2 = b_input[1]
+        b_3 = b_input[2] * (29.0 / 255.0)
+        b_4 = b_input[3] * (51.0 / 255.0) - 0.5 #make it darker
+
+        result = b_1 + b_2 + b_3 + b_4
+        result = torch.unsqueeze(result, 1)
+
+        return result
 
 def merge_yuv_results_to_rgb(y_tensor, uv_tensor):
     uv_tensor = uv_tensor.transpose(0, 1)
