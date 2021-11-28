@@ -28,6 +28,6 @@ srun python render_maps_main.py \
 --num_blocks=0 --net_config=2 \
 --l1_weight=0.0 --lpip_weight=10.0 --ssim_weight=0.0 --use_bce=1 --min_epochs=120 \
 --version_name="rgb2albedo_v1.07" --map_choice="albedo" \
---img_to_load=-1 --load_previous=0
+--img_to_load=-1 --load_previous=1
 
 conda deactivate

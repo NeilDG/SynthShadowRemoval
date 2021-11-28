@@ -24,7 +24,7 @@ srun python render_maps_main.py \
 --iteration=$ITERATION \
 --server_config=1 \
 --num_workers=6 \
---batch_size=512 \
+--batch_size=256 \
 --num_blocks=3 --net_config=3 \
 --l1_weight=0.0 --lpip_weight=10.0 --ssim_weight=0.0 --use_bce=0 --min_epochs=120 \
 --version_name="rgb2albedo_v1.08" --map_choice="albedo" \
