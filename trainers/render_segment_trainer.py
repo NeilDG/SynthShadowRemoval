@@ -23,12 +23,12 @@ class RenderSegmentTrainer:
         self.d_lr = opts.d_lr
         self.use_bce = opts.use_bce
 
-        self.l1_loss = nn.L1Loss()
+        self.l1_loss = nn.BCEWithLogitsLoss()
 
         num_blocks = opts.num_blocks
         self.batch_size = opts.batch_size
 
-        self.G_A = cycle_gan.Classifier(input_nc=3, num_classes=1, n_residual_blocks=num_blocks).to(self.gpu_device)
+        self.G_A = cycle_gan.Classifier(input_nc=3, num_classes=4, n_residual_blocks=num_blocks).to(self.gpu_device)
 
         self.visdom_reporter = plot_utils.VisdomReporter()
         self.optimizerG = torch.optim.Adam(itertools.chain(self.G_A.parameters()), lr=self.g_lr)
@@ -77,6 +77,13 @@ class RenderSegmentTrainer:
             self.optimizerG.zero_grad()
 
             a2b = self.G_A(a_tensor)
+            a2b = torch.clamp(a2b, min = 0.0, max = 1.0)
+            # print(np.shape(b_tensor))
+            # print(np.shape(a2b))
+
+            # print(b_tensor[0])
+            # print(a2b[0])
+
             likeness_loss = self.l1_loss(a2b, b_tensor) * self.l1_weight
             errG = likeness_loss
 
@@ -91,30 +98,53 @@ class RenderSegmentTrainer:
     def test(self, a_tensor):
         with torch.no_grad():
             a2b = self.G_A(a_tensor)
+            a2b = torch.clamp(a2b, min=0.0, max=1.0)
         return a2b
 
     def visdom_plot(self, iteration):
         self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict)
 
+    def visdom_interpret_onehot(self, b_input):
+        b_input = b_input.transpose(0, 1)
+        b_1 = 1 - (b_input[0] * 1.0)
+        b_2 = b_input[1] * 1.0
+        b_3 = b_input[2] * (29.0 / 255.0)
+        b_4 = b_input[3] * (51.0 / 255.0)
+
+        result = b_1 + b_2 + b_3 + b_4
+        # result = torch.clamp(b_1 + b_2 + b_3 + b_4, min = 0.0, max = 1.0)
+        result = torch.unsqueeze(result, 1)
+
+        return result
+
     def visdom_visualize(self, a_tensor, b_tensor, a_test, b_test):
         with torch.no_grad():
             a2b = self.G_A(a_tensor)
+            a2b = torch.clamp(a2b, min=0.0, max=1.0)
+            a2b = self.visdom_interpret_onehot(a2b)
+
             test_a2b = self.G_A(a_test)
+            test_a2b = torch.clamp(test_a2b, min=0.0, max=1.0)
+            test_a2b = self.visdom_interpret_onehot(test_a2b)
+
+            b_tensor = self.visdom_interpret_onehot(b_tensor)
+            b_test = self.visdom_interpret_onehot(b_test)
 
             self.visdom_reporter.plot_image(a_tensor, "Training A images - " + constants.MAPPER_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(a2b, "Training A2B images - " + constants.MAPPER_VERSION + constants.ITERATION)
-            #self.visdom_reporter.plot_image(b_tensor, "B images - " + constants.MAPPER_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(b_tensor, "B images - " + constants.MAPPER_VERSION + constants.ITERATION)
 
             self.visdom_reporter.plot_image(a_test, "Test A images - " + constants.MAPPER_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(test_a2b, "Test A2B images - " + constants.MAPPER_VERSION + constants.ITERATION)
-            #self.visdom_reporter.plot_image(b_test, "Test B images - " + constants.MAPPER_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(b_test, "Test B images - " + constants.MAPPER_VERSION + constants.ITERATION)
 
     def visdom_infer(self, rw_tensor):
         with torch.no_grad():
             rw2b = self.G_A(rw_tensor)
+            rw2b = torch.clamp(rw2b, min=0.0, max=1.0)
+            rw2b = self.visdom_interpret_onehot(rw2b)
             self.visdom_reporter.plot_image(rw_tensor, "Real World images - " + constants.MAPPER_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(rw2b, "Real World A2B images - " + constants.MAPPER_VERSION + constants.ITERATION)
-
 
     def load_saved_state(self, checkpoint):
         self.G_A.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])

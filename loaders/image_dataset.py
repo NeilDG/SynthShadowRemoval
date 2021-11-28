@@ -248,18 +248,16 @@ class RenderSegmentDataset(data.Dataset):
         # img_one_hot = img_segments[0] + img_segments[1] + img_segments[2] + img_segments[3]
 
         img_segments[0] = cv2.inRange(img_b[:, :, 1], 0, 15) # getting the mask of specific regions of colors. Multiplier is the class label
-        img_segments[0] = cv2.normalize(img_segments[0], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U) * 1
+        img_segments[0] = cv2.normalize(img_segments[0], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
 
         img_segments[1] = cv2.inRange(img_b[:, :, 1], 200, 255)
-        img_segments[1] = cv2.normalize(img_segments[1], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U) * 2
+        img_segments[1] = cv2.normalize(img_segments[1], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
 
         img_segments[2] = cv2.inRange(img_b[:, :, 1], 20, 29)
-        img_segments[2] = cv2.normalize(img_segments[2], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U) * 3
+        img_segments[2] = cv2.normalize(img_segments[2], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
 
         img_segments[3] = cv2.inRange(img_b[:, :, 1], 40, 51)
-        img_segments[3] = cv2.normalize(img_segments[3], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U) * 4
-
-        img_one_hot = img_segments[0] + img_segments[1] + img_segments[2] + img_segments[3]
+        img_segments[3] = cv2.normalize(img_segments[3], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
 
         img_a = self.initial_op(img_a)
         img_b = self.initial_op(img_b)
@@ -272,14 +270,17 @@ class RenderSegmentDataset(data.Dataset):
             img_a = transforms.functional.crop(img_a, i, j, h, w)
             img_b = transforms.functional.crop(img_b, i, j, h, w)
             # img_one_hot = transforms.functional.crop(img_one_hot, i, j, h, w)
-            img_one_hot = img_one_hot[i: i + h, j: j + w]
+
+            # img_one_hot = img_one_hot[i: i + h, j: j + w]
+            img_segments[0] = img_segments[0][i: i + h, j: j + w]
+            img_segments[1] = img_segments[1][i: i + h, j: j + w]
+            img_segments[2] = img_segments[2][i: i + h, j: j + w]
+            img_segments[3] = img_segments[3][i: i + h, j: j + w]
 
         img_a = self.final_transform_op(img_a)
         img_b = self.final_transform_op(img_b)
-        img_one_hot = torch.tensor(img_one_hot, dtype = torch.float16) / 4.0
-        img_one_hot = torch.unsqueeze(img_one_hot, 0)
-        #img_one_hot = self.mask_op(img_one_hot)
 
+        img_one_hot = torch.tensor([img_segments[0], img_segments[1], img_segments[2], img_segments[3]], dtype = torch.float32)
         return file_name, img_a, img_one_hot
 
     def __len__(self):

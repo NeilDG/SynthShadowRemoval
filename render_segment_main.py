@@ -114,9 +114,9 @@ def main(argv):
         _, a_batch, b_batch = next(iter(train_loader))
 
         show_images(a_batch, "Training - A Images")
-        # show_images(mask_batch, "Training - Mask Images")
+        # show_images(b_batch, "Training - B Images")
         print(np.shape(b_batch))
-        print(b_batch[0])
+        # print(b_batch[0])
 
     trainer = render_segment_trainer.RenderSegmentTrainer(device, opts)
     trainer.update_penalties(opts.adv_weight, opts.l1_weight)

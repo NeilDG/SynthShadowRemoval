@@ -135,7 +135,7 @@ class Classifier(nn.Module):
         # Output layer
         model += [  nn.ReflectionPad2d(4),
                     nn.Conv2d(64, num_classes, 8),
-                    nn.ReLU() ]
+                    nn.Softmax2d() ]
 
         self.model = nn.Sequential(*model)
         self.model.apply(weights_init)
