@@ -43,7 +43,7 @@ class VGGPerceptualLoss(torch.nn.Module):
         for block in self.blocks:
             x = block(x)
             y = block(y)
-            loss += torch.nn.functional.l1_loss(x, y)
+            loss += torch.nn.functional.loss_function(x, y)
         return loss
 
 def sample(img1, img2):

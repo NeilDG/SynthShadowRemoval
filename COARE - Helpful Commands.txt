@@ -1,0 +1,70 @@
+//COARE Commands
+//Clear screen
+clear
+
+//For directories
+scratch2/Synth Hazy 3 - Patch
+cd scratch2/NeuralNets-GenerativeExperiment
+cd scratch2/NeuralNets-GenerativeExperiment-2
+cd scratch2/NeuralNets-GenerativeExperiment-3
+cd scratch2/NeuralNets-GenerativeExperiment-4
+cd scratch2/NeuralNets-GenerativeExperiment-5
+cd scratch2/NeuralNets-GenerativeExperiment-6
+cd scratch2/Visdom
+
+//Execute job
+sbatch slurm_install.slurm
+sbatch slurm_visdom_test.slurm
+sbatch -w saliksik-cpu-23 visdom_run.slurm
+sbatch -w saliksik-cpu-23 --dependency=afterany:260467 visdom_run.slurm
+
+sbatch script_debug.slurm
+sbatch script_1.slurm
+sbatch script_2.slurm
+sbatch script_3.slurm
+sbatch script_4.slurm
+sbatch script_5.slurm
+sbatch script_6.slurm
+sbatch script_7.slurm
+sbatch script_8.slurm
+
+sbatch -w saliksik-gpu-05 script_1.slurm
+sbatch -w saliksik-gpu-06 script_2.slurm
+sbatch -w saliksik-gpu-05 script_3.slurm
+sbatch -w saliksik-gpu-06 script_4.slurm
+sbatch -w saliksik-gpu-05 script_5.slurm
+sbatch -w saliksik-gpu-06 script_6.slurm
+
+//Check status of job
+clear
+
+//Check all
+squeue -a
+squeue -u neil.delgallego
+
+//For cancelling job
+scancel <jobid>
+
+//VISDOM
+visdom -env_path "D:/Users/delgallegon/Documents/GithubProjects/Visdom/"
+visdom -env_path "/scratch1/scratch2/neil.delgallego/Visdom/"
+
+export XDG_RUNTIME_DIR=/scratch1/scratch2/neil.delgallego/Visdom/
+saliksik.asti.dost.gov.ph:8097
+
+//CCS SERVER-JUPYTERHUB
+python "ccs_jupyter_main_1.py"
+python "ccs_jupyter_main_2.py"
+python "transmission_main.py" --num_workers=10 --img_to_load=-1 --load_previous=0 --server_config=2 --cuda_device=cuda:0 --batch_size=512 --iteration=2 --t_min=0.1 --t_max=1.2 --a_min=0.1 --a_max=0.95
+python "transmission_main.py" --num_workers=10 --img_to_load=-1 --load_previous=0 --server_config=2 --cuda_device=cuda:1 --batch_size=512 --iteration=3 --t_min=0.1 --t_max=1.2 --a_min=0.1 --a_max=1.2
+python "transmission_main.py" --num_workers=10 --img_to_load=-1 --load_previous=0 --server_config=2 --cuda_device=cuda:0 --batch_size=512 --iteration=4 --t_min=0.25 --t_max=0.95 --a_min=0.1 --a_max=0.95
+python "transmission_main.py" --num_workers=10 --img_to_load=-1 --load_previous=0 --server_config=2 --cuda_device=cuda:1 --batch_size=512 --iteration=5 --t_min=0.25 --t_max=0.95 --a_min=0.1 --a_max=1.2
+
+//GCLOUD
+cd NeuralNets-GenerativeExperiment
+screen -S "MODEL_TRAINER"
+screen -R "MODEL_TRAINER"
+python "gcloud_main.py"
+
+screen -S "VISDOM_PROCESS"
+screen -R "VISDOM_PROCESS"

@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J CYCLE_4
+#SBATCH -J RM_4
 #SBATCH --partition=gpu
 #SBATCH --qos=12c-1h_2gpu
 #SBATCH --cpus-per-task=6
@@ -20,12 +20,14 @@ module load cuda/10.1_cudnn-7.6.5
 
 source activate NeilGAN_V2
 
-srun python cyclegan_main.py \
+srun python render_maps_main.py \
 --iteration=$ITERATION \
 --server_config=1 \
 --num_workers=6 \
---batch_size=512 \
---num_blocks=6 --net_config=1 --use_bce=0 --likeness_weight=0.0 \
---img_to_load=-1 --load_previous=1
+--batch_size=1024 \
+--num_blocks=0 --net_config=2 \
+--l1_weight=0.0 --lpip_weight=1.0 --ssim_weight=0.0 --bce_weight=10.0 --use_bce=1 --min_epochs=200 \
+--version_name="rgb2normal_v1.08" --map_choice="normal" \
+--img_to_load=-1 --load_previous=0
 
 conda deactivate

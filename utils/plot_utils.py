@@ -40,7 +40,7 @@ class VisdomReporter:
         if(constants.server_config == 2):
             return
 
-        img_group = vutils.make_grid(img_tensor[:constants.display_size], nrow = 8, padding=2, normalize=True).cpu()
+        img_group = vutils.make_grid(img_tensor[:16], nrow = 8, padding=2, normalize=True).cpu()
         if hash(caption) not in self.image_windows:
             self.image_windows[hash(caption)] = self.vis.images(img_group, opts = dict(caption = caption + " " + str(constants.ITERATION)))
         else:
@@ -88,7 +88,7 @@ class VisdomReporter:
         colors = ['r', 'g', 'black', 'darkorange', 'olive', 'palevioletred', 'rosybrown', 'cyan', 'slategray', 'darkmagenta', 'linen', 'chocolate']
         index = 0
         
-        x = [i for i in range(iteration, iteration + len(losses_dict[constants.D_OVERALL_LOSS_KEY]))]
+        x = [i for i in range(iteration, iteration + len(losses_dict[constants.LIKENESS_LOSS_KEY]))]
         COLS = 3; ROWS = 4
         fig, ax = plt.subplots(ROWS, COLS, sharex=True)
         fig.set_size_inches(9, 9)
@@ -107,9 +107,9 @@ class VisdomReporter:
     
         fig.legend(loc = 'lower right')
         if loss_key not in self.loss_windows:
-            self.loss_windows[loss_key] = self.vis.matplot(plt, opts = dict(caption = "Losses" + " " + str(constants)))
+            self.loss_windows[loss_key] = self.vis.matplot(plt, opts = dict(caption = "Losses" + " " + str(constants.STYLE_TRANSFER_CHECKPATH)))
         else:
-            self.vis.matplot(plt, win = self.loss_windows[loss_key], opts = dict(caption = "Losses" + " " + str(constants)))
+            self.vis.matplot(plt, win = self.loss_windows[loss_key], opts = dict(caption = "Losses" + " " + str(constants.STYLE_TRANSFER_CHECKPATH)))
           
         plt.show()
 
