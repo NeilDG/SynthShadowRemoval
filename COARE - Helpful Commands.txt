@@ -64,7 +64,7 @@ python "transmission_main.py" --num_workers=10 --img_to_load=-1 --load_previous=
 cd NeuralNets-GenerativeExperiment
 screen -S "MODEL_TRAINER"
 screen -R "MODEL_TRAINER"
+python "gcloud_main.py"
 
 screen -S "VISDOM_PROCESS"
 screen -R "VISDOM_PROCESS"
-python "gcloud_main.py"
