@@ -27,6 +27,7 @@ class RenderMapsTrainer:
         self.lpips_loss = lpips.LPIPS(net = 'vgg').to(self.gpu_device)
         self.ssim_loss = ssim_loss.SSIM()
         self.l1_loss = nn.L1Loss()
+        self.bce_loss = nn.BCEWithLogitsLoss()
 
         num_blocks = opts.num_blocks
         self.batch_size = opts.batch_size
@@ -74,14 +75,15 @@ class RenderMapsTrainer:
 
     def adversarial_loss(self, pred, target):
         if (self.use_bce == 0):
-            loss = nn.L1Loss()
-            return loss(pred, target)
+            return self.l1_loss(pred, target)
         else:
-            loss = nn.BCEWithLogitsLoss()
-            return loss(pred, target)
+            return self.bce_loss(pred, target)
 
     def l1_loss(self, pred, target):
         return self.l1_loss(pred, target)
+
+    def bce_loss_term(self, pred, target):
+        return self.bce_loss(pred, target)
 
     def lpip_loss(self, pred, target):
         result = torch.squeeze(self.lpips_loss(pred, target))
@@ -91,12 +93,13 @@ class RenderMapsTrainer:
     def ssim_loss(self, pred, target):
         return kornia.losses.ssim_loss(pred, target)
 
-    def update_penalties(self, adv_weight, l1_weight, lpip_weight, ssim_weight):
+    def update_penalties(self, adv_weight, l1_weight, lpip_weight, ssim_weight, bce_weight):
         # what penalties to use for losses?
         self.adv_weight = adv_weight
         self.l1_weight = l1_weight
         self.lpip_weight = lpip_weight
         self.ssim_weight = ssim_weight
+        self.bce_weight = bce_weight
 
         # save hyperparameters for bookeeping
         HYPERPARAMS_PATH = "checkpoint/" + constants.MAPPER_VERSION + "_" + constants.ITERATION + ".config"
@@ -107,11 +110,13 @@ class RenderMapsTrainer:
             print("====================================", file=f)
             print("Adv weight: ", str(self.adv_weight), file=f)
             print("Likeness weight: ", str(self.l1_weight), file=f)
+            print("LPIP weight: ", str(self.lpip_weight), file=f)
+            print("SSIM weight: ", str(self.ssim_weight), file=f)
+            print("BCE weight: ", str(self.bce_weight), file=f)
 
     def train(self, a_tensor, b_tensor, train_mask):
         with amp.autocast():
             a2b = self.G_A(a_tensor)
-
             if (self.use_mask == 1):
                 a2b = torch.mul(a2b, train_mask)
 
@@ -136,15 +141,19 @@ class RenderMapsTrainer:
             self.optimizerG.zero_grad()
 
             a2b = self.G_A(a_tensor)
+            if (self.use_mask == 1):
+                a2b = torch.mul(a2b, train_mask)
+
             likeness_loss = self.l1_loss(a2b, b_tensor) * self.l1_weight
             lpip_loss = self.lpip_loss(a2b, b_tensor) * self.lpip_weight
             ssim_loss = self.ssim_loss(a2b, b_tensor) * self.ssim_weight
+            bce_loss_val = self.bce_loss_term(a2b, b_tensor) * self.bce_weight
 
             prediction = self.D_A(a2b)
             real_tensor = torch.ones_like(prediction)
             A_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            errG = A_adv_loss + likeness_loss + lpip_loss + ssim_loss
+            errG = A_adv_loss + likeness_loss + lpip_loss + ssim_loss + bce_loss_val
 
             self.fp16_scaler.scale(errG).backward()
             self.fp16_scaler.step(self.optimizerG)

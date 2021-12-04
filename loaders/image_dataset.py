@@ -167,6 +167,41 @@ class MapDataset(data.Dataset):
     def __len__(self):
         return len(self.image_list_a)
 
+class SmoothnessMapData():
+    def create_mask_segments(self, img):
+        self.img = img
+        self.img_segments = [None, None, None, None, None]
+
+        self.img_segments[0] = cv2.inRange(self.img[:, :, 1], 0, 15)  # getting the mask of specific regions of colors. Multiplier is the class label
+        self.img_segments[0] = cv2.normalize(self.img_segments[0], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+
+        self.img_segments[1] = cv2.inRange(self.img[:, :, 1], 200, 255)
+        self.img_segments[1] = cv2.normalize(self.img_segments[1], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+
+        self.img_segments[2] = cv2.inRange(self.img[:, :, 1], 15, 29)
+        self.img_segments[2] = cv2.normalize(self.img_segments[2], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+
+        self.img_segments[3] = cv2.inRange(self.img[:, :, 1], 30, 51)
+        self.img_segments[3] = cv2.normalize(self.img_segments[3], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+
+        self.img_segments[4] = cv2.inRange(self.img[:, :, 1], 52, 199)
+        self.img_segments[4] = cv2.normalize(self.img_segments[4], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+
+        return self.img_segments
+
+    def crop_img_segments(self, i, j, h, w):
+        for i in range(0, len(self.img_segments)):
+            self.img_segments[i] = self.img_segments[i][i: i + h, j: j + w]
+
+        return self.img_segments
+
+class SpecularMapData(SmoothnessMapData):
+    def create_mask_segments(self, img):
+        self.img = img
+        self.img_segments = [None, None, None, None]
+
+        return self.img_segments
+
 
 class RenderSegmentDataset(data.Dataset):
     def __init__(self, image_list_a, path_b, transform_config):
@@ -207,17 +242,7 @@ class RenderSegmentDataset(data.Dataset):
         img_id = self.path_b + "/" + file_name
         img_b = cv2.imread(img_id)
 
-        self.mask_red = np.stack([np.full_like(img_b[:, :, 1], 255),
-                                  np.full_like(img_b[:, :, 1], 0),
-                                  np.full_like(img_b[:, :, 1], 0)], 2)
-
-        self.mask_green = np.stack([np.full_like(img_b[:, :, 1], 0),
-                                    np.full_like(img_b[:, :, 1], 255),
-                                    np.full_like(img_b[:, :, 1], 0)], 2)
-
-        self.mask_blue = np.stack([np.full_like(img_b[:, :, 1], 0),
-                                   np.full_like(img_b[:, :, 1], 0),
-                                   np.full_like(img_b[:, :, 1], 255)], 2)
+        self.smoothness_data = SmoothnessMapData()
 
     def __getitem__(self, idx):
         img_id = self.image_list_a[idx]
@@ -231,33 +256,7 @@ class RenderSegmentDataset(data.Dataset):
         img_b = cv2.imread(img_id);
         img_b = cv2.cvtColor(img_b, cv2.COLOR_BGR2RGB)
 
-        img_segments = [None, None, None, None]
-
-        # img_segments[0] = cv2.inRange(img_b[:, :, 1], 0, 15)  # mask for getting zero pixels to be excluded
-        # img_segments[0] = cv2.cvtColor(img_segments[0], cv2.COLOR_GRAY2RGB) * self.mask_red
-        #
-        # img_segments[1] = cv2.inRange(img_b[:, :, 1], 200, 255)  # mask for getting zero pixels to be excluded
-        # img_segments[1] = cv2.cvtColor(img_segments[1], cv2.COLOR_GRAY2RGB) * self.mask_green
-        #
-        # img_segments[2] = cv2.inRange(img_b[:, :, 1], 20, 29)  # mask for getting zero pixels to be excluded
-        # img_segments[2] = cv2.cvtColor(img_segments[2], cv2.COLOR_GRAY2RGB) * self.mask_blue
-        #
-        # img_segments[3] = cv2.inRange(img_b[:, :, 1], 40, 51)  # mask for getting zero pixels to be excluded
-        # img_segments[3] = cv2.cvtColor(img_segments[3], cv2.COLOR_GRAY2RGB) * self.mask_green + cv2.cvtColor(img_segments[3], cv2.COLOR_GRAY2RGB) * self.mask_red
-        #
-        # img_one_hot = img_segments[0] + img_segments[1] + img_segments[2] + img_segments[3]
-
-        img_segments[0] = cv2.inRange(img_b[:, :, 1], 0, 15) # getting the mask of specific regions of colors. Multiplier is the class label
-        img_segments[0] = cv2.normalize(img_segments[0], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
-
-        img_segments[1] = cv2.inRange(img_b[:, :, 1], 200, 255)
-        img_segments[1] = cv2.normalize(img_segments[1], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
-
-        img_segments[2] = cv2.inRange(img_b[:, :, 1], 20, 29)
-        img_segments[2] = cv2.normalize(img_segments[2], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
-
-        img_segments[3] = cv2.inRange(img_b[:, :, 1], 40, 51)
-        img_segments[3] = cv2.normalize(img_segments[3], dst=None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+        img_segments = self.smoothness_data.create_mask_segments(img_b)
 
         img_a = self.initial_op(img_a)
         img_b = self.initial_op(img_b)
@@ -272,15 +271,12 @@ class RenderSegmentDataset(data.Dataset):
             # img_one_hot = transforms.functional.crop(img_one_hot, i, j, h, w)
 
             # img_one_hot = img_one_hot[i: i + h, j: j + w]
-            img_segments[0] = img_segments[0][i: i + h, j: j + w]
-            img_segments[1] = img_segments[1][i: i + h, j: j + w]
-            img_segments[2] = img_segments[2][i: i + h, j: j + w]
-            img_segments[3] = img_segments[3][i: i + h, j: j + w]
+            img_segments = self.smoothness_data.crop_img_segments(i, j, h, w)
 
         img_a = self.final_transform_op(img_a)
         img_b = self.final_transform_op(img_b)
 
-        img_one_hot = torch.tensor([img_segments[0], img_segments[1], img_segments[2], img_segments[3]], dtype = torch.float32)
+        img_one_hot = torch.tensor(np.asarray(img_segments), dtype = torch.float32)
         return file_name, img_a, img_one_hot
 
     def __len__(self):
@@ -315,6 +311,9 @@ class RenderDataset(data.Dataset):
                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
             ])
 
+
+        self.smoothness_data = SmoothnessMapData()
+
     def __getitem__(self, idx):
         img_id = self.image_list_a[idx]
         path_segment = img_id.split("/")
@@ -347,7 +346,8 @@ class RenderDataset(data.Dataset):
         img_b = self.initial_op(img_b)
         img_c = self.initial_op(img_c)
         img_d = self.initial_op(img_d)
-        img_e = self.initial_op(img_e)
+        # img_e = self.initial_op(img_e)
+        img_segments_e = self.smoothness_data.create_mask_segments(img_e)
         img_f = self.initial_op(img_f)
 
         if(self.transform_config == 1):
@@ -358,14 +358,16 @@ class RenderDataset(data.Dataset):
             img_b = transforms.functional.crop(img_b, i, j, h, w)
             img_c = transforms.functional.crop(img_c, i, j, h, w)
             img_d = transforms.functional.crop(img_d, i, j, h, w)
-            img_e = transforms.functional.crop(img_e, i, j, h, w)
+            # img_e = transforms.functional.crop(img_e, i, j, h, w)
+            img_segments_e = self.smoothness_data.crop_img_segments(i, j, h, w)
             img_f = transforms.functional.crop(img_f, i, j, h, w)
 
         img_a = self.final_transform_op(img_a)
         img_b = self.final_transform_op(img_b)
         img_c = self.final_transform_op(img_c)
         img_d = self.final_transform_op(img_d)
-        img_e = self.final_transform_op(img_e)
+        # img_e = self.final_transform_op(img_e)
+        img_e = torch.tensor([img_segments_e[0], img_segments_e[1], img_segments_e[2], img_segments_e[3]], dtype=torch.float32)
         img_f = self.final_transform_op(img_f)
 
         return file_name, img_a, img_b, img_c, img_d, img_e, img_f

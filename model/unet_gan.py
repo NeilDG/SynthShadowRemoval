@@ -166,14 +166,14 @@ class Conv3x3(nn.Module):
                                              kernel_size=3,
                                              stride=1,
                                              padding=1),
-                                   nn.BatchNorm2d(out_feat),
+                                   nn.InstanceNorm2d(out_feat),
                                    nn.ReLU())
 
         self.conv2 = nn.Sequential(nn.Conv2d(out_feat, out_feat,
                                              kernel_size=3,
                                              stride=1,
                                              padding=1),
-                                   nn.BatchNorm2d(out_feat),
+                                   nn.InstanceNorm2d(out_feat),
                                    nn.ReLU())
 
     def forward(self, inputs):

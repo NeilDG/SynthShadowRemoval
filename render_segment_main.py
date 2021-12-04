@@ -60,12 +60,11 @@ def update_config(opts):
     elif (constants.server_config == 3):
         print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.MAPPER_CHECKPATH)
         constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/"
-        constants.DATASET_RGB_PATH = "/home/neil_delgallego/SynthWeather Dataset/default/"
-        constants.DATASET_ALBEDO_PATH = "/home/neil_delgallego/SynthWeather Dataset/albedo/"
-        constants.DATASET_NORMAL_PATH = "/home/neil_delgallego/SynthWeather Dataset/normal/"
-        constants.DATASET_SPECULAR_PATH = "/home/neil_delgallego/SynthWeather Dataset/specular/"
-        constants.DATASET_SMOOTHNESS_PATH = "/home/neil_delgallego/SynthWeather Dataset/smoothness/"
-        constants.DATASET_WEATHER_SEGMENT_PATH = "/home/neil_delgallego/SynthWeather Dataset/segmentation/"
+        constants.DATASET_RGB_PATH = "/home/neil_delgallego/SynthWeather Dataset 2/default/"
+        constants.DATASET_ALBEDO_PATH = "/home/neil_delgallego/SynthWeather Dataset 2/albedo/"
+        constants.DATASET_NORMAL_PATH = "/home/neil_delgallego/SynthWeather Dataset 2/normal/"
+        constants.DATASET_SPECULAR_PATH = "/home/neil_delgallego/SynthWeather Dataset 2/specular/"
+        constants.DATASET_SMOOTHNESS_PATH = "/home/neil_delgallego/SynthWeather Dataset 2/smoothness/"
 
 def show_images(img_tensor, caption):
     device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")

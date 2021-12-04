@@ -1,20 +1,18 @@
 # -*- coding: utf-8 -*-
 # Render trainer used for training.
-import kornia
 
-from model import ffa_gan as ffa
+from model import gscnn
 from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
+from model.gscnn_model import DualTaskLoss
 import constants
 import torch
 import torch.cuda.amp as amp
 import itertools
-import numpy as np
 import torch.nn as nn
 from utils import plot_utils
 from utils import tensor_utils
-from custom_losses import ssim_loss
-import lpips
+
 
 class RenderSegmentTrainer:
 
@@ -24,16 +22,18 @@ class RenderSegmentTrainer:
         self.d_lr = opts.d_lr
         self.use_bce = opts.use_bce
 
-        self.l1_loss = nn.BCEWithLogitsLoss()
-
+        self.loss_function = nn.BCEWithLogitsLoss()
+        # self.loss_function = DualTaskLoss.DualTaskLoss(cuda=True)
         num_blocks = opts.num_blocks
         self.batch_size = opts.batch_size
         net_config = opts.net_config
 
         if(net_config == 1):
-            self.G_A = cycle_gan.Classifier(input_nc=3, num_classes=4, n_residual_blocks=num_blocks).to(self.gpu_device)
+            self.G_A = cycle_gan.Classifier(input_nc=3, num_classes=5, n_residual_blocks=num_blocks).to(self.gpu_device)
+        elif(net_config == 2):
+            self.G_A = unet_gan.UNetClassifier(num_channels=3, num_classes=5).to(self.gpu_device)
         else:
-            self.G_A = unet_gan.UNetClassifier(num_channels=3, num_classes=4).to(self.gpu_device)
+            self.G_A = gscnn.GSCNN(num_classes=5).to(self.gpu_device)
 
         self.visdom_reporter = plot_utils.VisdomReporter()
         self.optimizerG = torch.optim.Adam(itertools.chain(self.G_A.parameters()), lr=self.g_lr)
@@ -59,7 +59,7 @@ class RenderSegmentTrainer:
             return loss(pred, target)
 
     def l1_loss(self, pred, target):
-        return self.l1_loss(pred, target)
+        return self.loss_function(pred, target)
 
     def update_penalties(self, adv_weight, l1_weight):
         # what penalties to use for losses?
@@ -89,7 +89,7 @@ class RenderSegmentTrainer:
             # print(b_tensor[0])
             # print(a2b[0])
 
-            likeness_loss = self.l1_loss(a2b, b_tensor) * self.l1_weight
+            likeness_loss = self.loss_function(a2b, b_tensor) * self.l1_weight
             errG = likeness_loss
 
             self.fp16_scaler.scale(errG).backward()
@@ -113,14 +113,14 @@ class RenderSegmentTrainer:
         with torch.no_grad():
             a2b = self.G_A(a_tensor)
             a2b = torch.clamp(a2b, min=0.0, max=1.0)
-            a2b = tensor_utils.interpret_one_hot(a2b, True)
+            a2b = tensor_utils.interpret_one_hot(a2b, False)
 
             test_a2b = self.G_A(a_test)
             test_a2b = torch.clamp(test_a2b, min=0.0, max=1.0)
-            test_a2b = tensor_utils.interpret_one_hot(test_a2b, True)
+            test_a2b = tensor_utils.interpret_one_hot(test_a2b, False)
 
-            b_tensor = tensor_utils.interpret_one_hot(b_tensor, True)
-            b_test = tensor_utils.interpret_one_hot(b_test, True)
+            b_tensor = tensor_utils.interpret_one_hot(b_tensor, False)
+            b_test = tensor_utils.interpret_one_hot(b_test, False)
 
             self.visdom_reporter.plot_image(a_tensor, "Training A images - " + constants.MAPPER_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(a2b, "Training A2B images - " + constants.MAPPER_VERSION + constants.ITERATION)
@@ -134,7 +134,7 @@ class RenderSegmentTrainer:
         with torch.no_grad():
             rw2b = self.G_A(rw_tensor)
             rw2b = torch.clamp(rw2b, min=0.0, max=1.0)
-            rw2b = tensor_utils.interpret_one_hot(rw2b, True)
+            rw2b = tensor_utils.interpret_one_hot(rw2b, False)
             self.visdom_reporter.plot_image(rw_tensor, "Real World images - " + constants.MAPPER_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(rw2b, "Real World A2B images - " + constants.MAPPER_VERSION + constants.ITERATION)
 

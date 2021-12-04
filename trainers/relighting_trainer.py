@@ -32,9 +32,9 @@ class RelightingTrainer:
         net_config = opts.net_config
 
         if(net_config == 1):
-            self.G_A = cycle_gan.Generator(input_nc=3 * num_inputs, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
+            self.G_A = cycle_gan.Generator(input_nc=num_inputs, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
         elif(net_config == 2):
-            self.G_A = unet_gan.UnetGenerator(input_nc=3 * num_inputs, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
+            self.G_A = unet_gan.UnetGenerator(input_nc=num_inputs, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
 
         self.D_A = cycle_gan.Discriminator().to(self.gpu_device)  # use CycleGAN's discriminator
 

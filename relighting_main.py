@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from loaders import dataset_loader
 from trainers import relighting_trainer
 from trainers import early_stopper
+from utils import tensor_utils
 import constants
 
 parser = OptionParser()
@@ -32,6 +33,7 @@ parser.add_option('--batch_size', type=int, help="batch_size", default="128")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--version_name', type=str, help="version_name")
 parser.add_option('--test_mode', type=int, help= "Test mode?", default=0)
+parser.add_option('--min_epochs', type=int, help= "Min epochs", default=60)
 
 #--img_to_load=-1 --load_previous=1
 #Update config if on COARE
@@ -108,13 +110,13 @@ def main(argv):
         show_images(b_batch, "Training - B Images")
         show_images(c_batch, "Training - C Images")
         show_images(d_batch, "Training - D Images")
-        show_images(e_batch, "Training - E Images")
+        show_images(tensor_utils.interpret_one_hot(e_batch), "Training - E Images")
         show_images(f_batch, "Training - F Images")
 
-    trainer = relighting_trainer.RelightingTrainer(device, 5, opts)
+    trainer = relighting_trainer.RelightingTrainer(device, 16, opts)
     trainer.update_penalties(opts.adv_weight, opts.l1_weight, opts.lpip_weight, opts.ssim_weight)
 
-    stopper_method = early_stopper.EarlyStopper(100, early_stopper.EarlyStopperMethod.L1_TYPE, 2000)
+    stopper_method = early_stopper.EarlyStopper(opts.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, 2000)
 
     if (opts.load_previous):
         checkpoint = torch.load(constants.RELIGHTING_CHECKPATH, map_location=device)

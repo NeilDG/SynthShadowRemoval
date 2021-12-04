@@ -30,7 +30,7 @@ def load_map_train_dataset(path_a, path_c, opts):
     a_list = assemble_unpaired_data(path_a, opts.img_to_load)
     print("Length of images: %d" % len(a_list))
 
-    if(opts.map_choice == "smoothness" or opts.map_choice == "specular"):
+    if(opts.map_choice == "smoothness"):
         data_loader = torch.utils.data.DataLoader(
             image_dataset.RenderSegmentDataset(a_list, path_c, 1),
             batch_size=opts.batch_size,
@@ -51,7 +51,7 @@ def load_map_test_dataset(path_a, path_c, opts):
     a_list = assemble_unpaired_data(path_a, opts.img_to_load)
     print("Length of images: %d" % len(a_list))
 
-    if(opts.map_choice == "smoothness" or opts.map_choice == "specular"):
+    if(opts.map_choice == "smoothness"):
         data_loader = torch.utils.data.DataLoader(
             image_dataset.RenderSegmentDataset(a_list, path_c, 2),
             batch_size=4,

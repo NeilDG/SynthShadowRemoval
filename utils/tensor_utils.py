@@ -123,6 +123,7 @@ def interpret_one_hot(b_input, colorize = True):
         b_2 = b_input[1] * mask_green
         b_3 = b_input[2] * mask_blue
         b_4 = b_input[3] * (mask_red + mask_green)
+        b_5 = b_input[4] * (mask_red + mask_blue)
 
         result = b_1 + b_2 + b_3 + b_4
         result = result.transpose(0, 1)

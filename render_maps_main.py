@@ -23,6 +23,7 @@ parser.add_option('--adv_weight', type=float, help="Weight", default="1.0")
 parser.add_option('--l1_weight', type=float, help="Weight", default="10.0")
 parser.add_option('--lpip_weight', type=float, help="Weight", default="0.0")
 parser.add_option('--ssim_weight', type=float, help="Weight", default="0.0")
+parser.add_option('--bce_weight', type=float, help="Weight", default="0.0")
 parser.add_option('--num_blocks', type=int)
 parser.add_option('--net_config', type=int)
 parser.add_option('--use_bce', type=int, default = "0")
@@ -122,12 +123,10 @@ def main(argv):
 
         show_images(a_batch, "Training - A Images")
         show_images(b_batch, "Training - B Images")
-        # show_images(mask_batch, "Training - Mask Images")
-        print(np.shape(mask_batch))
-        print(mask_batch[0])
+        show_images(mask_batch, "Training - Mask Images")
 
     trainer = render_maps_trainer.RenderMapsTrainer(device, opts)
-    trainer.update_penalties(opts.adv_weight, opts.l1_weight, opts.lpip_weight, opts.ssim_weight)
+    trainer.update_penalties(opts.adv_weight, opts.l1_weight, opts.lpip_weight, opts.ssim_weight, opts.bce_weight)
 
     stopper_method = early_stopper.EarlyStopper(opts.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, 2000)
 
@@ -173,21 +172,20 @@ def main(argv):
 
                 stopper_method.test(trainer, epoch, iteration, trainer.test(a_tensor, mask_tensor), b_tensor)
 
-                if (i % 300 == 0):
-                    trainer.save_states_checkpt(epoch, iteration)
-                    view_batch, test_a_batch, test_b_batch, test_mask_batch = next(iter(test_loader))
-                    test_a_tensor = test_a_batch.to(device)
-                    test_b_tensor = test_b_batch.to(device)
-                    test_mask_tensor = test_mask_batch.to(device)
-                    trainer.visdom_plot(iteration)
-                    trainer.visdom_visualize(a_tensor, b_tensor, mask_tensor, test_a_tensor, test_b_tensor, test_mask_tensor)
-
-                    _, rw_batch = rw_data
-                    rw_tensor = rw_batch.to(device)
-                    trainer.visdom_infer(rw_tensor)
-
                 if (stopper_method.did_stop_condition_met()):
                     break
+
+            trainer.save_states_checkpt(epoch, iteration)
+            view_batch, test_a_batch, test_b_batch, test_mask_batch = next(iter(test_loader))
+            test_a_tensor = test_a_batch.to(device)
+            test_b_tensor = test_b_batch.to(device)
+            test_mask_tensor = test_mask_batch.to(device)
+            trainer.visdom_plot(iteration)
+            trainer.visdom_visualize(a_tensor, b_tensor, mask_tensor, test_a_tensor, test_b_tensor, test_mask_tensor)
+
+            _, rw_batch = rw_data
+            rw_tensor = rw_batch.to(device)
+            trainer.visdom_infer(rw_tensor)
 
             if (stopper_method.did_stop_condition_met()):
                 break
