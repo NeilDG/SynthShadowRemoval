@@ -140,11 +140,8 @@ class MapDataset(data.Dataset):
         img_b = cv2.imread(img_id);
         img_b = cv2.cvtColor(img_b, cv2.COLOR_BGR2RGB)
 
-        img_mask = cv2.inRange(img_b[:, :, 1], 0, 1)  # mask for getting zero pixels to be excluded
+        img_mask = cv2.inRange(img_b[:, :, 1], 254, 255)  # mask for getting zero pixels to be excluded
         img_mask = cv2.cvtColor(img_mask, cv2.COLOR_GRAY2RGB)
-
-        img_one_hot = cv2.inRange(img_b[:, :, 1], 254, 255)
-        img_one_hot = cv2.cvtColor(img_one_hot, cv2.COLOR_GRAY2RGB)
 
         img_a = self.initial_op(img_a)
         img_b = self.initial_op(img_b)

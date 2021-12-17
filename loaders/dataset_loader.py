@@ -54,14 +54,14 @@ def load_map_test_dataset(path_a, path_c, opts):
     if(opts.map_choice == "smoothness"):
         data_loader = torch.utils.data.DataLoader(
             image_dataset.RenderSegmentDataset(a_list, path_c, 2),
-            batch_size=4,
+            batch_size=2,
             num_workers=1,
             shuffle=True
         )
     else:
         data_loader = torch.utils.data.DataLoader(
             image_dataset.MapDataset(a_list, path_c, 2),
-            batch_size=4,
+            batch_size=2,
             num_workers=1,
             shuffle=True
         )
@@ -114,7 +114,7 @@ def load_single_test_dataset(path_a, opts):
 
     data_loader = torch.utils.data.DataLoader(
         image_dataset.RealWorldDataset(a_list),
-        batch_size=4,
+        batch_size=2,
         num_workers=1,
         shuffle=True
     )

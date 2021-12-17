@@ -19,6 +19,10 @@ DATASET_SPECULAR_PATH = "E:/SynthWeather Dataset 2/specular/"
 DATASET_SMOOTHNESS_PATH = "E:/SynthWeather Dataset 2/smoothness/"
 DATASET_LIGHTMAP_PATH = "E:/SynthWeather Dataset 2/lightmap/"
 
+DATASET_RGB_DECOMPOSE_PATH = "E:/SynthWeather Dataset 3/rgb/"
+DATASET_SHADING_DECOMPOSE_PATH = "E:/SynthWeather Dataset 3/shading/"
+DATASET_ALBEDO_DECOMPOSE_PATH = "E:/SynthWeather Dataset 3/albedo/"
+
 PATCH_IMAGE_SIZE = (64, 64)
 TEST_IMAGE_SIZE = (256, 256)
 
@@ -61,7 +65,7 @@ D_B_FAKE_LOSS_KEY = "d_fake_b"
 manualSeed = 999
 
 # Number of training epochs
-num_epochs = 300
+num_epochs = 600
 
 #Running on local = 0, Running on COARE = 1, Running on CCS server = 2
 server_config = 0

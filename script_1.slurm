@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J RM_1
+#SBATCH -J B_1
 #SBATCH --partition=gpu
 #SBATCH --qos=12c-1h_2gpu
 #SBATCH --cpus-per-task=6
@@ -20,14 +20,24 @@ module load cuda/10.1_cudnn-7.6.5
 
 source activate NeilGAN_V2
 
-srun python render_maps_main.py \
+srun python iid_main.py \
 --iteration=$ITERATION \
 --server_config=1 \
 --num_workers=6 \
 --batch_size=1024 \
---num_blocks=0 --net_config=2 \
---l1_weight=0.0 --lpip_weight=0.0 --ssim_weight=0.0 --bce_weight=10.0 --use_bce=0 --min_epochs=200 \
---version_name="rgb2normal_v1.08" --map_choice="normal" \
+--num_blocks=0 --net_config=1 --use_mask=1 \
+--l1_weight=0.0 --lpip_weight=10.0 --ssim_weight=0.0 --bce_weight=0.0 --use_bce=0 --min_epochs=200 \
+--version_name="rgb2albedo_v2.03" --map_choice="albedo" \
+--img_to_load=-1 --load_previous=0
+
+srun python iid_main.py \
+--iteration=$ITERATION \
+--server_config=1 \
+--num_workers=6 \
+--batch_size=1024 \
+--num_blocks=0 --net_config=1 --use_mask=1 \
+--l1_weight=0.0 --lpip_weight=10.0 --ssim_weight=0.0 --bce_weight=0.0 --use_bce=0 --min_epochs=200 \
+--version_name="rgb2shading_v2.03" --map_choice="shading" \
 --img_to_load=-1 --load_previous=0
 
 conda deactivate

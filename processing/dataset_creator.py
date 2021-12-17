@@ -521,7 +521,7 @@ def main():
     # create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/normal_005.mp4", "E:/SynthWeather Dataset 2/normal/", "synth_%d.png", (256, 256), 0)
     # create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/specular_005.mp4", "E:/SynthWeather Dataset 2/specular/", "synth_%d.png", (256, 256), 0)
     # create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/smoothness_005.mp4", "E:/SynthWeather Dataset 2/smoothness/", "synth_%d.png", (256, 256), 0)
-    create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/lightmap_006.mp4", "E:/SynthWeather Dataset 2/lightmap/", "synth_%d.png", (256, 256), 0)
+    create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/default_nossr_006.mp4", "E:/SynthWeather Dataset 2/default_nossr/", "synth_%d.png", (256, 256), 0)
     #create_hazy_data(0)
     # produce_color_images("E:/Synth Hazy 4/clean/", "E:/Synth Hazy 4/clean - styled/",  "synth2places_v1.15_1.pt", net_config = 3)
 

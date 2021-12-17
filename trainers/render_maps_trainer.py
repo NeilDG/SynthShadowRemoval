@@ -186,16 +186,22 @@ class RenderMapsTrainer:
                 a2b = self.G_A(a_tensor) * 0.5 + 0.5
                 a2b = torch.mul(a2b, train_mask)
 
+                tensor_ones = torch.mul(torch.ones_like(a2b), 1 - train_mask)
+                a2b = a2b + tensor_ones
+
                 test_a2b = self.G_A(a_test) * 0.5 + 0.5
                 test_a2b = torch.mul(test_a2b, test_mask)
+
+                tensor_ones = torch.mul(torch.ones_like(test_a2b), 1 - test_mask)
+                test_a2b = test_a2b + tensor_ones
 
             else:
                 a2b = self.G_A(a_tensor)
                 test_a2b = self.G_A(a_test)
 
-            self.visdom_reporter.plot_image(a_tensor, "Training A images - " + constants.MAPPER_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(a2b, "Training A2B images - " + constants.MAPPER_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(b_tensor, "B images - " + constants.MAPPER_VERSION + constants.ITERATION)
+            # self.visdom_reporter.plot_image(a_tensor, "Training A images - " + constants.MAPPER_VERSION + constants.ITERATION)
+            # self.visdom_reporter.plot_image(a2b, "Training A2B images - " + constants.MAPPER_VERSION + constants.ITERATION)
+            # self.visdom_reporter.plot_image(b_tensor, "B images - " + constants.MAPPER_VERSION + constants.ITERATION)
 
             self.visdom_reporter.plot_image(a_test, "Test A images - " + constants.MAPPER_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(test_a2b, "Test A2B images - " + constants.MAPPER_VERSION + constants.ITERATION)

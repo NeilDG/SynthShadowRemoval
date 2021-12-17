@@ -20,6 +20,10 @@ def main():
 
     for i, (rgb_path, albedo_path, normal_path, specular_path, smoothness_path, lightmap_path)  \
             in enumerate(zip(rgb_list, albedo_list, normal_list, specular_list, smoothness_list, lightness_list)):
+
+        path_segment = rgb_path.split("/")
+        file_name = path_segment[len(path_segment) - 1]
+
         albedo_img = cv2.imread(albedo_path)
         normal_img = cv2.imread(normal_path)
         specular_img = cv2.imread(specular_path)
@@ -41,23 +45,58 @@ def main():
         lightmap_img = cv2.normalize(lightmap_img, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
         rgb_img = cv2.normalize(rgb_img, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
 
-        diffuse_contribution = albedo_img * lightmap_img
-        specular_highlights = albedo_img * np.dot(normal_img, 10.5) * specular_img * smoothness_img
-        composited_img = diffuse_contribution + specular_highlights
+        img_mask = cv2.inRange(albedo_img[:, :, 0], 0.0, 0.1)  # mask for getting zero pixels to be excluded
+        img_mask = np.asarray([img_mask, img_mask, img_mask])
+        img_mask = np.moveaxis(img_mask, 0, 2)
 
-        plt.imshow(albedo_img)
-        plt.show()
+        img_ones = np.full_like(img_mask, 1.0)
 
-        plt.imshow(lightmap_img)
-        plt.show()
+        # albedo_img = np.clip(albedo_img + (rgb_img * img_mask), 0.01, 1.0) #add skybox
+        albedo_img = np.clip(albedo_img + (img_ones * img_mask), 0.01, 1.0)
 
-        plt.imshow(composited_img)
-        plt.show()
+        light_color = np.asarray([225, 247, 250]) / 255.0
+        # light_color = np.asarray([np.random.randn(), np.random.randn(), np.random.randn()])
+        lightmap_img = lightmap_img * light_color - 0.1
 
-        plt.imshow(rgb_img)
-        plt.show()
+        # shading_component = np.clip((rgb_img / albedo_img) - lightmap_img , 0.0, 1.0)
+        # rgb_img_like = np.clip((albedo_img * shading_component + lightmap_img), 0.0, 1.0)
 
-        break
+        shading_component = np.clip((rgb_img / albedo_img), 0.0, 1.0)
+        rgb_img_like = np.clip((albedo_img * shading_component), 0.0, 1.0)
+
+        diff = rgb_img - rgb_img_like
+        print("Difference: ", np.mean(diff))
+
+        # plt.imshow(albedo_img)
+        # plt.show()
+
+        # plt.imshow(img_mask)
+        # plt.show()
+        #
+        # plt.imshow(shading_component)
+        # plt.show()
+
+        # plt.imshow(shading_component[:,:,0], cmap='gray')
+        # plt.show()
+        #
+        # plt.imshow(shading_component[:,:,1], cmap='gray')
+        # plt.show()
+        #
+        # plt.imshow(shading_component[:,:,2], cmap='gray')
+        # plt.show()
+
+        # plt.imshow(rgb_img_like)
+        # plt.show()
+        #
+        # plt.imshow(rgb_img)
+        # plt.show()
+        #
+        # break
+
+        cv2.imwrite("E:/SynthWeather Dataset 3/rgb/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(rgb_img_like, alpha=255.0), cv2.COLOR_BGR2RGB))
+        cv2.imwrite("E:/SynthWeather Dataset 3/shading/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(shading_component, alpha=255.0), cv2.COLOR_BGR2RGB))
+        # cv2.imwrite("E:/SynthWeather Dataset 3/lightmap_img/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(lightmap_img, alpha=255.0), cv2.COLOR_BGR2RGB))
+        cv2.imwrite("E:/SynthWeather Dataset 3/albedo/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(albedo_img, alpha=255.0), cv2.COLOR_BGR2RGB))
 
 if __name__ == "__main__":
     main()
