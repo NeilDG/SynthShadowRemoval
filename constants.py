@@ -63,7 +63,7 @@ D_A_REAL_LOSS_KEY = "d_real_a"
 D_A_FAKE_LOSS_KEY = "d_fake_a"
 D_B_REAL_LOSS_KEY = "d_real_b"
 D_B_FAKE_LOSS_KEY = "d_fake_b"
-4264866842642
+
 # Number of training epochs
 num_epochs = 600
 
