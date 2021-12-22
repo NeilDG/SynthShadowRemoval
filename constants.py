@@ -23,7 +23,7 @@ DATASET_RGB_DECOMPOSE_PATH = "E:/SynthWeather Dataset 3/rgb/"
 DATASET_SHADING_DECOMPOSE_PATH = "E:/SynthWeather Dataset 3/shading/"
 DATASET_ALBEDO_DECOMPOSE_PATH = "E:/SynthWeather Dataset 3/albedo/"
 
-PATCH_IMAGE_SIZE = (64, 64)
+# PATCH_IMAGE_SIZE = (64, 64)
 TEST_IMAGE_SIZE = (256, 256)
 
 #========================================================================#
@@ -63,10 +63,7 @@ D_A_REAL_LOSS_KEY = "d_real_a"
 D_A_FAKE_LOSS_KEY = "d_fake_a"
 D_B_REAL_LOSS_KEY = "d_real_b"
 D_B_FAKE_LOSS_KEY = "d_fake_b"
-
-# Set random seed for reproducibility
-manualSeed = 999
-
+4264866842642
 # Number of training epochs
 num_epochs = 600
 

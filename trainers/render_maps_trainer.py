@@ -37,8 +37,14 @@ class RenderMapsTrainer:
             self.G_A = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
         elif(net_config == 2):
             self.G_A = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
-        else:
+        elif (net_config == 3):
             self.G_A = ffa.FFA(gps=3, blocks=num_blocks).to(self.gpu_device)
+        elif (net_config == 4):
+            self.G_A = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
+        elif (net_config == 5):
+            self.G_A = cycle_gan.GeneratorV2(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=True).to(self.gpu_device)
+        else:
+            self.G_A = cycle_gan.GeneratorV2(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
         self.D_A = cycle_gan.Discriminator().to(self.gpu_device)  # use CycleGAN's discriminator
 
@@ -180,28 +186,14 @@ class RenderMapsTrainer:
     def visdom_plot(self, iteration):
         self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict)
 
-    def visdom_visualize(self, a_tensor, b_tensor, train_mask, a_test, b_test, test_mask):
+    def visdom_visualize(self, a_tensor, b_tensor, a_test, b_test):
         with torch.no_grad():
-            if (self.use_mask == 1):
-                a2b = self.G_A(a_tensor) * 0.5 + 0.5
-                a2b = torch.mul(a2b, train_mask)
+            a2b = self.G_A(a_tensor)
+            test_a2b = self.G_A(a_test)
 
-                tensor_ones = torch.mul(torch.ones_like(a2b), 1 - train_mask)
-                a2b = a2b + tensor_ones
-
-                test_a2b = self.G_A(a_test) * 0.5 + 0.5
-                test_a2b = torch.mul(test_a2b, test_mask)
-
-                tensor_ones = torch.mul(torch.ones_like(test_a2b), 1 - test_mask)
-                test_a2b = test_a2b + tensor_ones
-
-            else:
-                a2b = self.G_A(a_tensor)
-                test_a2b = self.G_A(a_test)
-
-            # self.visdom_reporter.plot_image(a_tensor, "Training A images - " + constants.MAPPER_VERSION + constants.ITERATION)
-            # self.visdom_reporter.plot_image(a2b, "Training A2B images - " + constants.MAPPER_VERSION + constants.ITERATION)
-            # self.visdom_reporter.plot_image(b_tensor, "B images - " + constants.MAPPER_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(a_tensor, "Training A images - " + constants.MAPPER_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(a2b, "Training A2B images - " + constants.MAPPER_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(b_tensor, "B images - " + constants.MAPPER_VERSION + constants.ITERATION)
 
             self.visdom_reporter.plot_image(a_test, "Test A images - " + constants.MAPPER_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(test_a2b, "Test A2B images - " + constants.MAPPER_VERSION + constants.ITERATION)

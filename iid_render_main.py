@@ -25,6 +25,7 @@ parser.add_option('--net_config_s', type=int)
 parser.add_option('--num_blocks_a', type=int)
 parser.add_option('--num_blocks_s', type=int)
 parser.add_option('--use_mask', type=int, default = "0")
+parser.add_option('--patch_size', type=int, help="patch_size", default="64")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--version_name_a', type=str, help="version_name")
 parser.add_option('--version_name_s', type=str, help="version_name")
@@ -77,19 +78,27 @@ def main(argv):
         G_albedo = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=opts.num_blocks_a).to(device)
     elif (opts.net_config_a == 2):
         G_albedo = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=opts.num_blocks_a).to(device)
-    else:
+    elif (opts.net_config_a == 3):
         G_albedo = ffa.FFA(gps=3, blocks=opts.num_blocks_a).to(device)
+    elif (opts.net_config_a == 4):
+        G_albedo = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=opts.num_blocks_a, has_dropout=False).to(device)
+    else:
+        G_albedo = cycle_gan.GeneratorV2(input_nc=3, output_nc=3, n_residual_blocks=opts.num_blocks_a, has_dropout=False, multiply=True).to(device)
 
     ALBEDO_CHECKPATH = 'checkpoint/' + opts.version_name_a + "_" + str(opts.iteration_a) + '.pt'
     checkpoint = torch.load(ALBEDO_CHECKPATH, map_location=device)
     G_albedo.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
 
-    if (opts.net_config_s == 1):
+    if (opts.net_config_a == 1):
         G_shader = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=opts.num_blocks_s).to(device)
-    elif (opts.net_config_s == 2):
+    elif (opts.net_config_a == 2):
         G_shader = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=opts.num_blocks_s).to(device)
-    else:
+    elif (opts.net_config_a == 3):
         G_shader = ffa.FFA(gps=3, blocks=opts.num_blocks_s).to(device)
+    elif (opts.net_config_a == 4):
+        G_shader = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=opts.num_blocks_s, has_dropout=False).to(device)
+    else:
+        G_shader = cycle_gan.GeneratorV2(input_nc=3, output_nc=3, n_residual_blocks=opts.num_blocks_s, has_dropout=False, multiply=True).to(device)
 
     SHADER_CHECKPATH = 'checkpoint/' + opts.version_name_s + "_" + str(opts.iteration_s) + '.pt'
     checkpoint = torch.load(SHADER_CHECKPATH, map_location=device)

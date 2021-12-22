@@ -94,10 +94,11 @@ class ColorTransferDataset(data.Dataset):
         return len(self.image_list_a)
 
 class MapDataset(data.Dataset):
-    def __init__(self, image_list_a, path_b, transform_config):
+    def __init__(self, image_list_a, path_b, transform_config, opts):
         self.image_list_a = image_list_a
         self.path_b = path_b
         self.transform_config = transform_config
+        self.patch_size = (opts.patch_size, opts.patch_size)
 
         self.initial_op = transforms.Compose([
             transforms.ToPILImage(),
@@ -148,7 +149,7 @@ class MapDataset(data.Dataset):
         img_mask = self.initial_op(img_mask)
         
         if(self.transform_config == 1):
-            crop_indices = transforms.RandomCrop.get_params(img_a, output_size=constants.PATCH_IMAGE_SIZE)
+            crop_indices = transforms.RandomCrop.get_params(img_a, output_size=self.patch_size)
             i, j, h, w = crop_indices
 
             img_a = transforms.functional.crop(img_a, i, j, h, w)

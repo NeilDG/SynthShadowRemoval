@@ -47,8 +47,10 @@ class IIDTrainer:
             self.G_shading = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
         elif (net_config == 2):
             self.G_shading = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
-        else:
+        elif(net_config ==3):
             self.G_shading = ffa.FFA(gps=3, blocks=num_blocks).to(self.gpu_device)
+        else:
+            self.G_shading = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout = False).to(self.gpu_device)
 
         self.D_albedo = cycle_gan.Discriminator().to(self.gpu_device)  # use CycleGAN's discriminator
         self.D_shading = cycle_gan.Discriminator().to(self.gpu_device)
@@ -151,7 +153,7 @@ class IIDTrainer:
             errD = D_A_real_loss + D_A_fake_loss + D_S_real_loss + D_S_fake_loss
 
             self.fp16_scaler.scale(errD).backward()
-            if (self.fp16_scaler.scale(errD).item() > 0.4):
+            if (self.fp16_scaler.scale(errD).item() > 0.2):
                 self.fp16_scaler.step(self.optimizerD)
                 self.schedulerD.step(errD)
 
@@ -179,7 +181,7 @@ class IIDTrainer:
             bce_loss_val_s = self.bce_loss_term(shading_like, shading_tensor) * self.bce_weight
             rgb_loss = self.l1_loss(albedo_like * shading_like, rgb_tensor) * self.iid_weight
 
-            prediction = self.D_albedo(shading_like)
+            prediction = self.D_shading(shading_like)
             real_tensor = torch.ones_like(prediction)
             A_adv_loss_s = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
@@ -214,8 +216,8 @@ class IIDTrainer:
 
     def visdom_visualize(self, rgb_tensor, albedo_tensor, shading_tensor, test = False):
         with torch.no_grad():
-            albedo_like = self.G_albedo(rgb_tensor)
-            shading_like = self.G_shading(rgb_tensor)
+            albedo_like = self.G_albedo(rgb_tensor) * 0.5 + 0.5
+            shading_like = self.G_shading(rgb_tensor) * 0.5 + 0.5
             rgb_like = albedo_like * shading_like
 
             label = "Train "
@@ -241,6 +243,8 @@ class IIDTrainer:
     def load_saved_state(self, checkpoint):
         self.G_albedo.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
         self.D_albedo.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "A"])
+        self.G_shading.load_state_dict(checkpoint[constants.GENERATOR_KEY + "S"])
+        self.D_shading.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "S"])
         self.optimizerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY])
         self.optimizerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY])
         self.schedulerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler"])

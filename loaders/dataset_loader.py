@@ -31,7 +31,7 @@ def load_map_train_dataset(path_a, path_c, opts):
     print("Length of images: %d" % len(a_list))
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.MapDataset(a_list, path_c, 1),
+        image_dataset.MapDataset(a_list, path_c, 1, opts),
         batch_size=opts.batch_size,
         num_workers=opts.num_workers,
         shuffle=True
@@ -44,7 +44,7 @@ def load_map_test_dataset(path_a, path_c, opts):
     print("Length of images: %d" % len(a_list))
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.MapDataset(a_list, path_c, 2),
+        image_dataset.MapDataset(a_list, path_c, 2, opts),
         batch_size=2,
         num_workers=1,
         shuffle=True
