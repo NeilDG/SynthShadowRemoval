@@ -77,6 +77,11 @@ def convert_to_opencv(img_tensor):
 
     return img
 
+def normalize(v):
+    norm = np.linalg.norm(v)
+    if norm == 0:
+       return v
+    return v / norm
 
 # loads an image compatible with opencv
 def load_image(file_path):

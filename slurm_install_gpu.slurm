@@ -1,10 +1,11 @@
 #!/bin/bash
 #SBATCH -J INSTALL
-#SBATCH --partition=serial
-#SBATCH --qos=84c-1d_serial
-#SBATCH --cpus-per-task=2
+#SBATCH --partition=gpu
+#SBATCH --qos=12c-1h_2gpu
+#SBATCH --cpus-per-task=1
+#SBATCH -G 1
 #SBATCH --ntasks=1
-#SBATCH --output=script_install.out
+#SBATCH --output=script_install_gpu.out
 #SBATCH --mail-user=neil.delgallego@dlsu.edu.ph
 #SBATCH --mail-type=END
 
@@ -15,7 +16,7 @@ module load anaconda
 module load cuda/10.1_cudnn-7.6.5
 
 #conda env remove --name NeilGAN_V2
-#conda create --name NeilGAN_V2 python=3.9
+conda create --name NeilGAN_V2 python=3.9
 #source activate NeilGAN_V2
 #conda update python
 

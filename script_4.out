@@ -1,0 +1,36 @@
+CUDA_DEVICE=/dev/nvidia/0
+Thu Dec 30 10:20:00 2021       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 470.82.01    Driver Version: 470.82.01    CUDA Version: 11.4     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  Tesla P40           Off  | 00000000:82:00.0 Off |                    0 |
+| N/A   34C    P0    47W / 250W |      0MiB / 22919MiB |      2%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|  No running processes found                                                 |
++-----------------------------------------------------------------------------+
+>> anaconda/3-5.3.1 has been loaded.
+>> cuda/10.1_cudnn-7.6.5 has been loaded.
+Could not find conda environment: NeilGAN_V2
+You can list all discoverable environments with `conda info --envs`.
+
+Traceback (most recent call last):
+  File "iid_main.py", line 5, in <module>
+    import torch
+ModuleNotFoundError: No module named 'torch'
+srun: error: saliksik-gpu-06: task 0: Exited with exit code 1
+Traceback (most recent call last):
+  File "iid_main.py", line 5, in <module>
+    import torch
+ModuleNotFoundError: No module named 'torch'
+srun: error: saliksik-gpu-06: task 0: Exited with exit code 1
