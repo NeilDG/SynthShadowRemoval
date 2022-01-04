@@ -27,14 +27,14 @@ parser.add_option('--bce_weight', type=float, help="Weight", default="0.0")
 parser.add_option('--num_blocks', type=int)
 parser.add_option('--net_config', type=int)
 parser.add_option('--use_bce', type=int, default = "0")
-parser.add_option('--use_mask', type=int, default = "0")
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--batch_size', type=int, help="batch_size", default="128")
 parser.add_option('--patch_size', type=int, help="patch_size", default="64")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--version_name', type=str, help="version_name")
-parser.add_option('--map_choice', type=str, help="Map choice", default = "albedo")
+parser.add_option('--light_angle', type=int, help="Light angle", default = "0")
+parser.add_option('--map_choice', type=str, help="Map choice", default = "shading")
 parser.add_option('--test_mode', type=int, help= "Test mode?", default=0)
 parser.add_option('--min_epochs', type=int, help= "Min epochs", default=120)
 
@@ -92,28 +92,28 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    if(opts.map_choice == "albedo"):
-        map_path = constants.DATASET_ALBEDO_DECOMPOSE_PATH
-    elif(opts.map_choice == "shading"):
-        map_path = constants.DATASET_SHADING_DECOMPOSE_PATH
+    rgb_path = constants.DATASET_PREFIX_4_PATH + str(opts.light_angle) + "deg/" + "rgb/"
+    if (opts.map_choice == "shading"):
+        map_path = constants.DATASET_PREFIX_4_PATH + str(opts.light_angle) + "deg/" + "shading/"
+    elif (opts.map_choice == "shading"):
+        map_path = constants.DATASET_PREFIX_4_PATH + str(opts.light_angle) + "deg/" + "shadow_map/"
     else:
-        print("Cannot determine map choice. Defaulting to Albedo")
-        map_path = constants.DATASET_ALBEDO_PATH
+        print("Cannot determine map choice. Defaulting to Shading")
+        map_path = constants.DATASET_PREFIX_4_PATH + str(opts.light_angle) + "deg/" + "shadow_map/"
 
     # Create the dataloader
-    train_loader = dataset_loader.load_map_train_dataset(constants.DATASET_RGB_DECOMPOSE_PATH, map_path, opts)
-    test_loader = dataset_loader.load_map_test_dataset(constants.DATASET_RGB_DECOMPOSE_PATH, map_path, opts)
+    train_loader = dataset_loader.load_shading_train_dataset(rgb_path, map_path, opts)
+    test_loader = dataset_loader.load_shading_train_dataset(rgb_path, map_path, opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
     start_epoch = 0
     iteration = 0
 
     # Plot some training images
     if (constants.server_config == 0):
-        _, a_batch, b_batch, mask_batch = next(iter(train_loader))
+        _, a_batch, b_batch = next(iter(train_loader))
 
         show_images(a_batch, "Training - A Images")
         show_images(b_batch, "Training - B Images")
-        show_images(mask_batch, "Training - Mask Images")
 
     trainer = render_maps_trainer.RenderMapsTrainer(device, opts)
     trainer.update_penalties(opts.adv_weight, opts.l1_weight, opts.lpip_weight, opts.ssim_weight, opts.bce_weight)

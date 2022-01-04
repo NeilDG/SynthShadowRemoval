@@ -16,7 +16,7 @@ cd scratch2/Visdom
 sbatch slurm_install.slurm
 sbatch slurm_visdom_test.slurm
 sbatch -w saliksik-cpu-23 visdom_run.slurm
-sbatch -w saliksik-cpu-23 --dependency=afterany:269399 visdom_run.slurm
+sbatch -w saliksik-cpu-23 --dependency=afterany:269400 visdom_run.slurm
 
 sbatch script_debug.slurm
 sbatch script_1.slurm
@@ -29,13 +29,13 @@ sbatch script_7.slurm
 sbatch script_8.slurm
 
 sbatch -w saliksik-gpu-06 slurm_install_gpu.slurm
-sbatch -w saliksik-gpu-01 script_1.slurm
+sbatch -w saliksik-gpu-03 script_1.slurm
 sbatch -w saliksik-gpu-02 script_2.slurm
-sbatch -w saliksik-gpu-01 script_3.slurm
+sbatch -w saliksik-gpu-03 script_3.slurm
 sbatch -w saliksik-gpu-02 script_4.slurm
-sbatch -w saliksik-gpu-01 script_5.slurm
+sbatch -w saliksik-gpu-03 script_5.slurm
 sbatch -w saliksik-gpu-02 script_6.slurm
-sbatch -w saliksik-gpu-01 script_7.slurm
+sbatch -w saliksik-gpu-03 script_7.slurm
 sbatch -w saliksik-gpu-02 script_8.slurm
 
 //Check status of job

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Render trainer used for training.
+# Shading trainer used for training.
 import kornia
 
 from model import ffa_gan as ffa
@@ -15,14 +15,13 @@ from utils import plot_utils
 from custom_losses import ssim_loss
 import lpips
 
-class RenderMapsTrainer:
+class ShadingTrainer:
 
     def __init__(self, gpu_device,  opts):
         self.gpu_device = gpu_device
         self.g_lr = opts.g_lr
         self.d_lr = opts.d_lr
         self.use_bce = opts.use_bce
-        self.use_mask = opts.use_mask
 
         self.lpips_loss = lpips.LPIPS(net = 'vgg').to(self.gpu_device)
         self.ssim_loss = ssim_loss.SSIM()
@@ -34,17 +33,17 @@ class RenderMapsTrainer:
         net_config = opts.net_config
 
         if(net_config == 1):
-            self.G_A = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
+            self.G_A = cycle_gan.Generator(input_nc=4, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
         elif(net_config == 2):
-            self.G_A = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
+            self.G_A = unet_gan.UnetGenerator(input_nc=4, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
-            self.G_A = ffa.FFA(gps=3, blocks=num_blocks).to(self.gpu_device)
+            self.G_A = ffa.FFA(gps=4, blocks=num_blocks).to(self.gpu_device)
         elif (net_config == 4):
-            self.G_A = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
+            self.G_A = cycle_gan.Generator(input_nc=4, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
         elif (net_config == 5):
-            self.G_A = cycle_gan.GeneratorV2(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=True).to(self.gpu_device)
+            self.G_A = cycle_gan.GeneratorV2(input_nc=4, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=True).to(self.gpu_device)
         else:
-            self.G_A = cycle_gan.GeneratorV2(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
+            self.G_A = cycle_gan.GeneratorV2(input_nc=4, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
         self.D_A = cycle_gan.Discriminator().to(self.gpu_device)  # use CycleGAN's discriminator
 
@@ -120,11 +119,11 @@ class RenderMapsTrainer:
             print("SSIM weight: ", str(self.ssim_weight), file=f)
             print("BCE weight: ", str(self.bce_weight), file=f)
 
-    def train(self, a_tensor, b_tensor, train_mask):
+    def train(self, a_tensor, b_tensor, light_angle):
         with amp.autocast():
+            light_tensor = torch.full_like(a_tensor, light_angle)
+            a_tensor = torch.cat([a_tensor, light_tensor], 1)
             a2b = self.G_A(a_tensor)
-            if (self.use_mask == 1):
-                a2b = torch.mul(a2b, train_mask)
 
             self.D_A.train()
             self.optimizerD.zero_grad()
@@ -146,9 +145,9 @@ class RenderMapsTrainer:
             self.G_A.train()
             self.optimizerG.zero_grad()
 
+            light_tensor = torch.full_like(a_tensor, light_angle)
+            a_tensor = torch.cat([a_tensor, light_tensor], 1)
             a2b = self.G_A(a_tensor)
-            if (self.use_mask == 1):
-                a2b = torch.mul(a2b, train_mask)
 
             likeness_loss = self.l1_loss(a2b, b_tensor) * self.l1_weight
             lpip_loss = self.lpip_loss(a2b, b_tensor) * self.lpip_weight
@@ -176,19 +175,24 @@ class RenderMapsTrainer:
             self.losses_dict[constants.D_A_FAKE_LOSS_KEY].append(D_A_fake_loss.item())
             self.losses_dict[constants.D_A_REAL_LOSS_KEY].append(D_A_real_loss.item())
 
-    def test(self, a_tensor, train_mask):
+    def test(self, a_tensor, light_angle):
         with torch.no_grad():
+            light_tensor = torch.full_like(a_tensor, light_angle)
+            a_tensor = torch.cat([a_tensor, light_tensor], 1)
             a2b = self.G_A(a_tensor)
-            if (self.use_mask == 1):
-                a2b = torch.mul(a2b, train_mask)
         return a2b
 
     def visdom_plot(self, iteration):
         self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict)
 
-    def visdom_visualize(self, a_tensor, b_tensor, a_test, b_test):
+    def visdom_visualize(self, a_tensor, b_tensor, light_angle, a_test, b_test, light_angle_test):
         with torch.no_grad():
+            light_tensor = torch.full_like(a_tensor, light_angle)
+            a_tensor = torch.cat([a_tensor, light_tensor], 1)
             a2b = self.G_A(a_tensor)
+
+            test_light_tensor = torch.full_like(a_test, light_angle_test)
+            a_test = torch.cat([a_test, test_light_tensor], 1)
             test_a2b = self.G_A(a_test)
 
             self.visdom_reporter.plot_image(a_tensor, "Training A images - " + constants.MAPPER_VERSION + constants.ITERATION)
@@ -199,9 +203,12 @@ class RenderMapsTrainer:
             self.visdom_reporter.plot_image(test_a2b, "Test A2B images - " + constants.MAPPER_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(b_test, "Test B images - " + constants.MAPPER_VERSION + constants.ITERATION)
 
-    def visdom_infer(self, rw_tensor):
+    def visdom_infer(self, rw_tensor, light_angle_rw):
         with torch.no_grad():
+            rw_light_tensor = torch.full_like(rw_tensor, light_angle_rw)
+            rw_tensor = torch.cat([rw_tensor, rw_light_tensor], 1)
             rw2b = self.G_A(rw_tensor)
+
             self.visdom_reporter.plot_image(rw_tensor, "Real World images - " + constants.MAPPER_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(rw2b, "Real World A2B images - " + constants.MAPPER_VERSION + constants.ITERATION)
 

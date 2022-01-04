@@ -23,6 +23,9 @@ DATASET_RGB_DECOMPOSE_PATH = "E:/SynthWeather Dataset 3/rgb/"
 DATASET_SHADING_DECOMPOSE_PATH = "E:/SynthWeather Dataset 3/shading/"
 DATASET_ALBEDO_DECOMPOSE_PATH = "E:/SynthWeather Dataset 3/albedo/"
 
+DATASET_PREFIX_4_PATH = "E:/SynthWeather Dataset 4/"
+DATASET_ALBEDO_4_PATH = "E:/SynthWeather Dataset 4/albedo/"
+
 # PATCH_IMAGE_SIZE = (64, 64)
 TEST_IMAGE_SIZE = (256, 256)
 

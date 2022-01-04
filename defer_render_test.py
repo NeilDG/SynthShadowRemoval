@@ -150,10 +150,11 @@ def test_deferred_render():
         # cv2.imwrite("E:/SynthWeather Dataset 3/shadow_map/" + file_name, cv2.convertScaleAbs(shadow_map, alpha=255.0))
         # cv2.imwrite("E:/SynthWeather Dataset 3/albedo/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(albedo_img, alpha=255.0), cv2.COLOR_BGR2RGB))
 
-def test_shadow_map():
-    RGB_PATH = "E:/SynthWeather Dataset 3/rgb/"
-    RGB_NOSHADOWS_PATH = "E:/SynthWeather Dataset 3/no_shadows/"
-    ALBEDO_PATH = "E:/SynthWeather Dataset 2/albedo/"
+def test_shadow_map(degree_prefix):
+    RGB_PATH = "E:/SynthWeather Dataset 4/" + degree_prefix + "/rgb/"
+    # print("RGB path: ", RGB_PATH)
+    RGB_NOSHADOWS_PATH = "E:/SynthWeather Dataset 4/no_shadows/"
+    ALBEDO_PATH = "E:/SynthWeather Dataset 4/albedo/"
 
     rgb_list = dataset_loader.assemble_unpaired_data(RGB_PATH, -1)
     noshadows_list = dataset_loader.assemble_unpaired_data(RGB_NOSHADOWS_PATH, -1)
@@ -185,11 +186,11 @@ def test_shadow_map():
 
         #extract shading component
         albedo_img = np.clip(albedo_img + (img_ones * img_mask), 0.01, 1.0)
-        light_color = np.asarray([225, 247, 250]) / 255.0
+        light_color = np.asarray([225, 247, 250]) / 255.0 #values are extracted from Unity Engine
 
         #extract shadows
-        noshadows_img = np.clip(noshadows_img, 0.001, 1.0)
-        shadow_map = (rgb_img / noshadows_img)[:, :, 0]
+        noshadows_img = np.clip(noshadows_img, 0.1, 1.0)
+        shadow_map = np.clip(rgb_img / noshadows_img, 0.1, 1.0)
 
         rgb_img_like = np.full_like(albedo_img, 0.0)
         shading_component = np.full_like(albedo_img, 0.0)
@@ -204,33 +205,38 @@ def test_shadow_map():
         diff = noshadows_img - rgb_img_like
         print("Difference: ", np.mean(diff))
 
-        rgb_closed_form = np.asarray([rgb_img_like[:, :, 0] * shadow_map,
-                                      rgb_img_like[:, :, 1] * shadow_map,
-                                      rgb_img_like[:, :, 2] * shadow_map])
-        rgb_closed_form = np.moveaxis(rgb_closed_form, 0, 2)
+        # rgb_closed_form = np.asarray([rgb_img_like[:, :, 0] * shadow_map,
+        #                               rgb_img_like[:, :, 1] * shadow_map,
+        #                               rgb_img_like[:, :, 2] * shadow_map])
+        # rgb_closed_form = np.moveaxis(rgb_closed_form, 0, 2)
+        rgb_closed_form = np.clip(rgb_img_like * shadow_map, 0.1, 1.0)
+        shading_component = np.clip(shading_component, 0.1, 1.0)
 
-        plt.imshow(rgb_img)
-        plt.show()
+        # plt.imshow(rgb_img)
+        # plt.show()
         #
-        # plt.imshow(noshadows_img)
+        # plt.imshow(shading_component)
         # plt.show()
         #
         # plt.imshow(shadow_map, cmap='gray')
         # plt.show()
         #
-        plt.imshow(rgb_closed_form)
-        plt.show()
-        break
+        # plt.imshow(rgb_closed_form)
+        # plt.show()
+        # break
 
-        # cv2.imwrite("E:/SynthWeather Dataset 3/rgb/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(rgb_img_like, alpha=255.0), cv2.COLOR_BGR2RGB))
-        # cv2.imwrite("E:/SynthWeather Dataset 3/shading/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(shading_component, alpha=255.0), cv2.COLOR_BGR2RGB))
-        # cv2.imwrite("E:/SynthWeather Dataset 3/shadow_map/" + file_name, cv2.convertScaleAbs(shadow_map, alpha=255.0))
-        # cv2.imwrite("E:/SynthWeather Dataset 3/albedo/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(albedo_img, alpha=255.0), cv2.COLOR_BGR2RGB))
+        cv2.imwrite("E:/SynthWeather Dataset 4/" + degree_prefix + "/rgb/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(rgb_closed_form, alpha=255.0), cv2.COLOR_BGR2RGB))
+        cv2.imwrite("E:/SynthWeather Dataset 4/" + degree_prefix + "/shading/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(shading_component, alpha=255.0), cv2.COLOR_BGR2RGB))
+        cv2.imwrite("E:/SynthWeather Dataset 4/" + degree_prefix + "/shadow_map/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(shadow_map, alpha=255.0), cv2.COLOR_BGR2RGB))
+        cv2.imwrite("E:/SynthWeather Dataset 4/" + degree_prefix + "/albedo/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(albedo_img, alpha=255.0), cv2.COLOR_BGR2RGB))
 
 def main():
     #test_lighting()
     #test_deferred_render()
-    test_shadow_map()
+    test_shadow_map("0deg")
+    test_shadow_map("36deg")
+    test_shadow_map("72deg")
+    test_shadow_map("108deg")
 
 
 if __name__ == "__main__":
