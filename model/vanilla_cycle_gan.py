@@ -48,7 +48,7 @@ class Generator(nn.Module):
         # Initial convolution block       
         model = [   nn.ReflectionPad2d(2),
                     nn.Conv2d(input_nc, 64, 8),
-                    nn.InstanceNorm2d(64),
+                    nn.BatchNorm2d(64),
                     nn.ReLU(inplace=True) ]
 
         # Downsampling
@@ -56,7 +56,7 @@ class Generator(nn.Module):
         out_features = in_features*2
         for _ in range(downsampling_blocks):
             model += [  nn.Conv2d(in_features, out_features, 4, stride=2, padding=1),
-                        nn.InstanceNorm2d(out_features),
+                        nn.BatchNorm2d(out_features),
                         nn.ReLU(inplace=True)
                     ]
 
@@ -73,7 +73,7 @@ class Generator(nn.Module):
         out_features = in_features//2
         for _ in range(downsampling_blocks):
             model += [  nn.ConvTranspose2d(in_features, out_features, 4, stride=2, padding=1, output_padding=1),
-                        nn.InstanceNorm2d(out_features),
+                        nn.BatchNorm2d(out_features),
                         nn.ReLU(inplace=True)]
 
             if (has_dropout):
@@ -91,6 +91,18 @@ class Generator(nn.Module):
 
     def forward(self, x):
         return self.model(x)
+
+class GeneratorV2(Generator):
+    def __init__(self, input_nc=3, output_nc=3, downsampling_blocks = 2, n_residual_blocks=6, has_dropout = True, multiply = True):
+        Generator.__init__(self, input_nc, output_nc, downsampling_blocks, n_residual_blocks, has_dropout)
+        self.multiply = multiply
+
+
+    def forward(self, x):
+        if(self.multiply):
+            return super().forward(x) * x
+        else:
+            return super().forward(x) + x
 
 class Classifier(nn.Module):
     def __init__(self, input_nc=3, num_classes=4, downsampling_blocks = 2, n_residual_blocks=6, has_dropout = True):

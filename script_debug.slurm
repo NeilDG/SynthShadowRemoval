@@ -18,14 +18,26 @@ module load cuda/10.1_cudnn-7.6.5
 
 source activate NeilGAN_V2
 
-srun python paired_main.py \
+srun python iid_main.py \
 --iteration=$ITERATION \
 --server_config=1 \
 --num_workers=6 \
---batch_size=512 \
---num_blocks=10 --net_config=1 \
---likeness_weight=1.0 use_bce=1 \
---version_name="synthplaces2sunny_v1.00" --weather="sunny" \
+--batch_size=1024 \
+--num_blocks=0 --net_config=2 --use_mask=0 \
+--l1_weight=0.0 --lpip_weight=10.0 --ssim_weight=0.0 --bce_weight=0.0 --use_bce=0 --min_epochs=200 \
+--version_name="rgb2albedo_v6.01" --map_choice="albedo" \
 --img_to_load=-1 --load_previous=0
+
+srun python iid_main.py \
+--iteration=$ITERATION \
+--server_config=1 \
+--num_workers=6 \
+--batch_size=1024 \
+--num_blocks=0 --net_config=2 --use_mask=0 \
+--l1_weight=0.0 --lpip_weight=10.0 --ssim_weight=0.0 --bce_weight=0.0 --use_bce=0 --min_epochs=200 \
+--version_name="rgb2shading_v6.01" --map_choice="shading" \
+--img_to_load=-1 --load_previous=0
+
+conda deactivate
 
 conda deactivate

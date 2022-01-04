@@ -19,7 +19,14 @@ DATASET_SPECULAR_PATH = "E:/SynthWeather Dataset 2/specular/"
 DATASET_SMOOTHNESS_PATH = "E:/SynthWeather Dataset 2/smoothness/"
 DATASET_LIGHTMAP_PATH = "E:/SynthWeather Dataset 2/lightmap/"
 
-PATCH_IMAGE_SIZE = (64, 64)
+DATASET_RGB_DECOMPOSE_PATH = "E:/SynthWeather Dataset 3/rgb/"
+DATASET_SHADING_DECOMPOSE_PATH = "E:/SynthWeather Dataset 3/shading/"
+DATASET_ALBEDO_DECOMPOSE_PATH = "E:/SynthWeather Dataset 3/albedo/"
+
+DATASET_PREFIX_4_PATH = "E:/SynthWeather Dataset 4/"
+DATASET_ALBEDO_4_PATH = "E:/SynthWeather Dataset 4/albedo/"
+
+# PATCH_IMAGE_SIZE = (64, 64)
 TEST_IMAGE_SIZE = (256, 256)
 
 #========================================================================#
@@ -31,12 +38,14 @@ EMBEDDING_VERSION = "embedding_v1.00"
 STYLE_TRANSFER_VERSION = "places2sunnyweather_v1.00"
 FFA_TRANSFER_VERSION = "synthplaces2sunny_v1.01"
 MAPPER_VERSION = "rgb2albedo_v1.00"
+IID_VERSION = "iid_v1.00"
 RELIGHTING_VERSION = "maps2rgb_v1.00"
 
 ITERATION = "1"
 STYLE_TRANSFER_CHECKPATH = 'checkpoint/' + STYLE_TRANSFER_VERSION + "_" + ITERATION + '.pt'
 EMBEDDING_CHECKPATH = 'checkpoint/' + EMBEDDING_VERSION + "_" + ITERATION + '.pt'
 MAPPER_CHECKPATH = 'checkpoint/' + MAPPER_VERSION + "_" + ITERATION + '.pt'
+IID_CHECKPATH = 'checkpoint/' + IID_VERSION + "_" + ITERATION + '.pt'
 RELIGHTING_CHECKPATH = 'checkpoint/' + RELIGHTING_VERSION + "_" + ITERATION + '.pt'
 
 # dictionary keys
@@ -50,6 +59,7 @@ SSIM_LOSS_KEY = "ssim"
 PSNR_LOSS_KEY = "colorshift"
 SMOOTHNESS_LOSS_KEY = "smoothness"
 EDGE_LOSS_KEY = "edge"
+RECONSTRUCTION_LOSS_KEY = "reconstruction"
 
 D_OVERALL_LOSS_KEY = "d_loss"
 D_A_REAL_LOSS_KEY = "d_real_a"
@@ -57,11 +67,8 @@ D_A_FAKE_LOSS_KEY = "d_fake_a"
 D_B_REAL_LOSS_KEY = "d_real_b"
 D_B_FAKE_LOSS_KEY = "d_fake_b"
 
-# Set random seed for reproducibility
-manualSeed = 999
-
 # Number of training epochs
-num_epochs = 300
+num_epochs = 600
 
 #Running on local = 0, Running on COARE = 1, Running on CCS server = 2
 server_config = 0

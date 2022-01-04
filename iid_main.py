@@ -27,15 +27,16 @@ parser.add_option('--bce_weight', type=float, help="Weight", default="0.0")
 parser.add_option('--num_blocks', type=int)
 parser.add_option('--net_config', type=int)
 parser.add_option('--use_bce', type=int, default = "0")
-parser.add_option('--use_mask', type=int, default = "1")
-parser.add_option('--g_lr', type=float, help="LR", default="0.00002")
-parser.add_option('--d_lr', type=float, help="LR", default="0.00002")
+parser.add_option('--use_mask', type=int, default = "0")
+parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
+parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--batch_size', type=int, help="batch_size", default="128")
+parser.add_option('--patch_size', type=int, help="patch_size", default="64")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--version_name', type=str, help="version_name")
 parser.add_option('--map_choice', type=str, help="Map choice", default = "albedo")
 parser.add_option('--test_mode', type=int, help= "Test mode?", default=0)
-parser.add_option('--min_epochs', type=int, help= "Min epochs", default=60)
+parser.add_option('--min_epochs', type=int, help= "Min epochs", default=120)
 
 #--img_to_load=-1 --load_previous=1
 #Update config if on COARE
@@ -49,11 +50,9 @@ def update_config(opts):
     if(constants.server_config == 1):
         print("Using COARE configuration ", opts.version_name)
         constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/"
-        constants.DATASET_RGB_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 2/default/"
-        constants.DATASET_ALBEDO_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 2/albedo/"
-        constants.DATASET_NORMAL_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 2/normal/"
-        constants.DATASET_SPECULAR_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 2/specular/"
-        constants.DATASET_SMOOTHNESS_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 2/smoothness/"
+        constants.DATASET_RGB_DECOMPOSE_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 3/rgb/"
+        constants.DATASET_SHADING_DECOMPOSE_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 3/shading/"
+        constants.DATASET_ALBEDO_DECOMPOSE_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 3/albedo/"
 
     #CCS JUPYTER
     elif (constants.server_config == 2):
@@ -64,12 +63,9 @@ def update_config(opts):
     elif (constants.server_config == 3):
         print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.MAPPER_CHECKPATH)
         constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/"
-        constants.DATASET_RGB_PATH = "/home/neil_delgallego/SynthWeather Dataset/default/"
-        constants.DATASET_ALBEDO_PATH = "/home/neil_delgallego/SynthWeather Dataset/albedo/"
-        constants.DATASET_NORMAL_PATH = "/home/neil_delgallego/SynthWeather Dataset/normal/"
-        constants.DATASET_SPECULAR_PATH = "/home/neil_delgallego/SynthWeather Dataset/specular/"
-        constants.DATASET_SMOOTHNESS_PATH = "/home/neil_delgallego/SynthWeather Dataset/smoothness/"
-        constants.DATASET_WEATHER_SEGMENT_PATH = "/home/neil_delgallego/SynthWeather Dataset/segmentation/"
+        constants.DATASET_RGB_DECOMPOSE_PATH = "/home/neil_delgallego/SynthWeather Dataset 3/rgb/"
+        constants.DATASET_SHADING_DECOMPOSE_PATH = "/home/neil_delgallego/SynthWeather Dataset 3/shading/"
+        constants.DATASET_ALBEDO_DECOMPOSE_PATH = "/home/neil_delgallego/SynthWeather Dataset 3/albedo/"
 
 def show_images(img_tensor, caption):
     device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
@@ -84,6 +80,7 @@ def main(argv):
     (opts, args) = parser.parse_args(argv)
     update_config(opts)
     print(opts)
+    # torch.multiprocessing.set_sharing_strategy('file_system')
     print("=====================BEGIN============================")
     print("Server config? %d Has GPU available? %d Count: %d" % (constants.server_config, torch.cuda.is_available(), torch.cuda.device_count()))
     print("Torch CUDA version: %s" % torch.version.cuda)
@@ -96,24 +93,17 @@ def main(argv):
     print("Device: %s" % device)
 
     if(opts.map_choice == "albedo"):
-        map_path = constants.DATASET_ALBEDO_PATH
-    elif(opts.map_choice == "normal"):
-        map_path = constants.DATASET_NORMAL_PATH
-    elif(opts.map_choice == "specular"):
-        map_path = constants.DATASET_SPECULAR_PATH
-    elif (opts.map_choice == "smoothness"):
-        map_path = constants.DATASET_SMOOTHNESS_PATH
-    elif (opts.map_choice == "segmentation"):
-        map_path = constants.DATASET_WEATHER_SEGMENT_PATH
+        map_path = constants.DATASET_ALBEDO_DECOMPOSE_PATH
+    elif(opts.map_choice == "shading"):
+        map_path = constants.DATASET_SHADING_DECOMPOSE_PATH
     else:
         print("Cannot determine map choice. Defaulting to Albedo")
         map_path = constants.DATASET_ALBEDO_PATH
 
     # Create the dataloader
-    train_loader = dataset_loader.load_map_train_dataset(constants.DATASET_RGB_PATH, map_path, opts)
-    test_loader = dataset_loader.load_map_test_dataset(constants.DATASET_RGB_PATH, map_path, opts)
+    train_loader = dataset_loader.load_map_train_dataset(constants.DATASET_RGB_DECOMPOSE_PATH, map_path, opts)
+    test_loader = dataset_loader.load_map_test_dataset(constants.DATASET_RGB_DECOMPOSE_PATH, map_path, opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
-    index = 0
     start_epoch = 0
     iteration = 0
 
@@ -152,7 +142,7 @@ def main(argv):
         test_a_tensor = test_a_batch.to(device)
         test_b_tensor = test_b_batch.to(device)
         test_mask_tensor = test_mask_batch.to(device)
-        trainer.visdom_visualize(a_tensor, b_tensor, mask_tensor, test_a_tensor, test_b_tensor, test_mask_tensor)
+        trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
 
         _, rw_batch = next(iter(rw_loader))
         rw_tensor = rw_batch.to(device)
@@ -176,18 +166,22 @@ def main(argv):
                     break
 
             trainer.save_states_checkpt(epoch, iteration)
-            # view_batch, test_a_batch, test_b_batch, test_mask_batch = next(iter(test_loader))
-            # test_a_tensor = test_a_batch.to(device)
-            # test_b_tensor = test_b_batch.to(device)
-            # test_mask_tensor = test_mask_batch.to(device)
-            # trainer.visdom_plot(iteration)
-            # trainer.visdom_visualize(a_tensor, b_tensor, mask_tensor, test_a_tensor, test_b_tensor, test_mask_tensor)
-            #
-            # _, rw_batch = rw_data
-            # rw_tensor = rw_batch.to(device)
-            # trainer.visdom_infer(rw_tensor)
+            view_batch, test_a_batch, test_b_batch, _ = test_data
+            test_a_tensor = test_a_batch.to(device)
+            test_b_tensor = test_b_batch.to(device)
+            trainer.visdom_plot(iteration)
+            trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
+
+            _, rw_batch = rw_data
+            rw_tensor = rw_batch.to(device)
+            trainer.visdom_infer(rw_tensor)
 
             if (stopper_method.did_stop_condition_met()):
+                #visualize last result
+                view_batch, test_a_batch, test_b_batch, _ = test_data
+                test_a_tensor = test_a_batch.to(device)
+                test_b_tensor = test_b_batch.to(device)
+                trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
                 break
 
 
