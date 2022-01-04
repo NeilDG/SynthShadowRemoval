@@ -233,10 +233,10 @@ def test_shadow_map(degree_prefix):
 def main():
     #test_lighting()
     #test_deferred_render()
-    test_shadow_map("0deg")
+    # test_shadow_map("0deg")
     test_shadow_map("36deg")
-    test_shadow_map("72deg")
-    test_shadow_map("108deg")
+    # test_shadow_map("72deg")
+    # test_shadow_map("108deg")
 
 
 if __name__ == "__main__":

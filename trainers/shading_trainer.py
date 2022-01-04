@@ -121,9 +121,9 @@ class ShadingTrainer:
 
     def train(self, a_tensor, b_tensor, light_angle):
         with amp.autocast():
-            light_tensor = torch.full_like(a_tensor, light_angle)
-            a_tensor = torch.cat([a_tensor, light_tensor], 1)
-            a2b = self.G_A(a_tensor)
+            light_tensor = torch.unsqueeze(torch.full_like(a_tensor[:, 0, :, :], light_angle), 1)
+            a_input = torch.cat([a_tensor, light_tensor], 1)
+            a2b = self.G_A(a_input)
 
             self.D_A.train()
             self.optimizerD.zero_grad()
@@ -145,9 +145,9 @@ class ShadingTrainer:
             self.G_A.train()
             self.optimizerG.zero_grad()
 
-            light_tensor = torch.full_like(a_tensor, light_angle)
-            a_tensor = torch.cat([a_tensor, light_tensor], 1)
-            a2b = self.G_A(a_tensor)
+            light_tensor = torch.unsqueeze(torch.full_like(a_tensor[:, 0, :, :], light_angle), 1)
+            a_input = torch.cat([a_tensor, light_tensor], 1)
+            a2b = self.G_A(a_input)
 
             likeness_loss = self.l1_loss(a2b, b_tensor) * self.l1_weight
             lpip_loss = self.lpip_loss(a2b, b_tensor) * self.lpip_weight
@@ -177,9 +177,9 @@ class ShadingTrainer:
 
     def test(self, a_tensor, light_angle):
         with torch.no_grad():
-            light_tensor = torch.full_like(a_tensor, light_angle)
-            a_tensor = torch.cat([a_tensor, light_tensor], 1)
-            a2b = self.G_A(a_tensor)
+            light_tensor = torch.unsqueeze(torch.full_like(a_tensor[:, 0, :, :], light_angle), 1)
+            a_input = torch.cat([a_tensor, light_tensor], 1)
+            a2b = self.G_A(a_input)
         return a2b
 
     def visdom_plot(self, iteration):
@@ -187,13 +187,13 @@ class ShadingTrainer:
 
     def visdom_visualize(self, a_tensor, b_tensor, light_angle, a_test, b_test, light_angle_test):
         with torch.no_grad():
-            light_tensor = torch.full_like(a_tensor, light_angle)
-            a_tensor = torch.cat([a_tensor, light_tensor], 1)
-            a2b = self.G_A(a_tensor)
+            light_tensor = torch.unsqueeze(torch.full_like(a_tensor[:, 0, :, :], light_angle), 1)
+            a_input = torch.cat([a_tensor, light_tensor], 1)
+            a2b = self.G_A(a_input)
 
-            test_light_tensor = torch.full_like(a_test, light_angle_test)
-            a_test = torch.cat([a_test, test_light_tensor], 1)
-            test_a2b = self.G_A(a_test)
+            test_light_tensor = torch.unsqueeze(torch.full_like(a_test[:, 0, :, :], light_angle_test), 1)
+            a_test_input = torch.cat([a_test, test_light_tensor], 1)
+            test_a2b = self.G_A(a_test_input)
 
             self.visdom_reporter.plot_image(a_tensor, "Training A images - " + constants.MAPPER_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(a2b, "Training A2B images - " + constants.MAPPER_VERSION + constants.ITERATION)

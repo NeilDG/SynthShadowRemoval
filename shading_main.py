@@ -9,7 +9,7 @@ import torchvision.utils as vutils
 import numpy as np
 import matplotlib.pyplot as plt
 from loaders import dataset_loader
-from trainers import render_maps_trainer
+from trainers import shading_trainer
 from trainers import early_stopper
 import constants
 
@@ -102,6 +102,7 @@ def main(argv):
         map_path = constants.DATASET_PREFIX_4_PATH + str(opts.light_angle) + "deg/" + "shadow_map/"
 
     # Create the dataloader
+    print(rgb_path, map_path)
     train_loader = dataset_loader.load_shading_train_dataset(rgb_path, map_path, opts)
     test_loader = dataset_loader.load_shading_train_dataset(rgb_path, map_path, opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
@@ -115,7 +116,7 @@ def main(argv):
         show_images(a_batch, "Training - A Images")
         show_images(b_batch, "Training - B Images")
 
-    trainer = render_maps_trainer.RenderMapsTrainer(device, opts)
+    trainer = shading_trainer.ShadingTrainer(device, opts)
     trainer.update_penalties(opts.adv_weight, opts.l1_weight, opts.lpip_weight, opts.ssim_weight, opts.bce_weight)
 
     stopper_method = early_stopper.EarlyStopper(opts.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, 2000)
@@ -131,18 +132,16 @@ def main(argv):
 
     if(opts.test_mode == 1):
         print("Plotting test images...")
-        _, a_batch, b_batch, mask_batch = next(iter(train_loader))
+        _, a_batch, b_batch = next(iter(train_loader))
         a_tensor = a_batch.to(device)
         b_tensor = b_batch.to(device)
-        mask_tensor = mask_batch.to(device)
 
-        trainer.train(a_tensor, b_tensor, mask_tensor)
+        trainer.train(a_tensor, b_tensor, opts.light_angle)
 
-        view_batch, test_a_batch, test_b_batch, test_mask_batch = next(iter(test_loader))
+        view_batch, test_a_batch, test_b_batch = next(iter(test_loader))
         test_a_tensor = test_a_batch.to(device)
         test_b_tensor = test_b_batch.to(device)
-        test_mask_tensor = test_mask_batch.to(device)
-        trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
+        trainer.visdom_visualize(a_tensor, b_tensor, opts.light_angle, test_a_tensor, test_b_tensor, opts.light_angle)
 
         _, rw_batch = next(iter(rw_loader))
         rw_tensor = rw_batch.to(device)

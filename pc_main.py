@@ -5,7 +5,7 @@ def main():
     #           "--version_name=\"embedding_v1.00\" --iteration=1")
     #
 
-    os.system("python \"shading_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=1 --patch_size=64 --batch_size=256 --net_config=2 --num_blocks=0 "
+    os.system("python \"shading_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=1 --patch_size=64 --batch_size=256 --net_config=2 --num_blocks=0 "
               "--l1_weight=10.0 --lpip_weight=0.0 --ssim_weight=1.0 --adv_weight=1.0 --use_bce=0 --min_epochs=200 --light_angle=0 "
               "--version_name=\"rgb2shadingv7.01\" --iteration=1 --map_choice=\"shading\"")
 
