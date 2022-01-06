@@ -15,7 +15,7 @@ from utils import plot_utils
 from custom_losses import ssim_loss
 import lpips
 
-class ShadingTrainer:
+class ShadowMapTrainer:
 
     def __init__(self, gpu_device,  opts):
         self.gpu_device = gpu_device
@@ -35,17 +35,17 @@ class ShadingTrainer:
         net_config = opts.net_config
 
         if(net_config == 1):
-            self.G_A = cycle_gan.Generator(input_nc=4, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
+            self.G_A = cycle_gan.Generator(input_nc=7, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
         elif(net_config == 2):
-            self.G_A = unet_gan.UnetGenerator(input_nc=4, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
+            self.G_A = unet_gan.UnetGenerator(input_nc=7, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
-            self.G_A = ffa.FFA(gps=4, blocks=num_blocks).to(self.gpu_device)
+            self.G_A = ffa.FFA(gps=7, blocks=num_blocks).to(self.gpu_device)
         elif (net_config == 4):
-            self.G_A = cycle_gan.Generator(input_nc=4, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
+            self.G_A = cycle_gan.Generator(input_nc=7, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
         elif (net_config == 5):
-            self.G_A = cycle_gan.GeneratorV2(input_nc=4, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=True).to(self.gpu_device)
+            self.G_A = cycle_gan.GeneratorV2(input_nc=7, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=True).to(self.gpu_device)
         else:
-            self.G_A = cycle_gan.GeneratorV2(input_nc=4, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
+            self.G_A = cycle_gan.GeneratorV2(input_nc=7, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
         self.D_A = cycle_gan.Discriminator().to(self.gpu_device)  # use CycleGAN's discriminator
 
@@ -117,9 +117,9 @@ class ShadingTrainer:
         self.bce_weight = bce_weight
 
         # save hyperparameters for bookeeping
-        HYPERPARAMS_PATH = "checkpoint/" + constants.SHADING_VERSION + "_" + constants.ITERATION + ".config"
+        HYPERPARAMS_PATH = "checkpoint/" + constants.SHADOWMAP_VERSION + "_" + constants.ITERATION + ".config"
         with open(HYPERPARAMS_PATH, "w") as f:
-            print("Version: ", constants.SHADING_CHECKPATH, file=f)
+            print("Version: ", constants.SHADOWMAP_CHECKPATH, file=f)
             print("Learning rate for G: ", str(self.g_lr), file=f)
             print("Learning rate for D: ", str(self.d_lr), file=f)
             print("====================================", file=f)
@@ -129,11 +129,14 @@ class ShadingTrainer:
             print("SSIM weight: ", str(self.ssim_weight), file=f)
             print("BCE weight: ", str(self.bce_weight), file=f)
 
-    def train(self, a_tensor, b_tensor):
+    def prepare_input(self, a_tensor, shading_tensor):
+        light_angle_tensor = torch.unsqueeze(torch.full_like(a_tensor[:, 0, :, :], self.light_angle), 1)
+        concat_input = torch.cat([a_tensor, shading_tensor, light_angle_tensor], 1)
+        return concat_input
+    
+    def train(self, a_tensor, b_tensor, shading_tensor):
         with amp.autocast():
-            light_tensor = torch.unsqueeze(torch.full_like(a_tensor[:, 0, :, :], self.light_angle), 1)
-            a_input = torch.cat([a_tensor, light_tensor], 1)
-            a2b = self.G_A(a_input)
+            a2b = self.G_A(self.prepare_input(a_tensor, shading_tensor))
 
             self.D_A.train()
             self.optimizerD.zero_grad()
@@ -155,9 +158,7 @@ class ShadingTrainer:
             self.G_A.train()
             self.optimizerG.zero_grad()
 
-            light_tensor = torch.unsqueeze(torch.full_like(a_tensor[:, 0, :, :], self.light_angle), 1)
-            a_input = torch.cat([a_tensor, light_tensor], 1)
-            a2b = self.G_A(a_input)
+            a2b = self.G_A(self.prepare_input(a_tensor, shading_tensor))
 
             likeness_loss = self.l1_loss(a2b, b_tensor) * self.l1_weight
             lpip_loss = self.lpip_loss(a2b, b_tensor) * self.lpip_weight
@@ -185,42 +186,34 @@ class ShadingTrainer:
             self.losses_dict[constants.D_A_FAKE_LOSS_KEY].append(D_A_fake_loss.item())
             self.losses_dict[constants.D_A_REAL_LOSS_KEY].append(D_A_real_loss.item())
 
-    def test(self, a_tensor):
+    def test(self, a_tensor, shading_tensor):
         with torch.no_grad():
-            light_tensor = torch.unsqueeze(torch.full_like(a_tensor[:, 0, :, :], self.light_angle), 1)
-            a_input = torch.cat([a_tensor, light_tensor], 1)
-            a2b = self.G_A(a_input)
+            a2b = self.G_A(self.prepare_input(a_tensor, shading_tensor))
         return a2b
 
     def visdom_plot(self, iteration):
-        self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict, constants.SHADING_CHECKPATH)
+        self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict, constants.SHADOWMAP_CHECKPATH)
 
-    def visdom_visualize(self, a_tensor, b_tensor, a_test, b_test):
+    def visdom_visualize(self, a_tensor, b_tensor, shading_tensor, a_test, b_test, shading_tensor_test):
         with torch.no_grad():
-            light_tensor = torch.unsqueeze(torch.full_like(a_tensor[:, 0, :, :], self.light_angle), 1)
-            a_input = torch.cat([a_tensor, light_tensor], 1)
-            a2b = self.G_A(a_input)
+            a2b = self.G_A(self.prepare_input(a_tensor, shading_tensor))
+            test_a2b = self.G_A(self.prepare_input(a_test, shading_tensor_test))
 
-            test_light_tensor = torch.unsqueeze(torch.full_like(a_test[:, 0, :, :], self.light_angle), 1)
-            a_test_input = torch.cat([a_test, test_light_tensor], 1)
-            test_a2b = self.G_A(a_test_input)
+            self.visdom_reporter.plot_image(a_tensor, "Training A images - " + constants.SHADOWMAP_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(a2b, "Training A2B images - " + constants.SHADOWMAP_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(b_tensor, "B images - " + constants.SHADOWMAP_VERSION + constants.ITERATION)
 
-            self.visdom_reporter.plot_image(a_tensor, "Training A images - " + constants.SHADING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(a2b, "Training A2B images - " + constants.SHADING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(b_tensor, "B images - " + constants.SHADING_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(a_test, "Test A images - " + constants.SHADOWMAP_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(test_a2b, "Test A2B images - " + constants.SHADOWMAP_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(b_test, "Test B images - " + constants.SHADOWMAP_VERSION + constants.ITERATION)
 
-            self.visdom_reporter.plot_image(a_test, "Test A images - " + constants.SHADING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(test_a2b, "Test A2B images - " + constants.SHADING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(b_test, "Test B images - " + constants.SHADING_VERSION + constants.ITERATION)
-
-    def visdom_infer(self, rw_tensor):
-        with torch.no_grad():
-            rw_light_tensor = torch.unsqueeze(torch.full_like(rw_tensor[:, 0, :, :], self.light_angle), 1)
-            rw_input = torch.cat([rw_tensor, rw_light_tensor], 1)
-            rw2b = self.G_A(rw_input)
-
-            self.visdom_reporter.plot_image(rw_tensor, "Real World images - " + constants.SHADING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(rw2b, "Real World A2B images - " + constants.SHADING_VERSION + constants.ITERATION)
+    #must have a shading generator network first
+    # def visdom_infer(self, rw_tensor, shading_rw):
+    #     with torch.no_grad():
+    #         rw2b = self.G_A(self.prepare_input(rw_tensor, shading_rw))
+    #
+    #         self.visdom_reporter.plot_image(rw_tensor, "Real World images - " + constants.SHADOWMAP_VERSION + constants.ITERATION)
+    #         self.visdom_reporter.plot_image(rw2b, "Real World A2B images - " + constants.SHADOWMAP_VERSION + constants.ITERATION)
 
 
     def load_saved_state(self, checkpoint):
@@ -251,7 +244,7 @@ class ShadingTrainer:
         save_dict[constants.GENERATOR_KEY + "scheduler"] = schedulerG_state_dict
         save_dict[constants.DISCRIMINATOR_KEY + "scheduler"] = schedulerD_state_dict
 
-        torch.save(save_dict, constants.SHADING_CHECKPATH + ".checkpt")
+        torch.save(save_dict, constants.SHADOWMAP_CHECKPATH + ".checkpt")
         print("Saved model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
 
     def save_states(self, epoch, iteration):
@@ -274,5 +267,5 @@ class ShadingTrainer:
         save_dict[constants.GENERATOR_KEY + "scheduler"] = schedulerG_state_dict
         save_dict[constants.DISCRIMINATOR_KEY + "scheduler"] = schedulerD_state_dict
 
-        torch.save(save_dict, constants.SHADING_CHECKPATH)
+        torch.save(save_dict, constants.SHADOWMAP_CHECKPATH)
         print("Saved model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))

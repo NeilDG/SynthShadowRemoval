@@ -519,12 +519,12 @@ def main():
     #                        "E:/SynthWeather Dataset 4/0deg/rgb/", "synth_%d.png", (256, 256), 0)
     create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/Elevation/default_36deg_001.mp4",
                            "E:/SynthWeather Dataset 4/36deg/rgb/", "synth_%d.png", (256, 256), 0)
-    # create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/Elevation/default_72deg_001.mp4",
-    #                        "E:/SynthWeather Dataset 4/72deg/rgb/", "synth_%d.png", (256, 256), 0)
-    # create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/Elevation/default_108deg_001.mp4",
-    #                        "E:/SynthWeather Dataset 4/108deg/rgb/", "synth_%d.png", (256, 256), 0)
-    # create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/Elevation/default_144deg_001.mp4",
-    #                        "E:/SynthWeather Dataset 4/144deg/rgb/", "synth_%d.png", (256, 256), 0)
+    create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/Elevation/default_72deg_001.mp4",
+                           "E:/SynthWeather Dataset 4/72deg/rgb/", "synth_%d.png", (256, 256), 0)
+    create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/Elevation/default_108deg_001.mp4",
+                           "E:/SynthWeather Dataset 4/108deg/rgb/", "synth_%d.png", (256, 256), 0)
+    create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/Elevation/default_144deg_001.mp4",
+                           "E:/SynthWeather Dataset 4/144deg/rgb/", "synth_%d.png", (256, 256), 0)
     # create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/Elevation/default_180deg_001.mp4",
     #                        "E:/SynthWeather Dataset 4/180deg/rgb/", "synth_%d.png", (256, 256), 0)
     #create_hazy_data(0)

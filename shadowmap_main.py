@@ -9,7 +9,7 @@ import torchvision.utils as vutils
 import numpy as np
 import matplotlib.pyplot as plt
 from loaders import dataset_loader
-from trainers import shading_trainer
+from trainers import shadow_map_trainer
 from trainers import early_stopper
 import constants
 
@@ -42,29 +42,27 @@ parser.add_option('--min_epochs', type=int, help= "Min epochs", default=120)
 def update_config(opts):
     constants.server_config = opts.server_config
     constants.ITERATION = str(opts.iteration)
-    constants.SHADING_VERSION = opts.version_name
-    constants.SHADING_CHECKPATH = 'checkpoint/' + constants.SHADING_VERSION + "_" + constants.ITERATION + '.pt'
+    constants.SHADOWMAP_VERSION = opts.version_name
+    constants.SHADOWMAP_CHECKPATH = 'checkpoint/' + constants.SHADOWMAP_VERSION + "_" + constants.ITERATION + '.pt'
 
     #COARE
     if(constants.server_config == 1):
         print("Using COARE configuration ", opts.version_name)
         constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/"
-        constants.DATASET_RGB_DECOMPOSE_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 3/rgb/"
-        constants.DATASET_SHADING_DECOMPOSE_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 3/shading/"
-        constants.DATASET_ALBEDO_DECOMPOSE_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 3/albedo/"
+        constants.DATASET_PREFIX_4_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 4/"
+        constants.DATASET_ALBEDO_4_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 4/albedo/"
 
     #CCS JUPYTER
     elif (constants.server_config == 2):
-        print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", constants.SHADING_CHECKPATH)
+        print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", constants.SHADOWMAP_CHECKPATH)
         constants.DATASET_PLACES_PATH = "Places Dataset/"
 
     #GCLOUD
     elif (constants.server_config == 3):
-        print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.SHADING_CHECKPATH)
+        print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.SHADOWMAP_CHECKPATH)
         constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/"
-        constants.DATASET_RGB_DECOMPOSE_PATH = "/home/neil_delgallego/SynthWeather Dataset 3/rgb/"
-        constants.DATASET_SHADING_DECOMPOSE_PATH = "/home/neil_delgallego/SynthWeather Dataset 3/shading/"
-        constants.DATASET_ALBEDO_DECOMPOSE_PATH = "/home/neil_delgallego/SynthWeather Dataset 3/albedo/"
+        constants.DATASET_PREFIX_4_PATH = "/home/neil_delgallego/SynthWeather Dataset 4/"
+        constants.DATASET_ALBEDO_4_PATH = "/home/neil_delgallego/SynthWeather Dataset 4/albedo/"
 
 def show_images(img_tensor, caption):
     device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
@@ -91,88 +89,86 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    rgb_path = constants.DATASET_PREFIX_4_PATH + str(opts.light_angle) + "deg/" + "rgb/"
-    map_path = constants.DATASET_PREFIX_4_PATH + str(opts.light_angle) + "deg/" + "shading/"
+    albedo_path = constants.DATASET_ALBEDO_4_PATH
+    shading_path =constants.DATASET_PREFIX_4_PATH + str(opts.light_angle) + "deg/" + "shading/"
+    map_path = constants.DATASET_PREFIX_4_PATH + str(opts.light_angle) + "deg/" + "shadow_map/"
 
     # Create the dataloader
-    print(rgb_path, map_path)
-    train_loader = dataset_loader.load_shading_train_dataset(rgb_path, map_path, opts)
-    test_loader = dataset_loader.load_shading_test_dataset(rgb_path, map_path, opts)
-    rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
+    print(albedo_path, map_path)
+    train_loader = dataset_loader.load_shadowmap_train_dataset(albedo_path, map_path, shading_path, opts)
+    test_loader = dataset_loader.load_shadowmap_test_dataset(albedo_path, map_path, shading_path, opts)
     start_epoch = 0
     iteration = 0
 
     # Plot some training images
     if (constants.server_config == 0):
-        _, a_batch, b_batch = next(iter(train_loader))
+        _, a_batch, b_batch, c_batch = next(iter(train_loader))
 
         show_images(a_batch, "Training - A Images")
         show_images(b_batch, "Training - B Images")
+        show_images(c_batch, "Training - C Images")
 
-    trainer = shading_trainer.ShadingTrainer(device, opts)
+    trainer = shadow_map_trainer.ShadowMapTrainer(device, opts)
     trainer.update_penalties(opts.adv_weight, opts.l1_weight, opts.lpip_weight, opts.ssim_weight, opts.bce_weight)
 
     stopper_method = early_stopper.EarlyStopper(opts.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, 2000)
 
     if (opts.load_previous):
-        checkpoint = torch.load(constants.SHADING_CHECKPATH, map_location=device)
+        checkpoint = torch.load(constants.SHADOWMAP_CHECKPATH, map_location=device)
         start_epoch = checkpoint['epoch'] + 1
         iteration = checkpoint['iteration'] + 1
         trainer.load_saved_state(checkpoint)
 
-        print("Loaded checkpt: %s Current epoch: %d" % (constants.SHADING_CHECKPATH, start_epoch))
+        print("Loaded checkpt: %s Current epoch: %d" % (constants.SHADOWMAP_CHECKPATH, start_epoch))
         print("===================================================")
 
     if(opts.test_mode == 1):
         print("Plotting test images...")
-        _, a_batch, b_batch = next(iter(train_loader))
+        _, a_batch, b_batch, c_batch = next(iter(train_loader))
         a_tensor = a_batch.to(device)
         b_tensor = b_batch.to(device)
+        c_tensor = c_batch.to(device)
 
-        trainer.train(a_tensor, b_tensor)
+        trainer.train(a_tensor, b_tensor, c_tensor)
 
-        view_batch, test_a_batch, test_b_batch = next(iter(test_loader))
+        view_batch, test_a_batch, test_b_batch, test_c_batch = next(iter(test_loader))
         test_a_tensor = test_a_batch.to(device)
         test_b_tensor = test_b_batch.to(device)
-        trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
-
-        _, rw_batch = next(iter(rw_loader))
-        rw_tensor = rw_batch.to(device)
-        trainer.visdom_infer(rw_tensor)
+        test_c_tensor = test_c_batch.to(device)
+        trainer.visdom_visualize(a_tensor, b_tensor, c_tensor, test_a_tensor, test_b_tensor, test_c_tensor)
 
     else:
         print("Starting Training Loop...")
         for epoch in range(start_epoch, constants.num_epochs):
             # For each batch in the dataloader
-            for i, (train_data, test_data, rw_data) in enumerate(zip(train_loader, test_loader, itertools.cycle(rw_loader))):
-                _, a_batch, b_batch = train_data
+            for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader)):
+                _, a_batch, b_batch, c_batch = train_data
                 a_tensor = a_batch.to(device)
                 b_tensor = b_batch.to(device)
-                trainer.train(a_tensor, b_tensor)
+                c_tensor = c_batch.to(device)
+
+                trainer.train(a_tensor, b_tensor, c_tensor)
                 iteration = iteration + 1
 
-                stopper_method.test(trainer, epoch, iteration, trainer.test(a_tensor), b_tensor)
+                stopper_method.test(trainer, epoch, iteration, trainer.test(a_tensor, c_tensor), b_tensor)
 
                 if (stopper_method.did_stop_condition_met()):
                     break
 
             trainer.save_states_checkpt(epoch, iteration)
-            view_batch, test_a_batch, test_b_batch = test_data
+            view_batch, test_a_batch, test_b_batch, test_c_batch = test_data
             test_a_tensor = test_a_batch.to(device)
             test_b_tensor = test_b_batch.to(device)
-            trainer.visdom_plot(iteration)
-            trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
-
-            _, rw_batch = rw_data
-            rw_tensor = rw_batch.to(device)
-            trainer.visdom_infer(rw_tensor)
+            test_c_tensor = test_c_batch.to(device)
+            trainer.visdom_visualize(a_tensor, b_tensor, c_tensor, test_a_tensor, test_b_tensor, test_c_tensor)
 
             if (stopper_method.did_stop_condition_met()):
                 #visualize last result
-                view_batch, test_a_batch, test_b_batch, _ = test_data
+                view_batch, test_a_batch, test_b_batch, test_c_batch = next(iter(test_loader))
                 test_a_tensor = test_a_batch.to(device)
                 test_b_tensor = test_b_batch.to(device)
-                trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
+                test_c_tensor = test_c_batch.to(device)
+                trainer.visdom_visualize(a_tensor, b_tensor, c_tensor, test_a_tensor, test_b_tensor, test_c_tensor)
                 break
 
 

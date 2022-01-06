@@ -100,7 +100,7 @@ def load_single_test_dataset(path_a, opts):
         image_dataset.RealWorldDataset(a_list),
         batch_size=2,
         num_workers=1,
-        shuffle=True
+        shuffle=False
     )
 
     return data_loader
@@ -150,9 +150,35 @@ def load_shading_test_dataset(path_a, path_c, opts):
 
     data_loader = torch.utils.data.DataLoader(
         image_dataset.ShadingDataset(a_list, path_c, 2, opts),
+        batch_size=4,
+        num_workers=1,
+        shuffle=False
+    )
+
+    return data_loader
+
+def load_shadowmap_train_dataset(path_a, path_b, path_c, opts):
+    a_list = assemble_unpaired_data(path_a, opts.img_to_load)
+    print("Length of images: %d" % len(a_list))
+
+    data_loader = torch.utils.data.DataLoader(
+        image_dataset.ShadowMapDataset(a_list, path_b, path_c, 1, opts),
         batch_size=opts.batch_size,
         num_workers=opts.num_workers,
         shuffle=True
+    )
+
+    return data_loader
+
+def load_shadowmap_test_dataset(path_a, path_b, path_c, opts):
+    a_list = assemble_unpaired_data(path_a, opts.img_to_load)
+    print("Length of images: %d" % len(a_list))
+
+    data_loader = torch.utils.data.DataLoader(
+        image_dataset.ShadowMapDataset(a_list, path_b, path_c, 2, opts),
+        batch_size=4,
+        num_workers=1,
+        shuffle=False
     )
 
     return data_loader

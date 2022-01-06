@@ -35,18 +35,20 @@ GENERATOR_KEY = "generator"
 DISCRIMINATOR_KEY = "discriminator"
 
 EMBEDDING_VERSION = "embedding_v1.00"
-STYLE_TRANSFER_VERSION = "places2sunnyweather_v1.00"
 FFA_TRANSFER_VERSION = "synthplaces2sunny_v1.01"
 MAPPER_VERSION = "rgb2albedo_v1.00"
 IID_VERSION = "iid_v1.00"
 RELIGHTING_VERSION = "maps2rgb_v1.00"
+SHADING_VERSION = "rgb2shading_v7.00"
+SHADOWMAP_VERSION = "rgb2shadowmap_v1.00"
 
 ITERATION = "1"
-STYLE_TRANSFER_CHECKPATH = 'checkpoint/' + STYLE_TRANSFER_VERSION + "_" + ITERATION + '.pt'
 EMBEDDING_CHECKPATH = 'checkpoint/' + EMBEDDING_VERSION + "_" + ITERATION + '.pt'
 MAPPER_CHECKPATH = 'checkpoint/' + MAPPER_VERSION + "_" + ITERATION + '.pt'
 IID_CHECKPATH = 'checkpoint/' + IID_VERSION + "_" + ITERATION + '.pt'
 RELIGHTING_CHECKPATH = 'checkpoint/' + RELIGHTING_VERSION + "_" + ITERATION + '.pt'
+SHADING_CHECKPATH = 'checkpoint/' + SHADING_VERSION + "_" + ITERATION + '.pt'
+SHADOWMAP_CHECKPATH = 'checkpoint/' + SHADOWMAP_VERSION + "_" + ITERATION + '.pt'
 
 # dictionary keys
 G_LOSS_KEY = "g_loss"
