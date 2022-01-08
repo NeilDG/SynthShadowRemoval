@@ -88,25 +88,30 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
+    albedo_path = constants.DATASET_ALBEDO_4_PATH
     rgb_path = constants.DATASET_PREFIX_4_PATH + str(opts.light_angle) + "deg/" + "rgb/"
     map_path = constants.DATASET_PREFIX_4_PATH + str(opts.light_angle) + "deg/" + "shading/"
 
     # Create the dataloader
     print(rgb_path, map_path)
-    train_loader = dataset_loader.load_shading_train_dataset(rgb_path, map_path, opts)
-    test_loader = dataset_loader.load_shading_test_dataset(rgb_path, map_path, opts)
-    rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
+    train_loader = dataset_loader.load_shadowmap_train_dataset(rgb_path, albedo_path, map_path, opts)
+    test_loader = dataset_loader.load_shadowmap_test_dataset(rgb_path, albedo_path, map_path, opts)
+    # rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
     start_epoch = 0
     iteration = 0
 
     # Plot some training images
     if (constants.server_config == 0):
-        _, a_batch, b_batch = next(iter(train_loader))
+        _, a_batch, b_batch, c_batch = next(iter(train_loader))
+        a_tensor = a_batch.to(device)
+        b_tensor = b_batch.to(device)
+        c_tensor = c_batch.to(device)
 
-        show_images(a_batch, "Training - A Images")
-        show_images(b_batch, "Training - B Images")
+        show_images(a_tensor, "Training - A Images")
+        show_images(b_tensor, "Training - B Images")
+        show_images(c_tensor, "Training - C Images")
 
-    trainer = shading_trainer.ShadingTrainer(device, opts)
+    trainer = shading_trainer.ShadingTrainerAlbedo(device, opts)
     trainer.update_penalties(opts.adv_weight, opts.l1_weight, opts.lpip_weight, opts.ssim_weight, opts.bce_weight)
 
     stopper_method = early_stopper.EarlyStopper(opts.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, 2000)
@@ -121,55 +126,51 @@ def main(argv):
         print("===================================================")
 
     if(opts.test_mode == 1):
-        print("Plotting test images...")
-        _, a_batch, b_batch = next(iter(train_loader))
+        _, a_batch, b_batch, c_batch = next(iter(train_loader))
         a_tensor = a_batch.to(device)
         b_tensor = b_batch.to(device)
+        c_tensor = c_batch.to(device)
 
-        trainer.train(a_tensor, b_tensor)
+        trainer.train(a_tensor, b_tensor, c_tensor)
 
-        view_batch, test_a_batch, test_b_batch = next(iter(test_loader))
+        view_batch, test_a_batch, test_b_batch, test_c_batch = next(iter(test_loader))
         test_a_tensor = test_a_batch.to(device)
         test_b_tensor = test_b_batch.to(device)
-        trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
-
-        _, rw_batch = next(iter(rw_loader))
-        rw_tensor = rw_batch.to(device)
-        trainer.visdom_infer(rw_tensor)
+        test_c_tensor = test_c_batch.to(device)
+        trainer.visdom_visualize(a_tensor, b_tensor, c_tensor, test_a_tensor, test_b_tensor, test_c_tensor)
 
     else:
         print("Starting Training Loop...")
         for epoch in range(start_epoch, constants.num_epochs):
             # For each batch in the dataloader
-            for i, (train_data, test_data, rw_data) in enumerate(zip(train_loader, test_loader, itertools.cycle(rw_loader))):
-                _, a_batch, b_batch = train_data
+            for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader)):
+                _, a_batch, b_batch, c_batch = train_data
                 a_tensor = a_batch.to(device)
                 b_tensor = b_batch.to(device)
-                trainer.train(a_tensor, b_tensor)
+                c_tensor = c_batch.to(device)
+
+                trainer.train(a_tensor, b_tensor, c_tensor)
                 iteration = iteration + 1
 
-                stopper_method.test(trainer, epoch, iteration, trainer.test(a_tensor), b_tensor)
+                stopper_method.test(trainer, epoch, iteration, trainer.test(a_tensor, c_tensor), b_tensor)
 
                 if (stopper_method.did_stop_condition_met()):
                     break
 
             trainer.save_states_checkpt(epoch, iteration)
-            view_batch, test_a_batch, test_b_batch = test_data
+            view_batch, test_a_batch, test_b_batch, test_c_batch = test_data
             test_a_tensor = test_a_batch.to(device)
             test_b_tensor = test_b_batch.to(device)
-            trainer.visdom_plot(iteration)
-            trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
-
-            _, rw_batch = rw_data
-            rw_tensor = rw_batch.to(device)
-            trainer.visdom_infer(rw_tensor)
+            test_c_tensor = test_c_batch.to(device)
+            trainer.visdom_visualize(a_tensor, b_tensor, c_tensor, test_a_tensor, test_b_tensor, test_c_tensor)
 
             if (stopper_method.did_stop_condition_met()):
-                #visualize last result
-                view_batch, test_a_batch, test_b_batch, _ = test_data
+                # visualize last result
+                view_batch, test_a_batch, test_b_batch, test_c_batch = next(iter(test_loader))
                 test_a_tensor = test_a_batch.to(device)
                 test_b_tensor = test_b_batch.to(device)
-                trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
+                test_c_tensor = test_c_batch.to(device)
+                trainer.visdom_visualize(a_tensor, b_tensor, c_tensor, test_a_tensor, test_b_tensor, test_c_tensor)
                 break
 
 

@@ -79,7 +79,7 @@ class VisdomReporter:
         else:
             self.vis.matplot(plt, win = self.loss_windows[hash(caption)], opts = dict(caption = caption))
 
-    def plot_finegrain_loss(self, loss_key, iteration, losses_dict, caption_dict):
+    def plot_finegrain_loss(self, loss_key, iteration, losses_dict, caption_dict, label):
         if (constants.server_config == 2):
             return
         
@@ -107,9 +107,9 @@ class VisdomReporter:
     
         fig.legend(loc = 'lower right')
         if loss_key not in self.loss_windows:
-            self.loss_windows[loss_key] = self.vis.matplot(plt, opts = dict(caption = "Losses" + " " + str(constants.STYLE_TRANSFER_CHECKPATH)))
+            self.loss_windows[loss_key] = self.vis.matplot(plt, opts = dict(caption = "Losses" + " " + str(label)))
         else:
-            self.vis.matplot(plt, win = self.loss_windows[loss_key], opts = dict(caption = "Losses" + " " + str(constants.STYLE_TRANSFER_CHECKPATH)))
+            self.vis.matplot(plt, win = self.loss_windows[loss_key], opts = dict(caption = "Losses" + " " + str(label)))
           
         plt.show()
 

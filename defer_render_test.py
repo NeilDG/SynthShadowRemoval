@@ -235,8 +235,9 @@ def main():
     #test_deferred_render()
     # test_shadow_map("0deg")
     test_shadow_map("36deg")
-    # test_shadow_map("72deg")
-    # test_shadow_map("108deg")
+    test_shadow_map("72deg")
+    test_shadow_map("108deg")
+    test_shadow_map("144deg")
 
 
 if __name__ == "__main__":

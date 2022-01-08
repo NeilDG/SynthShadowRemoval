@@ -38,6 +38,6 @@ srun python iid_main.py \
 --num_blocks=6 --net_config=1 --use_mask=0 \
 --l1_weight=10.0 --lpip_weight=1.0 --ssim_weight=0.0 --bce_weight=0.0 --use_bce=0 --min_epochs=200 \
 --version_name="rgb2shading_v6.00" --map_choice="shading" \
---img_to_load=-1 --load_previous=1
+--img_to_load=-1 --load_previous=0
 
 conda deactivate
