@@ -156,7 +156,7 @@ class Classifier(nn.Module):
         return self.model(x)
 
 class Discriminator(nn.Module):
-    def __init__(self, input_nc = 3):
+    def __init__(self, input_nc = 3, use_bce = 0):
         super(Discriminator, self).__init__()
 
         # A bunch of convolutions one after another
@@ -177,6 +177,8 @@ class Discriminator(nn.Module):
 
         # FCN classification layer
         model += [nn.Conv2d(512, 1, 4, padding=1)]
+        if(use_bce == 1):
+            model += [nn.Sigmoid()]
 
         self.model = nn.Sequential(*model)
         self.model.apply(weights_init)

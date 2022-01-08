@@ -57,10 +57,10 @@ def prepare_shadow_input(a_tensor, shading_tensor, light_angle):
     concat_input = torch.cat([a_tensor, shading_tensor, light_angle_tensor], 1)
     return concat_input
 
-def prepare_shading_input(a_tensor, light_angle):
+def prepare_shading_input(a_tensor, albedo_tensor, light_angle):
     light_angle = normalize(light_angle)
     light_tensor = torch.unsqueeze(torch.full_like(a_tensor[:, 0, :, :], light_angle), 1)
-    concat_input = torch.cat([a_tensor, light_tensor], 1)
+    concat_input = torch.cat([a_tensor, albedo_tensor, light_tensor], 1)
     return concat_input
 
 def produce_rgb(albedo_tensor, shading_tensor, light_color, shadowmap_tensor):
@@ -134,15 +134,15 @@ def main(argv):
     G_albedo.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
 
     if (opts.net_config_s1 == 1):
-        G_shader = cycle_gan.Generator(input_nc=4, output_nc=3, n_residual_blocks=opts.num_blocks_s1).to(device)
+        G_shader = cycle_gan.Generator(input_nc=7, output_nc=3, n_residual_blocks=opts.num_blocks_s1).to(device)
     elif (opts.net_config_s1 == 2):
-        G_shader = unet_gan.UnetGenerator(input_nc=4, output_nc=3, num_downs=opts.num_blocks_s1).to(device)
+        G_shader = unet_gan.UnetGenerator(input_nc=7, output_nc=3, num_downs=opts.num_blocks_s1).to(device)
     elif (opts.net_config_s1 == 3):
-        G_shader = ffa.FFA(gps=4, blocks=opts.num_blocks_s1).to(device)
+        G_shader = ffa.FFA(gps=7, blocks=opts.num_blocks_s1).to(device)
     elif (opts.net_config_s1 == 4):
-        G_shader = cycle_gan.Generator(input_nc=4, output_nc=3, n_residual_blocks=opts.num_blocks_s1, has_dropout=False).to(device)
+        G_shader = cycle_gan.Generator(input_nc=7, output_nc=3, n_residual_blocks=opts.num_blocks_s1, has_dropout=False).to(device)
     else:
-        G_shader = cycle_gan.GeneratorV2(input_nc=4, output_nc=3, n_residual_blocks=opts.num_blocks_s1, has_dropout=False, multiply=True).to(device)
+        G_shader = cycle_gan.GeneratorV2(input_nc=7, output_nc=3, n_residual_blocks=opts.num_blocks_s1, has_dropout=False, multiply=True).to(device)
 
     SHADER_CHECKPATH = 'checkpoint/' + opts.version_shading + "_" + str(opts.iteration_s1) + '.pt'
     checkpoint = torch.load(SHADER_CHECKPATH, map_location=device)
@@ -177,7 +177,7 @@ def main(argv):
     shading_tensor = shading_batch.to(device)
     shadow_tensor = shadow_batch.to(device)
     rgb2albedo = G_albedo(rgb_tensor)
-    rgb2shading = G_shader(prepare_shading_input(rgb_tensor, opts.light_angle))
+    rgb2shading = G_shader(prepare_shading_input(rgb_tensor, rgb2albedo, opts.light_angle))
     input2shadow = G_shadow(prepare_shadow_input(rgb_tensor, rgb2shading, opts.light_angle))
     rgb_like = produce_rgb(rgb2albedo, rgb2shading, opts.light_color, input2shadow)
 
@@ -190,7 +190,7 @@ def main(argv):
     _, rgb_batch = next(iter(rw_loader))
     rgb_tensor = rgb_batch.to(device)
     rgb2albedo = G_albedo(rgb_tensor)
-    rgb2shading = G_shader(prepare_shading_input(rgb_tensor, opts.light_angle))
+    rgb2shading = G_shader(prepare_shading_input(rgb_tensor, rgb2albedo, opts.light_angle))
     input2shadow = G_shadow(prepare_shadow_input(rgb_tensor, rgb2shading, opts.light_angle))
     rgb_like = produce_rgb(rgb2albedo, rgb2shading, opts.light_color, input2shadow)
 
