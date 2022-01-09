@@ -95,8 +95,8 @@ def main(argv):
 
     # Create the dataloader
     print(rgb_path, albedo_path)
-    train_loader = dataset_loader.load_map_train_dataset(constants.DATASET_RGB_DECOMPOSE_PATH, albedo_path, opts)
-    test_loader = dataset_loader.load_map_test_dataset(constants.DATASET_RGB_DECOMPOSE_PATH, albedo_path, opts)
+    train_loader = dataset_loader.load_map_train_dataset(rgb_path, albedo_path, opts)
+    test_loader = dataset_loader.load_map_test_dataset(rgb_path, albedo_path, opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
     start_epoch = 0
     iteration = 0
