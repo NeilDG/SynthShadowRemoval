@@ -39,10 +39,8 @@ class ShadingTrainer:
         elif(net_config == 2):
             self.G_A = unet_gan.UnetGenerator(input_nc=4, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
-            self.G_A = ffa.FFA(gps=4, blocks=num_blocks).to(self.gpu_device)
-        elif (net_config == 4):
             self.G_A = cycle_gan.Generator(input_nc=4, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
-        elif (net_config == 5):
+        elif (net_config == 4):
             self.G_A = cycle_gan.GeneratorV2(input_nc=4, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=True).to(self.gpu_device)
         else:
             self.G_A = cycle_gan.GeneratorV2(input_nc=4, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
@@ -301,10 +299,8 @@ class ShadingTrainerAlbedo:
         elif(net_config == 2):
             self.G_A = unet_gan.UnetGenerator(input_nc=7, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
-            self.G_A = ffa.FFA(gps=7, blocks=num_blocks).to(self.gpu_device)
-        elif (net_config == 4):
             self.G_A = cycle_gan.Generator(input_nc=7, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
-        elif (net_config == 5):
+        elif (net_config == 4):
             self.G_A = cycle_gan.GeneratorV2(input_nc=7, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=True).to(self.gpu_device)
         else:
             self.G_A = cycle_gan.GeneratorV2(input_nc=7, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)

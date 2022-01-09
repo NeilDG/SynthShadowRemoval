@@ -36,15 +36,15 @@ class VisdomReporter:
         self.image_windows = {}
         self.loss_windows = {}
     
-    def plot_image(self, img_tensor, caption):
+    def plot_image(self, img_tensor, caption, normalize = True):
         if(constants.server_config == 2):
             return
 
-        img_group = vutils.make_grid(img_tensor[:16], nrow = 8, padding=2, normalize=True).cpu()
+        img_group = vutils.make_grid(img_tensor[:16], nrow = 8, padding=2, normalize=normalize).cpu()
         if hash(caption) not in self.image_windows:
-            self.image_windows[hash(caption)] = self.vis.images(img_group, opts = dict(caption = caption + " " + str(constants.ITERATION)))
+            self.image_windows[hash(caption)] = self.vis.images(img_group, opts = dict(caption = caption))
         else:
-            self.vis.images(img_group, win = self.image_windows[hash(caption)], opts = dict(caption = caption + " " + str(constants.ITERATION)))
+            self.vis.images(img_group, win = self.image_windows[hash(caption)], opts = dict(caption = caption))
 
     def plot_grad_flow(self, named_parameters, caption):
         '''Plots the gradients flowing through different layers in the net during training.

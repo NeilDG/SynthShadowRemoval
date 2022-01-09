@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 from utils import tensor_utils
+from skimage.metrics import structural_similarity as ssim
 
 def test_lighting():
     RGB_PATH = "E:/SynthWeather Dataset 2/default/"
@@ -150,8 +151,8 @@ def test_deferred_render():
         # cv2.imwrite("E:/SynthWeather Dataset 3/shadow_map/" + file_name, cv2.convertScaleAbs(shadow_map, alpha=255.0))
         # cv2.imwrite("E:/SynthWeather Dataset 3/albedo/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(albedo_img, alpha=255.0), cv2.COLOR_BGR2RGB))
 
-def test_shadow_map(degree_prefix):
-    RGB_PATH = "E:/SynthWeather Dataset 4/" + degree_prefix + "/rgb/"
+def test_shadow_map(type_prefix, degree_prefix):
+    RGB_PATH = "E:/SynthWeather Dataset 4/" + type_prefix + "/" + degree_prefix + "/rgb/"
     # print("RGB path: ", RGB_PATH)
     RGB_NOSHADOWS_PATH = "E:/SynthWeather Dataset 4/no_shadows/"
     ALBEDO_PATH = "E:/SynthWeather Dataset 4/albedo/"
@@ -225,19 +226,43 @@ def test_shadow_map(degree_prefix):
         # plt.show()
         # break
 
-        cv2.imwrite("E:/SynthWeather Dataset 4/" + degree_prefix + "/rgb/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(rgb_closed_form, alpha=255.0), cv2.COLOR_BGR2RGB))
-        cv2.imwrite("E:/SynthWeather Dataset 4/" + degree_prefix + "/shading/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(shading_component, alpha=255.0), cv2.COLOR_BGR2RGB))
-        cv2.imwrite("E:/SynthWeather Dataset 4/" + degree_prefix + "/shadow_map/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(shadow_map, alpha=255.0), cv2.COLOR_BGR2RGB))
-        cv2.imwrite("E:/SynthWeather Dataset 4/" + degree_prefix + "/albedo/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(albedo_img, alpha=255.0), cv2.COLOR_BGR2RGB))
+        cv2.imwrite("E:/SynthWeather Dataset 4/" + type_prefix + "/" + degree_prefix + "/rgb/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(rgb_closed_form, alpha=255.0), cv2.COLOR_BGR2RGB))
+        # cv2.imwrite("E:/SynthWeather Dataset 4/" + type_prefix + "/" + degree_prefix + "/shading/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(shading_component, alpha=255.0), cv2.COLOR_BGR2RGB))
+        cv2.imwrite("E:/SynthWeather Dataset 4/" + type_prefix + "/" + degree_prefix + "/shadow_map/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(shadow_map, alpha=255.0), cv2.COLOR_BGR2RGB))
+        # cv2.imwrite("E:/SynthWeather Dataset 4/" + degree_prefix + "/albedo/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(albedo_img, alpha=255.0), cv2.COLOR_BGR2RGB))
+
+def measure_shading_diff(path_a, path_b):
+    a_list = dataset_loader.assemble_unpaired_data(path_a, -1)
+    b_list = dataset_loader.assemble_unpaired_data(path_b, -1)
+
+    ssim_measure = 0.0
+    for i, (a_path, b_path) in enumerate(zip(a_list, b_list)):
+        a_img = cv2.imread(a_path)
+        b_img = cv2.imread(b_path)
+
+        a_img = cv2.cvtColor(a_img, cv2.COLOR_BGR2RGB)
+        b_img = cv2.cvtColor(b_img, cv2.COLOR_BGR2RGB)
+
+        a_img = cv2.normalize(a_img, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+        b_img = cv2.normalize(b_img, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+
+        ssim_measure = ssim_measure + ssim(a_img, b_img, multichannel=True)
+
+    ssim_measure = ssim_measure / len(a_list)
+    print("Average SSIM between %s %s: %f" %(a_path, b_path, ssim_measure))
+
+
 
 def main():
     #test_lighting()
     #test_deferred_render()
-    # test_shadow_map("0deg")
-    test_shadow_map("36deg")
-    test_shadow_map("72deg")
-    test_shadow_map("108deg")
-    test_shadow_map("144deg")
+    test_shadow_map("azimuth", "0deg")
+    test_shadow_map("azimuth", "36deg")
+    test_shadow_map("azimuth", "72deg")
+    test_shadow_map("azimuth", "108deg")
+    test_shadow_map("azimuth", "144deg")
+
+    # measure_shading_diff("E:/SynthWeather Dataset 4/azimuth/0deg/shading/", "E:/SynthWeather Dataset 4/azimuth/144deg/shading/")
 
 
 if __name__ == "__main__":

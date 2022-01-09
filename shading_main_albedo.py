@@ -34,6 +34,7 @@ parser.add_option('--patch_size', type=int, help="patch_size", default="64")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--version_name', type=str, help="version_name")
 parser.add_option('--light_angle', type=int, help="Light angle", default = "0")
+parser.add_option('--mode', type=str, default = "elevation")
 parser.add_option('--test_mode', type=int, help= "Test mode?", default=0)
 parser.add_option('--min_epochs', type=int, help= "Min epochs", default=120)
 
@@ -89,8 +90,8 @@ def main(argv):
     print("Device: %s" % device)
 
     albedo_path = constants.DATASET_ALBEDO_4_PATH
-    rgb_path = constants.DATASET_PREFIX_4_PATH + str(opts.light_angle) + "deg/" + "rgb/"
-    map_path = constants.DATASET_PREFIX_4_PATH + str(opts.light_angle) + "deg/" + "shading/"
+    rgb_path = constants.DATASET_PREFIX_4_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "rgb/"
+    map_path = constants.DATASET_PREFIX_4_PATH + "shading/"
 
     # Create the dataloader
     print(rgb_path, map_path)
