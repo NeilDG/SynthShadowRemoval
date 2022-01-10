@@ -184,18 +184,20 @@ class RenderMapsTrainer:
         return a2b
 
     def visdom_plot(self, iteration):
-        self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict)
+        self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict, constants.MAPPER_CHECKPATH)
 
     def visdom_visualize(self, a_tensor, b_tensor, a_test, b_test):
         with torch.no_grad():
             a2b = self.G_A(a_tensor)
             test_a2b = self.G_A(a_test)
+            a_tensor = (a_tensor * 0.5) + 0.5
+            a_test = (a_test * 0.5) + 0.5
 
-            self.visdom_reporter.plot_image(a_tensor, "Training A images - " + constants.MAPPER_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(a_tensor, "Training A images - " + constants.MAPPER_VERSION + constants.ITERATION, False)
             self.visdom_reporter.plot_image(a2b, "Training A2B images - " + constants.MAPPER_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(b_tensor, "B images - " + constants.MAPPER_VERSION + constants.ITERATION)
 
-            self.visdom_reporter.plot_image(a_test, "Test A images - " + constants.MAPPER_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(a_test, "Test A images - " + constants.MAPPER_VERSION + constants.ITERATION, False)
             self.visdom_reporter.plot_image(test_a2b, "Test A2B images - " + constants.MAPPER_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(b_test, "Test B images - " + constants.MAPPER_VERSION + constants.ITERATION)
 

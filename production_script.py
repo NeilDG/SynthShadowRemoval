@@ -23,21 +23,25 @@ def main():
     #           "--l1_weight=10.0 --lpip_weight=1.0 --ssim_weight=0.0 --adv_weight=1.0 --use_bce=0 --mode=azimuth --min_epochs=400 --light_angle=144 "
     #           "--version_name=\"rgb2shadowmap_v7.09\" --iteration=1")
 
-    os.system("python \"albedo_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=1 --patch_size=64 --batch_size=256 --net_config=1 --num_blocks=6 "
-              "--l1_weight=10.0 --lpip_weight=1.0 --ssim_weight=0.0 --adv_weight=1.0 --use_bce=0 --use_mask=0 --mode=elevation --min_epochs=100 --light_angle=0 "
-              "--version_name=\"rgb2albedo_v7.09\" --iteration=1")
+    os.system("python \"shading_main_albedo.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=64 --net_config=3 --num_blocks=3 "
+              "--l1_weight=10.0 --lpip_weight=1.0 --ssim_weight=0.0 --adv_weight=1.0 --use_bce=0 --mode=elevation --min_epochs=100 --light_angle=0 "
+              "--version_name=\"rgb2shading_v7.11\" --iteration=1")
 
-    os.system("python \"albedo_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=1 --patch_size=64 --batch_size=256 --net_config=1 --num_blocks=6 "
-              "--l1_weight=10.0 --lpip_weight=1.0 --ssim_weight=0.0 --adv_weight=1.0 --use_bce=0 --use_mask=0 --mode=elevation --min_epochs=200 --light_angle=36 "
-              "--version_name=\"rgb2albedo_v7.09\" --iteration=1")
+    os.system("python \"shading_main_albedo.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=64 --net_config=3 --num_blocks=3 "
+              "--l1_weight=10.0 --lpip_weight=1.0 --ssim_weight=0.0 --adv_weight=1.0 --use_bce=0 --mode=elevation --min_epochs=200 --light_angle=36 "
+              "--version_name=\"rgb2shading_v7.11\" --iteration=1")
 
-    os.system("python \"albedo_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=1 --patch_size=64 --batch_size=256 --net_config=1 --num_blocks=6 "
-              "--l1_weight=10.0 --lpip_weight=1.0 --ssim_weight=0.0 --adv_weight=1.0 --use_bce=0 --use_mask=0 --mode=elevation --min_epochs=300 --light_angle=72 "
-              "--version_name=\"rgb2albedo_v7.09\" --iteration=1")
+    os.system("python \"shading_main_albedo.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=64 --net_config=3 --num_blocks=3 "
+              "--l1_weight=10.0 --lpip_weight=1.0 --ssim_weight=0.0 --adv_weight=1.0 --use_bce=0 --mode=elevation --min_epochs=300 --light_angle=72 "
+              "--version_name=\"rgb2shading_v7.11\" --iteration=1")
 
-    os.system("python \"albedo_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=1 --patch_size=64 --batch_size=256 --net_config=1 --num_blocks=6 "
-              "--l1_weight=10.0 --lpip_weight=1.0 --ssim_weight=0.0 --adv_weight=1.0 --use_bce=0 --use_mask=0 --mode=elevation --min_epochs=400 --light_angle=144 "
-              "--version_name=\"rgb2albedo_v7.09\" --iteration=1")
+    os.system("python \"shading_main_albedo.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=64 --net_config=3 --num_blocks=3 "
+              "--l1_weight=10.0 --lpip_weight=1.0 --ssim_weight=0.0 --adv_weight=1.0 --use_bce=0 --mode=elevation --min_epochs=300 --light_angle=108 "
+              "--version_name=\"rgb2shading_v7.11\" --iteration=1")
+
+    os.system("python \"shading_main_albedo.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=64 --net_config=3 --num_blocks=3 "
+              "--l1_weight=10.0 --lpip_weight=1.0 --ssim_weight=0.0 --adv_weight=1.0 --use_bce=0 --mode=elevation --min_epochs=400 --light_angle=144 "
+              "--version_name=\"rgb2shading_v7.11\" --iteration=1")
 
     # os.system("python \"iid_render_main_2.py\" --num_workers=12 --img_to_load=-1 --patch_size=64 "
     #           "--net_config_a=2 --num_blocks_a=0 --net_config_s1=2 --num_blocks_s1=0 --net_config_s2=2 --num_blocks_s2=0 "

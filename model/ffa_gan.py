@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torch
 import numpy as np
+from model import vanilla_cycle_gan as cycle_gan
 
 def default_conv(in_channels, out_channels, kernel_size, bias=True):
     return nn.Conv2d(in_channels, out_channels, kernel_size, padding=(kernel_size // 2), bias=bias)
@@ -69,6 +70,16 @@ class Group(nn.Module):
         res += x
         return res
 
+
+class FFAWithBackbone(nn.Module):
+    def __init__(self, input_nc, blocks):
+        super(FFAWithBackbone, self).__init__()
+        self.backbone = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=4)
+        self.ffa_proper = FFA(3, blocks)
+
+    def forward(self, x1):
+        ffa_input = self.backbone(x1)
+        return self.ffa_proper(ffa_input)
 
 class FFA(nn.Module):
     def __init__(self, gps, blocks, conv=default_conv):

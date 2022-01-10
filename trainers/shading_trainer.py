@@ -298,9 +298,11 @@ class ShadingTrainerAlbedo:
             self.G_A = cycle_gan.Generator(input_nc=7, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
         elif(net_config == 2):
             self.G_A = unet_gan.UnetGenerator(input_nc=7, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
-        elif (net_config == 3):
-            self.G_A = cycle_gan.Generator(input_nc=7, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
+        elif(net_config == 3):
+            self.G_A = ffa.FFAWithBackbone(input_nc=7, blocks = num_blocks).to(self.gpu_device)
         elif (net_config == 4):
+            self.G_A = cycle_gan.Generator(input_nc=7, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
+        elif (net_config == 5):
             self.G_A = cycle_gan.GeneratorV2(input_nc=7, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=True).to(self.gpu_device)
         else:
             self.G_A = cycle_gan.GeneratorV2(input_nc=7, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
@@ -463,12 +465,15 @@ class ShadingTrainerAlbedo:
             a_test_input = torch.cat([input_test, albedo_test, test_light_tensor], 1)
             test_a2b = self.G_A(a_test_input)
 
-            self.visdom_reporter.plot_image(input_tensor, "Training A images - " + constants.SHADING_VERSION + constants.ITERATION)
+            input_tensor = (input_tensor * 0.5) + 0.5
+            input_test = (input_test * 0.5) + 0.5
+
+            self.visdom_reporter.plot_image(input_tensor, "Training A images - " + constants.SHADING_VERSION + constants.ITERATION, False)
             self.visdom_reporter.plot_image(albedo_tensor, "Training Albedo images - " + constants.SHADING_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(a2b, "Training A2B images - " + constants.SHADING_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(result_tensor, "B images - " + constants.SHADING_VERSION + constants.ITERATION)
 
-            self.visdom_reporter.plot_image(input_test, "Test A images - " + constants.SHADING_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(input_test, "Test A images - " + constants.SHADING_VERSION + constants.ITERATION, False)
             self.visdom_reporter.plot_image(albedo_test, "Test Albedo images - " + constants.SHADING_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(test_a2b, "Test A2B images - " + constants.SHADING_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(result_test, "Test B images - " + constants.SHADING_VERSION + constants.ITERATION)

@@ -55,12 +55,12 @@ def update_config(opts):
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
-        print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", constants.SHADOWMAP_CHECKPATH)
+        print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", constants.MAPPER_CHECKPATH)
         constants.DATASET_PLACES_PATH = "Places Dataset/"
 
     # GCLOUD
     elif (constants.server_config == 3):
-        print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.SHADOWMAP_CHECKPATH)
+        print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.MAPPER_CHECKPATH)
         constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/"
         constants.DATASET_PREFIX_4_PATH = "/home/neil_delgallego/SynthWeather Dataset 4/"
         constants.DATASET_ALBEDO_4_PATH = "/home/neil_delgallego/SynthWeather Dataset 4/albedo/"
