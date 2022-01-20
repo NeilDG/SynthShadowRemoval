@@ -441,24 +441,24 @@ class ShadingDataset(data.Dataset):
         return len(self.image_list_a)
 
 class ShadowMapDataset(data.Dataset):
-    def __init__(self, image_list_a, path_b, path_c, transform_config, opts):
+    def __init__(self, image_list_a, path_b, path_c, transform_config, return_shading: bool, opts):
         self.image_list_a = image_list_a
         self.path_b = path_b
         self.path_c = path_c
         self.transform_config = transform_config
+        self.return_shading = return_shading
         self.patch_size = (opts.patch_size, opts.patch_size)
 
         self.initial_op = transforms.Compose([
             transforms.ToPILImage(),
             transforms.Resize((256, 256))])
 
+        self.normalize_op = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        self.normalize_op_grey = transforms.Normalize((0.5), (0.5))
+
         if (transform_config == 1):
             self.final_transform_op = transforms.Compose([
-                # transforms.RandomCrop(constants.PATCH_IMAGE_SIZE),
-                # transforms.RandomVerticalFlip(),
-                # transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
-                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                transforms.ToTensor()
             ])
 
             self.mask_op = transforms.Compose([
@@ -468,8 +468,7 @@ class ShadowMapDataset(data.Dataset):
         else:
             self.final_transform_op = transforms.Compose([
                 transforms.Resize(constants.TEST_IMAGE_SIZE),
-                transforms.ToTensor(),
-                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                transforms.ToTensor()
             ])
 
             self.mask_op = transforms.Compose([
@@ -487,7 +486,7 @@ class ShadowMapDataset(data.Dataset):
 
         img_id = self.path_b + "/" + file_name
         img_b = cv2.imread(img_id);
-        img_b = cv2.cvtColor(img_b, cv2.COLOR_BGR2RGB)
+        img_b = cv2.cvtColor(img_b, cv2.COLOR_BGR2GRAY)
 
         img_id = self.path_c + "/" + file_name
         img_c = cv2.imread(img_id);
@@ -509,7 +508,14 @@ class ShadowMapDataset(data.Dataset):
         img_b = self.final_transform_op(img_b)
         img_c = self.final_transform_op(img_c)
 
-        return file_name, img_a, img_b, img_c
+        img_a = self.normalize_op(img_a)
+        img_b = self.normalize_op_grey(img_b)
+        img_c = self.normalize_op(img_c)
+
+        if(self.return_shading):
+            return file_name, img_a, img_b, img_c
+        else:
+            return file_name, img_a, img_b
 
     def __len__(self):
         return len(self.image_list_a)

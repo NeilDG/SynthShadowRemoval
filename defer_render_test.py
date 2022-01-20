@@ -1,9 +1,16 @@
+import sys
+
 from loaders import dataset_loader
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 from utils import tensor_utils
 from skimage.metrics import structural_similarity as ssim
+from optparse import OptionParser
+
+parser = OptionParser()
+parser.add_option('--shading_multiplier', type=float, default=1.0)
+parser.add_option('--shadow_multiplier', type=float, default=1.0)
 
 def test_lighting():
     RGB_PATH = "E:/SynthWeather Dataset 2/default/"
@@ -151,11 +158,21 @@ def test_deferred_render():
         # cv2.imwrite("E:/SynthWeather Dataset 3/shadow_map/" + file_name, cv2.convertScaleAbs(shadow_map, alpha=255.0))
         # cv2.imwrite("E:/SynthWeather Dataset 3/albedo/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(albedo_img, alpha=255.0), cv2.COLOR_BGR2RGB))
 
-def test_shadow_map(type_prefix, degree_prefix):
-    RGB_PATH = "E:/SynthWeather Dataset 4/" + type_prefix + "/" + degree_prefix + "/rgb/"
+def load_img(path):
+    img = cv2.imread(path)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = cv2.normalize(img, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+
+    return img
+
+def compute_and_produce_rgb(type_prefix, degree_prefix, argv):
+    (opts, args) = parser.parse_args(argv)
+    print(opts)
+
+    RGB_PATH = "E:/SynthWeather Dataset 5 - RAW/" + type_prefix + "/" + degree_prefix + "/rgb/"
     # print("RGB path: ", RGB_PATH)
-    RGB_NOSHADOWS_PATH = "E:/SynthWeather Dataset 4/no_shadows/"
-    ALBEDO_PATH = "E:/SynthWeather Dataset 4/albedo/"
+    RGB_NOSHADOWS_PATH = "E:/SynthWeather Dataset 5/no_shadows/"
+    ALBEDO_PATH = "E:/SynthWeather Dataset 5/albedo/"
 
     rgb_list = dataset_loader.assemble_unpaired_data(RGB_PATH, -1)
     noshadows_list = dataset_loader.assemble_unpaired_data(RGB_NOSHADOWS_PATH, -1)
@@ -179,39 +196,49 @@ def test_shadow_map(type_prefix, degree_prefix):
         noshadows_img = cv2.normalize(noshadows_img, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
         albedo_img = cv2.normalize(albedo_img, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
 
-        img_mask = cv2.inRange(albedo_img[:, :, 0], 0.0, 0.1)  # mask for getting zero pixels to be excluded
-        img_mask = np.asarray([img_mask, img_mask, img_mask])
-        img_mask = np.moveaxis(img_mask, 0, 2)
-
-        img_ones = np.full_like(img_mask, 1.0)
-
-        #extract shading component
-        albedo_img = np.clip(albedo_img + (img_ones * img_mask), 0.01, 1.0)
-        light_color = np.asarray([225, 247, 250]) / 255.0 #values are extracted from Unity Engine
+        # img_mask = cv2.inRange(albedo_img[:, :, 0], 0.0, 0.1)  # mask for getting zero pixels to be excluded
+        # img_mask = np.asarray([img_mask, img_mask, img_mask])
+        # img_mask = np.moveaxis(img_mask, 0, 2)
+        #
+        # img_ones = np.full_like(img_mask, 1.0)
+        #
+        # #extract shading component
+        # albedo_img = np.clip(albedo_img + (img_ones * img_mask), 0.01, 1.0)
+        albedo_img = np.clip(albedo_img, 0.00001, 1.0)
+        light_color = np.asarray([255, 255, 255]) / 255.0 #values are extracted from Unity Engine
+        # light_color = light_color * 1.5
 
         #extract shadows
-        noshadows_img = np.clip(noshadows_img, 0.1, 1.0)
-        shadow_map = np.clip(rgb_img / noshadows_img, 0.1, 1.0)
+        noshadows_img = np.clip(noshadows_img, 0.00001, 1.0)
+        shadow_map = np.clip(rgb_img  / noshadows_img, 0.00001, 1.0)
 
-        rgb_img_like = np.full_like(albedo_img, 0.0)
+        # compress shadow map since varying information across all channels are very minute
+        shadow_map = (shadow_map[:, :, 0] + shadow_map[:, :, 1] + shadow_map[:, :, 2]) / 3.0
+        shadow_map = shadow_map * opts.shadow_multiplier
+        shadow_map = np.clip(shadow_map, 0.00001, 1.0)
+
         shading_component = np.full_like(albedo_img, 0.0)
         shading_component[:, :, 0] = noshadows_img[:, :, 0] / (albedo_img[:, :, 0] * light_color[0])
         shading_component[:, :, 1] = noshadows_img[:, :, 1] / (albedo_img[:, :, 1] * light_color[1])
         shading_component[:, :, 2] = noshadows_img[:, :, 2] / (albedo_img[:, :, 2] * light_color[2])
+        shading_component = shading_component * opts.shading_multiplier
+        shading_component = np.clip(shading_component, 0.00001, 1.0)
 
-        # light_color = np.asarray([np.random.randn(), np.random.randn(), np.random.randn()])
-        rgb_img_like[:, :, 0] = np.clip((albedo_img[:, :, 0] * shading_component[:, :, 0] * light_color[0]), 0.0, 1.0)
-        rgb_img_like[:, :, 1] = np.clip((albedo_img[:, :, 1] * shading_component[:, :, 1] * light_color[1]), 0.0, 1.0)
-        rgb_img_like[:, :, 2] = np.clip((albedo_img[:, :, 2] * shading_component[:, :, 2] * light_color[2]), 0.0, 1.0)
-        diff = noshadows_img - rgb_img_like
-        print("Difference: ", np.mean(diff))
+        # light_color = np.asarray([np.random.randn(), np.random.randn(), np.random.randn()])\
+        rgb_img_like = np.full_like(albedo_img, 0.0)
+        rgb_img_like[:, :, 0] = np.clip((albedo_img[:, :, 0] * shading_component[:, :, 0] * light_color[0]) * shadow_map, 0.0, 1.0)
+        rgb_img_like[:, :, 1] = np.clip((albedo_img[:, :, 1] * shading_component[:, :, 1] * light_color[1]) * shadow_map, 0.0, 1.0)
+        rgb_img_like[:, :, 2] = np.clip((albedo_img[:, :, 2] * shading_component[:, :, 2] * light_color[2]) * shadow_map, 0.0, 1.0)
+        # rgb_img_like[:, :, 0] = np.clip((albedo_img[:, :, 0] * shading_component[:, :, 0] * light_color[0]), 0.0, 1.0)
+        # rgb_img_like[:, :, 1] = np.clip((albedo_img[:, :, 1] * shading_component[:, :, 1] * light_color[1]), 0.0, 1.0)
+        # rgb_img_like[:, :, 2] = np.clip((albedo_img[:, :, 2] * shading_component[:, :, 2] * light_color[2]), 0.0, 1.0)
+        diff = rgb_img - rgb_img_like
+        # print("Difference: ", np.mean(diff))
 
         # rgb_closed_form = np.asarray([rgb_img_like[:, :, 0] * shadow_map,
         #                               rgb_img_like[:, :, 1] * shadow_map,
         #                               rgb_img_like[:, :, 2] * shadow_map])
         # rgb_closed_form = np.moveaxis(rgb_closed_form, 0, 2)
-        rgb_closed_form = np.clip(rgb_img_like * shadow_map, 0.1, 1.0)
-        shading_component = np.clip(shading_component, 0.1, 1.0)
 
         # plt.imshow(rgb_img)
         # plt.show()
@@ -226,10 +253,41 @@ def test_shadow_map(type_prefix, degree_prefix):
         # plt.show()
         # break
 
-        cv2.imwrite("E:/SynthWeather Dataset 4/" + type_prefix + "/" + degree_prefix + "/rgb/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(rgb_closed_form, alpha=255.0), cv2.COLOR_BGR2RGB))
-        # cv2.imwrite("E:/SynthWeather Dataset 4/" + type_prefix + "/" + degree_prefix + "/shading/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(shading_component, alpha=255.0), cv2.COLOR_BGR2RGB))
-        cv2.imwrite("E:/SynthWeather Dataset 4/" + type_prefix + "/" + degree_prefix + "/shadow_map/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(shadow_map, alpha=255.0), cv2.COLOR_BGR2RGB))
-        # cv2.imwrite("E:/SynthWeather Dataset 4/" + degree_prefix + "/albedo/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(albedo_img, alpha=255.0), cv2.COLOR_BGR2RGB))
+        cv2.imwrite("E:/SynthWeather Dataset 5/" + type_prefix + "/" + degree_prefix + "/rgb/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(rgb_img_like, alpha=255.0), cv2.COLOR_BGR2RGB))
+        # cv2.imwrite("E:/SynthWeather Dataset 5/" + type_prefix + "/" + degree_prefix + "/shading/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(shading_component, alpha=255.0), cv2.COLOR_BGR2RGB))
+        # cv2.imwrite("E:/SynthWeather Dataset 5/shading/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(shading_component, alpha=255.0), cv2.COLOR_BGR2RGB))
+        # cv2.imwrite("E:/SynthWeather Dataset 5/" + type_prefix + "/" + degree_prefix + "/shadow_map/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(shadow_map, alpha=255.0), cv2.COLOR_BGR2RGB))
+        cv2.imwrite("E:/SynthWeather Dataset 5/" + type_prefix + "/" + degree_prefix + "/shadow_map/" + file_name, cv2.convertScaleAbs(shadow_map, alpha=255.0))
+        # # cv2.imwrite("E:/SynthWeather Dataset 5/" + degree_prefix + "/albedo/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(albedo_img, alpha=255.0), cv2.COLOR_BGR2RGB))
+
+def produce_rgbs(type_prefix, degree_prefix):
+    SHADOWS_PATH = "E:/SynthWeather Dataset 4/" + type_prefix + "/" + degree_prefix + "/shadow_map/"
+    ALBEDO_PATH = "E:/SynthWeather Dataset 4/albedo/"
+    SHADING_PATH = "E:/SynthWeather Dataset 4/shading/"
+    light_color = np.asarray([225, 247, 250]) / 255.0 #values are extracted from Unity Engine
+
+    shadow_list = dataset_loader.assemble_unpaired_data(SHADOWS_PATH, -1)
+    albedo_list = dataset_loader.assemble_unpaired_data(ALBEDO_PATH, -1)
+    shading_list = dataset_loader.assemble_unpaired_data(SHADING_PATH, -1)
+
+    shadows_diff_mean = 0.0
+    for i, (albedo_path, shading_path, shadow_path) \
+            in enumerate(zip(albedo_list, shading_list, shadow_list)):
+        path_segment = albedo_path.split("/")
+        file_name = path_segment[len(path_segment) - 1]
+
+        albedo_img = load_img(albedo_path)
+        shading_img = load_img(shading_path)
+        shadow_img = load_img(shadow_path)
+
+        rgb_img = np.full_like(albedo_img, 0)
+        rgb_img[:, :, 0] = np.clip(albedo_img[:, :, 0] * shading_img[:, :, 0] * light_color[0] * shadow_img[:, :, 0], 0.0, 1.0)
+        rgb_img[:, :, 1] = np.clip(albedo_img[:, :, 1] * shading_img[:, :, 1] * light_color[1] * shadow_img[:, :, 1], 0.0, 1.0)
+        rgb_img[:, :, 2] = np.clip(albedo_img[:, :, 2] * shading_img[:, :, 2] * light_color[2] * shadow_img[:, :, 2], 0.0, 1.0)
+        rgb_img = np.clip(rgb_img, 0.0, 1.0)
+
+        cv2.imwrite("E:/SynthWeather Dataset 4/" + type_prefix + "/" + degree_prefix + "/rgb_new/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(rgb_img, alpha=255.0), cv2.COLOR_BGR2RGB))
+        print("Saved: " + "E:/SynthWeather Dataset 4/" + type_prefix + "/" + degree_prefix + "/rgb_new/" + file_name)
 
 def measure_shading_diff(path_a, path_b):
     a_list = dataset_loader.assemble_unpaired_data(path_a, -1)
@@ -256,11 +314,17 @@ def measure_shading_diff(path_a, path_b):
 def main():
     #test_lighting()
     #test_deferred_render()
-    test_shadow_map("azimuth", "0deg")
-    test_shadow_map("azimuth", "36deg")
-    test_shadow_map("azimuth", "72deg")
-    test_shadow_map("azimuth", "108deg")
-    test_shadow_map("azimuth", "144deg")
+    compute_and_produce_rgb("azimuth", "0deg", sys.argv)
+    compute_and_produce_rgb("azimuth", "36deg", sys.argv)
+    compute_and_produce_rgb("azimuth", "72deg", sys.argv)
+    compute_and_produce_rgb("azimuth", "108deg", sys.argv)
+    compute_and_produce_rgb("azimuth", "144deg", sys.argv)
+
+    # produce_rgbs("azimuth", "0deg")
+    # produce_rgbs("azimuth", "36deg")
+    # produce_rgbs("azimuth", "72deg")
+    # produce_rgbs("azimuth", "108deg")
+    # produce_rgbs("azimuth", "144deg")
 
     # measure_shading_diff("E:/SynthWeather Dataset 4/azimuth/0deg/shading/", "E:/SynthWeather Dataset 4/azimuth/144deg/shading/")
 

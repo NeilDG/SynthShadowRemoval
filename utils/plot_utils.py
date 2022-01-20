@@ -35,6 +35,7 @@ class VisdomReporter:
         
         self.image_windows = {}
         self.loss_windows = {}
+        self.text_windows = {}
     
     def plot_image(self, img_tensor, caption, normalize = True):
         if(constants.server_config == 2):
@@ -45,6 +46,15 @@ class VisdomReporter:
             self.image_windows[hash(caption)] = self.vis.images(img_group, opts = dict(caption = caption))
         else:
             self.vis.images(img_group, win = self.image_windows[hash(caption)], opts = dict(caption = caption))
+
+    def plot_text(self, text):
+        if (constants.server_config == 2):
+            return
+
+        if(hash(text) not in self.text_windows):
+            self.text_windows[hash(text)] = self.vis.text(text, opts = dict(caption = text))
+        else:
+            self.vis.text(text, win = self.text_windows[hash(text)], opts = dict(caption = text))
 
     def plot_grad_flow(self, named_parameters, caption):
         '''Plots the gradients flowing through different layers in the net during training.
