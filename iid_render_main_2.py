@@ -113,7 +113,7 @@ def main(argv):
 
     # Create the dataloader
     shading_loader = dataset_loader.load_shading_test_dataset(rgb_path, shading_path, opts)
-    shadow_loader = dataset_loader.load_shadowmap_test_dataset(albedo_path, shadow_path, shading_path, opts)
+    shadow_loader = dataset_loader.load_shadowmap_test_dataset(albedo_path, shadow_path, shading_path, True, opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
 
     # Plot some training images
