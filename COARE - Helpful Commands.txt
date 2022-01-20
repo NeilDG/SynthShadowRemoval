@@ -15,8 +15,9 @@ cd scratch2/Visdom
 //Execute job
 sbatch slurm_install.slurm
 sbatch slurm_visdom_test.slurm
+sbatch visdom_run.slurm
 sbatch -w saliksik-cpu-23 visdom_run.slurm
-sbatch -w saliksik-cpu-23 --dependency=afterany:269400 visdom_run.slurm
+sbatch -w saliksik-cpu-23 --dependency=afterany:272844 visdom_run.slurm
 
 sbatch script_debug.slurm
 sbatch script_1.slurm
@@ -28,6 +29,7 @@ sbatch script_6.slurm
 sbatch script_7.slurm
 sbatch script_8.slurm
 
+sbatch --dependency=afterany:271860 script_debug.slurm
 sbatch -w saliksik-gpu-06 slurm_install_gpu.slurm
 sbatch -w saliksik-gpu-03 script_1.slurm
 sbatch -w saliksik-gpu-02 script_2.slurm

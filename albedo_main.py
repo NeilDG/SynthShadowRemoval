@@ -9,7 +9,7 @@ import torchvision.utils as vutils
 import numpy as np
 import matplotlib.pyplot as plt
 from loaders import dataset_loader
-from trainers import shadow_map_trainer
+from trainers import render_maps_trainer
 from trainers import early_stopper
 import constants
 
@@ -27,6 +27,7 @@ parser.add_option('--bce_weight', type=float, help="Weight", default="0.0")
 parser.add_option('--num_blocks', type=int)
 parser.add_option('--net_config', type=int)
 parser.add_option('--use_bce', type=int, default = "0")
+parser.add_option('--use_mask', type=int, default = "0")
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--batch_size', type=int, help="batch_size", default="128")
@@ -34,35 +35,35 @@ parser.add_option('--patch_size', type=int, help="patch_size", default="64")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--version_name', type=str, help="version_name")
 parser.add_option('--light_angle', type=int, help="Light angle", default = "0")
+parser.add_option('--mode', type=str, default = "elevation")
 parser.add_option('--test_mode', type=int, help= "Test mode?", default=0)
 parser.add_option('--min_epochs', type=int, help= "Min epochs", default=120)
 
-#--img_to_load=-1 --load_previous=1
 #Update config if on COARE
 def update_config(opts):
     constants.server_config = opts.server_config
     constants.ITERATION = str(opts.iteration)
-    constants.SHADOWMAP_VERSION = opts.version_name
-    constants.SHADOWMAP_CHECKPATH = 'checkpoint/' + constants.SHADOWMAP_VERSION + "_" + constants.ITERATION + '.pt'
+    constants.MAPPER_VERSION = opts.version_name
+    constants.MAPPER_CHECKPATH = 'checkpoint/' + constants.MAPPER_VERSION + "_" + constants.ITERATION + '.pt'
 
-    #COARE
-    if(constants.server_config == 1):
+    # COARE
+    if (constants.server_config == 1):
         print("Using COARE configuration ", opts.version_name)
         constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/"
-        constants.DATASET_PREFIX_4_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 4/"
-        constants.DATASET_ALBEDO_4_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 4/albedo/"
+        constants.DATASET_PREFIX_5_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 5/"
+        constants.DATASET_ALBEDO_5_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 5/albedo/"
 
-    #CCS JUPYTER
+    # CCS JUPYTER
     elif (constants.server_config == 2):
-        print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", constants.SHADOWMAP_CHECKPATH)
+        print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", constants.MAPPER_CHECKPATH)
         constants.DATASET_PLACES_PATH = "Places Dataset/"
 
-    #GCLOUD
+    # GCLOUD
     elif (constants.server_config == 3):
-        print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.SHADOWMAP_CHECKPATH)
+        print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.MAPPER_CHECKPATH)
         constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/"
-        constants.DATASET_PREFIX_4_PATH = "/home/neil_delgallego/SynthWeather Dataset 4/"
-        constants.DATASET_ALBEDO_4_PATH = "/home/neil_delgallego/SynthWeather Dataset 4/albedo/"
+        constants.DATASET_PREFIX_5_PATH = "/home/neil_delgallego/SynthWeather Dataset 5/"
+        constants.DATASET_ALBEDO_5_PATH = "/home/neil_delgallego/SynthWeather Dataset 5/albedo/"
 
 def show_images(img_tensor, caption):
     device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
@@ -77,7 +78,7 @@ def main(argv):
     (opts, args) = parser.parse_args(argv)
     update_config(opts)
     print(opts)
-    # torch.multiprocessing.set_sharing_strategy('file_system')
+    torch.multiprocessing.set_sharing_strategy('file_system')
     print("=====================BEGIN============================")
     print("Server config? %d Has GPU available? %d Count: %d" % (constants.server_config, torch.cuda.is_available(), torch.cuda.device_count()))
     print("Torch CUDA version: %s" % torch.version.cuda)
@@ -89,86 +90,95 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    albedo_path = constants.DATASET_ALBEDO_4_PATH
-    shading_path =constants.DATASET_PREFIX_4_PATH + str(opts.light_angle) + "deg/" + "shading/"
-    map_path = constants.DATASET_PREFIX_4_PATH + str(opts.light_angle) + "deg/" + "shadow_map/"
+    albedo_path = constants.DATASET_ALBEDO_5_PATH
+    rgb_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "rgb/"
 
     # Create the dataloader
-    print(albedo_path, map_path)
-    train_loader = dataset_loader.load_shadowmap_train_dataset(albedo_path, map_path, shading_path, opts)
-    test_loader = dataset_loader.load_shadowmap_test_dataset(albedo_path, map_path, shading_path, opts)
+    print(rgb_path, albedo_path)
+    train_loader = dataset_loader.load_map_train_dataset(rgb_path, albedo_path, opts)
+    test_loader = dataset_loader.load_map_test_dataset(rgb_path, albedo_path, opts)
+    rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
     start_epoch = 0
     iteration = 0
 
     # Plot some training images
     if (constants.server_config == 0):
         _, a_batch, b_batch, c_batch = next(iter(train_loader))
+        a_tensor = a_batch.to(device)
+        b_tensor = b_batch.to(device)
+        c_tensor = c_batch.to(device)
 
-        show_images(a_batch, "Training - A Images")
-        show_images(b_batch, "Training - B Images")
-        show_images(c_batch, "Training - C Images")
+        show_images(a_tensor, "Training - A Images")
+        show_images(b_tensor, "Training - B Images")
+        show_images(c_tensor, "Training - C Images")
 
-    trainer = shadow_map_trainer.ShadowMapTrainer(device, opts)
+    trainer = render_maps_trainer.RenderMapsTrainer(device, opts)
     trainer.update_penalties(opts.adv_weight, opts.l1_weight, opts.lpip_weight, opts.ssim_weight, opts.bce_weight)
 
     stopper_method = early_stopper.EarlyStopper(opts.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, 2000)
 
     if (opts.load_previous):
-        checkpoint = torch.load(constants.SHADOWMAP_CHECKPATH, map_location=device)
+        checkpoint = torch.load(constants.MAPPER_CHECKPATH, map_location=device)
         start_epoch = checkpoint['epoch'] + 1
         iteration = checkpoint['iteration'] + 1
         trainer.load_saved_state(checkpoint)
 
-        print("Loaded checkpt: %s Current epoch: %d" % (constants.SHADOWMAP_CHECKPATH, start_epoch))
+        print("Loaded checkpt: %s Current epoch: %d" % (constants.MAPPER_CHECKPATH, start_epoch))
         print("===================================================")
 
-    if(opts.test_mode == 1):
+    if (opts.test_mode == 1):
         print("Plotting test images...")
-        _, a_batch, b_batch, c_batch = next(iter(train_loader))
+        _, a_batch, b_batch, mask_batch = next(iter(train_loader))
         a_tensor = a_batch.to(device)
         b_tensor = b_batch.to(device)
-        c_tensor = c_batch.to(device)
+        mask_tensor = mask_batch.to(device)
 
-        trainer.train(a_tensor, b_tensor, c_tensor)
+        trainer.train(a_tensor, b_tensor, mask_tensor)
 
-        view_batch, test_a_batch, test_b_batch, test_c_batch = next(iter(test_loader))
+        view_batch, test_a_batch, test_b_batch, test_mask_batch = next(iter(test_loader))
         test_a_tensor = test_a_batch.to(device)
         test_b_tensor = test_b_batch.to(device)
-        test_c_tensor = test_c_batch.to(device)
-        trainer.visdom_visualize(a_tensor, b_tensor, c_tensor, test_a_tensor, test_b_tensor, test_c_tensor)
+        test_mask_tensor = test_mask_batch.to(device)
+        trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
+
+        _, rw_batch = next(iter(rw_loader))
+        rw_tensor = rw_batch.to(device)
+        trainer.visdom_infer(rw_tensor)
 
     else:
         print("Starting Training Loop...")
         for epoch in range(start_epoch, constants.num_epochs):
             # For each batch in the dataloader
-            for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader)):
-                _, a_batch, b_batch, c_batch = train_data
+            for i, (train_data, test_data, rw_data) in enumerate(zip(train_loader, test_loader, itertools.cycle(rw_loader))):
+                _, a_batch, b_batch, mask_batch = train_data
                 a_tensor = a_batch.to(device)
                 b_tensor = b_batch.to(device)
-                c_tensor = c_batch.to(device)
-
-                trainer.train(a_tensor, b_tensor, c_tensor)
+                mask_tensor = mask_batch.to(device)
+                trainer.train(a_tensor, b_tensor, mask_tensor)
                 iteration = iteration + 1
 
-                stopper_method.test(trainer, epoch, iteration, trainer.test(a_tensor, c_tensor), b_tensor)
+                stopper_method.test(trainer, epoch, iteration, trainer.test(a_tensor, mask_tensor), b_tensor)
 
                 if (stopper_method.did_stop_condition_met()):
                     break
 
             trainer.save_states_checkpt(epoch, iteration)
-            view_batch, test_a_batch, test_b_batch, test_c_batch = test_data
+            view_batch, test_a_batch, test_b_batch, _ = test_data
             test_a_tensor = test_a_batch.to(device)
             test_b_tensor = test_b_batch.to(device)
-            test_c_tensor = test_c_batch.to(device)
-            trainer.visdom_visualize(a_tensor, b_tensor, c_tensor, test_a_tensor, test_b_tensor, test_c_tensor)
+            trainer.visdom_plot(iteration)
+            trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
+
+            _, rw_batch = rw_data
+            rw_tensor = rw_batch.to(device)
+            trainer.visdom_infer(rw_tensor)
 
             if (stopper_method.did_stop_condition_met()):
-                #visualize last result
-                view_batch, test_a_batch, test_b_batch, test_c_batch = next(iter(test_loader))
+                # visualize last result
+                view_batch, test_a_batch, test_b_batch, _ = test_data
                 test_a_tensor = test_a_batch.to(device)
                 test_b_tensor = test_b_batch.to(device)
-                test_c_tensor = test_c_batch.to(device)
-                trainer.visdom_visualize(a_tensor, b_tensor, c_tensor, test_a_tensor, test_b_tensor, test_c_tensor)
+                trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
                 break
 
 

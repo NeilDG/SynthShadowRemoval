@@ -14,6 +14,7 @@ from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
 import constants
 from utils import plot_utils
+import kornia
 
 parser = OptionParser()
 parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:0")
@@ -32,6 +33,7 @@ parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--version_albedo', type=str, help="version_name")
 parser.add_option('--version_shading', type=str, help="version_name")
 parser.add_option('--version_shadow', type=str, help="version_name")
+parser.add_option('--mode', type=str, default = "elevation")
 parser.add_option('--light_angle', type=int, help="Light angle", default = "0")
 parser.add_option('--light_color', type=str, help="Light color", default = "225,247,250")
 
@@ -58,13 +60,14 @@ def prepare_shadow_input(a_tensor, shading_tensor, light_angle):
     return concat_input
 
 def prepare_shading_input(a_tensor, albedo_tensor, light_angle):
-    light_angle = normalize(light_angle)
-    light_tensor = torch.unsqueeze(torch.full_like(a_tensor[:, 0, :, :], light_angle), 1)
-    concat_input = torch.cat([a_tensor, albedo_tensor, light_tensor], 1)
-    return concat_input
+    # light_angle = normalize(light_angle)
+    # light_tensor = torch.unsqueeze(torch.full_like(a_tensor[:, 0, :, :], light_angle), 1)
+    # concat_input = torch.cat([a_tensor, albedo_tensor, light_tensor], 1)
+    # return concat_input
+    return a_tensor
 
 def produce_rgb(albedo_tensor, shading_tensor, light_color, shadowmap_tensor):
-    albedo_tensor = albedo_tensor.transpose(0, 1) * 0.5
+    albedo_tensor = albedo_tensor.transpose(0, 1)
     shading_tensor = shading_tensor.transpose(0, 1)
     shadowmap_tensor = shadowmap_tensor.transpose(0, 1)
     light_color = torch.from_numpy(np.asarray(light_color.split(","), dtype = np.int32))
@@ -75,11 +78,12 @@ def produce_rgb(albedo_tensor, shading_tensor, light_color, shadowmap_tensor):
     shadowmap_tensor = (shadowmap_tensor * 0.5) + 0.5
     light_color = light_color / 255.0
 
+    print("Shadow map shape: ", np.shape(shadowmap_tensor))
 
     rgb_img_like = torch.full_like(albedo_tensor, 0)
-    rgb_img_like[0] = torch.clip((albedo_tensor[0] * shading_tensor[0] * light_color[0] * shadowmap_tensor[0]), 0.0, 1.0)
-    rgb_img_like[1] = torch.clip((albedo_tensor[1] * shading_tensor[1] * light_color[1] * shadowmap_tensor[1]), 0.0, 1.0)
-    rgb_img_like[2] = torch.clip((albedo_tensor[2] * shading_tensor[2] * light_color[2] * shadowmap_tensor[2]), 0.0, 1.0)
+    rgb_img_like[0] = torch.clip(albedo_tensor[0] * shading_tensor[0] * light_color[0] * shadowmap_tensor, 0.0, 1.0)
+    rgb_img_like[1] = torch.clip(albedo_tensor[1] * shading_tensor[1] * light_color[1] * shadowmap_tensor, 0.0, 1.0)
+    rgb_img_like[2] = torch.clip(albedo_tensor[2] * shading_tensor[2] * light_color[2] * shadowmap_tensor, 0.0, 1.0)
 
     rgb_img_like = rgb_img_like.transpose(0, 1)
     return rgb_img_like
@@ -98,10 +102,14 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    albedo_path = constants.DATASET_ALBEDO_4_PATH
-    rgb_path = constants.DATASET_PREFIX_4_PATH + str(opts.light_angle) + "deg/" + "rgb/"
-    shading_path =constants.DATASET_PREFIX_4_PATH + str(opts.light_angle) + "deg/" + "shading/"
-    shadow_path = constants.DATASET_PREFIX_4_PATH + str(opts.light_angle) + "deg/" + "shadow_map/"
+    albedo_path = constants.DATASET_ALBEDO_5_PATH
+    rgb_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "rgb/"
+    # rgb_path = "E:/SynthWeather Dataset 5 - RAW/" + opts.mode + "/" + str(opts.light_angle) + "deg/" + "rgb/"
+    shading_path = constants.DATASET_PREFIX_5_PATH + "shading/"
+    # shading_path = constants.DATASET_PREFIX_4_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "shading/"
+    shadow_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "shadow_map/"
+
+    print(rgb_path, shading_path, shadow_path)
 
     # Create the dataloader
     shading_loader = dataset_loader.load_shading_test_dataset(rgb_path, shading_path, opts)
@@ -136,9 +144,9 @@ def main(argv):
     if (opts.net_config_s1 == 1):
         G_shader = cycle_gan.Generator(input_nc=7, output_nc=3, n_residual_blocks=opts.num_blocks_s1).to(device)
     elif (opts.net_config_s1 == 2):
-        G_shader = unet_gan.UnetGenerator(input_nc=7, output_nc=3, num_downs=opts.num_blocks_s1).to(device)
+        G_shader = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=opts.num_blocks_s1).to(device)
     elif (opts.net_config_s1 == 3):
-        G_shader = ffa.FFA(gps=7, blocks=opts.num_blocks_s1).to(device)
+        G_shader = ffa.FFAWithBackbone(input_nc=7, blocks = opts.num_blocks_s1).to(device)
     elif (opts.net_config_s1 == 4):
         G_shader = cycle_gan.Generator(input_nc=7, output_nc=3, n_residual_blocks=opts.num_blocks_s1, has_dropout=False).to(device)
     else:
@@ -149,15 +157,15 @@ def main(argv):
     G_shader.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
 
     if (opts.net_config_s2 == 1):
-        G_shadow = cycle_gan.Generator(input_nc=7, output_nc=3, n_residual_blocks=opts.num_blocks_s2).to(device)
+        G_shadow = cycle_gan.Generator(input_nc=7, output_nc=1, n_residual_blocks=opts.num_blocks_s2).to(device)
     elif (opts.net_config_s2 == 2):
-        G_shadow = unet_gan.UnetGenerator(input_nc=7, output_nc=3, num_downs=opts.num_blocks_s2).to(device)
+        G_shadow = unet_gan.UnetGenerator(input_nc=7, output_nc=1, num_downs=opts.num_blocks_s2).to(device)
     elif (opts.net_config_s2 == 3):
-        G_shadow = ffa.FFA(gps=7, blocks=opts.num_blocks_s2).to(device)
+        G_shadow = ffa.FFAWithBackbone(input_nc=7, blocks = opts.num_blocks_s2).to(device)
     elif (opts.net_config_s2 == 4):
-        G_shadow = cycle_gan.Generator(input_nc=7, output_nc=3, n_residual_blocks=opts.num_blocks_s2, has_dropout=False).to(device)
+        G_shadow = cycle_gan.Generator(input_nc=7, output_nc=1, n_residual_blocks=opts.num_blocks_s2, has_dropout=False).to(device)
     else:
-        G_shadow = cycle_gan.GeneratorV2(input_nc=7, output_nc=3, n_residual_blocks=opts.num_blocks_s2, has_dropout=False, multiply=True).to(device)
+        G_shadow = cycle_gan.GeneratorV2(input_nc=7, output_nc=1, n_residual_blocks=opts.num_blocks_s2, has_dropout=False, multiply=True).to(device)
 
     SHADOW_CHECKPATH = 'checkpoint/' + opts.version_shadow + "_" + str(opts.iteration_s2) + '.pt'
     checkpoint = torch.load(SHADOW_CHECKPATH, map_location=device)
@@ -179,26 +187,68 @@ def main(argv):
     rgb2albedo = G_albedo(rgb_tensor)
     rgb2shading = G_shader(prepare_shading_input(rgb_tensor, rgb2albedo, opts.light_angle))
     input2shadow = G_shadow(prepare_shadow_input(rgb_tensor, rgb2shading, opts.light_angle))
-    rgb_like = produce_rgb(rgb2albedo, rgb2shading, opts.light_color, input2shadow)
 
-    visdom_reporter.plot_image(rgb_tensor, "Test RGB images - " + opts.version_albedo + str(opts.iteration_a))
-    # visdom_reporter.plot_image(rgb2albedo, "Test RGB 2 Albedo images - " + opts.version_albedo + str(opts.iteration_a))
-    # visdom_reporter.plot_image(rgb2shading, "Test RGB 2 Shading images - " + opts.version_shading + str(opts.iteration_s1))
+    # rgb_tensor = produce_rgb(albedo_tensor, shading_tensor, opts.light_color, shadow_tensor)
+    rgb_like = produce_rgb(rgb2albedo, rgb2shading, opts.light_color, shadow_tensor)
+
+    #plot metrics
+    rgb2albedo = (rgb2albedo * 0.5) + 0.5
+    albedo_tensor = (albedo_tensor * 0.5) + 0.5
+    rgb2shading = (rgb2shading * 0.5) + 0.5
+    shading_tensor = (shading_tensor * 0.5) + 0.5
+    input2shadow = (input2shadow * 0.5) + 0.5
+    shadow_tensor = (shadow_tensor * 0.5) + 0.5
+    rgb_tensor = (rgb_tensor * 0.5) + 0.5
+
+    psnr_albedo = np.round(kornia.losses.psnr(rgb2albedo, albedo_tensor, max_val=1.0).item(), 4)
+    ssim_albedo = np.round(1.0 - kornia.losses.ssim_loss(rgb2albedo, albedo_tensor, 5).item(), 4)
+    psnr_shading = np.round(kornia.losses.psnr(rgb2shading, shading_tensor, max_val=1.0).item(), 4)
+    ssim_shading = np.round(1.0 - kornia.losses.ssim_loss(rgb2shading, shading_tensor, 5).item(), 4)
+    psnr_shadow = np.round(kornia.losses.psnr(input2shadow, shadow_tensor, max_val=1.0).item(), 4)
+    ssim_shadow = np.round(1.0 - kornia.losses.ssim_loss(input2shadow, shadow_tensor, 5).item(), 4)
+    psnr_rgb = np.round(kornia.losses.psnr(rgb_like, rgb_tensor, max_val=1.0).item(), 4)
+    ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb_like, rgb_tensor, 5).item(), 4)
+    display_text = "Versions: " + opts.version_albedo + str(opts.iteration_a) + "<br>" \
+                   + opts.version_shading + str(opts.iteration_s1) + "<br>" \
+                   + opts.version_shadow + str(opts.iteration_s2) + "<br>" \
+                   "<br> Angle: " +str(opts.light_angle) + \
+                          "<br> Albedo PSNR: " + str(psnr_albedo) + \
+                          "<br> Albedo SSIM: " + str(ssim_albedo) + "<br> Shading PSNR: " + str(psnr_shading) + "<br> Shading SSIM: " + str(ssim_shading) + \
+                            "<br> Shadow PSNR: " + str(psnr_shadow) + "<br> Shadow SSIM: " +str(ssim_shadow) + \
+                            "<br> RGB Reconstruction PSNR: " + str(psnr_rgb) + "<br> RGB Reconstruction SSIM: " +str(ssim_rgb)
+    visdom_reporter.plot_text(display_text)
+
+
+    #remove artifacts
+    # albedo_tensor = torch.clip(albedo_tensor, 0.1, 1.0)
+    # shading_tensor = torch.clip(shading_tensor, 0.1, 1.0)
+    # shadow_tensor = torch.clip(shadow_tensor, 0.1, 1.0)
+    # rgb2albedo = torch.clip(rgb2albedo, 0.1, 1.0)
+    # rgb2shading = torch.clip(rgb2shading, 0.1, 1.0)
+    # input2shadow = torch.clip(input2shadow, 0.1, 1.0)
+
+    # visdom_reporter.plot_image(albedo_tensor, "Test Albedo images - " + opts.version_albedo + str(opts.iteration_a) + " Light angle: " + str(opts.light_angle))
+    # visdom_reporter.plot_image(rgb2albedo, "Test RGB 2 Albedo images - " + opts.version_albedo + str(opts.iteration_a) + " Light angle: " +str(opts.light_angle))
+    visdom_reporter.plot_image(shading_tensor, "Test Shading images - " + opts.version_shading + str(opts.iteration_s1) + " Light angle: " + str(opts.light_angle))
+    # visdom_reporter.plot_image(rgb2shading, "Test RGB 2 Shading images - " + opts.version_shading + str(opts.iteration_s1) + " Light angle: " + str(opts.light_angle))
+    visdom_reporter.plot_image(shadow_tensor, "Test Shadow images - " + opts.version_shadow + str(opts.iteration_s2))
     # visdom_reporter.plot_image(input2shadow, "Test RGB 2 Shadow images - " + opts.version_shadow + str(opts.iteration_s2))
-    visdom_reporter.plot_image(rgb_like, "Test RGB Reconstructed - " + opts.version_albedo + str(opts.iteration_a))
+    visdom_reporter.plot_image(rgb_tensor, "Test RGB images - " + opts.version_albedo + str(opts.iteration_a) + " Light angle: " + str(opts.light_angle))
+    # visdom_reporter.plot_image(rgb_tensor, "Test RGB images - " + opts.version_albedo + str(opts.iteration_a) + " Light angle: " + str(opts.light_angle), False)
+    visdom_reporter.plot_image(rgb_like, "Test RGB Reconstructed - " + opts.version_albedo + str(opts.iteration_a) + " Light angle: " + str(opts.light_angle))
 
-    _, rgb_batch = next(iter(rw_loader))
-    rgb_tensor = rgb_batch.to(device)
-    rgb2albedo = G_albedo(rgb_tensor)
-    rgb2shading = G_shader(prepare_shading_input(rgb_tensor, rgb2albedo, opts.light_angle))
-    input2shadow = G_shadow(prepare_shadow_input(rgb_tensor, rgb2shading, opts.light_angle))
-    rgb_like = produce_rgb(rgb2albedo, rgb2shading, opts.light_color, input2shadow)
-
-    visdom_reporter.plot_image(rgb_tensor, "RW RGB images - " + opts.version_albedo + str(opts.iteration_a))
-    # visdom_reporter.plot_image(rgb2albedo, "RW RGB 2 Albedo images - " + opts.version_albedo + str(opts.iteration_a))
-    # visdom_reporter.plot_image(rgb2shading, "RW RGB 2 Shading images - " + opts.version_shading + str(opts.iteration_s1))
-    # visdom_reporter.plot_image(input2shadow, "RW RGB 2 Shadow images - " + opts.version_shadow + str(opts.iteration_s2))
-    visdom_reporter.plot_image(rgb_like, "RW RGB Reconstructed - " + opts.version_albedo + str(opts.iteration_a))
+    # _, rgb_batch = next(iter(rw_loader))
+    # rgb_tensor = rgb_batch.to(device)
+    # rgb2albedo = G_albedo(rgb_tensor)
+    # rgb2shading = G_shader(prepare_shading_input(rgb_tensor, rgb2albedo, opts.light_angle))
+    # input2shadow = G_shadow(prepare_shadow_input(rgb_tensor, rgb2shading, opts.light_angle))
+    # rgb_like = produce_rgb(rgb2albedo, rgb2shading, opts.light_color, input2shadow)
+    #
+    # visdom_reporter.plot_image(rgb_tensor, "RW RGB images - " + opts.version_albedo + str(opts.iteration_a))
+    # # visdom_reporter.plot_image(rgb2albedo, "RW RGB 2 Albedo images - " + opts.version_albedo + str(opts.iteration_a))
+    # # visdom_reporter.plot_image(rgb2shading, "RW RGB 2 Shading images - " + opts.version_shading + str(opts.iteration_s1))
+    # # visdom_reporter.plot_image(input2shadow, "RW RGB 2 Shadow images - " + opts.version_shadow + str(opts.iteration_s2))
+    # visdom_reporter.plot_image(rgb_like, "RW RGB Reconstructed - " + opts.version_albedo + str(opts.iteration_a))
 
 
 
