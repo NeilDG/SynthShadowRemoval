@@ -1,17 +1,18 @@
-import itertools
+import random
 import sys
 from optparse import OptionParser
-import random
+
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
 import torch.nn.parallel
 import torch.utils.data
 import torchvision.utils as vutils
-import numpy as np
-import matplotlib.pyplot as plt
-from loaders import dataset_loader
-from trainers import shadow_map_trainer
-from trainers import early_stopper
+
 import constants
+from loaders import dataset_loader
+from trainers import early_stopper
+from trainers import shadow_map_trainer
 
 parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
@@ -26,51 +27,53 @@ parser.add_option('--ssim_weight', type=float, help="Weight", default="0.0")
 parser.add_option('--bce_weight', type=float, help="Weight", default="0.0")
 parser.add_option('--num_blocks', type=int)
 parser.add_option('--net_config', type=int)
-parser.add_option('--use_bce', type=int, default = "0")
+parser.add_option('--use_bce', type=int, default="0")
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--batch_size', type=int, help="batch_size", default="128")
 parser.add_option('--patch_size', type=int, help="patch_size", default="64")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--version_name', type=str, help="version_name")
-parser.add_option('--light_angle', type=int, help="Light angle", default = "0")
-parser.add_option('--mode', type=str, default = "elevation")
-parser.add_option('--test_mode', type=int, help= "Test mode?", default=0)
-parser.add_option('--min_epochs', type=int, help= "Min epochs", default=120)
+parser.add_option('--light_angle', type=int, help="Light angle", default="0")
+parser.add_option('--mode', type=str, default="elevation")
+parser.add_option('--test_mode', type=int, help="Test mode?", default=0)
+parser.add_option('--min_epochs', type=int, help="Min epochs", default=120)
 
-#--img_to_load=-1 --load_previous=1
-#Update config if on COARE
+
+# --img_to_load=-1 --load_previous=1
+# Update config if on COARE
 def update_config(opts):
     constants.server_config = opts.server_config
     constants.ITERATION = str(opts.iteration)
     constants.SHADOWMAP_VERSION = opts.version_name
     constants.SHADOWMAP_CHECKPATH = 'checkpoint/' + constants.SHADOWMAP_VERSION + "_" + constants.ITERATION + '.pt'
 
-    #COARE
-    if(constants.server_config == 1):
+    # COARE
+    if (constants.server_config == 1):
         print("Using COARE configuration ", opts.version_name)
         constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/"
-        constants.DATASET_PREFIX_4_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 4/"
-        constants.DATASET_ALBEDO_4_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 4/albedo/"
+        constants.DATASET_PREFIX_5_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 5/"
+        constants.DATASET_ALBEDO_5_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 5/albedo/"
 
-    #CCS JUPYTER
+    # CCS JUPYTER
     elif (constants.server_config == 2):
         print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", constants.SHADOWMAP_CHECKPATH)
         constants.DATASET_PLACES_PATH = "Places Dataset/"
 
-    #GCLOUD
+    # GCLOUD
     elif (constants.server_config == 3):
         print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.SHADOWMAP_CHECKPATH)
         constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/"
-        constants.DATASET_PREFIX_4_PATH = "/home/neil_delgallego/SynthWeather Dataset 4/"
-        constants.DATASET_ALBEDO_4_PATH = "/home/neil_delgallego/SynthWeather Dataset 4/albedo/"
+        constants.DATASET_PREFIX_5_PATH = "/home/neil_delgallego/SynthWeather Dataset 5/"
+        constants.DATASET_ALBEDO_5_PATH = "/home/neil_delgallego/SynthWeather Dataset 5/albedo/"
+
 
 def show_images(img_tensor, caption):
     device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
     plt.figure(figsize=(32, 32))
     plt.axis("off")
     plt.title(caption)
-    plt.imshow(np.transpose(vutils.make_grid(img_tensor.to(device)[:16], nrow = 8, padding=2, normalize=True).cpu(),(1,2,0)))
+    plt.imshow(np.transpose(vutils.make_grid(img_tensor.to(device)[:16], nrow=8, padding=2, normalize=True).cpu(), (1, 2, 0)))
     plt.show()
 
 
@@ -90,14 +93,14 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    albedo_path = constants.DATASET_ALBEDO_4_PATH
-    shading_path = constants.DATASET_PREFIX_4_PATH + "shading/"
-    map_path = constants.DATASET_PREFIX_4_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "shadow_map/"
+    albedo_path = constants.DATASET_ALBEDO_5_PATH
+    shading_path = constants.DATASET_PREFIX_5_PATH + "shading/"
+    map_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "shadow_map/"
 
     # Create the dataloader
     print(albedo_path, map_path)
-    train_loader = dataset_loader.load_shadowmap_train_dataset(albedo_path, map_path, shading_path, opts)
-    test_loader = dataset_loader.load_shadowmap_test_dataset(albedo_path, map_path, shading_path, opts)
+    train_loader = dataset_loader.load_shadowmap_train_dataset(albedo_path, map_path, shading_path, True, opts)
+    test_loader = dataset_loader.load_shadowmap_test_dataset(albedo_path, map_path, shading_path, True, opts)
     start_epoch = 0
     iteration = 0
 
@@ -123,7 +126,7 @@ def main(argv):
         print("Loaded checkpt: %s Current epoch: %d" % (constants.SHADOWMAP_CHECKPATH, start_epoch))
         print("===================================================")
 
-    if(opts.test_mode == 1):
+    if (opts.test_mode == 1):
         print("Plotting test images...")
         _, a_batch, b_batch, c_batch = next(iter(train_loader))
         a_tensor = a_batch.to(device)
@@ -164,14 +167,13 @@ def main(argv):
             trainer.visdom_visualize(a_tensor, b_tensor, c_tensor, test_a_tensor, test_b_tensor, test_c_tensor)
 
             if (stopper_method.did_stop_condition_met()):
-                #visualize last result
+                # visualize last result
                 view_batch, test_a_batch, test_b_batch, test_c_batch = next(iter(test_loader))
                 test_a_tensor = test_a_batch.to(device)
                 test_b_tensor = test_b_batch.to(device)
                 test_c_tensor = test_c_batch.to(device)
                 trainer.visdom_visualize(a_tensor, b_tensor, c_tensor, test_a_tensor, test_b_tensor, test_c_tensor)
                 break
-
 
 
 if __name__ == "__main__":
