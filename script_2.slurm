@@ -24,25 +24,25 @@ module load cuda/10.1_cudnn-7.6.5
 
 source activate NeilGAN_V2
 
-srun python shading_main.py \
---iteration=$ITERATION \
---server_config=1 \
---num_workers=6 \
---batch_size=512 \
---num_blocks=6 --net_config=1 \
---l1_weight=$L1_WEIGHT --lpip_weight=$LPIP_WEIGHT --ssim_weight=$SSIM_WEIGHT --use_bce=$BCE --patch_size=64 \
---version_name="rgb2shading_v8.01" --mode="azimuth" --min_epochs=100 --light_angle=0 \
---img_to_load=-1 --load_previous=1
-
-srun python shading_main.py \
---iteration=$ITERATION \
---server_config=1 \
---num_workers=6 \
---batch_size=512 \
---num_blocks=6 --net_config=1 \
---l1_weight=$L1_WEIGHT --lpip_weight=$LPIP_WEIGHT --ssim_weight=$SSIM_WEIGHT --use_bce=$BCE --patch_size=64 \
---version_name="rgb2shading_v8.01" --mode="azimuth" --min_epochs=200 --light_angle=36 \
---img_to_load=-1 --load_previous=1
+#srun python shading_main.py \
+#--iteration=$ITERATION \
+#--server_config=1 \
+#--num_workers=6 \
+#--batch_size=512 \
+#--num_blocks=6 --net_config=1 \
+#--l1_weight=$L1_WEIGHT --lpip_weight=$LPIP_WEIGHT --ssim_weight=$SSIM_WEIGHT --use_bce=$BCE --patch_size=64 \
+#--version_name="rgb2shading_v8.01" --mode="azimuth" --min_epochs=100 --light_angle=0 \
+#--img_to_load=-1 --load_previous=1
+#
+#srun python shading_main.py \
+#--iteration=$ITERATION \
+#--server_config=1 \
+#--num_workers=6 \
+#--batch_size=512 \
+#--num_blocks=6 --net_config=1 \
+#--l1_weight=$L1_WEIGHT --lpip_weight=$LPIP_WEIGHT --ssim_weight=$SSIM_WEIGHT --use_bce=$BCE --patch_size=64 \
+#--version_name="rgb2shading_v8.01" --mode="azimuth" --min_epochs=200 --light_angle=36 \
+#--img_to_load=-1 --load_previous=1
 
 srun python shading_main.py \
 --iteration=$ITERATION \
