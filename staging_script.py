@@ -15,39 +15,39 @@ def main():
 
     # os.system("python \"defer_render_test.py\" --shadow_multiplier=1.0 --shading_multiplier=1.0")
 
-    os.system("python \"iid_render_main_2.py\" --num_workers=12 --img_to_load=-1 --patch_size=64 "
-              "--net_config_a=1 --num_blocks_a=6 --net_config_s1=2 --num_blocks_s1=0 --net_config_s2=2 --num_blocks_s2=0 "
-              "--version_albedo=\"rgb2albedo_v7.11\" --iteration_a=1 "
-              "--version_shading=\"rgb2shading_v8.01\" --iteration_s1=2 "
-              "--version_shadow=\"rgb2shadow_v8.01\" --iteration_s2=1 "
+    os.system("python \"iid_render_main_2.py\" --num_workers=12 --img_to_load=-1 --patch_size=32 "
+              "--net_config_a=2 --num_blocks_a=0 --net_config_s1=2 --num_blocks_s1=0 --net_config_s2=2 --num_blocks_s2=0 "
+              "--version_albedo=\"rgb2albedo_v7.14\" --iteration_a=5 "
+              "--version_shading=\"rgb2shading_v8.04\" --iteration_s1=5 "
+              "--version_shadow=\"rgb2shadow_v9.02\" --iteration_s2=1 "
               "--mode=azimuth --light_angle=0 --light_color=\"255,255,255\"")
 
-    os.system("python \"iid_render_main_2.py\" --num_workers=12 --img_to_load=-1 --patch_size=64 "
-              "--net_config_a=1 --num_blocks_a=6 --net_config_s1=2 --num_blocks_s1=0 --net_config_s2=2 --num_blocks_s2=0 "
-              "--version_albedo=\"rgb2albedo_v7.11\" --iteration_a=1 "
-              "--version_shading=\"rgb2shading_v8.01\" --iteration_s1=2 "
-              "--version_shadow=\"rgb2shadow_v8.01\" --iteration_s2=1 "
+    os.system("python \"iid_render_main_2.py\" --num_workers=12 --img_to_load=-1 --patch_size=32 "
+              "--net_config_a=2 --num_blocks_a=0 --net_config_s1=2 --num_blocks_s1=0 --net_config_s2=2 --num_blocks_s2=0 "
+              "--version_albedo=\"rgb2albedo_v7.14\" --iteration_a=5 "
+              "--version_shading=\"rgb2shading_v8.04\" --iteration_s1=5 "
+              "--version_shadow=\"rgb2shadow_v9.02\" --iteration_s2=1 "
               "--mode=azimuth --light_angle=36 --light_color=\"255,255,255\"")
 
-    os.system("python \"iid_render_main_2.py\" --num_workers=12 --img_to_load=-1 --patch_size=64 "
-              "--net_config_a=1 --num_blocks_a=6 --net_config_s1=2 --num_blocks_s1=0 --net_config_s2=2 --num_blocks_s2=0 "
-              "--version_albedo=\"rgb2albedo_v7.11\" --iteration_a=1 "
-              "--version_shading=\"rgb2shading_v8.01\" --iteration_s1=2 "
-              "--version_shadow=\"rgb2shadow_v8.01\" --iteration_s2=1 "
+    os.system("python \"iid_render_main_2.py\" --num_workers=12 --img_to_load=-1 --patch_size=32 "
+              "--net_config_a=2 --num_blocks_a=0 --net_config_s1=2 --num_blocks_s1=0 --net_config_s2=2 --num_blocks_s2=0 "
+              "--version_albedo=\"rgb2albedo_v7.14\" --iteration_a=5 "
+              "--version_shading=\"rgb2shading_v8.04\" --iteration_s1=5 "
+              "--version_shadow=\"rgb2shadow_v9.02\" --iteration_s2=1 "
               "--mode=azimuth --light_angle=72 --light_color=\"255,255,255\"")
 
-    os.system("python \"iid_render_main_2.py\" --num_workers=12 --img_to_load=-1 --patch_size=64 "
-              "--net_config_a=1 --num_blocks_a=6 --net_config_s1=2 --num_blocks_s1=0 --net_config_s2=2 --num_blocks_s2=0 "
-              "--version_albedo=\"rgb2albedo_v7.11\" --iteration_a=1 "
-              "--version_shading=\"rgb2shading_v8.01\" --iteration_s1=2 "
-              "--version_shadow=\"rgb2shadow_v8.01\" --iteration_s2=1 "
+    os.system("python \"iid_render_main_2.py\" --num_workers=12 --img_to_load=-1 --patch_size=32 "
+              "--net_config_a=2 --num_blocks_a=0 --net_config_s1=2 --num_blocks_s1=0 --net_config_s2=2 --num_blocks_s2=0 "
+              "--version_albedo=\"rgb2albedo_v7.14\" --iteration_a=5 "
+              "--version_shading=\"rgb2shading_v8.04\" --iteration_s1=5 "
+              "--version_shadow=\"rgb2shadow_v9.02\" --iteration_s2=1 "
               "--mode=azimuth --light_angle=108 --light_color=\"255,255,255\"")
 
-    os.system("python \"iid_render_main_2.py\" --num_workers=12 --img_to_load=-1 --patch_size=64 "
-              "--net_config_a=1 --num_blocks_a=6 --net_config_s1=2 --num_blocks_s1=0 --net_config_s2=2 --num_blocks_s2=0 "
-              "--version_albedo=\"rgb2albedo_v7.11\" --iteration_a=1 "
-              "--version_shading=\"rgb2shading_v8.01\" --iteration_s1=2 "
-              "--version_shadow=\"rgb2shadow_v8.01\" --iteration_s2=1 "
+    os.system("python \"iid_render_main_2.py\" --num_workers=12 --img_to_load=-1 --patch_size=32 "
+              "--net_config_a=2 --num_blocks_a=0 --net_config_s1=2 --num_blocks_s1=0 --net_config_s2=2 --num_blocks_s2=0 "
+              "--version_albedo=\"rgb2albedo_v7.14\" --iteration_a=5 "
+              "--version_shading=\"rgb2shading_v8.04\" --iteration_s1=5 "
+              "--version_shadow=\"rgb2shadow_v9.02\" --iteration_s2=1 "
               "--mode=azimuth --light_angle=144 --light_color=\"255,255,255\"")
 
 

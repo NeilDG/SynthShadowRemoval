@@ -47,7 +47,7 @@ def load_map_test_dataset(path_a, path_c, opts):
         image_dataset.MapDataset(a_list, path_c, 2, opts),
         batch_size=2,
         num_workers=1,
-        shuffle=True
+        shuffle=False
     )
 
     return data_loader
@@ -176,7 +176,7 @@ def load_shadowmap_test_dataset(path_a, path_b, path_c, return_shading: bool, op
 
     data_loader = torch.utils.data.DataLoader(
         image_dataset.ShadowMapDataset(a_list, path_b, path_c, 2, return_shading, opts),
-        batch_size=16,
+        batch_size=2,
         num_workers=1,
         shuffle=False
     )

@@ -104,16 +104,15 @@ def main(argv):
 
     albedo_path = constants.DATASET_ALBEDO_5_PATH
     rgb_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "rgb/"
-    # rgb_path = "E:/SynthWeather Dataset 5 - RAW/" + opts.mode + "/" + str(opts.light_angle) + "deg/" + "rgb/"
     shading_path = constants.DATASET_PREFIX_5_PATH + "shading/"
-    # shading_path = constants.DATASET_PREFIX_4_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "shading/"
     shadow_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "shadow_map/"
 
     print(rgb_path, shading_path, shadow_path)
 
     # Create the dataloader
-    shading_loader = dataset_loader.load_shading_test_dataset(rgb_path, shading_path, opts)
-    shadow_loader = dataset_loader.load_shadowmap_test_dataset(albedo_path, shadow_path, shading_path, True, opts)
+    #shading_loader = dataset_loader.load_shading_test_dataset(rgb_path, shading_path, opts)
+    albedo_loader = dataset_loader.load_map_test_dataset(rgb_path, albedo_path, opts)
+    shadow_loader = dataset_loader.load_shadowmap_test_dataset(rgb_path, shadow_path, shading_path, True, opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
 
     # Plot some training images
@@ -142,30 +141,30 @@ def main(argv):
     G_albedo.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
 
     if (opts.net_config_s1 == 1):
-        G_shader = cycle_gan.Generator(input_nc=7, output_nc=3, n_residual_blocks=opts.num_blocks_s1).to(device)
+        G_shader = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=opts.num_blocks_s1).to(device)
     elif (opts.net_config_s1 == 2):
         G_shader = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=opts.num_blocks_s1).to(device)
     elif (opts.net_config_s1 == 3):
-        G_shader = ffa.FFAWithBackbone(input_nc=7, blocks = opts.num_blocks_s1).to(device)
+        G_shader = ffa.FFAWithBackbone(input_nc=3, blocks = opts.num_blocks_s1).to(device)
     elif (opts.net_config_s1 == 4):
-        G_shader = cycle_gan.Generator(input_nc=7, output_nc=3, n_residual_blocks=opts.num_blocks_s1, has_dropout=False).to(device)
+        G_shader = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=opts.num_blocks_s1, has_dropout=False).to(device)
     else:
-        G_shader = cycle_gan.GeneratorV2(input_nc=7, output_nc=3, n_residual_blocks=opts.num_blocks_s1, has_dropout=False, multiply=True).to(device)
+        G_shader = cycle_gan.GeneratorV2(input_nc=3, output_nc=3, n_residual_blocks=opts.num_blocks_s1, has_dropout=False, multiply=True).to(device)
 
     SHADER_CHECKPATH = 'checkpoint/' + opts.version_shading + "_" + str(opts.iteration_s1) + '.pt'
     checkpoint = torch.load(SHADER_CHECKPATH, map_location=device)
     G_shader.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
 
     if (opts.net_config_s2 == 1):
-        G_shadow = cycle_gan.Generator(input_nc=7, output_nc=1, n_residual_blocks=opts.num_blocks_s2).to(device)
+        G_shadow = cycle_gan.Generator(input_nc=3, output_nc=1, n_residual_blocks=opts.num_blocks_s2).to(device)
     elif (opts.net_config_s2 == 2):
-        G_shadow = unet_gan.UnetGenerator(input_nc=7, output_nc=1, num_downs=opts.num_blocks_s2).to(device)
+        G_shadow = unet_gan.UnetGenerator(input_nc=3, output_nc=1, num_downs=opts.num_blocks_s2).to(device)
     elif (opts.net_config_s2 == 3):
-        G_shadow = ffa.FFAWithBackbone(input_nc=7, blocks = opts.num_blocks_s2).to(device)
+        G_shadow = ffa.FFAWithBackbone(input_nc=3, blocks = opts.num_blocks_s2).to(device)
     elif (opts.net_config_s2 == 4):
-        G_shadow = cycle_gan.Generator(input_nc=7, output_nc=1, n_residual_blocks=opts.num_blocks_s2, has_dropout=False).to(device)
+        G_shadow = cycle_gan.Generator(input_nc=3, output_nc=1, n_residual_blocks=opts.num_blocks_s2, has_dropout=False).to(device)
     else:
-        G_shadow = cycle_gan.GeneratorV2(input_nc=7, output_nc=1, n_residual_blocks=opts.num_blocks_s2, has_dropout=False, multiply=True).to(device)
+        G_shadow = cycle_gan.GeneratorV2(input_nc=3, output_nc=1, n_residual_blocks=opts.num_blocks_s2, has_dropout=False, multiply=True).to(device)
 
     SHADOW_CHECKPATH = 'checkpoint/' + opts.version_shadow + "_" + str(opts.iteration_s2) + '.pt'
     checkpoint = torch.load(SHADOW_CHECKPATH, map_location=device)
@@ -178,18 +177,18 @@ def main(argv):
     print("Plotting test images...")
 
     visdom_reporter = plot_utils.VisdomReporter()
-    _, rgb_batch, _ = next(iter(shading_loader))
-    _, albedo_batch, shadow_batch, shading_batch = next(iter(shadow_loader))
+    _, _, albedo_batch, _ = next(iter(albedo_loader))
+    _, rgb_batch, shadow_batch, shading_batch = next(iter(shadow_loader))
     rgb_tensor = rgb_batch.to(device)
     albedo_tensor = albedo_batch.to(device)
     shading_tensor = shading_batch.to(device)
     shadow_tensor = shadow_batch.to(device)
     rgb2albedo = G_albedo(rgb_tensor)
-    rgb2shading = G_shader(prepare_shading_input(rgb_tensor, rgb2albedo, opts.light_angle))
-    input2shadow = G_shadow(prepare_shadow_input(rgb_tensor, rgb2shading, opts.light_angle))
+    rgb2shading = G_shader(rgb_tensor)
+    input2shadow = G_shadow(rgb_tensor)
 
     # rgb_tensor = produce_rgb(albedo_tensor, shading_tensor, opts.light_color, shadow_tensor)
-    rgb_like = produce_rgb(rgb2albedo, rgb2shading, opts.light_color, shadow_tensor)
+    rgb_like = produce_rgb(albedo_tensor, shading_tensor, opts.light_color, input2shadow)
 
     #plot metrics
     rgb2albedo = (rgb2albedo * 0.5) + 0.5
