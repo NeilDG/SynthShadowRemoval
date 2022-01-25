@@ -132,7 +132,7 @@ def main(argv):
     elif (opts.net_config_a == 3):
         G_albedo = ffa.FFA(gps=3, blocks=opts.num_blocks_a).to(device)
     elif (opts.net_config_a == 4):
-        G_albedo = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=opts.num_blocks_a, has_dropout=False).to(device)
+        G_albedo = cycle_gan.GeneratorV3(input_nc=3, output_nc=3, n_residual_blocks=opts.num_blocks_a).to(device)
     else:
         G_albedo = cycle_gan.GeneratorV2(input_nc=3, output_nc=3, n_residual_blocks=opts.num_blocks_a, has_dropout=False, multiply=True).to(device)
 
@@ -188,7 +188,7 @@ def main(argv):
     input2shadow = G_shadow(rgb_tensor)
 
     # rgb_tensor = produce_rgb(albedo_tensor, shading_tensor, opts.light_color, shadow_tensor)
-    rgb_like = produce_rgb(albedo_tensor, shading_tensor, opts.light_color, input2shadow)
+    rgb_like = produce_rgb(rgb2albedo, shading_tensor, opts.light_color, shadow_tensor)
 
     #plot metrics
     rgb2albedo = (rgb2albedo * 0.5) + 0.5
@@ -228,13 +228,12 @@ def main(argv):
 
     # visdom_reporter.plot_image(albedo_tensor, "Test Albedo images - " + opts.version_albedo + str(opts.iteration_a) + " Light angle: " + str(opts.light_angle))
     # visdom_reporter.plot_image(rgb2albedo, "Test RGB 2 Albedo images - " + opts.version_albedo + str(opts.iteration_a) + " Light angle: " +str(opts.light_angle))
-    visdom_reporter.plot_image(shading_tensor, "Test Shading images - " + opts.version_shading + str(opts.iteration_s1) + " Light angle: " + str(opts.light_angle))
+    # visdom_reporter.plot_image(shading_tensor, "Test Shading images - " + opts.version_shading + str(opts.iteration_s1) + " Light angle: " + str(opts.light_angle))
     # visdom_reporter.plot_image(rgb2shading, "Test RGB 2 Shading images - " + opts.version_shading + str(opts.iteration_s1) + " Light angle: " + str(opts.light_angle))
-    visdom_reporter.plot_image(shadow_tensor, "Test Shadow images - " + opts.version_shadow + str(opts.iteration_s2))
+    # visdom_reporter.plot_image(shadow_tensor, "Test Shadow images - " + opts.version_shadow + str(opts.iteration_s2))
     # visdom_reporter.plot_image(input2shadow, "Test RGB 2 Shadow images - " + opts.version_shadow + str(opts.iteration_s2))
-    visdom_reporter.plot_image(rgb_tensor, "Test RGB images - " + opts.version_albedo + str(opts.iteration_a) + " Light angle: " + str(opts.light_angle))
-    # visdom_reporter.plot_image(rgb_tensor, "Test RGB images - " + opts.version_albedo + str(opts.iteration_a) + " Light angle: " + str(opts.light_angle), False)
-    visdom_reporter.plot_image(rgb_like, "Test RGB Reconstructed - " + opts.version_albedo + str(opts.iteration_a) + " Light angle: " + str(opts.light_angle))
+    # visdom_reporter.plot_image(rgb_tensor, "Test RGB images - " + opts.version_albedo + str(opts.iteration_a) + " Light angle: " + str(opts.light_angle))
+    # visdom_reporter.plot_image(rgb_like, "Test RGB Reconstructed - " + opts.version_albedo + str(opts.iteration_a) + " Light angle: " + str(opts.light_angle))
 
     # _, rgb_batch = next(iter(rw_loader))
     # rgb_tensor = rgb_batch.to(device)

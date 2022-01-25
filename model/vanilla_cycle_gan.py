@@ -5,8 +5,7 @@ Created on Mon Jun 29 14:30:24 2020
 
 @author: delgallegon
 """
-
-
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -103,6 +102,14 @@ class GeneratorV2(Generator):
             return super().forward(x) * x
         else:
             return super().forward(x) + x
+
+class GeneratorV3(Generator):
+    def __init__(self, input_nc=3, output_nc=3, downsampling_blocks = 2, n_residual_blocks=6):
+        Generator.__init__(self, input_nc, output_nc, downsampling_blocks, n_residual_blocks, True)
+
+
+    def forward(self, x):
+        return super().forward(x) * torch.ones_like(x)
 
 class Classifier(nn.Module):
     def __init__(self, input_nc=3, num_classes=4, downsampling_blocks = 2, n_residual_blocks=6, has_dropout = True):

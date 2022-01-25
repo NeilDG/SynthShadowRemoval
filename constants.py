@@ -69,6 +69,8 @@ D_A_FAKE_LOSS_KEY = "d_fake_a"
 D_B_REAL_LOSS_KEY = "d_real_b"
 D_B_FAKE_LOSS_KEY = "d_fake_b"
 
+LAST_METRIC_KEY = "last_metric"
+
 # Number of training epochs
 num_epochs = 600
 

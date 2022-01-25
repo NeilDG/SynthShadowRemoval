@@ -752,8 +752,8 @@ class ShadingTrainerBasic:
         self.schedulerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler"])
         self.schedulerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler"])
 
-    def save_states_checkpt(self, epoch, iteration):
-        save_dict = {'epoch': epoch, 'iteration': iteration}
+    def save_states_checkpt(self, epoch, iteration, last_metric):
+        save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: last_metric}
         netGA_state_dict = self.G_A.state_dict()
         netDA_state_dict = self.D_A.state_dict()
 
@@ -775,8 +775,8 @@ class ShadingTrainerBasic:
         torch.save(save_dict, constants.SHADING_CHECKPATH + ".checkpt")
         print("Saved model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
 
-    def save_states(self, epoch, iteration):
-        save_dict = {'epoch': epoch, 'iteration': iteration}
+    def save_states(self, epoch, iteration, last_metric):
+        save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: last_metric}
         netGA_state_dict = self.G_A.state_dict()
         netDA_state_dict = self.D_A.state_dict()
 

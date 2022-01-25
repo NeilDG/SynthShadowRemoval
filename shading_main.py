@@ -112,16 +112,18 @@ def main(argv):
     trainer = shading_trainer.ShadingTrainerBasic(device, opts)
     trainer.update_penalties(opts.adv_weight, opts.l1_weight, opts.lpip_weight, opts.ssim_weight, opts.bce_weight)
 
-    stopper_method = early_stopper.EarlyStopper(opts.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, 2000)
-
+    last_metric = 10000.0
     if (opts.load_previous):
         checkpoint = torch.load(constants.SHADING_CHECKPATH, map_location=device)
         start_epoch = checkpoint['epoch'] + 1
         iteration = checkpoint['iteration'] + 1
+        last_metric = checkpoint[constants.LAST_METRIC_KEY]
         trainer.load_saved_state(checkpoint)
 
         print("Loaded checkpt: %s Current epoch: %d" % (constants.SHADING_CHECKPATH, start_epoch))
         print("===================================================")
+
+    stopper_method = early_stopper.EarlyStopper(opts.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, 2000, last_metric)
 
     if(opts.test_mode == 1):
         print("Plotting test images...")
@@ -156,7 +158,7 @@ def main(argv):
                 if (stopper_method.did_stop_condition_met()):
                     break
 
-            trainer.save_states_checkpt(epoch, iteration)
+            trainer.save_states_checkpt(epoch, iteration, stopper_method.get_last_metric())
             view_batch, test_a_batch, test_b_batch = test_data
             test_a_tensor = test_a_batch.to(device)
             test_b_tensor = test_b_batch.to(device)
