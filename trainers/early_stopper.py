@@ -12,13 +12,15 @@ class EarlyStopperMethod(Enum):
     PSNR_TYPE = 2,
 
 class EarlyStopper():
-    def __init__(self, min_epochs, early_stopper_method, early_stop_tolerance):
+    def __init__(self, min_epochs, early_stopper_method, early_stop_tolerance, last_metric = 10000.0):
         self.min_epochs = min_epochs
         self.early_stop_tolerance = early_stop_tolerance
         self.stop_counter = 0
-        self.last_metric = 10000.0
+        self.last_metric = last_metric
         self.stop_condition_met = False
         self.network = None
+
+        print("Set last metric to: ", self.last_metric)
 
         if(early_stopper_method is EarlyStopperMethod.L1_TYPE):
             self.loss_op = nn.L1Loss()
@@ -39,7 +41,7 @@ class EarlyStopper():
             self.last_metric = D_loss
             self.stop_counter = 0
             print("Early stopping mechanism reset. Best metric is now ", self.last_metric)
-            trainer.save_states(epoch, iteration)
+            trainer.save_states(epoch, iteration, self.last_metric)
 
         if (self.stop_counter == self.early_stop_tolerance):
             self.stop_condition_met = True
@@ -49,6 +51,9 @@ class EarlyStopper():
 
     def did_stop_condition_met(self):
         return self.stop_condition_met
+
+    def get_last_metric(self):
+        return self.last_metric
 
 
 

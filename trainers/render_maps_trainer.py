@@ -40,7 +40,7 @@ class RenderMapsTrainer:
         elif (net_config == 3):
             self.G_A = ffa.FFA(gps=3, blocks=num_blocks).to(self.gpu_device)
         elif (net_config == 4):
-            self.G_A = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
+            self.G_A = cycle_gan.GeneratorV3(input_nc=3, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
         elif (net_config == 5):
             self.G_A = cycle_gan.GeneratorV2(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=True).to(self.gpu_device)
         else:
@@ -216,8 +216,8 @@ class RenderMapsTrainer:
         self.schedulerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler"])
         self.schedulerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler"])
 
-    def save_states_checkpt(self, epoch, iteration):
-        save_dict = {'epoch': epoch, 'iteration': iteration}
+    def save_states_checkpt(self, epoch, iteration, last_metric):
+        save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: last_metric}
         netGA_state_dict = self.G_A.state_dict()
         netDA_state_dict = self.D_A.state_dict()
 
@@ -239,8 +239,8 @@ class RenderMapsTrainer:
         torch.save(save_dict, constants.MAPPER_CHECKPATH + ".checkpt")
         print("Saved model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
 
-    def save_states(self, epoch, iteration):
-        save_dict = {'epoch': epoch, 'iteration': iteration}
+    def save_states(self, epoch, iteration, last_metric):
+        save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: last_metric}
         netGA_state_dict = self.G_A.state_dict()
         netDA_state_dict = self.D_A.state_dict()
 
