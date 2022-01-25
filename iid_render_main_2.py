@@ -34,7 +34,6 @@ parser.add_option('--version_albedo', type=str, help="version_name")
 parser.add_option('--version_shading', type=str, help="version_name")
 parser.add_option('--version_shadow', type=str, help="version_name")
 parser.add_option('--mode', type=str, default = "elevation")
-parser.add_option('--light_angle', type=int, help="Light angle", default = "0")
 parser.add_option('--light_color', type=str, help="Light color", default = "225,247,250")
 
 def show_images(img_tensor, caption):
@@ -103,16 +102,18 @@ def main(argv):
     print("Device: %s" % device)
 
     albedo_path = constants.DATASET_ALBEDO_5_PATH
-    rgb_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "rgb/"
+    # rgb_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "rgb/"
+    # shading_path = constants.DATASET_PREFIX_5_PATH + "shading/"
+    # shadow_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "shadow_map/
+    rgb_path = constants.DATASET_PREFIX_5_PATH + opts.mode
     shading_path = constants.DATASET_PREFIX_5_PATH + "shading/"
-    shadow_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "shadow_map/"
 
-    print(rgb_path, shading_path, shadow_path)
+    print(rgb_path, shading_path)
 
     # Create the dataloader
     #shading_loader = dataset_loader.load_shading_test_dataset(rgb_path, shading_path, opts)
-    albedo_loader = dataset_loader.load_map_test_dataset(rgb_path, albedo_path, opts)
-    shadow_loader = dataset_loader.load_shadowmap_test_dataset(rgb_path, shadow_path, shading_path, True, opts)
+    albedo_loader = dataset_loader.load_map_test_recursive(rgb_path, albedo_path, opts)
+    shadow_loader = dataset_loader.load_shadowmap_test_recursive(rgb_path, "shadow_map", "shading", True, opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
 
     # Plot some training images
@@ -210,7 +211,6 @@ def main(argv):
     display_text = "Versions: " + opts.version_albedo + str(opts.iteration_a) + "<br>" \
                    + opts.version_shading + str(opts.iteration_s1) + "<br>" \
                    + opts.version_shadow + str(opts.iteration_s2) + "<br>" \
-                   "<br> Angle: " +str(opts.light_angle) + \
                           "<br> Albedo PSNR: " + str(psnr_albedo) + \
                           "<br> Albedo SSIM: " + str(ssim_albedo) + "<br> Shading PSNR: " + str(psnr_shading) + "<br> Shading SSIM: " + str(ssim_shading) + \
                             "<br> Shadow PSNR: " + str(psnr_shadow) + "<br> Shadow SSIM: " +str(ssim_shadow) + \
@@ -226,27 +226,27 @@ def main(argv):
     # rgb2shading = torch.clip(rgb2shading, 0.1, 1.0)
     # input2shadow = torch.clip(input2shadow, 0.1, 1.0)
 
-    # visdom_reporter.plot_image(albedo_tensor, "Test Albedo images - " + opts.version_albedo + str(opts.iteration_a) + " Light angle: " + str(opts.light_angle))
-    # visdom_reporter.plot_image(rgb2albedo, "Test RGB 2 Albedo images - " + opts.version_albedo + str(opts.iteration_a) + " Light angle: " +str(opts.light_angle))
-    # visdom_reporter.plot_image(shading_tensor, "Test Shading images - " + opts.version_shading + str(opts.iteration_s1) + " Light angle: " + str(opts.light_angle))
-    # visdom_reporter.plot_image(rgb2shading, "Test RGB 2 Shading images - " + opts.version_shading + str(opts.iteration_s1) + " Light angle: " + str(opts.light_angle))
-    # visdom_reporter.plot_image(shadow_tensor, "Test Shadow images - " + opts.version_shadow + str(opts.iteration_s2))
-    # visdom_reporter.plot_image(input2shadow, "Test RGB 2 Shadow images - " + opts.version_shadow + str(opts.iteration_s2))
-    # visdom_reporter.plot_image(rgb_tensor, "Test RGB images - " + opts.version_albedo + str(opts.iteration_a) + " Light angle: " + str(opts.light_angle))
-    # visdom_reporter.plot_image(rgb_like, "Test RGB Reconstructed - " + opts.version_albedo + str(opts.iteration_a) + " Light angle: " + str(opts.light_angle))
+    visdom_reporter.plot_image(albedo_tensor, "Test Albedo images - " + opts.version_albedo + str(opts.iteration_a))
+    visdom_reporter.plot_image(rgb2albedo, "Test RGB 2 Albedo images - " + opts.version_albedo + str(opts.iteration_a))
+    visdom_reporter.plot_image(shading_tensor, "Test Shading images - " + opts.version_shading + str(opts.iteration_s1))
+    visdom_reporter.plot_image(rgb2shading, "Test RGB 2 Shading images - " + opts.version_shading + str(opts.iteration_s1))
+    visdom_reporter.plot_image(shadow_tensor, "Test Shadow images - " + opts.version_shadow + str(opts.iteration_s2))
+    visdom_reporter.plot_image(input2shadow, "Test RGB 2 Shadow images - " + opts.version_shadow + str(opts.iteration_s2))
+    visdom_reporter.plot_image(rgb_tensor, "Test RGB images - " + opts.version_albedo + str(opts.iteration_a))
+    visdom_reporter.plot_image(rgb_like, "Test RGB Reconstructed - " + opts.version_albedo + str(opts.iteration_a))
 
-    # _, rgb_batch = next(iter(rw_loader))
-    # rgb_tensor = rgb_batch.to(device)
-    # rgb2albedo = G_albedo(rgb_tensor)
-    # rgb2shading = G_shader(prepare_shading_input(rgb_tensor, rgb2albedo, opts.light_angle))
-    # input2shadow = G_shadow(prepare_shadow_input(rgb_tensor, rgb2shading, opts.light_angle))
-    # rgb_like = produce_rgb(rgb2albedo, rgb2shading, opts.light_color, input2shadow)
-    #
-    # visdom_reporter.plot_image(rgb_tensor, "RW RGB images - " + opts.version_albedo + str(opts.iteration_a))
-    # # visdom_reporter.plot_image(rgb2albedo, "RW RGB 2 Albedo images - " + opts.version_albedo + str(opts.iteration_a))
-    # # visdom_reporter.plot_image(rgb2shading, "RW RGB 2 Shading images - " + opts.version_shading + str(opts.iteration_s1))
-    # # visdom_reporter.plot_image(input2shadow, "RW RGB 2 Shadow images - " + opts.version_shadow + str(opts.iteration_s2))
-    # visdom_reporter.plot_image(rgb_like, "RW RGB Reconstructed - " + opts.version_albedo + str(opts.iteration_a))
+    _, rgb_batch = next(iter(rw_loader))
+    rgb_tensor = rgb_batch.to(device)
+    rgb2albedo = G_albedo(rgb_tensor)
+    rgb2shading = G_shader(rgb_tensor)
+    input2shadow = G_shadow(rgb_tensor)
+    rgb_like = produce_rgb(rgb2albedo, rgb2shading, opts.light_color, input2shadow)
+
+    visdom_reporter.plot_image(rgb_tensor, "RW RGB images - " + opts.version_albedo + str(opts.iteration_a))
+    # visdom_reporter.plot_image(rgb2albedo, "RW RGB 2 Albedo images - " + opts.version_albedo + str(opts.iteration_a))
+    # visdom_reporter.plot_image(rgb2shading, "RW RGB 2 Shading images - " + opts.version_shading + str(opts.iteration_s1))
+    # visdom_reporter.plot_image(input2shadow, "RW RGB 2 Shadow images - " + opts.version_shadow + str(opts.iteration_s2))
+    visdom_reporter.plot_image(rgb_like, "RW RGB Reconstructed - " + opts.version_albedo + str(opts.iteration_a))
 
 
 

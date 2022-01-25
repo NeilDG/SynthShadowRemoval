@@ -275,8 +275,6 @@ class ShadowMapTrainerBasic:
         self.g_lr = opts.g_lr
         self.d_lr = opts.d_lr
         self.use_bce = opts.use_bce
-        self.light_angle = opts.light_angle
-        self.light_angle = self.normalize(self.light_angle)
 
         self.lpips_loss = lpips.LPIPS(net='vgg').to(self.gpu_device)
         self.ssim_loss = ssim_loss.SSIM()
