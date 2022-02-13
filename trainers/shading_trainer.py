@@ -643,17 +643,17 @@ class ShadingTrainerBasic:
         self.bce_weight = bce_weight
 
         # save hyperparameters for bookeeping
-        HYPERPARAMS_PATH = "checkpoint/" + constants.SHADING_VERSION + "_" + constants.ITERATION + ".config"
-        with open(HYPERPARAMS_PATH, "w") as f:
-            print("Version: ", constants.SHADING_CHECKPATH, file=f)
-            print("Learning rate for G: ", str(self.g_lr), file=f)
-            print("Learning rate for D: ", str(self.d_lr), file=f)
-            print("====================================", file=f)
-            print("Adv weight: ", str(self.adv_weight), file=f)
-            print("Likeness weight: ", str(self.l1_weight), file=f)
-            print("LPIP weight: ", str(self.lpip_weight), file=f)
-            print("SSIM weight: ", str(self.ssim_weight), file=f)
-            print("BCE weight: ", str(self.bce_weight), file=f)
+        # HYPERPARAMS_PATH = "checkpoint/" + constants.SHADING_VERSION + "_" + constants.ITERATION + ".config"
+        # with open(HYPERPARAMS_PATH, "w") as f:
+        #     print("Version: ", constants.SHADING_CHECKPATH, file=f)
+        #     print("Learning rate for G: ", str(self.g_lr), file=f)
+        #     print("Learning rate for D: ", str(self.d_lr), file=f)
+        #     print("====================================", file=f)
+        #     print("Adv weight: ", str(self.adv_weight), file=f)
+        #     print("Likeness weight: ", str(self.l1_weight), file=f)
+        #     print("LPIP weight: ", str(self.lpip_weight), file=f)
+        #     print("SSIM weight: ", str(self.ssim_weight), file=f)
+        #     print("BCE weight: ", str(self.bce_weight), file=f)
 
     def train(self, input_tensor, result_tensor):
         with amp.autocast():

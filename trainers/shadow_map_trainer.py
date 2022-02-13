@@ -270,11 +270,12 @@ class ShadowMapTrainer:
 
 class ShadowMapTrainerBasic:
 
-    def __init__(self, gpu_device, opts):
+    def __init__(self, gpu_device, opts, use_bce):
         self.gpu_device = gpu_device
         self.g_lr = opts.g_lr
         self.d_lr = opts.d_lr
-        self.use_bce = opts.use_bce
+        # self.use_bce = opts.use_bce
+        self.use_bce = use_bce
 
         self.lpips_loss = lpips.LPIPS(net='vgg').to(self.gpu_device)
         self.ssim_loss = ssim_loss.SSIM()
@@ -291,8 +292,8 @@ class ShadowMapTrainerBasic:
             self.G_A = unet_gan.UnetGenerator(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
             self.G_A = cycle_gan.Generator(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
-        elif (net_config == 4):
-            self.G_A = cycle_gan.GeneratorV2(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, multiply=True).to(self.gpu_device)
+        elif (net_config == 5):
+            self.G_A = unet_gan.UnetGeneratorV2(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         else:
             self.G_A = cycle_gan.GeneratorV2(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
@@ -365,18 +366,15 @@ class ShadowMapTrainerBasic:
         self.ssim_weight = ssim_weight
         self.bce_weight = bce_weight
 
-        # save hyperparameters for bookeeping
-        HYPERPARAMS_PATH = "checkpoint/" + constants.SHADOWMAP_VERSION + "_" + constants.ITERATION + ".config"
-        with open(HYPERPARAMS_PATH, "w") as f:
-            print("Version: ", constants.SHADOWMAP_CHECKPATH, file=f)
-            print("Learning rate for G: ", str(self.g_lr), file=f)
-            print("Learning rate for D: ", str(self.d_lr), file=f)
-            print("====================================", file=f)
-            print("Adv weight: ", str(self.adv_weight), file=f)
-            print("Likeness weight: ", str(self.l1_weight), file=f)
-            print("LPIP weight: ", str(self.lpip_weight), file=f)
-            print("SSIM weight: ", str(self.ssim_weight), file=f)
-            print("BCE weight: ", str(self.bce_weight), file=f)
+        print("Version: ", constants.SHADOWMAP_CHECKPATH)
+        print("Learning rate for G: ", str(self.g_lr))
+        print("Learning rate for D: ", str(self.d_lr))
+        print("====================================")
+        print("Adv weight: ", str(self.adv_weight))
+        print("Likeness weight: ", str(self.l1_weight))
+        print("LPIP weight: ", str(self.lpip_weight))
+        print("SSIM weight: ", str(self.ssim_weight))
+        print("BCE weight: ", str(self.bce_weight))
 
     def train(self, a_tensor, b_tensor):
         with amp.autocast():

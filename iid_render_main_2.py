@@ -35,6 +35,7 @@ parser.add_option('--version_shading', type=str, help="version_name")
 parser.add_option('--version_shadow', type=str, help="version_name")
 parser.add_option('--mode', type=str, default = "elevation")
 parser.add_option('--light_color', type=str, help="Light color", default = "225,247,250")
+parser.add_option('--test_code', type=str, default = "111") #Enable albedo - shading - shadow inference?
 
 def show_images(img_tensor, caption):
     device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
@@ -135,7 +136,7 @@ def main(argv):
     elif (opts.net_config_a == 4):
         G_albedo = cycle_gan.GeneratorV3(input_nc=3, output_nc=3, n_residual_blocks=opts.num_blocks_a).to(device)
     else:
-        G_albedo = cycle_gan.GeneratorV2(input_nc=3, output_nc=3, n_residual_blocks=opts.num_blocks_a, has_dropout=False, multiply=True).to(device)
+        G_albedo = unet_gan.UnetGeneratorV2(input_nc=3, output_nc=3, num_downs=opts.num_blocks_a).to(device)
 
     ALBEDO_CHECKPATH = 'checkpoint/' + opts.version_albedo + "_" + str(opts.iteration_a) + '.pt'
     checkpoint = torch.load(ALBEDO_CHECKPATH, map_location=device)
@@ -184,12 +185,23 @@ def main(argv):
     albedo_tensor = albedo_batch.to(device)
     shading_tensor = shading_batch.to(device)
     shadow_tensor = shadow_batch.to(device)
-    rgb2albedo = G_albedo(rgb_tensor)
-    rgb2shading = G_shader(rgb_tensor)
-    input2shadow = G_shadow(rgb_tensor)
 
-    # rgb_tensor = produce_rgb(albedo_tensor, shading_tensor, opts.light_color, shadow_tensor)
-    rgb_like = produce_rgb(rgb2albedo, shading_tensor, opts.light_color, shadow_tensor)
+    if(opts.test_code[0] == "1"):
+        rgb2albedo = G_albedo(rgb_tensor)
+    else:
+        rgb2albedo = albedo_tensor
+
+    if(opts.test_code[1] == "1"):
+        rgb2shading = G_shader(rgb_tensor)
+    else:
+        rgb2shading = shading_tensor
+
+    if (opts.test_code[2] == "1"):
+        input2shadow = G_shadow(rgb_tensor)
+    else:
+        input2shadow = shadow_tensor
+
+    rgb_like = produce_rgb(rgb2albedo, rgb2shading, opts.light_color, input2shadow)
 
     #plot metrics
     rgb2albedo = (rgb2albedo * 0.5) + 0.5
@@ -226,12 +238,18 @@ def main(argv):
     # rgb2shading = torch.clip(rgb2shading, 0.1, 1.0)
     # input2shadow = torch.clip(input2shadow, 0.1, 1.0)
 
-    visdom_reporter.plot_image(albedo_tensor, "Test Albedo images - " + opts.version_albedo + str(opts.iteration_a))
-    visdom_reporter.plot_image(rgb2albedo, "Test RGB 2 Albedo images - " + opts.version_albedo + str(opts.iteration_a))
-    visdom_reporter.plot_image(shading_tensor, "Test Shading images - " + opts.version_shading + str(opts.iteration_s1))
-    visdom_reporter.plot_image(rgb2shading, "Test RGB 2 Shading images - " + opts.version_shading + str(opts.iteration_s1))
-    visdom_reporter.plot_image(shadow_tensor, "Test Shadow images - " + opts.version_shadow + str(opts.iteration_s2))
-    visdom_reporter.plot_image(input2shadow, "Test RGB 2 Shadow images - " + opts.version_shadow + str(opts.iteration_s2))
+    if (opts.test_code[0] == "1"):
+        visdom_reporter.plot_image(albedo_tensor, "Test Albedo images - " + opts.version_albedo + str(opts.iteration_a))
+        visdom_reporter.plot_image(rgb2albedo, "Test RGB 2 Albedo images - " + opts.version_albedo + str(opts.iteration_a))
+
+    if (opts.test_code[1] == "1"):
+        visdom_reporter.plot_image(shading_tensor, "Test Shading images - " + opts.version_shading + str(opts.iteration_s1))
+        visdom_reporter.plot_image(rgb2shading, "Test RGB 2 Shading images - " + opts.version_shading + str(opts.iteration_s1))
+
+    if (opts.test_code[2] == "1"):
+        visdom_reporter.plot_image(shadow_tensor, "Test Shadow images - " + opts.version_shadow + str(opts.iteration_s2))
+        visdom_reporter.plot_image(input2shadow, "Test RGB 2 Shadow images - " + opts.version_shadow + str(opts.iteration_s2))
+
     visdom_reporter.plot_image(rgb_tensor, "Test RGB images - " + opts.version_albedo + str(opts.iteration_a))
     visdom_reporter.plot_image(rgb_like, "Test RGB Reconstructed - " + opts.version_albedo + str(opts.iteration_a))
 
