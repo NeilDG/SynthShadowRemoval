@@ -1,3 +1,5 @@
+import os.path
+
 import torch
 import cv2
 import numpy as np
@@ -131,13 +133,13 @@ class MapDataset(data.Dataset):
 
     def __getitem__(self, idx):
         img_id = self.image_list_a[idx]
-        path_segment = img_id.split("/")
-        file_name = path_segment[len(path_segment) - 1]
+        file_name = os.path.basename(img_id)
 
         img_a = cv2.imread(img_id);
         img_a = cv2.cvtColor(img_a, cv2.COLOR_BGR2RGB)  # because matplot uses RGB, openCV is BGR
 
         img_id = self.path_b + "/" + file_name
+        # print("Img id: ", img_id)
         img_b = cv2.imread(img_id);
         img_b = cv2.cvtColor(img_b, cv2.COLOR_BGR2RGB)
 
@@ -387,9 +389,6 @@ class ShadingDataset(data.Dataset):
 
         if (transform_config == 1):
             self.final_transform_op = transforms.Compose([
-                # transforms.RandomCrop(constants.PATCH_IMAGE_SIZE),
-                # transforms.RandomVerticalFlip(),
-                # transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
             ])
@@ -412,8 +411,7 @@ class ShadingDataset(data.Dataset):
 
     def __getitem__(self, idx):
         img_id = self.image_list_a[idx]
-        path_segment = img_id.split("/")
-        file_name = path_segment[len(path_segment) - 1]
+        file_name = os.path.basename(img_id)
 
         img_a = cv2.imread(img_id);
         img_a = cv2.cvtColor(img_a, cv2.COLOR_BGR2RGB)  # because matplot uses RGB, openCV is BGR
@@ -441,10 +439,10 @@ class ShadingDataset(data.Dataset):
         return len(self.image_list_a)
 
 class ShadowMapDataset(data.Dataset):
-    def __init__(self, image_list_a, path_b, path_c, transform_config, return_shading: bool, opts):
+    def __init__(self, image_list_a, folder_b, folder_c, transform_config, return_shading: bool, opts):
         self.image_list_a = image_list_a
-        self.path_b = path_b
-        self.path_c = path_c
+        self.folder_b = folder_b
+        self.folder_c = folder_c
         self.transform_config = transform_config
         self.return_shading = return_shading
         self.patch_size = (opts.patch_size, opts.patch_size)
@@ -478,18 +476,18 @@ class ShadowMapDataset(data.Dataset):
 
     def __getitem__(self, idx):
         img_id = self.image_list_a[idx]
-        path_segment = img_id.split("/")
-        file_name = path_segment[len(path_segment) - 1]
+        file_name = os.path.basename(img_id)
+        base_path = os.path.split(os.path.split(img_id)[0])[0]
 
         img_a = cv2.imread(img_id);
         img_a = cv2.cvtColor(img_a, cv2.COLOR_BGR2RGB)  # because matplot uses RGB, openCV is BGR
 
-        img_id = self.path_b + "/" + file_name
-        img_b = cv2.imread(img_id);
+        img_id = base_path + "/" + self.folder_b + "/" + file_name
+        img_b = cv2.imread(img_id)
         img_b = cv2.cvtColor(img_b, cv2.COLOR_BGR2GRAY)
 
-        img_id = self.path_c + "/" + file_name
-        img_c = cv2.imread(img_id);
+        img_id = constants.DATASET_PREFIX_5_PATH + self.folder_c + "/" + file_name
+        img_c = cv2.imread(img_id)
         img_c = cv2.cvtColor(img_c, cv2.COLOR_BGR2RGB)
 
         img_a = self.initial_op(img_a)

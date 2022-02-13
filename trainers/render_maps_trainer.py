@@ -23,6 +23,7 @@ class RenderMapsTrainer:
         self.d_lr = opts.d_lr
         self.use_bce = opts.use_bce
         self.use_mask = opts.use_mask
+        self.accept_input_d = opts.accept_input_d
 
         self.lpips_loss = lpips.LPIPS(net = 'vgg').to(self.gpu_device)
         self.ssim_loss = ssim_loss.SSIM()
@@ -42,11 +43,14 @@ class RenderMapsTrainer:
         elif (net_config == 4):
             self.G_A = cycle_gan.GeneratorV3(input_nc=3, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
         elif (net_config == 5):
-            self.G_A = cycle_gan.GeneratorV2(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=True).to(self.gpu_device)
+            self.G_A = unet_gan.UnetGeneratorV2(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         else:
             self.G_A = cycle_gan.GeneratorV2(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
-        self.D_A = cycle_gan.Discriminator().to(self.gpu_device)  # use CycleGAN's discriminator
+        if(self.accept_input_d == 0):
+            self.D_A = cycle_gan.Discriminator(3, self.use_bce).to(self.gpu_device)  # use CycleGAN's discriminator
+        else:
+            self.D_A = cycle_gan.Discriminator(6, self.use_bce).to(self.gpu_device)
 
         self.visdom_reporter = plot_utils.VisdomReporter()
         self.optimizerG = torch.optim.Adam(itertools.chain(self.G_A.parameters()), lr=self.g_lr)
@@ -108,17 +112,23 @@ class RenderMapsTrainer:
         self.bce_weight = bce_weight
 
         # save hyperparameters for bookeeping
-        HYPERPARAMS_PATH = "checkpoint/" + constants.MAPPER_VERSION + "_" + constants.ITERATION + ".config"
-        with open(HYPERPARAMS_PATH, "w") as f:
-            print("Version: ", constants.MAPPER_CHECKPATH, file=f)
-            print("Learning rate for G: ", str(self.g_lr), file=f)
-            print("Learning rate for D: ", str(self.d_lr), file=f)
-            print("====================================", file=f)
-            print("Adv weight: ", str(self.adv_weight), file=f)
-            print("Likeness weight: ", str(self.l1_weight), file=f)
-            print("LPIP weight: ", str(self.lpip_weight), file=f)
-            print("SSIM weight: ", str(self.ssim_weight), file=f)
-            print("BCE weight: ", str(self.bce_weight), file=f)
+        # HYPERPARAMS_PATH = "checkpoint/" + constants.MAPPER_VERSION + "_" + constants.ITERATION + ".config"
+        # with open(HYPERPARAMS_PATH, "w") as f:
+        #     print("Version: ", constants.MAPPER_CHECKPATH, file=f)
+        #     print("Learning rate for G: ", str(self.g_lr), file=f)
+        #     print("Learning rate for D: ", str(self.d_lr), file=f)
+        #     print("====================================", file=f)
+        #     print("Adv weight: ", str(self.adv_weight), file=f)
+        #     print("Likeness weight: ", str(self.l1_weight), file=f)
+        #     print("LPIP weight: ", str(self.lpip_weight), file=f)
+        #     print("SSIM weight: ", str(self.ssim_weight), file=f)
+        #     print("BCE weight: ", str(self.bce_weight), file=f)
+
+    def prepare_d_input(self, a_tensor, b_tensor):
+        if(self.accept_input_d):
+            return torch.cat([a_tensor, b_tensor], 1)
+        else:
+            return b_tensor
 
     def train(self, a_tensor, b_tensor, train_mask):
         with amp.autocast():
@@ -129,12 +139,12 @@ class RenderMapsTrainer:
             self.D_A.train()
             self.optimizerD.zero_grad()
 
-            prediction = self.D_A(b_tensor)
+            prediction = self.D_A(self.prepare_d_input(a_tensor, b_tensor))
             real_tensor = torch.ones_like(prediction)
             fake_tensor = torch.zeros_like(prediction)
 
-            D_A_real_loss = self.adversarial_loss(self.D_A(b_tensor), real_tensor) * self.adv_weight
-            D_A_fake_loss = self.adversarial_loss(self.D_A(a2b.detach()), fake_tensor) * self.adv_weight
+            D_A_real_loss = self.adversarial_loss(self.D_A(self.prepare_d_input(a_tensor, b_tensor)), real_tensor) * self.adv_weight
+            D_A_fake_loss = self.adversarial_loss(self.D_A(self.prepare_d_input(a_tensor, a2b.detach())), fake_tensor) * self.adv_weight
 
             errD = D_A_real_loss + D_A_fake_loss
 
@@ -155,7 +165,7 @@ class RenderMapsTrainer:
             ssim_loss = self.ssim_loss(a2b, b_tensor) * self.ssim_weight
             bce_loss_val = self.bce_loss_term(a2b, b_tensor) * self.bce_weight
 
-            prediction = self.D_A(a2b)
+            prediction = self.D_A(self.prepare_d_input(a_tensor, a2b))
             real_tensor = torch.ones_like(prediction)
             A_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 

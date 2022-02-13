@@ -27,6 +27,7 @@ parser.add_option('--bce_weight', type=float, help="Weight", default="0.0")
 parser.add_option('--num_blocks', type=int)
 parser.add_option('--net_config', type=int)
 parser.add_option('--use_bce', type=int, default = "0")
+parser.add_option('--accept_input_d', type=int, default = "0")
 parser.add_option('--use_mask', type=int, default = "0")
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
@@ -34,8 +35,7 @@ parser.add_option('--batch_size', type=int, help="batch_size", default="128")
 parser.add_option('--patch_size', type=int, help="patch_size", default="64")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--version_name', type=str, help="version_name")
-parser.add_option('--light_angle', type=int, help="Light angle", default = "0")
-parser.add_option('--mode', type=str, default = "elevation")
+parser.add_option('--mode', type=str, default = "azimuth")
 parser.add_option('--test_mode', type=int, help= "Test mode?", default=0)
 parser.add_option('--min_epochs', type=int, help= "Min epochs", default=120)
 
@@ -91,12 +91,13 @@ def main(argv):
     print("Device: %s" % device)
 
     albedo_path = constants.DATASET_ALBEDO_5_PATH
-    rgb_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "rgb/"
+    #rgb_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "rgb/"
+    rgb_path = constants.DATASET_PREFIX_5_PATH + opts.mode
 
     # Create the dataloader
     print(rgb_path, albedo_path)
-    train_loader = dataset_loader.load_map_train_dataset(rgb_path, albedo_path, opts)
-    test_loader = dataset_loader.load_map_test_dataset(rgb_path, albedo_path, opts)
+    train_loader = dataset_loader.load_map_train_recursive(rgb_path, albedo_path, opts)
+    test_loader = dataset_loader.load_map_test_recursive(rgb_path, albedo_path, opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
     start_epoch = 0
     iteration = 0

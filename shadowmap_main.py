@@ -13,6 +13,8 @@ import constants
 from loaders import dataset_loader
 from trainers import early_stopper
 from trainers import shadow_map_trainer
+from model import iteration_table
+
 
 parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
@@ -21,20 +23,19 @@ parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
 parser.add_option('--load_previous', type=int, help="Load previous?", default=0)
 parser.add_option('--iteration', type=int, help="Style version?", default="1")
 parser.add_option('--adv_weight', type=float, help="Weight", default="1.0")
-parser.add_option('--l1_weight', type=float, help="Weight", default="10.0")
-parser.add_option('--lpip_weight', type=float, help="Weight", default="0.0")
-parser.add_option('--ssim_weight', type=float, help="Weight", default="0.0")
+# parser.add_option('--l1_weight', type=float, help="Weight", default="10.0")
+# parser.add_option('--lpip_weight', type=float, help="Weight", default="0.0")
+# parser.add_option('--ssim_weight', type=float, help="Weight", default="0.0")
 parser.add_option('--bce_weight', type=float, help="Weight", default="0.0")
 parser.add_option('--num_blocks', type=int)
 parser.add_option('--net_config', type=int)
-parser.add_option('--use_bce', type=int, default="0")
+# parser.add_option('--use_bce', type=int, default="0")
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--batch_size', type=int, help="batch_size", default="128")
 parser.add_option('--patch_size', type=int, help="patch_size", default="64")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--version_name', type=str, help="version_name")
-parser.add_option('--light_angle', type=int, help="Light angle", default="0")
 parser.add_option('--mode', type=str, default="elevation")
 parser.add_option('--test_mode', type=int, help="Test mode?", default=0)
 parser.add_option('--min_epochs', type=int, help="Min epochs", default=120)
@@ -93,14 +94,15 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    rgb_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "rgb/"
-    shading_path = constants.DATASET_PREFIX_5_PATH + "shading/"
-    map_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "shadow_map/"
+    #rgb_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "rgb/"
+    rgb_path = constants.DATASET_PREFIX_5_PATH + opts.mode
+    # shading_path = constants.DATASET_PREFIX_5_PATH + "shading/"
+    # map_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "shadow_map/"
 
     # Create the dataloader
-    print(rgb_path, map_path)
-    train_loader = dataset_loader.load_shadowmap_train_dataset(rgb_path, map_path, shading_path, False, opts)
-    test_loader = dataset_loader.load_shadowmap_test_dataset(rgb_path, map_path, shading_path, False, opts)
+    print(rgb_path)
+    train_loader = dataset_loader.load_shadowmap_train_recursive(rgb_path, "shadow_map", "shading", False, opts)
+    test_loader = dataset_loader.load_shadowmap_test_recursive(rgb_path, "shadow_map", "shading", False, opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
     start_epoch = 0
     iteration = 0
@@ -112,8 +114,10 @@ def main(argv):
         show_images(a_batch, "Training - A Images")
         show_images(b_batch, "Training - B Images")
 
-    trainer = shadow_map_trainer.ShadowMapTrainerBasic(device, opts)
-    trainer.update_penalties(opts.adv_weight, opts.l1_weight, opts.lpip_weight, opts.ssim_weight, opts.bce_weight)
+    it_table = iteration_table.IterationTable()
+    trainer = shadow_map_trainer.ShadowMapTrainerBasic(device, opts, it_table.is_bce_enabled(opts.iteration))
+    trainer.update_penalties(opts.adv_weight, it_table.get_l1_weight(opts.iteration), it_table.get_lpip_weight(opts.iteration),
+                             it_table.get_ssim_weight(opts.iteration), opts.bce_weight)
 
     last_metric = 10000.0
     if (opts.load_previous):
