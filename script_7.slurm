@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J S_7
+#SBATCH -J A_7
 #SBATCH --partition=gpu
 #SBATCH --qos=12c-1h_2gpu
 #SBATCH --cpus-per-task=6
@@ -24,14 +24,14 @@ module load cuda/10.1_cudnn-7.6.5
 
 source activate NeilGAN_V2
 
-srun python shading_main.py \
+srun python albedo_main.py \
 --iteration=$ITERATION \
 --server_config=1 \
 --num_workers=6 \
 --batch_size=256 \
---net_config=2 --num_blocks=0 \
+--net_config=1 --num_blocks=6 \
 --l1_weight=$L1_WEIGHT --lpip_weight=$LPIP_WEIGHT --ssim_weight=$SSIM_WEIGHT --use_bce=$BCE --patch_size=128 \
---version_name="rgb2shading_v8.07" --min_epochs=100 \
+--version_name="rgb2albedo_v7.19" --min_epochs=100 \
 --img_to_load=-1 --load_previous=0
 
 
