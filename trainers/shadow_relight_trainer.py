@@ -22,8 +22,6 @@ class ShadowRelightTrainer:
         self.g_lr = opts.g_lr
         self.d_lr = opts.d_lr
         self.use_bce = use_bce
-        self.light_angle = opts.desired_light_angle
-        self.light_angle = self.normalize(self.light_angle)
 
         self.lpips_loss = lpips.LPIPS(net='vgg').to(self.gpu_device)
         self.ssim_loss = ssim_loss.SSIM()
@@ -124,14 +122,16 @@ class ShadowRelightTrainer:
         print("SSIM weight: ", str(self.ssim_weight))
         print("BCE weight: ", str(self.bce_weight))
 
-    def prepare_input(self, a_tensor):
-        light_angle_tensor = torch.unsqueeze(torch.full_like(a_tensor[:, 0, :, :], self.light_angle), 1)
-        concat_input = torch.cat([a_tensor, light_angle_tensor], 1)
+    def prepare_input(self, a_tensor, light_angle):
+        # light_angle = self.normalize(light_angle)
+        # light_angle_tensor = torch.unsqueeze(torch.full_like(a_tensor[:, 0, :, :], light_angle), 1)
+        print("Shapes: ", np.shape(a_tensor), np.shape(light_angle))
+        concat_input = torch.cat([a_tensor, light_angle], 1)
         return concat_input
 
-    def train(self, a_tensor, b_tensor):
+    def train(self, a_tensor, b_tensor, light_angle):
         with amp.autocast():
-            a2b = self.G_A(self.prepare_input(a_tensor))
+            a2b = self.G_A(self.prepare_input(a_tensor, light_angle))
 
             self.D_A.train()
             self.optimizerD.zero_grad()
@@ -153,7 +153,7 @@ class ShadowRelightTrainer:
             self.G_A.train()
             self.optimizerG.zero_grad()
 
-            a2b = self.G_A(self.prepare_input(a_tensor))
+            a2b = self.G_A(self.prepare_input(a_tensor, light_angle))
 
             likeness_loss = self.l1_loss(a2b, b_tensor) * self.l1_weight
             lpip_loss = self.lpip_loss(a2b, b_tensor) * self.lpip_weight
@@ -181,18 +181,18 @@ class ShadowRelightTrainer:
             self.losses_dict[constants.D_A_FAKE_LOSS_KEY].append(D_A_fake_loss.item())
             self.losses_dict[constants.D_A_REAL_LOSS_KEY].append(D_A_real_loss.item())
 
-    def test(self, a_tensor):
+    def test(self, a_tensor, light_angle):
         with torch.no_grad():
-            a2b = self.G_A(self.prepare_input(a_tensor))
+            a2b = self.G_A(self.prepare_input(a_tensor, light_angle))
         return a2b
 
     def visdom_plot(self, iteration):
         self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict, constants.SHADOWMAP_RELIGHT_CHECKPATH)
 
-    def visdom_visualize(self, a_tensor, b_tensor, a_test, b_test):
+    def visdom_visualize(self, a_tensor, b_tensor, light_angle, a_test, b_test, light_angle_test):
         with torch.no_grad():
-            a2b = self.G_A(self.prepare_input(a_tensor))
-            test_a2b = self.G_A(self.prepare_input(a_test))
+            a2b = self.G_A(self.prepare_input(a_tensor, light_angle))
+            test_a2b = self.G_A(self.prepare_input(a_test, light_angle_test))
 
             self.visdom_reporter.plot_image(a_tensor, "Training A images - " + constants.SHADOWMAP_RELIGHT_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(a2b, "Training A2B images - " + constants.SHADOWMAP_RELIGHT_VERSION + constants.ITERATION)

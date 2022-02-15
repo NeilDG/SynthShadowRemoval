@@ -519,11 +519,13 @@ class ShadowMapDataset(data.Dataset):
         return len(self.image_list_a)
 
 class ShadowRelightDatset(data.Dataset):
-    def __init__(self, image_list_a, path_b, transform_config, opts):
-        self.image_list_a = image_list_a
+    def __init__(self, img_length, path_a, path_b, transform_config, opts):
+        self.img_length = img_length
+        self.path_a = path_a
         self.path_b = path_b
         self.transform_config = transform_config
         self.patch_size = (opts.patch_size, opts.patch_size)
+        self.light_angles = [0, 36, 72, 108, 144]
 
         self.initial_op = transforms.Compose([
             transforms.ToPILImage(),
@@ -551,15 +553,29 @@ class ShadowRelightDatset(data.Dataset):
                 transforms.ToTensor()
             ])
 
+    def normalize(self, light_angle):
+        std = light_angle / 360.0
+        min = -1.0
+        max = 1.0
+        scaled = std * (max - min) + min
+
+        return scaled
+
     def __getitem__(self, idx):
-        img_id = self.image_list_a[idx]
-        file_name = os.path.basename(img_id)
+        # img_id = self.image_list_a[idx]
+        file_name = "synth_"+ str(idx) + ".png"
 
-        img_a = cv2.imread(img_id);
-        img_a = cv2.cvtColor(img_a, cv2.COLOR_BGR2GRAY)  # because matplot uses RGB, openCV is BGR
+        light_angle = np.random.choice(self.light_angles)
+        img_a_path = self.path_a.format(input_light_angle=light_angle) + file_name
+        img_a = cv2.imread(img_a_path)
+        img_a = cv2.cvtColor(img_a, cv2.COLOR_BGR2GRAY)
 
-        img_id = self.path_b + "/" + file_name
-        img_b = cv2.imread(img_id);
+        #randomize desired light angle
+        light_angle = np.random.choice(self.light_angles)
+        img_b_path = self.path_b.format(input_light_angle = light_angle) + file_name
+        # print("Img path pairing: ", img_a_path, img_b_path)
+
+        img_b = cv2.imread(img_b_path)
         img_b = cv2.cvtColor(img_b, cv2.COLOR_BGR2GRAY)
 
         img_a = self.initial_op(img_a)
@@ -574,11 +590,13 @@ class ShadowRelightDatset(data.Dataset):
 
         img_a = self.final_transform_op(img_a)
         img_b = self.final_transform_op(img_b)
+        light_angle = self.normalize(light_angle)
+        light_angle_tensor = torch.full_like(img_a[:, :, :], light_angle)
 
-        return file_name, img_a, img_b
+        return file_name, img_a, img_b, light_angle_tensor
 
     def __len__(self):
-        return len(self.image_list_a)
+        return self.img_length
 
 class RealWorldDataset(data.Dataset):
     def __init__(self, image_list_a):

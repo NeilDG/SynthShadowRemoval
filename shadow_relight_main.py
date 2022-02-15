@@ -9,11 +9,12 @@ import torch.nn.parallel
 import torch.utils.data
 import torchvision.utils as vutils
 import constants
+import kornia
 from loaders import dataset_loader
 from trainers import early_stopper
 from trainers import shadow_relight_trainer
 from model import iteration_table
-
+from utils import plot_utils
 
 parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
@@ -34,8 +35,8 @@ parser.add_option('--version_name', type=str, help="version_name")
 parser.add_option('--mode', type=str, default="elevation")
 parser.add_option('--test_mode', type=int, help="Test mode?", default=0)
 parser.add_option('--min_epochs', type=int, help="Min epochs", default=120)
-parser.add_option('--input_light_angle', type=int, default="0")
-parser.add_option('--desired_light_angle', type=int, default="144")
+# parser.add_option('--input_light_angle', type=int, default="0")
+# parser.add_option('--desired_light_angle', type=int, default="144")
 
 # --img_to_load=-1 --load_previous=1
 # Update config if on COARE
@@ -90,20 +91,21 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    shadow_path_a = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + str(opts.input_light_angle) + "deg/" + "shadow_map/"
-    shadow_path_b = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + str(opts.desired_light_angle) + "deg/" + "shadow_map/"
+    sample_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + "0deg/" + "shadow_map/"
+    shadow_path_a = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "shadow_map/"
+    shadow_path_b = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "shadow_map/"
 
     # Create the dataloader
     print(shadow_path_a, shadow_path_b)
-    train_loader = dataset_loader.load_shadowrelight_train_dataset(shadow_path_a, shadow_path_b, opts)
-    test_loader = dataset_loader.load_shadowrelight_test_dataset(shadow_path_a, shadow_path_b, opts)
+    train_loader = dataset_loader.load_shadowrelight_train_dataset(sample_path, shadow_path_a, shadow_path_b, opts)
+    test_loader = dataset_loader.load_shadowrelight_test_dataset(sample_path, shadow_path_a, shadow_path_b, opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
     start_epoch = 0
     iteration = 0
 
     # Plot some training images
     if (constants.server_config == 0):
-        _, a_batch, b_batch = next(iter(train_loader))
+        _, a_batch, b_batch, _ = next(iter(train_loader))
 
         show_images(a_batch, "Training - A Images")
         show_images(b_batch, "Training - B Images")
@@ -128,16 +130,32 @@ def main(argv):
 
     if (opts.test_mode == 1):
         print("Plotting test images...")
-        _, a_batch, b_batch = next(iter(train_loader))
+        _, a_batch, b_batch, light_angle_batch = next(iter(train_loader))
         a_tensor = a_batch.to(device)
         b_tensor = b_batch.to(device)
+        light_angle_tensor = light_angle_batch.to(device)
 
-        trainer.train(a_tensor, b_tensor)
+        trainer.train(a_tensor, b_tensor, light_angle_tensor)
 
-        view_batch, test_a_batch, test_b_batch = next(iter(test_loader))
+        view_batch, test_a_batch, test_b_batch, test_light_angle = next(iter(test_loader))
         test_a_tensor = test_a_batch.to(device)
         test_b_tensor = test_b_batch.to(device)
-        trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
+        test_light_angle_tensor = test_light_angle.to(device)
+        trainer.visdom_visualize(a_tensor, b_tensor, light_angle_tensor, test_a_tensor, test_b_tensor, test_light_angle_tensor)
+
+        #plot metrics
+        a_tensor = (a_tensor * 0.5) + 0.5
+        b_tensor = (b_tensor * 0.5) + 0.5
+        shadow_relight_tensor = (trainer.test(a_tensor, light_angle_tensor) * 0.5) + 0.5
+
+        psnr_relight = np.round(kornia.losses.psnr(shadow_relight_tensor, b_tensor, max_val=1.0).item(), 4)
+        ssim_relight = np.round(1.0 - kornia.losses.ssim_loss(shadow_relight_tensor, b_tensor, 5).item(), 4)
+
+        display_text = "Versions: " + opts.version_name + str(opts.iteration) + \
+                       "<br> PSNR: " + str(psnr_relight) + "<br> SSIM: " +str(ssim_relight)
+
+        visdom_reporter = plot_utils.VisdomReporter()
+        visdom_reporter.plot_text(display_text)
 
     else:
         print("Starting Training Loop...")
@@ -145,23 +163,25 @@ def main(argv):
             for epoch in range(start_epoch, constants.num_epochs):
                 # For each batch in the dataloader
                 for i, (train_data, test_data, rw_data) in enumerate(zip(train_loader, test_loader, rw_loader)):
-                    _, a_batch, b_batch = train_data
+                    _, a_batch, b_batch, light_angle_batch = train_data
                     a_tensor = a_batch.to(device)
                     b_tensor = b_batch.to(device)
+                    light_angle_tensor = light_angle_batch.to(device)
 
-                    trainer.train(a_tensor, b_tensor)
+                    trainer.train(a_tensor, b_tensor, light_angle_tensor)
                     iteration = iteration + 1
 
-                    stopper_method.test(trainer, epoch, iteration, trainer.test(a_tensor), b_tensor)
+                    stopper_method.test(trainer, epoch, iteration, trainer.test(a_tensor, light_angle_tensor), b_tensor)
 
                     if (stopper_method.did_stop_condition_met()):
                         break
 
                 trainer.save_states_checkpt(epoch, iteration, stopper_method.get_last_metric())
-                view_batch, test_a_batch, test_b_batch = test_data
+                view_batch, test_a_batch, test_b_batch, test_light_angle = test_data
                 test_a_tensor = test_a_batch.to(device)
                 test_b_tensor = test_b_batch.to(device)
-                trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
+                test_light_angle_tensor = test_light_angle.to(device)
+                trainer.visdom_visualize(a_tensor, b_tensor, light_angle_tensor, test_a_tensor, test_b_tensor, test_light_angle_tensor)
 
                 # _, rw_batch = rw_data
                 # rw_tensor = rw_batch.to(device)
