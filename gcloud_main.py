@@ -37,68 +37,17 @@ def train_albedo():
 
 def train_shadow_relight():
     os.system("python \"shadow_relight_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=128 --batch_size=192 --net_config=2 --num_blocks=0 "
-              "--input_light_angle=0 --desired_light_angle=36 "
               "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.02\" --iteration=7")
 
-    os.system("python \"shadow_relight_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=192 --net_config=2 --num_blocks=0 "
-              "--input_light_angle=0 --desired_light_angle=72 "
-              "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.02\" --iteration=7")
+    os.system("python \"shadow_relight_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=128 --batch_size=192 --net_config=2 --num_blocks=0 "
+              "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.02\" --iteration=8")
 
-    os.system("python \"shadow_relight_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=192 --net_config=2 --num_blocks=0 "
-              "--input_light_angle=0 --desired_light_angle=108 "
-              "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.02\" --iteration=7")
+    os.system("python \"shadow_relight_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=128 --batch_size=192 --net_config=2 --num_blocks=0 "
+              "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.02\" --iteration=5")
 
-    os.system("python \"shadow_relight_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=192 --net_config=2 --num_blocks=0 "
-              "--input_light_angle=0 --desired_light_angle=144 "
-              "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.02\" --iteration=7")
+    os.system("python \"shadow_relight_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=128 --batch_size=192 --net_config=2 --num_blocks=0 "
+              "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.02\" --iteration=6")
 
-    # os.system("python \"shadow_relight_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=128 --batch_size=192 --net_config=2 --num_blocks=0 "
-    #           "--input_light_angle=0 --desired_light_angle=36 "
-    #           "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.02\" --iteration=8")
-    #
-    # os.system("python \"shadow_relight_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=192 --net_config=2 --num_blocks=0 "
-    #           "--input_light_angle=0 --desired_light_angle=72 "
-    #           "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.02\" --iteration=8")
-    #
-    # os.system("python \"shadow_relight_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=192 --net_config=2 --num_blocks=0 "
-    #           "--input_light_angle=0 --desired_light_angle=108 "
-    #           "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.02\" --iteration=8")
-    #
-    # os.system("python \"shadow_relight_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=192 --net_config=2 --num_blocks=0 "
-    #           "--input_light_angle=0 --desired_light_angle=144 "
-    #           "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.02\" --iteration=8")
-    #
-    # os.system("python \"shadow_relight_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=128 --batch_size=192 --net_config=2 --num_blocks=0 "
-    #           "--input_light_angle=0 --desired_light_angle=36 "
-    #           "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.02\" --iteration=5")
-    #
-    # os.system("python \"shadow_relight_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=192 --net_config=2 --num_blocks=0 "
-    #           "--input_light_angle=0 --desired_light_angle=72 "
-    #           "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.02\" --iteration=5")
-    #
-    # os.system("python \"shadow_relight_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=192 --net_config=2 --num_blocks=0 "
-    #           "--input_light_angle=0 --desired_light_angle=108 "
-    #           "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.02\" --iteration=5")
-    #
-    # os.system("python \"shadow_relight_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=192 --net_config=2 --num_blocks=0 "
-    #           "--input_light_angle=0 --desired_light_angle=144 "
-    #           "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.02\" --iteration=5")
-    #
-    # os.system("python \"shadow_relight_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=128 --batch_size=192 --net_config=2 --num_blocks=0 "
-    #           "--input_light_angle=0 --desired_light_angle=36 "
-    #           "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.02\" --iteration=6")
-    #
-    # os.system("python \"shadow_relight_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=192 --net_config=2 --num_blocks=0 "
-    #           "--input_light_angle=0 --desired_light_angle=72 "
-    #           "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.02\" --iteration=6")
-    #
-    # os.system("python \"shadow_relight_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=192 --net_config=2 --num_blocks=0 "
-    #           "--input_light_angle=0 --desired_light_angle=108 "
-    #           "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.02\" --iteration=6")
-    #
-    # os.system("python \"shadow_relight_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=192 --net_config=2 --num_blocks=0 "
-    #           "--input_light_angle=0 --desired_light_angle=144 "
-    #           "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.02\" --iteration=6")
 
 def main():
     train_shadow_relight()

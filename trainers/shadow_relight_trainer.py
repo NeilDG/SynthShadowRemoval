@@ -125,7 +125,7 @@ class ShadowRelightTrainer:
     def prepare_input(self, a_tensor, light_angle):
         # light_angle = self.normalize(light_angle)
         # light_angle_tensor = torch.unsqueeze(torch.full_like(a_tensor[:, 0, :, :], light_angle), 1)
-        print("Shapes: ", np.shape(a_tensor), np.shape(light_angle))
+        # print("Shapes: ", np.shape(a_tensor), np.shape(light_angle))
         concat_input = torch.cat([a_tensor, light_angle], 1)
         return concat_input
 
