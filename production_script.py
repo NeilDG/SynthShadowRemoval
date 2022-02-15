@@ -50,10 +50,10 @@ def train_shading():
 
 def train_shadow():
     # train shadow
-    os.system("python \"shadowmap_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=64 --net_config=1 --num_blocks=6 "
-              "--mode=azimuth --min_epochs=50 --version_name=\"rgb2shadow_v8.07\" --iteration=5")
+    # os.system("python \"shadowmap_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=64 --net_config=1 --num_blocks=6 "
+    #           "--mode=azimuth --min_epochs=50 --version_name=\"rgb2shadow_v8.07\" --iteration=5")
 
-    os.system("python \"shadowmap_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=128 --batch_size=64 --net_config=1 --num_blocks=6 "
+    os.system("python \"shadowmap_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=64 --net_config=1 --num_blocks=6 "
               "--mode=azimuth --min_epochs=50 --version_name=\"rgb2shadow_v8.07\" --iteration=6")
 
     os.system("python \"shadowmap_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=128 --batch_size=64 --net_config=1 --num_blocks=6 "
@@ -62,10 +62,37 @@ def train_shadow():
     os.system("python \"shadowmap_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=128 --batch_size=64 --net_config=1 --num_blocks=6 "
               "--mode=azimuth --min_epochs=50 --version_name=\"rgb2shadow_v8.07\" --iteration=8")
 
+def train_shadow_relight():
+    os.system("python \"shadow_relight_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=1 --patch_size=128 --batch_size=64 --net_config=1 --num_blocks=6 "
+              "--input_light_angle=0 --desired_light_angle=36 "
+              "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.00\" --iteration=5")
+
+    os.system("python \"shadow_relight_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=1 --patch_size=128 --batch_size=64 --net_config=1 --num_blocks=6 "
+              "--input_light_angle=0 --desired_light_angle=72 "
+              "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.00\" --iteration=5")
+
+    os.system("python \"shadow_relight_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=1 --patch_size=128 --batch_size=64 --net_config=1 --num_blocks=6 "
+              "--input_light_angle=0 --desired_light_angle=108 "
+              "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.00\" --iteration=5")
+
+    os.system("python \"shadow_relight_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=1 --patch_size=128 --batch_size=64 --net_config=1 --num_blocks=6 "
+              "--input_light_angle=0 --desired_light_angle=144 "
+              "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.00\" --iteration=5")
+
+    # os.system("python \"shadow_relight_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=1 --patch_size=128 --batch_size=64 --net_config=1 --num_blocks=6 "
+    #           "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.00\" --iteration=6")
+    #
+    # os.system("python \"shadow_relight_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=1 --patch_size=128 --batch_size=64 --net_config=1 --num_blocks=6 "
+    #           "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.00\" --iteration=7")
+    #
+    # os.system("python \"shadow_relight_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=1 --patch_size=128 --batch_size=64 --net_config=1 --num_blocks=6 "
+    #           "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.00\" --iteration=8")
+
 def main():
     # train_albedo()
     # train_shading()
     train_shadow()
+    # train_shadow_relight()
     os.system("shutdown /s /t 1")
 
 
