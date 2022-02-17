@@ -25,6 +25,7 @@ parser.add_option('--num_blocks', type=int)
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--patch_size', type=int, help="patch_size", default="64")
 parser.add_option('--version_name', type=str, help="version_name")
+parser.add_option('--input_light_angle', type=int, default="144")
 parser.add_option('--desired_light_angle', type=int, default="144")
 parser.add_option('--light_color', type=str, help="Light color", default = "255,255,255")
 parser.add_option('--mode', type=str, default = "azimuth")
@@ -79,16 +80,17 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    input_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + "0deg/"
+    input_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" "/" +str(opts.input_light_angle) + "deg/"
     ground_truth_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" +str(opts.desired_light_angle) + "deg/"
 
     print(input_path, ground_truth_path)
 
     # Create the dataloader
-    shadow_loader = dataset_loader.load_shadowmap_test_recursive_2(ground_truth_path, "albedo", "shadow_map", "shading", True, opts)
+    input_loader = dataset_loader.load_shadowmap_test_recursive_2(input_path, "albedo", "shadow_map", "shading", True, opts)
+    ground_truth_loader = dataset_loader.load_shadowmap_test_recursive_2(ground_truth_path, "albedo", "shadow_map", "shading", True, opts)
 
     # Plot some training images
-    view_batch, test_a_batch, test_b_batch, test_c_batch, test_d_tensor = next(iter(shadow_loader))
+    view_batch, test_a_batch, test_b_batch, test_c_batch, test_d_tensor = next(iter(ground_truth_loader))
     test_a_tensor = test_a_batch.to(device)
     test_b_tensor = test_b_batch.to(device)
     test_c_tensor = test_c_batch.to(device)
@@ -100,9 +102,11 @@ def main(argv):
     show_images(test_d_tensor, "Test - D Images")
 
     visdom_reporter = plot_utils.VisdomReporter()
-    # _, _, albedo_batch, _ = next(iter(albedo_loader))
-    _, rgb_batch, albedo_batch, shadow_batch, shading_batch = next(iter(shadow_loader))
+
+    _, rgb_batch, _, _, _ = next(iter(ground_truth_loader))
     rgb_tensor = rgb_batch.to(device)
+
+    _, _, albedo_batch, shadow_batch, shading_batch = next(iter(input_loader))
     albedo_tensor = albedo_batch.to(device)
     shading_tensor = shading_batch.to(device)
     shadow_tensor = shadow_batch.to(device)

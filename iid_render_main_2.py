@@ -35,7 +35,7 @@ parser.add_option('--version_shading', type=str, help="version_name")
 parser.add_option('--version_shadow', type=str, help="version_name")
 parser.add_option('--mode', type=str, default = "elevation")
 parser.add_option('--light_color', type=str, help="Light color", default = "225,247,250")
-parser.add_option('--test_code', type=str, default = "111") #Enable albedo - shading - shadow inference?
+parser.add_option('--test_code', type=str, default = "1111") #Enable albedo - shading - shadow - relighting?
 
 def show_images(img_tensor, caption):
     device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
@@ -104,30 +104,29 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    albedo_path = constants.DATASET_ALBEDO_5_PATH
-    # rgb_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "rgb/"
-    # shading_path = constants.DATASET_PREFIX_5_PATH + "shading/"
-    # shadow_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "shadow_map/
-    rgb_path = constants.DATASET_PREFIX_5_PATH + opts.mode
-    shading_path = constants.DATASET_PREFIX_5_PATH + "shading/"
+    albedo_dir = constants.DATASET_ALBEDO_5_PATH
+    shading_dir = constants.DATASET_PREFIX_5_PATH + "shading/"
+    rgb_dir = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "rgb/"
+    shadow_dir = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "shadow_map/"
 
-    print(rgb_path, shading_path)
+    print(rgb_dir, albedo_dir, shading_dir, shadow_dir)
 
     # Create the dataloader
-    #shading_loader = dataset_loader.load_shading_test_dataset(rgb_path, shading_path, opts)
-    albedo_loader = dataset_loader.load_map_test_recursive(rgb_path, albedo_path, opts)
-    shadow_loader = dataset_loader.load_shadowmap_test_recursive(rgb_path, "shadow_map", "shading", True, opts)
+    test_loader = dataset_loader.load_map_test_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
 
     # Plot some training images
-    view_batch, test_a_batch, test_b_batch, test_c_batch = next(iter(shadow_loader))
+    view_batch, test_a_batch, test_b_batch, test_c_batch, test_d_batch, light_angle_batch = next(iter(test_loader))
     test_a_tensor = test_a_batch.to(device)
     test_b_tensor = test_b_batch.to(device)
     test_c_tensor = test_c_batch.to(device)
+    test_d_tensor = test_d_batch.to(device)
 
     show_images(test_a_tensor, "Training - A Images")
     show_images(test_b_tensor, "Training - B Images")
     show_images(test_c_tensor, "Training - C Images")
+    show_images(test_d_tensor, "Training - C Images")
+    print(light_angle_batch)
 
     if (opts.net_config_a == 1):
         G_albedo = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=opts.num_blocks_a).to(device)
@@ -180,8 +179,7 @@ def main(argv):
 
     print("Plotting test images...")
     visdom_reporter = plot_utils.VisdomReporter()
-    _, _, albedo_batch, _ = next(iter(albedo_loader))
-    _, rgb_batch, shadow_batch, shading_batch = next(iter(shadow_loader))
+    _, albedo_batch, shading_batch, shadow_batch, rgb_batch, _ = next(iter(test_loader))
     rgb_tensor = rgb_batch.to(device)
     albedo_tensor = albedo_batch.to(device)
     shading_tensor = shading_batch.to(device)

@@ -438,14 +438,24 @@ class ShadingDataset(data.Dataset):
     def __len__(self):
         return len(self.image_list_a)
 
-class ShadowMapDataset(data.Dataset):
-    def __init__(self, image_list_a, folder_b, folder_c, transform_config, return_shading: bool, opts):
-        self.image_list_a = image_list_a
-        self.folder_b = folder_b
-        self.folder_c = folder_c
+def normalize(light_angle):
+    std = light_angle / 360.0
+    min = -1.0
+    max = 1.0
+    scaled = std * (max - min) + min
+
+    return scaled
+
+class ImageRelightDataset(data.Dataset):
+    def __init__(self, img_length, rgb_dir, albedo_dir, shading_dir, shadow_dir, transform_config, opts):
+        self.img_length = img_length
+        self.albedo_dir = albedo_dir
+        self.shading_dir = shading_dir
+        self.shadow_dir = shadow_dir
+        self.rgb_dir = rgb_dir
         self.transform_config = transform_config
-        self.return_shading = return_shading
         self.patch_size = (opts.patch_size, opts.patch_size)
+        self.light_angles = [0, 36, 72, 108, 144]
 
         self.initial_op = transforms.Compose([
             transforms.ToPILImage(),
@@ -475,50 +485,54 @@ class ShadowMapDataset(data.Dataset):
             ])
 
     def __getitem__(self, idx):
-        img_id = self.image_list_a[idx]
-        file_name = os.path.basename(img_id)
-        base_path = os.path.split(os.path.split(img_id)[0])[0]
+        file_name = "synth_" + str(idx) + ".png"
 
-        img_a = cv2.imread(img_id);
-        img_a = cv2.cvtColor(img_a, cv2.COLOR_BGR2RGB)  # because matplot uses RGB, openCV is BGR
+        img_a_path = self.albedo_dir + file_name
+        img_a = cv2.imread(img_a_path) #albedo
+        img_a = cv2.cvtColor(img_a, cv2.COLOR_BGR2RGB)
 
-        img_id = base_path + "/" + self.folder_b + "/" + file_name
-        img_b = cv2.imread(img_id)
-        img_b = cv2.cvtColor(img_b, cv2.COLOR_BGR2GRAY)
+        img_b_path = self.shading_dir + file_name
+        img_b = cv2.imread(img_b_path) #shading
+        img_b = cv2.cvtColor(img_b, cv2.COLOR_BGR2RGB)
 
-        print("Shadow path: ", img_id)
+        #randomize light_angle
+        light_angle = np.random.choice(self.light_angles)
+        img_c_path = self.shadow_dir.format(input_light_angle=light_angle) + file_name
+        img_c = cv2.imread(img_c_path) #shadow map
+        img_c = cv2.cvtColor(img_c, cv2.COLOR_BGR2GRAY)
 
-        img_id = constants.DATASET_PREFIX_5_PATH + self.folder_c + "/" + file_name
-        img_c = cv2.imread(img_id)
-        img_c = cv2.cvtColor(img_c, cv2.COLOR_BGR2RGB)
+        img_d_path = self.rgb_dir.format(input_light_angle=light_angle) + file_name
+        img_d = cv2.imread(img_d_path) #rgb
+        img_d = cv2.cvtColor(img_d, cv2.COLOR_BGR2RGB)
 
         img_a = self.initial_op(img_a)
         img_b = self.initial_op(img_b)
         img_c = self.initial_op(img_c)
+        img_d = self.initial_op(img_d)
 
         if (self.transform_config == 1):
-            crop_indices = transforms.RandomCrop.get_params(img_a, output_size=self.patch_size)
+            crop_indices = transforms.RandomCrop.get_params(img_b, output_size=self.patch_size)
             i, j, h, w = crop_indices
 
             img_a = transforms.functional.crop(img_a, i, j, h, w)
             img_b = transforms.functional.crop(img_b, i, j, h, w)
             img_c = transforms.functional.crop(img_c, i, j, h, w)
+            img_d = transforms.functional.crop(img_d, i, j, h, w)
 
         img_a = self.final_transform_op(img_a)
         img_b = self.final_transform_op(img_b)
         img_c = self.final_transform_op(img_c)
+        img_d = self.final_transform_op(img_d)
 
         img_a = self.normalize_op(img_a)
-        img_b = self.normalize_op_grey(img_b)
-        img_c = self.normalize_op(img_c)
+        img_b = self.normalize_op(img_b)
+        img_c = self.normalize_op_grey(img_c)
+        img_d = self.normalize_op(img_d)
 
-        if(self.return_shading):
-            return file_name, img_a, img_b, img_c
-        else:
-            return file_name, img_a, img_b
+        return file_name, img_a, img_b, img_c, img_d, light_angle
 
     def __len__(self):
-        return len(self.image_list_a)
+        return self.img_length
 
 class ShadowRelightDatset(data.Dataset):
     def __init__(self, img_length, path_a, path_b, transform_config, opts):
@@ -554,14 +568,6 @@ class ShadowRelightDatset(data.Dataset):
                 transforms.Resize(constants.TEST_IMAGE_SIZE),
                 transforms.ToTensor()
             ])
-
-    def normalize(self, light_angle):
-        std = light_angle / 360.0
-        min = -1.0
-        max = 1.0
-        scaled = std * (max - min) + min
-
-        return scaled
 
     def __getitem__(self, idx):
         # img_id = self.image_list_a[idx]
