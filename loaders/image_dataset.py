@@ -486,6 +486,8 @@ class ShadowMapDataset(data.Dataset):
         img_b = cv2.imread(img_id)
         img_b = cv2.cvtColor(img_b, cv2.COLOR_BGR2GRAY)
 
+        print("Shadow path: ", img_id)
+
         img_id = constants.DATASET_PREFIX_5_PATH + self.folder_c + "/" + file_name
         img_c = cv2.imread(img_id)
         img_c = cv2.cvtColor(img_c, cv2.COLOR_BGR2RGB)
@@ -657,6 +659,100 @@ class RealWorldTrainDataset(data.Dataset):
         img_a = self.final_transform_op(img_a)
 
         return file_name, img_a
+
+    def __len__(self):
+        return len(self.image_list_a)
+
+class ShadowMapDataset2(data.Dataset):
+    def __init__(self, image_list_a, folder_a, folder_b, folder_c, transform_config, return_shading: bool, opts):
+        self.image_list_a = image_list_a
+        self.folder_a = folder_a
+        self.folder_b = folder_b
+        self.folder_c = folder_c
+        self.transform_config = transform_config
+        self.return_shading = return_shading
+        self.patch_size = (opts.patch_size, opts.patch_size)
+
+        self.initial_op = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize((256, 256))])
+
+        self.normalize_op = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        self.normalize_op_grey = transforms.Normalize((0.5), (0.5))
+
+        if (transform_config == 1):
+            self.final_transform_op = transforms.Compose([
+                transforms.ToTensor()
+            ])
+
+            self.mask_op = transforms.Compose([
+                transforms.ToTensor()
+            ])
+
+        else:
+            self.final_transform_op = transforms.Compose([
+                transforms.Resize(constants.TEST_IMAGE_SIZE),
+                transforms.ToTensor()
+            ])
+
+            self.mask_op = transforms.Compose([
+                transforms.Resize(constants.TEST_IMAGE_SIZE),
+                transforms.ToTensor()
+            ])
+
+    def __getitem__(self, idx):
+        img_id = self.image_list_a[idx]
+        file_name = os.path.basename(img_id)
+        specific_folder_path = os.path.split(os.path.split(img_id)[0])[0]
+        base_path = os.path.split(os.path.split(specific_folder_path)[0])[0]
+
+        # print(img_id)
+        img_a = cv2.imread(img_id);
+        img_a = cv2.cvtColor(img_a, cv2.COLOR_BGR2RGB)  # because matplot uses RGB, openCV is BGR
+
+        img_id = base_path + "/" + self.folder_a + "/" + file_name
+        # print(img_id)
+        img_b = cv2.imread(img_id);
+        img_b = cv2.cvtColor(img_b, cv2.COLOR_BGR2RGB)  # because matplot uses RGB, openCV is BGR
+
+        img_id = specific_folder_path + "/" + self.folder_b + "/" + file_name
+        # print(img_id)
+        img_c = cv2.imread(img_id)
+        img_c = cv2.cvtColor(img_c, cv2.COLOR_BGR2GRAY)
+
+        img_id = constants.DATASET_PREFIX_5_PATH + self.folder_c + "/" + file_name
+        # print(img_id)
+        img_d = cv2.imread(img_id)
+        img_d = cv2.cvtColor(img_d, cv2.COLOR_BGR2RGB)
+
+        img_a = self.initial_op(img_a)
+        img_b = self.initial_op(img_b)
+        img_c = self.initial_op(img_c)
+        img_d = self.initial_op(img_d)
+
+        if (self.transform_config == 1):
+            crop_indices = transforms.RandomCrop.get_params(img_b, output_size=self.patch_size)
+            i, j, h, w = crop_indices
+
+            img_a = transforms.functional.crop(img_a, i, j, h, w)
+            img_b = transforms.functional.crop(img_b, i, j, h, w)
+            img_c = transforms.functional.crop(img_c, i, j, h, w)
+            img_d = transforms.functional.crop(img_d, i, j, h, w)
+
+        img_a = self.final_transform_op(img_a)
+        img_b = self.final_transform_op(img_b)
+        img_c = self.final_transform_op(img_c)
+        img_d = self.final_transform_op(img_d)
+
+        img_a = self.normalize_op(img_a)
+        img_b = self.normalize_op(img_b)
+        img_c = self.normalize_op_grey(img_c)
+        img_d = self.normalize_op(img_d)
+
+        if (self.return_shading):
+            return file_name, img_a, img_b, img_c, img_d
+        else:
+            return file_name, img_a, img_b, img_c
 
     def __len__(self):
         return len(self.image_list_a)

@@ -72,13 +72,15 @@ def produce_rgb(albedo_tensor, shading_tensor, light_color, shadowmap_tensor):
     shadowmap_tensor = shadowmap_tensor.transpose(0, 1)
     light_color = torch.from_numpy(np.asarray(light_color.split(","), dtype = np.int32))
 
+    print("Shading Range: ", torch.min(shading_tensor).item(), torch.max(shading_tensor).item(), " Mean: ", torch.mean(shading_tensor).item())
+    print("ShadowMap Range: ", torch.min(shadowmap_tensor).item(), torch.max(shadowmap_tensor).item(), " Mean: ", torch.mean(shading_tensor).item())
+    print("Light Range: ", light_color)
+
     #normalize/remove normalization
     albedo_tensor = (albedo_tensor * 0.5) + 0.5
     shading_tensor = (shading_tensor * 0.5) + 0.5
     shadowmap_tensor = (shadowmap_tensor * 0.5) + 0.5
     light_color = light_color / 255.0
-
-    print("Shadow map shape: ", np.shape(shadowmap_tensor))
 
     rgb_img_like = torch.full_like(albedo_tensor, 0)
     rgb_img_like[0] = torch.clip(albedo_tensor[0] * shading_tensor[0] * light_color[0] * shadowmap_tensor, 0.0, 1.0)
@@ -177,7 +179,6 @@ def main(argv):
     print("===================================================")
 
     print("Plotting test images...")
-
     visdom_reporter = plot_utils.VisdomReporter()
     _, _, albedo_batch, _ = next(iter(albedo_loader))
     _, rgb_batch, shadow_batch, shading_batch = next(iter(shadow_loader))
@@ -253,18 +254,18 @@ def main(argv):
     visdom_reporter.plot_image(rgb_tensor, "Test RGB images - " + opts.version_albedo + str(opts.iteration_a))
     visdom_reporter.plot_image(rgb_like, "Test RGB Reconstructed - " + opts.version_albedo + str(opts.iteration_a))
 
-    _, rgb_batch = next(iter(rw_loader))
-    rgb_tensor = rgb_batch.to(device)
-    rgb2albedo = G_albedo(rgb_tensor)
-    rgb2shading = G_shader(rgb_tensor)
-    input2shadow = G_shadow(rgb_tensor)
-    rgb_like = produce_rgb(rgb2albedo, rgb2shading, opts.light_color, input2shadow)
-
-    visdom_reporter.plot_image(rgb_tensor, "RW RGB images - " + opts.version_albedo + str(opts.iteration_a))
-    # visdom_reporter.plot_image(rgb2albedo, "RW RGB 2 Albedo images - " + opts.version_albedo + str(opts.iteration_a))
-    # visdom_reporter.plot_image(rgb2shading, "RW RGB 2 Shading images - " + opts.version_shading + str(opts.iteration_s1))
-    # visdom_reporter.plot_image(input2shadow, "RW RGB 2 Shadow images - " + opts.version_shadow + str(opts.iteration_s2))
-    visdom_reporter.plot_image(rgb_like, "RW RGB Reconstructed - " + opts.version_albedo + str(opts.iteration_a))
+    # _, rgb_batch = next(iter(rw_loader))
+    # rgb_tensor = rgb_batch.to(device)
+    # rgb2albedo = G_albedo(rgb_tensor)
+    # rgb2shading = G_shader(rgb_tensor)
+    # input2shadow = G_shadow(rgb_tensor)
+    # rgb_like = produce_rgb(rgb2albedo, rgb2shading, opts.light_color, input2shadow)
+    #
+    # visdom_reporter.plot_image(rgb_tensor, "RW RGB images - " + opts.version_albedo + str(opts.iteration_a))
+    # # visdom_reporter.plot_image(rgb2albedo, "RW RGB 2 Albedo images - " + opts.version_albedo + str(opts.iteration_a))
+    # # visdom_reporter.plot_image(rgb2shading, "RW RGB 2 Shading images - " + opts.version_shading + str(opts.iteration_s1))
+    # # visdom_reporter.plot_image(input2shadow, "RW RGB 2 Shadow images - " + opts.version_shadow + str(opts.iteration_s2))
+    # visdom_reporter.plot_image(rgb_like, "RW RGB Reconstructed - " + opts.version_albedo + str(opts.iteration_a))
 
 
 

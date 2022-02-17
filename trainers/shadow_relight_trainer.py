@@ -40,6 +40,8 @@ class ShadowRelightTrainer:
             self.G_A = cycle_gan.Generator(input_nc=2, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
         elif (net_config == 4):
             self.G_A = cycle_gan.GeneratorV2(input_nc=2, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, multiply=True).to(self.gpu_device)
+        elif (net_config == 5):
+            self.G_A = unet_gan.UnetGeneratorV2(input_nc=2, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         else:
             self.G_A = cycle_gan.GeneratorV2(input_nc=2, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
@@ -140,6 +142,7 @@ class ShadowRelightTrainer:
             real_tensor = torch.ones_like(prediction)
             fake_tensor = torch.zeros_like(prediction)
 
+            print("A2B shape: ", np.shape(a2b))
             D_A_real_loss = self.adversarial_loss(self.D_A(b_tensor), real_tensor) * self.adv_weight
             D_A_fake_loss = self.adversarial_loss(self.D_A(a2b.detach()), fake_tensor) * self.adv_weight
 

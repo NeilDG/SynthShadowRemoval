@@ -80,6 +80,19 @@ def load_map_test_recursive(path_a, path_c, opts):
 
     return data_loader
 
+def load_map_test_recursive_2(path_a, path_c, opts):
+    a_list = glob.glob(path_a + "/rgb/*.png")
+    print("Length of images: %d" % len(a_list))
+
+    data_loader = torch.utils.data.DataLoader(
+        image_dataset.MapDataset(a_list, path_c, 2, opts),
+        batch_size=2,
+        num_workers=1,
+        shuffle=False
+    )
+
+    return data_loader
+
 def load_color_train_dataset(path_a, path_c, path_segment, opts):
     a_list = assemble_unpaired_data(path_a, opts.img_to_load / 2)
     print("Length of images: %d" % len(a_list))
@@ -256,6 +269,19 @@ def load_shadowmap_test_recursive(path_a, folder_b, folder_c, return_shading: bo
 
     data_loader = torch.utils.data.DataLoader(
         image_dataset.ShadowMapDataset(a_list, folder_b, folder_c, 2, return_shading, opts),
+        batch_size=2,
+        num_workers=1,
+        shuffle=False
+    )
+
+    return data_loader
+
+def load_shadowmap_test_recursive_2(path_a, folder_a, folder_b, folder_c, return_shading: bool, opts):
+    a_list = glob.glob(path_a + "/rgb/*.png")
+    print("Length of images: %d" % len(a_list))
+
+    data_loader = torch.utils.data.DataLoader(
+        image_dataset.ShadowMapDataset2(a_list, folder_a, folder_b, folder_c, 2, return_shading, opts),
         batch_size=2,
         num_workers=1,
         shuffle=False
