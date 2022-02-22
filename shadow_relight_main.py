@@ -99,6 +99,8 @@ def main(argv):
     print(shadow_path_a, shadow_path_b)
     train_loader = dataset_loader.load_shadowrelight_train_dataset(sample_path, shadow_path_a, shadow_path_b, opts)
     test_loader = dataset_loader.load_shadowrelight_test_dataset(sample_path, shadow_path_a, shadow_path_b, opts)
+    sp_train_loader = dataset_loader.load_shadow_priors_train(constants.DATASET_PREFIX_5_PATH + opts.mode + "/", opts)
+    sp_test_loader = dataset_loader.load_shadow_priors_test(constants.DATASET_PREFIX_5_PATH + opts.mode + "/", opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
     start_epoch = 0
     iteration = 0
@@ -110,8 +112,11 @@ def main(argv):
         show_images(a_batch, "Training - A Images")
         show_images(b_batch, "Training - B Images")
 
+        _, a_batch = next(iter(sp_train_loader))
+        show_images(a_batch, "Training - Shadow Priors")
+
     it_table = iteration_table.IterationTable()
-    trainer = shadow_relight_trainer.ShadowRelightTrainer(device, opts, it_table.is_bce_enabled(opts.iteration))
+    trainer = shadow_relight_trainer.ShadowRelightTrainerPrior(device, opts, it_table.is_bce_enabled(opts.iteration))
     trainer.update_penalties(opts.adv_weight, it_table.get_l1_weight(opts.iteration), it_table.get_lpip_weight(opts.iteration),
                              it_table.get_ssim_weight(opts.iteration), opts.bce_weight)
 
@@ -135,18 +140,26 @@ def main(argv):
         b_tensor = b_batch.to(device)
         light_angle_tensor = light_angle_batch.to(device)
 
-        trainer.train(a_tensor, b_tensor, light_angle_tensor)
+        _, sp_batch = next(iter(sp_train_loader))
+        sp_tensor = sp_batch.to(device)
+
+
+        trainer.train(a_tensor, b_tensor, sp_tensor, light_angle_tensor)
 
         view_batch, test_a_batch, test_b_batch, test_light_angle = next(iter(test_loader))
         test_a_tensor = test_a_batch.to(device)
         test_b_tensor = test_b_batch.to(device)
         test_light_angle_tensor = test_light_angle.to(device)
-        trainer.visdom_visualize(a_tensor, b_tensor, light_angle_tensor, test_a_tensor, test_b_tensor, test_light_angle_tensor)
+
+        _, sp_test_batch = next(iter(sp_test_loader))
+        sp_test_tensor = sp_test_batch.to(device)
+
+        trainer.visdom_visualize(a_tensor, b_tensor, sp_tensor, light_angle_tensor, test_a_tensor, test_b_tensor, sp_test_tensor, test_light_angle_tensor)
 
         #plot metrics
         a_tensor = (a_tensor * 0.5) + 0.5
         b_tensor = (b_tensor * 0.5) + 0.5
-        shadow_relight_tensor = (trainer.test(a_tensor, light_angle_tensor) * 0.5) + 0.5
+        shadow_relight_tensor = (trainer.test(a_tensor, sp_tensor, light_angle_tensor) * 0.5) + 0.5
 
         psnr_relight = np.round(kornia.losses.psnr(shadow_relight_tensor, b_tensor, max_val=1.0).item(), 4)
         ssim_relight = np.round(1.0 - kornia.losses.ssim_loss(shadow_relight_tensor, b_tensor, 5).item(), 4)
@@ -162,16 +175,19 @@ def main(argv):
         for i in range(0, 5):
             for epoch in range(start_epoch, constants.num_epochs):
                 # For each batch in the dataloader
-                for i, (train_data, test_data, rw_data) in enumerate(zip(train_loader, test_loader, rw_loader)):
+                for i, (train_data, test_data, sp_train_data, sp_test_data, rw_data) in enumerate(zip(train_loader, test_loader, sp_train_loader, sp_test_loader, rw_loader)):
                     _, a_batch, b_batch, light_angle_batch = train_data
                     a_tensor = a_batch.to(device)
                     b_tensor = b_batch.to(device)
                     light_angle_tensor = light_angle_batch.to(device)
 
-                    trainer.train(a_tensor, b_tensor, light_angle_tensor)
+                    _, sp_batch = sp_train_data
+                    sp_tensor = sp_batch.to(device)
+
+                    trainer.train(a_tensor, b_tensor, sp_tensor, light_angle_tensor)
                     iteration = iteration + 1
 
-                    stopper_method.test(trainer, epoch, iteration, trainer.test(a_tensor, light_angle_tensor), b_tensor)
+                    stopper_method.test(trainer, epoch, iteration, trainer.test(a_tensor, sp_tensor, light_angle_tensor), b_tensor)
 
                     if (stopper_method.did_stop_condition_met()):
                         break
@@ -181,18 +197,22 @@ def main(argv):
                 test_a_tensor = test_a_batch.to(device)
                 test_b_tensor = test_b_batch.to(device)
                 test_light_angle_tensor = test_light_angle.to(device)
-                trainer.visdom_visualize(a_tensor, b_tensor, light_angle_tensor, test_a_tensor, test_b_tensor, test_light_angle_tensor)
 
+                _, sp_test_batch = sp_test_data
+                sp_test_tensor = sp_test_batch.to(device)
+
+                trainer.visdom_visualize(a_tensor, b_tensor, sp_tensor, light_angle_tensor, test_a_tensor, test_b_tensor, sp_test_tensor, test_light_angle_tensor)
+                trainer.visdom_plot(iteration)
                 # _, rw_batch = rw_data
                 # rw_tensor = rw_batch.to(device)
                 # trainer.visdom_infer(rw_tensor)
 
                 if (stopper_method.did_stop_condition_met()):
                     # visualize last result
-                    view_batch, test_a_batch, test_b_batch = test_data
-                    test_a_tensor = test_a_batch.to(device)
-                    test_b_tensor = test_b_batch.to(device)
-                    trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
+                    # view_batch, test_a_batch, test_b_batch = test_data
+                    # test_a_tensor = test_a_batch.to(device)
+                    # test_b_tensor = test_b_batch.to(device)
+                    # trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
                     break
 
 

@@ -9,6 +9,7 @@ import torchvision.utils as vutils
 import numpy as np
 import matplotlib.pyplot as plt
 from loaders import dataset_loader
+from model import iteration_table
 from trainers import relighting_trainer
 from trainers import early_stopper
 from utils import tensor_utils
@@ -21,19 +22,18 @@ parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
 parser.add_option('--load_previous', type=int, help="Load previous?", default=0)
 parser.add_option('--iteration', type=int, help="Style version?", default="1")
 parser.add_option('--adv_weight', type=float, help="Weight", default="1.0")
-parser.add_option('--l1_weight', type=float, help="Weight", default="10.0")
-parser.add_option('--lpip_weight', type=float, help="Weight", default="0.0")
-parser.add_option('--ssim_weight', type=float, help="Weight", default="0.0")
+parser.add_option('--bce_weight', type=float, help="Weight", default="0.0")
 parser.add_option('--num_blocks', type=int)
 parser.add_option('--net_config', type=int)
-parser.add_option('--use_bce', type=int, default = "0")
-parser.add_option('--g_lr', type=float, help="LR", default="0.00002")
-parser.add_option('--d_lr', type=float, help="LR", default="0.00002")
+parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
+parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--batch_size', type=int, help="batch_size", default="128")
+parser.add_option('--patch_size', type=int, help="patch_size", default="64")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--version_name', type=str, help="version_name")
-parser.add_option('--test_mode', type=int, help= "Test mode?", default=0)
-parser.add_option('--min_epochs', type=int, help= "Min epochs", default=60)
+parser.add_option('--mode', type=str, default="elevation")
+parser.add_option('--test_mode', type=int, help="Test mode?", default=0)
+parser.add_option('--min_epochs', type=int, help="Min epochs", default=120)
 
 #--img_to_load=-1 --load_previous=1
 #Update config if on COARE
@@ -43,31 +43,24 @@ def update_config(opts):
     constants.RELIGHTING_VERSION = opts.version_name
     constants.RELIGHTING_CHECKPATH = 'checkpoint/' + constants.RELIGHTING_VERSION + "_" + constants.ITERATION + '.pt'
 
-    #COARE
-    if(constants.server_config == 1):
+    # COARE
+    if (constants.server_config == 1):
         print("Using COARE configuration ", opts.version_name)
         constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/"
-        constants.DATASET_RGB_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset/default/"
-        constants.DATASET_ALBEDO_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset/albedo/"
-        constants.DATASET_NORMAL_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset/normal/"
-        constants.DATASET_SPECULAR_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset/specular/"
-        constants.DATASET_SMOOTHNESS_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset/smoothness/"
+        constants.DATASET_PREFIX_5_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 5/"
+        constants.DATASET_ALBEDO_5_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 5/albedo/"
 
-    #CCS JUPYTER
+    # CCS JUPYTER
     elif (constants.server_config == 2):
-        print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", constants.MAPPER_CHECKPATH)
+        print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", constants.RELIGHTING_CHECKPATH)
         constants.DATASET_PLACES_PATH = "Places Dataset/"
 
-    #GCLOUD
+    # GCLOUD
     elif (constants.server_config == 3):
-        print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.MAPPER_CHECKPATH)
+        print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.RELIGHTING_CHECKPATH)
         constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/"
-        constants.DATASET_RGB_PATH = "/home/neil_delgallego/SynthWeather Dataset/default/"
-        constants.DATASET_ALBEDO_PATH = "/home/neil_delgallego/SynthWeather Dataset/albedo/"
-        constants.DATASET_NORMAL_PATH = "/home/neil_delgallego/SynthWeather Dataset/normal/"
-        constants.DATASET_SPECULAR_PATH = "/home/neil_delgallego/SynthWeather Dataset/specular/"
-        constants.DATASET_SMOOTHNESS_PATH = "/home/neil_delgallego/SynthWeather Dataset/smoothness/"
-        constants.DATASET_WEATHER_SEGMENT_PATH = "/home/neil_delgallego/SynthWeather Dataset/segmentation/"
+        constants.DATASET_PREFIX_5_PATH = "/home/neil_delgallego/SynthWeather Dataset 5/"
+        constants.DATASET_ALBEDO_5_PATH = "/home/neil_delgallego/SynthWeather Dataset 5/albedo/"
 
 def show_images(img_tensor, caption):
     device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
@@ -82,6 +75,7 @@ def main(argv):
     (opts, args) = parser.parse_args(argv)
     update_config(opts)
     print(opts)
+    # torch.multiprocessing.set_sharing_strategy('file_system')
     print("=====================BEGIN============================")
     print("Server config? %d Has GPU available? %d Count: %d" % (constants.server_config, torch.cuda.is_available(), torch.cuda.device_count()))
     print("Torch CUDA version: %s" % torch.version.cuda)
@@ -93,35 +87,46 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    # Create the dataloader
-    train_loader = dataset_loader.load_render_train_dataset(constants.DATASET_RGB_PATH, constants.DATASET_ALBEDO_PATH, constants.DATASET_NORMAL_PATH,
-                                                            constants.DATASET_SPECULAR_PATH, constants.DATASET_SMOOTHNESS_PATH, constants.DATASET_LIGHTMAP_PATH, opts)
+    albedo_dir = constants.DATASET_ALBEDO_5_PATH
+    shading_dir = constants.DATASET_PREFIX_5_PATH + "shading/"
+    rgb_dir = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "rgb/"
+    shadow_dir = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "shadow_map/"
 
-    test_loader = dataset_loader.load_render_test_dataset(constants.DATASET_RGB_PATH, constants.DATASET_ALBEDO_PATH, constants.DATASET_NORMAL_PATH,
-                                                            constants.DATASET_SPECULAR_PATH, constants.DATASET_SMOOTHNESS_PATH, constants.DATASET_LIGHTMAP_PATH, opts)
+    print(rgb_dir, albedo_dir, shading_dir, shadow_dir)
+
+    # Create the dataloader
+    train_loader = dataset_loader.load_map_train_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts)
+    test_loader = dataset_loader.load_map_test_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts)
+    rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
+
     index = 0
     start_epoch = 0
     iteration = 0
 
     # Plot some training images
-    if (constants.server_config == 0):
-        _, a_batch, b_batch, c_batch, d_batch, e_batch, f_batch, = next(iter(train_loader))
-        show_images(a_batch, "Training - A Images")
-        show_images(b_batch, "Training - B Images")
-        show_images(c_batch, "Training - C Images")
-        show_images(d_batch, "Training - D Images")
-        show_images(tensor_utils.interpret_one_hot(e_batch), "Training - E Images")
-        show_images(f_batch, "Training - F Images")
+    # if (constants.server_config == 0):
+    #     _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = next(iter(train_loader))
+    #     show_images(input_rgb_batch, "Training - A Images")
+    #     show_images(albedo_batch, "Training - B Images")
+    #     show_images(shading_batch, "Training - C Images")
+    #     show_images(input_shadow_batch, "Training - D Images")
+    #     show_images(target_shadow_batch, "Training - E Images")
+    #     show_images(target_rgb_batch, "Training - F Images")
 
-    trainer = relighting_trainer.RelightingTrainer(device, 16, opts)
-    trainer.update_penalties(opts.adv_weight, opts.l1_weight, opts.lpip_weight, opts.ssim_weight)
+        # print(light_angle_batch)
 
-    stopper_method = early_stopper.EarlyStopper(opts.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, 2000)
+    it_table = iteration_table.IterationTable()
+    trainer = relighting_trainer.RelightingTrainer(device, opts, it_table.is_bce_enabled(opts.iteration))
+    trainer.update_penalties(opts.adv_weight, it_table.get_l1_weight(opts.iteration), it_table.get_lpip_weight(opts.iteration),
+                             it_table.get_ssim_weight(opts.iteration), opts.bce_weight)
 
+    last_metric = 10000.0
+    stopper_method = early_stopper.EarlyStopper(opts.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, 2000, last_metric)
     if (opts.load_previous):
         checkpoint = torch.load(constants.RELIGHTING_CHECKPATH, map_location=device)
         start_epoch = checkpoint['epoch'] + 1
         iteration = checkpoint['iteration'] + 1
+        last_metric = checkpoint[constants.LAST_METRIC_KEY]
         trainer.load_saved_state(checkpoint)
 
         print("Loaded checkpt: %s Current epoch: %d" % (constants.RELIGHTING_CHECKPATH, start_epoch))
@@ -129,57 +134,64 @@ def main(argv):
 
     if(opts.test_mode == 1):
         print("Plotting test images...")
-        _, a_batch, b_batch, c_batch, d_batch, e_batch, f_batch, = next(iter(train_loader))
-        a_tensor = a_batch.to(device)
-        b_tensor = b_batch.to(device)
-        c_tensor = c_batch.to(device)
-        d_tensor = d_batch.to(device)
-        e_tensor = e_batch.to(device)
-        f_tensor = f_batch.to(device)
+        _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = next(iter(train_loader))
+        input_rgb_tensor = input_rgb_batch.to(device)
+        target_rgb_tensor = target_rgb_batch.to(device)
+        albedo_tensor = albedo_batch.to(device)
+        shading_tensor = shading_batch.to(device)
+        input_shadow_tensor = input_shadow_batch.to(device)
+        target_shadow_tensor = target_shadow_batch.to(device)
+        light_angle_tensor = light_angle_batch.to(device)
 
-        trainer.train(torch.cat([b_tensor, c_tensor, d_tensor, e_tensor, f_tensor], 1), a_tensor)
+        trainer.train(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor)
+        trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor, "Training")
 
-        _, view_a_batch, view_b_batch, view_c_batch, view_d_batch, view_e_batch, view_f_batch, = next(iter(test_loader))
-        view_a_tensor = view_a_batch.to(device)
-        view_b_tensor = view_b_batch.to(device)
-        view_c_tensor = view_c_batch.to(device)
-        view_d_tensor = view_d_batch.to(device)
-        view_e_tensor = view_e_batch.to(device)
-        view_f_tensor = view_f_batch.to(device)
-        trainer.visdom_visualize(b_tensor, torch.cat([b_tensor, c_tensor, d_tensor, e_tensor, f_tensor], 1), a_tensor,
-                                 view_b_tensor, torch.cat([view_b_tensor, view_c_tensor, view_d_tensor, view_e_tensor, view_f_tensor], 1), view_a_tensor)
+        _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = next(iter(test_loader))
+        input_rgb_tensor = input_rgb_batch.to(device)
+        target_rgb_tensor = target_rgb_batch.to(device)
+        albedo_tensor = albedo_batch.to(device)
+        shading_tensor = shading_batch.to(device)
+        input_shadow_tensor = input_shadow_batch.to(device)
+        target_shadow_tensor = target_shadow_batch.to(device)
+        light_angle_tensor = light_angle_batch.to(device)
+
+        trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor, "Test")
+
+        _, input_rgb_batch = next(iter(rw_loader))
+        input_rgb_tensor = input_rgb_batch.to(device)
+        trainer.visdom_infer(input_rgb_tensor)
 
     else:
         print("Starting Training Loop...")
         for epoch in range(start_epoch, constants.num_epochs):
             # For each batch in the dataloader
-            for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader)):
-                _, a_batch, b_batch, c_batch, d_batch, e_batch, f_batch, = train_data
-                a_tensor = a_batch.to(device)
-                b_tensor = b_batch.to(device)
-                c_tensor = c_batch.to(device)
-                d_tensor = d_batch.to(device)
-                e_tensor = e_batch.to(device)
-                f_tensor = f_batch.to(device)
+            for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader, rw_loader)):
+                _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = train_data
+                input_rgb_tensor = input_rgb_batch.to(device)
+                target_rgb_tensor = target_rgb_batch.to(device)
+                albedo_tensor = albedo_batch.to(device)
+                shading_tensor = shading_batch.to(device)
+                input_shadow_tensor = input_shadow_batch.to(device)
+                target_shadow_tensor = target_shadow_batch.to(device)
+                light_angle_tensor = light_angle_batch.to(device)
 
-                input_tensor = torch.cat([b_tensor, c_tensor, d_tensor, e_tensor, f_tensor], 1)
-                trainer.train(input_tensor, a_tensor)
+                trainer.train(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor)
                 iteration = iteration + 1
 
-                stopper_method.test(trainer, epoch, iteration, trainer.test(input_tensor), a_tensor)
+                stopper_method.test(trainer, epoch, iteration, trainer.test(input_rgb_tensor), input_rgb_tensor)
 
                 if (i % 300 == 0):
-                    trainer.save_states_checkpt(epoch, iteration)
-                    _, view_a_batch, view_b_batch, view_c_batch, view_d_batch, view_e_batch, view_f_batch, = test_data
-                    view_a_tensor = view_a_batch.to(device)
-                    view_b_tensor = view_b_batch.to(device)
-                    view_c_tensor = view_c_batch.to(device)
-                    view_d_tensor = view_d_batch.to(device)
-                    view_e_tensor = view_e_batch.to(device)
-                    view_f_tensor = view_f_batch.to(device)
-                    # trainer.visdom_visualize(torch.cat([b_tensor, c_tensor, d_tensor, e_tensor, f_tensor], 1), a_tensor,
-                    #                          torch.cat([view_b_tensor, view_c_tensor, view_d_tensor, view_e_tensor, view_f_tensor], 1), view_a_tensor)
-                    # trainer.visdom_plot(iteration)
+                    trainer.save_states_checkpt(epoch, iteration, last_metric)
+                    _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = test_data
+                    input_rgb_tensor = input_rgb_batch.to(device)
+                    target_rgb_tensor = target_rgb_batch.to(device)
+                    albedo_tensor = albedo_batch.to(device)
+                    shading_tensor = shading_batch.to(device)
+                    input_shadow_tensor = input_shadow_batch.to(device)
+                    target_shadow_tensor = target_shadow_batch.to(device)
+                    light_angle_tensor = light_angle_batch.to(device)
+                    trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor, "Test")
+                    trainer.visdom_plot(iteration)
 
                 if (stopper_method.did_stop_condition_met()):
                     break
