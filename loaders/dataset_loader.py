@@ -139,9 +139,9 @@ def load_single_test_dataset(path_a, opts):
 
     data_loader = torch.utils.data.DataLoader(
         image_dataset.RealWorldDataset(a_list),
-        batch_size=2,
+        batch_size=4,
         num_workers=1,
-        shuffle=False
+        shuffle=True
     )
 
     return data_loader
@@ -224,12 +224,12 @@ def load_shading_test_recursive(path_a, path_c, opts):
 
     return data_loader
 
-def load_shadowrelight_train_dataset(sample_path, path_a, path_b, opts):
+def load_shadowrelight_train_dataset(sample_path, path_rgb, path_a, path_b, opts):
     img_length = len(assemble_unpaired_data(sample_path, opts.img_to_load))
     print("Length of images: %d" % img_length)
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.ShadowRelightDatset(img_length, path_a, path_b, 1, opts),
+        image_dataset.ShadowRelightDatset(img_length, path_rgb, path_a, path_b, 1, opts),
         batch_size=opts.batch_size,
         num_workers=opts.num_workers,
         shuffle=True
@@ -237,12 +237,12 @@ def load_shadowrelight_train_dataset(sample_path, path_a, path_b, opts):
 
     return data_loader
 
-def load_shadowrelight_test_dataset(sample_path, path_a, path_b, opts):
+def load_shadowrelight_test_dataset(sample_path, path_rgb, path_a, path_b, opts):
     img_length = len(assemble_unpaired_data(sample_path, opts.img_to_load))
     print("Length of images: %d" % img_length)
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.ShadowRelightDatset(img_length, path_a, path_b, 2, opts),
+        image_dataset.ShadowRelightDatset(img_length, path_rgb, path_a, path_b, 2, opts),
         batch_size=2,
         num_workers=1,
         shuffle=False

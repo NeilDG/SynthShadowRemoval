@@ -63,17 +63,17 @@ def train_shadow():
               "--mode=azimuth --min_epochs=50 --version_name=\"rgb2shadow_v8.07\" --iteration=8")
 
 def train_shadow_relight():
-    os.system("python \"shadow_relight_main.py\" --num_workers=6 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=72 --net_config=2 --num_blocks=0 "
-              "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.06\" --iteration=5")
+    os.system("python \"shadow_relight_main.py\" --num_workers=6 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=128 --batch_size=108 --net_config=2 --num_blocks=0 "
+              "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.08\" --iteration=5")
 
-    os.system("python \"shadow_relight_main.py\" --num_workers=6 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=128 --batch_size=72 --net_config=2 --num_blocks=0 "
-              "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.06\" --iteration=6")
+    os.system("python \"shadow_relight_main.py\" --num_workers=6 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=128 --batch_size=108 --net_config=2 --num_blocks=0 "
+              "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.08\" --iteration=6")
 
-    os.system("python \"shadow_relight_main.py\" --num_workers=6 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=128 --batch_size=72 --net_config=2 --num_blocks=0 "
-              "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.06\" --iteration=7")
-
-    os.system("python \"shadow_relight_main.py\" --num_workers=6 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=128 --batch_size=72 --net_config=2 --num_blocks=0 "
-              "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.06\" --iteration=8")
+    # os.system("python \"shadow_relight_main.py\" --num_workers=6 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=128 --batch_size=108 --net_config=2 --num_blocks=0 "
+    #           "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.06\" --iteration=7")
+    #
+    # os.system("python \"shadow_relight_main.py\" --num_workers=6 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=128 --batch_size=108 --net_config=2 --num_blocks=0 "
+    #           "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.06\" --iteration=8")
 
 def train_relighting():
     os.system("python \"relighting_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=1 --patch_size=128 --batch_size=48 --net_config=2 --num_blocks=0 "

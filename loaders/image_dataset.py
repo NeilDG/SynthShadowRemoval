@@ -558,10 +558,11 @@ class ImageRelightDataset(data.Dataset):
         return self.img_length
 
 class ShadowRelightDatset(data.Dataset):
-    def __init__(self, img_length, path_a, path_b, transform_config, opts):
+    def __init__(self, img_length, input_rgb_path, input_shadow_path, desired_shadow_path, transform_config, opts):
         self.img_length = img_length
-        self.path_a = path_a
-        self.path_b = path_b
+        self.path_a = input_shadow_path
+        self.path_b = desired_shadow_path
+        self.path_rgb = input_rgb_path
         self.transform_config = transform_config
         self.patch_size = (opts.patch_size, opts.patch_size)
         self.light_angles = [0, 36, 72, 108, 144]
@@ -571,9 +572,14 @@ class ShadowRelightDatset(data.Dataset):
             transforms.Resize((256, 256))])
 
         if (transform_config == 1):
-            self.final_transform_op = transforms.Compose([
+            self.final_transform_op_grey = transforms.Compose([
                 transforms.ToTensor(),
                 transforms.Normalize((0.5,), (0.5,))
+            ])
+
+            self.final_transform_op = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
             ])
 
             self.mask_op = transforms.Compose([
@@ -581,10 +587,16 @@ class ShadowRelightDatset(data.Dataset):
             ])
 
         else:
-            self.final_transform_op = transforms.Compose([
+            self.final_transform_op_grey = transforms.Compose([
                 transforms.Resize(constants.TEST_IMAGE_SIZE),
                 transforms.ToTensor(),
                 transforms.Normalize((0.5,), (0.5,))
+            ])
+
+            self.final_transform_op = transforms.Compose([
+                transforms.Resize(constants.TEST_IMAGE_SIZE),
+                transforms.ToTensor(),
+                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
             ])
 
             self.mask_op = transforms.Compose([
@@ -601,6 +613,10 @@ class ShadowRelightDatset(data.Dataset):
         img_a = cv2.imread(img_a_path)
         img_a = cv2.cvtColor(img_a, cv2.COLOR_BGR2GRAY)
 
+        path = self.path_rgb.format(input_light_angle=light_angle_a) + file_name
+        img_rgb = cv2.imread(path)
+        img_rgb = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2RGB)
+
         #randomize desired light angle
         light_angle_b = np.random.choice(self.light_angles)
         while light_angle_a == light_angle_b:
@@ -611,6 +627,7 @@ class ShadowRelightDatset(data.Dataset):
         img_b = cv2.imread(img_b_path)
         img_b = cv2.cvtColor(img_b, cv2.COLOR_BGR2GRAY)
 
+        img_rgb = self.initial_op(img_rgb)
         img_a = self.initial_op(img_a)
         img_b = self.initial_op(img_b)
 
@@ -618,15 +635,17 @@ class ShadowRelightDatset(data.Dataset):
             crop_indices = transforms.RandomCrop.get_params(img_a, output_size=self.patch_size)
             i, j, h, w = crop_indices
 
+            img_rgb = transforms.functional.crop(img_rgb, i, j, h, w)
             img_a = transforms.functional.crop(img_a, i, j, h, w)
             img_b = transforms.functional.crop(img_b, i, j, h, w)
 
-        img_a = self.final_transform_op(img_a)
-        img_b = self.final_transform_op(img_b)
+        img_rgb = self.final_transform_op(img_rgb)
+        img_a = self.final_transform_op_grey(img_a)
+        img_b = self.final_transform_op_grey(img_b)
         light_angle_b = normalize(light_angle_b)
         light_angle_tensor = torch.full_like(img_a[:, :, :], light_angle_b)
 
-        return file_name, img_a, img_b, light_angle_tensor
+        return file_name, img_rgb, img_a, img_b, light_angle_tensor
 
     def __len__(self):
         return self.img_length

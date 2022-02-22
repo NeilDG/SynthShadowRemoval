@@ -204,7 +204,7 @@ def main(argv):
 
     print("Plotting test images...")
     visdom_reporter = plot_utils.VisdomReporter()
-    _, input_rgb_batch, albedo_batch, shading_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = next(iter(input_loader))
+    _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = next(iter(input_loader))
     input_rgb_tensor = input_rgb_batch.to(device)
     target_rgb_tensor = target_rgb_batch.to(device)
     albedo_tensor = albedo_batch.to(device)
