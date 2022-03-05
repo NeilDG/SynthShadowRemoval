@@ -189,11 +189,11 @@ def main(argv):
     G_shadow.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
 
     if (opts.net_config_s3 == 1):
-        G_shadow_remap = cycle_gan.Generator(input_nc=2, output_nc=1, n_residual_blocks=opts.num_blocks_s3).to(device)
+        G_shadow_remap = cycle_gan.Generator(input_nc=5, output_nc=1, n_residual_blocks=opts.num_blocks_s3).to(device)
     elif (opts.net_config_s3 == 2):
-        G_shadow_remap = unet_gan.UnetGenerator(input_nc=2, output_nc=1, num_downs=opts.num_blocks_s3).to(device)
+        G_shadow_remap = unet_gan.UnetGenerator(input_nc=5, output_nc=1, num_downs=opts.num_blocks_s3).to(device)
     else:
-        G_shadow_remap = cycle_gan.Generator(input_nc=2, output_nc=1, n_residual_blocks=opts.num_blocks_s3, has_dropout=False).to(device)
+        G_shadow_remap = cycle_gan.Generator(input_nc=5, output_nc=1, n_residual_blocks=opts.num_blocks_s3, has_dropout=False).to(device)
 
     SHADOW_REMAP_CHECKPATH = 'checkpoint/' + opts.version_shadow_remap + "_" + str(opts.iteration_s3) + '.pt'
     checkpoint = torch.load(SHADOW_REMAP_CHECKPATH, map_location=device)
@@ -224,7 +224,7 @@ def main(argv):
 
     if (opts.test_code[2] == "1"):
         input2shadow = G_shadow(input_rgb_tensor)
-        concat_input = torch.cat([input2shadow, light_angle_tensor], 1)
+        concat_input = torch.cat([input2shadow, input_rgb_tensor, light_angle_tensor], 1)
         input2shadow = G_shadow_remap(concat_input)
     else:
         input2shadow = target_shadow_tensor
@@ -291,7 +291,7 @@ def main(argv):
     #desired light angle
     light_angle = image_dataset.normalize(36)
     light_angle_tensor = torch.full_like(input2shadow, light_angle)
-    concat_input = torch.cat([input2shadow, light_angle_tensor], 1)
+    concat_input = torch.cat([input2shadow, target_rgb_tensor, light_angle_tensor], 1)
     input2shadow = G_shadow_remap(concat_input)
 
     rgb_like = produce_rgb(rgb2albedo, rgb2shading, opts.light_color, input2shadow)

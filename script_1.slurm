@@ -19,14 +19,14 @@ module load cuda/10.1_cudnn-7.6.5
 
 source activate NeilGAN_V2
 
-srun python shadow_relight_main.py \
+srun python relighting_main.py \
 --iteration=$ITERATION \
 --server_config=1 \
 --num_workers=6 \
---batch_size=128 \
+--batch_size=64 \
 --net_config=1 --num_blocks=6 \
 --patch_size=128 \
---version_name="shadow2relight_v1.05" --min_epochs=100 \
+--version_name="maps2rgb_rgb2maps_v2.00" --mode=azimuth --min_epochs=100 \
 --img_to_load=-1 --load_previous=0
 
 

@@ -144,7 +144,7 @@ def main(argv):
         light_angle_tensor = light_angle_batch.to(device)
 
         trainer.train(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor)
-        trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor, "Training")
+        # trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor, "Training")
 
         _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = next(iter(test_loader))
         input_rgb_tensor = input_rgb_batch.to(device)
@@ -165,7 +165,7 @@ def main(argv):
         print("Starting Training Loop...")
         for epoch in range(start_epoch, constants.num_epochs):
             # For each batch in the dataloader
-            for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader, rw_loader)):
+            for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader)):
                 _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = train_data
                 input_rgb_tensor = input_rgb_batch.to(device)
                 target_rgb_tensor = target_rgb_batch.to(device)

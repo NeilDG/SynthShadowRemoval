@@ -12,6 +12,7 @@ import itertools
 import numpy as np
 import torch.nn as nn
 from utils import plot_utils
+from utils import tensor_utils
 from custom_losses import ssim_loss
 import lpips
 
@@ -159,29 +160,29 @@ class RelightingTrainer:
         print("SSIM weight: ", str(self.ssim_weight))
         print("BCE weight: ", str(self.bce_weight))
 
-    def produce_rgb(self, albedo_tensor, shading_tensor, light_color, shadowmap_tensor):
-        albedo_tensor = albedo_tensor.transpose(0, 1)
-        shading_tensor = shading_tensor.transpose(0, 1)
-        shadowmap_tensor = shadowmap_tensor.transpose(0, 1)
-        light_color = torch.from_numpy(np.asarray(light_color.split(","), dtype=np.int32))
-
-        # print("Shading Range: ", torch.min(shading_tensor).item(), torch.max(shading_tensor).item(), " Mean: ", torch.mean(shading_tensor).item())
-        # print("ShadowMap Range: ", torch.min(shadowmap_tensor).item(), torch.max(shadowmap_tensor).item(), " Mean: ", torch.mean(shading_tensor).item())
-        # print("Light Range: ", light_color)
-
-        # normalize/remove normalization
-        albedo_tensor = (albedo_tensor * 0.5) + 0.5
-        shading_tensor = (shading_tensor * 0.5) + 0.5
-        shadowmap_tensor = (shadowmap_tensor * 0.5) + 0.5
-        light_color = light_color / 255.0
-
-        rgb_img_like = torch.full_like(albedo_tensor, 0)
-        rgb_img_like[0] = torch.clip(albedo_tensor[0] * shading_tensor[0] * light_color[0] * shadowmap_tensor, 0.0, 1.0)
-        rgb_img_like[1] = torch.clip(albedo_tensor[1] * shading_tensor[1] * light_color[1] * shadowmap_tensor, 0.0, 1.0)
-        rgb_img_like[2] = torch.clip(albedo_tensor[2] * shading_tensor[2] * light_color[2] * shadowmap_tensor, 0.0, 1.0)
-
-        rgb_img_like = rgb_img_like.transpose(0, 1)
-        return rgb_img_like
+    # def produce_rgb(self, albedo_tensor, shading_tensor, light_color, shadowmap_tensor):
+    #     albedo_tensor = albedo_tensor.transpose(0, 1)
+    #     shading_tensor = shading_tensor.transpose(0, 1)
+    #     shadowmap_tensor = shadowmap_tensor.transpose(0, 1)
+    #     light_color = torch.from_numpy(np.asarray(light_color.split(","), dtype=np.int32))
+    #
+    #     # print("Shading Range: ", torch.min(shading_tensor).item(), torch.max(shading_tensor).item(), " Mean: ", torch.mean(shading_tensor).item())
+    #     # print("ShadowMap Range: ", torch.min(shadowmap_tensor).item(), torch.max(shadowmap_tensor).item(), " Mean: ", torch.mean(shading_tensor).item())
+    #     # print("Light Range: ", light_color)
+    #
+    #     # normalize/remove normalization
+    #     albedo_tensor = (albedo_tensor * 0.5) + 0.5
+    #     shading_tensor = (shading_tensor * 0.5) + 0.5
+    #     shadowmap_tensor = (shadowmap_tensor * 0.5) + 0.5
+    #     light_color = light_color / 255.0
+    #
+    #     rgb_img_like = torch.full_like(albedo_tensor, 0)
+    #     rgb_img_like[0] = torch.clip(albedo_tensor[0] * shading_tensor[0] * light_color[0] * shadowmap_tensor, 0.0, 1.0)
+    #     rgb_img_like[1] = torch.clip(albedo_tensor[1] * shading_tensor[1] * light_color[1] * shadowmap_tensor, 0.0, 1.0)
+    #     rgb_img_like[2] = torch.clip(albedo_tensor[2] * shading_tensor[2] * light_color[2] * shadowmap_tensor, 0.0, 1.0)
+    #
+    #     rgb_img_like = rgb_img_like.transpose(0, 1)
+    #     return rgb_img_like
 
     def train(self, input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor, target_rgb_tensor):
         with amp.autocast():
@@ -256,7 +257,7 @@ class RelightingTrainer:
             real_tensor = torch.ones_like(prediction)
             Z_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            rgb_like = self.produce_rgb(rgb2albedo, rgb2shading, self.default_light_color, rgb2shadow)
+            rgb_like = tensor_utils.produce_rgb(rgb2albedo, rgb2shading, self.default_light_color, rgb2shadow)
             rgb_l1_loss = self.l1_loss(rgb_like, target_rgb_tensor) * self.l1_weight
 
             errG = A_likeness_loss + A_lpip_loss + A_bce_loss + A_adv_loss + \
@@ -284,7 +285,7 @@ class RelightingTrainer:
             rgb2albedo = self.G_A(input_rgb_tensor)
             rgb2shading = self.G_S(input_rgb_tensor)
             rgb2shadow = self.G_Z(input_rgb_tensor)
-            rgb_like = self.produce_rgb(rgb2albedo, rgb2shading, self.default_light_color, rgb2shadow)
+            rgb_like = tensor_utils.produce_rgb(rgb2albedo, rgb2shading, self.default_light_color, rgb2shadow)
         return rgb_like
 
     def visdom_plot(self, iteration):
@@ -295,7 +296,7 @@ class RelightingTrainer:
             rgb2albedo = self.G_A(input_rgb_tensor)
             rgb2shading = self.G_S(input_rgb_tensor)
             rgb2shadow = self.G_Z(input_rgb_tensor)
-            rgb_like = self.produce_rgb(rgb2albedo, rgb2shading, self.default_light_color, rgb2shadow)
+            rgb_like = tensor_utils.produce_rgb(rgb2albedo, rgb2shading, self.default_light_color, rgb2shadow)
 
             self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(rgb_like, str(label) + " RGB Reconstruction - " + constants.RELIGHTING_VERSION + constants.ITERATION)
@@ -310,30 +311,30 @@ class RelightingTrainer:
             self.visdom_reporter.plot_image(rgb2shadow, str(label) + " RGB2Shadow images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(shadow_tensor, str(label) + " Shadow images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
 
-            # plot metrics
-            rgb2albedo = (rgb2albedo * 0.5) + 0.5
-            albedo_tensor = (albedo_tensor * 0.5) + 0.5
-            rgb2shading = (rgb2shading * 0.5) + 0.5
-            shading_tensor = (shading_tensor * 0.5) + 0.5
-            rgb2shadow = (rgb2shadow * 0.5) + 0.5
-            shadow_tensor = (shadow_tensor * 0.5) + 0.5
-            target_rgb_tensor = (target_rgb_tensor * 0.5) + 0.5
-
-            psnr_albedo = np.round(kornia.losses.psnr(rgb2albedo, albedo_tensor, max_val=1.0).item(), 4)
-            ssim_albedo = np.round(1.0 - kornia.losses.ssim_loss(rgb2albedo, albedo_tensor, 5).item(), 4)
-            psnr_shading = np.round(kornia.losses.psnr(rgb2shading, shading_tensor, max_val=1.0).item(), 4)
-            ssim_shading = np.round(1.0 - kornia.losses.ssim_loss(rgb2shading, shading_tensor, 5).item(), 4)
-            psnr_shadow = np.round(kornia.losses.psnr(rgb2shadow, shadow_tensor, max_val=1.0).item(), 4)
-            ssim_shadow = np.round(1.0 - kornia.losses.ssim_loss(rgb2shadow, shadow_tensor, 5).item(), 4)
-            psnr_rgb = np.round(kornia.losses.psnr(rgb_like, target_rgb_tensor, max_val=1.0).item(), 4)
-            ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb_like, target_rgb_tensor, 5).item(), 4)
-            display_text = str(label) + " - Versions: " + constants.RELIGHTING_VERSION + constants.ITERATION +\
-                           "<br> Albedo PSNR: " + str(psnr_albedo) + "<br> Albedo SSIM: " + str(ssim_albedo) +\
-                           "<br> Shading PSNR: " + str(psnr_shading) + "<br> Shading SSIM: " + str(ssim_shading) + \
-                           "<br> Shadow PSNR: " + str(psnr_shadow) + "<br> Shadow SSIM: " + str(ssim_shadow) + \
-                           "<br> RGB Reconstruction PSNR: " + str(psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ssim_rgb)
-
-            self.visdom_reporter.plot_text(display_text)
+            # # plot metrics
+            # rgb2albedo = (rgb2albedo * 0.5) + 0.5
+            # albedo_tensor = (albedo_tensor * 0.5) + 0.5
+            # rgb2shading = (rgb2shading * 0.5) + 0.5
+            # shading_tensor = (shading_tensor * 0.5) + 0.5
+            # rgb2shadow = (rgb2shadow * 0.5) + 0.5
+            # shadow_tensor = (shadow_tensor * 0.5) + 0.5
+            # target_rgb_tensor = (target_rgb_tensor * 0.5) + 0.5
+            #
+            # psnr_albedo = np.round(kornia.losses.psnr(rgb2albedo, albedo_tensor, max_val=1.0).item(), 4)
+            # ssim_albedo = np.round(1.0 - kornia.losses.ssim_loss(rgb2albedo, albedo_tensor, 5).item(), 4)
+            # psnr_shading = np.round(kornia.losses.psnr(rgb2shading, shading_tensor, max_val=1.0).item(), 4)
+            # ssim_shading = np.round(1.0 - kornia.losses.ssim_loss(rgb2shading, shading_tensor, 5).item(), 4)
+            # psnr_shadow = np.round(kornia.losses.psnr(rgb2shadow, shadow_tensor, max_val=1.0).item(), 4)
+            # ssim_shadow = np.round(1.0 - kornia.losses.ssim_loss(rgb2shadow, shadow_tensor, 5).item(), 4)
+            # psnr_rgb = np.round(kornia.losses.psnr(rgb_like, target_rgb_tensor, max_val=1.0).item(), 4)
+            # ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb_like, target_rgb_tensor, 5).item(), 4)
+            # display_text = str(label) + " - Versions: " + constants.RELIGHTING_VERSION + constants.ITERATION +\
+            #                "<br> Albedo PSNR: " + str(psnr_albedo) + "<br> Albedo SSIM: " + str(ssim_albedo) +\
+            #                "<br> Shading PSNR: " + str(psnr_shading) + "<br> Shading SSIM: " + str(ssim_shading) + \
+            #                "<br> Shadow PSNR: " + str(psnr_shadow) + "<br> Shadow SSIM: " + str(ssim_shadow) + \
+            #                "<br> RGB Reconstruction PSNR: " + str(psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ssim_rgb)
+            #
+            # self.visdom_reporter.plot_text(display_text)
 
     # must have a shading generator network first
     def visdom_infer(self, rw_tensor):
@@ -341,7 +342,7 @@ class RelightingTrainer:
             rgb2albedo = self.G_A(rw_tensor)
             rgb2shading = self.G_S(rw_tensor)
             rgb2shadow = self.G_Z(rw_tensor)
-            rgb_like = self.produce_rgb(rgb2albedo, rgb2shading, self.default_light_color, rgb2shadow)
+            rgb_like = tensor_utils.produce_rgb(rgb2albedo, rgb2shading, self.default_light_color, rgb2shadow)
 
             self.visdom_reporter.plot_image(rw_tensor, "Real World images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(rgb_like, "Real World A2B images - " + constants.RELIGHTING_VERSION + constants.ITERATION)

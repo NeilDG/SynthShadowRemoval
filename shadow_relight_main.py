@@ -92,14 +92,16 @@ def main(argv):
     print("Device: %s" % device)
 
     sample_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + "0deg/" + "shadow_map/"
-    rgb_path_a = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "rgb/"
-    shadow_path_a = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "shadow_map/"
-    shadow_path_b = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "shadow_map/"
+    albedo_dir = constants.DATASET_ALBEDO_5_PATH
+    shading_dir = constants.DATASET_PREFIX_5_PATH + "shading/"
+    rgb_dir = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "rgb/"
+    shadow_dir = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "shadow_map/"
+
+    print(rgb_dir, albedo_dir, shading_dir, shadow_dir)
 
     # Create the dataloader
-    print(rgb_path_a, shadow_path_a, shadow_path_b)
-    train_loader = dataset_loader.load_shadowrelight_train_dataset(sample_path, rgb_path_a, shadow_path_a, shadow_path_b, opts)
-    test_loader = dataset_loader.load_shadowrelight_test_dataset(sample_path, rgb_path_a, shadow_path_a, shadow_path_b, opts)
+    train_loader = dataset_loader.load_map_train_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts)
+    test_loader = dataset_loader.load_map_test_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts)
     # sp_train_loader = dataset_loader.load_shadow_priors_train(constants.DATASET_PREFIX_5_PATH + opts.mode + "/", opts)
     # sp_test_loader = dataset_loader.load_shadow_priors_test(constants.DATASET_PREFIX_5_PATH + opts.mode + "/", opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
@@ -136,33 +138,35 @@ def main(argv):
 
     if (opts.test_mode == 1):
         print("Plotting test images...")
-        _, rgb_batch, a_batch, b_batch, light_angle_batch = next(iter(train_loader))
-        rgb_tensor = rgb_batch.to(device)
-        a_tensor = a_batch.to(device)
-        b_tensor = b_batch.to(device)
+        _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = next(iter(train_loader))
+        input_rgb_tensor = input_rgb_batch.to(device)
+        target_rgb_tensor = target_rgb_batch.to(device)
+        albedo_tensor = albedo_batch.to(device)
+        shading_tensor = shading_batch.to(device)
+        input_shadow_tensor = input_shadow_batch.to(device)
+        target_shadow_tensor = target_shadow_batch.to(device)
         light_angle_tensor = light_angle_batch.to(device)
 
-        # _, sp_batch = next(iter(sp_train_loader))
-        # sp_tensor = sp_batch.to(device)
+        trainer.train(input_rgb_tensor, input_shadow_tensor, light_angle_tensor, albedo_tensor, shading_tensor, target_shadow_tensor, target_rgb_tensor)
+        trainer.visdom_visualize(input_rgb_tensor, input_shadow_tensor, light_angle_tensor, albedo_tensor, shading_tensor, target_shadow_tensor, target_rgb_tensor, "Training")
 
-        trainer.train(a_tensor, b_tensor, rgb_tensor, light_angle_tensor)
-        trainer.visdom_visualize(a_tensor, b_tensor, rgb_tensor, light_angle_tensor, "Training")
-
-        _, rgb_batch, a_batch, b_batch, light_angle_batch = next(iter(test_loader))
-        rgb_tensor = rgb_batch.to(device)
-        a_tensor = a_batch.to(device)
-        b_tensor = b_batch.to(device)
+        _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = next(iter(test_loader))
+        input_rgb_tensor = input_rgb_batch.to(device)
+        target_rgb_tensor = target_rgb_batch.to(device)
+        albedo_tensor = albedo_batch.to(device)
+        shading_tensor = shading_batch.to(device)
+        input_shadow_tensor = input_shadow_batch.to(device)
+        target_shadow_tensor = target_shadow_batch.to(device)
         light_angle_tensor = light_angle_batch.to(device)
 
-        trainer.visdom_visualize(a_tensor, b_tensor, rgb_tensor, light_angle_tensor, "Test")
+        trainer.visdom_visualize(input_rgb_tensor, input_shadow_tensor, light_angle_tensor, albedo_tensor, shading_tensor, target_shadow_tensor, target_rgb_tensor, "Test")
 
         #plot metrics
-        shadow_relight_tensor = (trainer.test(a_tensor, rgb_tensor, light_angle_tensor) * 0.5) + 0.5
-        a_tensor = (a_tensor * 0.5) + 0.5
-        b_tensor = (b_tensor * 0.5) + 0.5
+        shadow_relight_tensor = (trainer.test(input_shadow_tensor, input_rgb_tensor, light_angle_tensor) * 0.5) + 0.5
+        target_shadow_tensor = (target_shadow_tensor * 0.5) + 0.5
 
-        psnr_relight = np.round(kornia.losses.psnr(shadow_relight_tensor, b_tensor, max_val=1.0).item(), 4)
-        ssim_relight = np.round(1.0 - kornia.losses.ssim_loss(shadow_relight_tensor, b_tensor, 5).item(), 4)
+        psnr_relight = np.round(kornia.losses.psnr(shadow_relight_tensor, target_shadow_tensor, max_val=1.0).item(), 4)
+        ssim_relight = np.round(1.0 - kornia.losses.ssim_loss(shadow_relight_tensor, target_shadow_tensor, 5).item(), 4)
 
         display_text = "Versions: " + opts.version_name + str(opts.iteration) + \
                        "<br> PSNR: " + str(psnr_relight) + "<br> SSIM: " +str(ssim_relight)
@@ -176,28 +180,34 @@ def main(argv):
             for epoch in range(start_epoch, constants.num_epochs):
                 # For each batch in the dataloader
                 for i, (train_data, test_data, rw_data) in enumerate(zip(train_loader, test_loader, rw_loader)):
-                    _, rgb_batch, a_batch, b_batch, light_angle_batch = train_data
-                    rgb_tensor = rgb_batch.to(device)
-                    a_tensor = a_batch.to(device)
-                    b_tensor = b_batch.to(device)
+                    _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = train_data
+                    input_rgb_tensor = input_rgb_batch.to(device)
+                    target_rgb_tensor = target_rgb_batch.to(device)
+                    albedo_tensor = albedo_batch.to(device)
+                    shading_tensor = shading_batch.to(device)
+                    input_shadow_tensor = input_shadow_batch.to(device)
+                    target_shadow_tensor = target_shadow_batch.to(device)
                     light_angle_tensor = light_angle_batch.to(device)
 
-                    trainer.train(a_tensor, b_tensor, rgb_tensor, light_angle_tensor)
+                    trainer.train(input_rgb_tensor, input_shadow_tensor, light_angle_tensor, albedo_tensor, shading_tensor, target_shadow_tensor, target_rgb_tensor)
                     iteration = iteration + 1
 
-                    stopper_method.test(trainer, epoch, iteration, trainer.test(a_tensor, rgb_tensor, light_angle_tensor), b_tensor)
+                    stopper_method.test(trainer, epoch, iteration, trainer.test(input_shadow_tensor, input_rgb_tensor, light_angle_tensor), target_shadow_tensor)
 
                     if (stopper_method.did_stop_condition_met()):
                         break
 
                 trainer.save_states_checkpt(epoch, iteration, stopper_method.get_last_metric())
-                _, rgb_batch, a_batch, b_batch, light_angle_batch = test_data
-                rgb_tensor = rgb_batch.to(device)
-                a_tensor = a_batch.to(device)
-                b_tensor = b_batch.to(device)
+                _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = next(iter(test_loader))
+                input_rgb_tensor = input_rgb_batch.to(device)
+                target_rgb_tensor = target_rgb_batch.to(device)
+                albedo_tensor = albedo_batch.to(device)
+                shading_tensor = shading_batch.to(device)
+                input_shadow_tensor = input_shadow_batch.to(device)
+                target_shadow_tensor = target_shadow_batch.to(device)
                 light_angle_tensor = light_angle_batch.to(device)
 
-                trainer.visdom_visualize(a_tensor, b_tensor, rgb_tensor, light_angle_tensor, "Test")
+                trainer.visdom_visualize(input_rgb_tensor, input_shadow_tensor, light_angle_tensor, albedo_tensor, shading_tensor, target_shadow_tensor, target_rgb_tensor, "Test")
                 trainer.visdom_plot(iteration)
                 # _, rw_batch = rw_data
                 # rw_tensor = rw_batch.to(device)
@@ -208,6 +218,7 @@ def main(argv):
                     # view_batch, test_a_batch, test_b_batch = test_data
                     # test_a_tensor = test_a_batch.to(device)
                     # test_b_tensor = test_b_batch.to(device)
+
                     # trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
                     break
 

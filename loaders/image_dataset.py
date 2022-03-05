@@ -497,6 +497,7 @@ class ImageRelightDataset(data.Dataset):
 
         #randomize light angle
         light_angle_a = np.random.choice(self.light_angles)
+        # light_angle_a = 36
         img_rgb_path = self.rgb_dir.format(input_light_angle=light_angle_a) + file_name
         input_rgb = cv2.imread(img_rgb_path)  # input rgb
         input_rgb = cv2.cvtColor(input_rgb, cv2.COLOR_BGR2RGB)
@@ -509,6 +510,7 @@ class ImageRelightDataset(data.Dataset):
         light_angle_b = np.random.choice(self.light_angles)
         while(light_angle_b == light_angle_a):
             light_angle_b = np.random.choice(self.light_angles)
+        light_angle_b = 144
         img_c_path = self.shadow_dir.format(input_light_angle=light_angle_b) + file_name
         target_shadow_map = cv2.imread(img_c_path) #target shadow map
         target_shadow_map = cv2.cvtColor(target_shadow_map, cv2.COLOR_BGR2GRAY)

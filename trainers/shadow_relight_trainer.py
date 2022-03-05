@@ -12,6 +12,7 @@ import itertools
 import numpy as np
 import torch.nn as nn
 from utils import plot_utils
+from utils import tensor_utils
 from custom_losses import ssim_loss
 import lpips
 
@@ -425,19 +426,14 @@ class ShadowRelightTrainerPrior:
     def visdom_plot(self, iteration):
         self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict, constants.SHADOWMAP_RELIGHT_CHECKPATH)
 
-    def visdom_visualize(self, a_tensor, b_tensor, shadow_prior_train, light_angle, a_test, b_test, shadow_prior_test, light_angle_test):
+    def visdom_visualize(self, a_tensor, b_tensor, shadow_prior_train, light_angle, label = "Training"):
         with torch.no_grad():
             a2b = self.G_A(self.prepare_input(a_tensor, shadow_prior_train, light_angle))
-            test_a2b = self.G_A(self.prepare_input(a_test, shadow_prior_test, light_angle_test))
 
-            self.visdom_reporter.plot_image(a_tensor, "Training A images - " + constants.SHADOWMAP_RELIGHT_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(shadow_prior_train, "Training Shadow Priors - " + constants.SHADOWMAP_RELIGHT_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(a2b, "Training A2B images - " + constants.SHADOWMAP_RELIGHT_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(b_tensor, "B images - " + constants.SHADOWMAP_RELIGHT_VERSION + constants.ITERATION)
-
-            self.visdom_reporter.plot_image(a_test, "Test A images - " + constants.SHADOWMAP_RELIGHT_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(test_a2b, "Test A2B images - " + constants.SHADOWMAP_RELIGHT_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(b_test, "Test B images - " + constants.SHADOWMAP_RELIGHT_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(a_tensor, str(label) + " A images - " + constants.SHADOWMAP_RELIGHT_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(shadow_prior_train, str(label) + " Shadow Priors - " + constants.SHADOWMAP_RELIGHT_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(a2b, str(label) + " A2B images - " + constants.SHADOWMAP_RELIGHT_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(b_tensor, str(label) + " B images - " + constants.SHADOWMAP_RELIGHT_VERSION + constants.ITERATION)
 
 
     def load_saved_state(self, checkpoint):
@@ -501,6 +497,7 @@ class ShadowRelightTrainerRGB:
         self.g_lr = opts.g_lr
         self.d_lr = opts.d_lr
         self.use_bce = use_bce
+        self.default_light_color = "255,255,255"
 
         self.lpips_loss = lpips.LPIPS(net='vgg').to(self.gpu_device)
         self.ssim_loss = ssim_loss.SSIM()
@@ -540,6 +537,8 @@ class ShadowRelightTrainerRGB:
         self.losses_dict[constants.G_ADV_LOSS_KEY] = []
         self.losses_dict[constants.D_A_FAKE_LOSS_KEY] = []
         self.losses_dict[constants.D_A_REAL_LOSS_KEY] = []
+        self.RGB_RECONSTRUCTION_LOSS_KEY = "RGB_RECONSTRUCTION_LOSS_KEY"
+        self.losses_dict[self.RGB_RECONSTRUCTION_LOSS_KEY] = []
 
         self.caption_dict = {}
         self.caption_dict[constants.G_LOSS_KEY] = "G loss per iteration"
@@ -550,6 +549,7 @@ class ShadowRelightTrainerRGB:
         self.caption_dict[constants.G_ADV_LOSS_KEY] = "G adv loss per iteration"
         self.caption_dict[constants.D_A_FAKE_LOSS_KEY] = "D(A) fake loss per iteration"
         self.caption_dict[constants.D_A_REAL_LOSS_KEY] = "D(A) real loss per iteration"
+        self.caption_dict[self.RGB_RECONSTRUCTION_LOSS_KEY] = "RGB Reconstruction loss per iteration"
     def adversarial_loss(self, pred, target):
         if (self.use_bce == 0):
             return self.l1_loss(pred, target)
@@ -588,27 +588,28 @@ class ShadowRelightTrainerRGB:
         print("SSIM weight: ", str(self.ssim_weight))
         print("BCE weight: ", str(self.bce_weight))
 
-    def prepare_input(self, a_tensor, input_rgb_tensor, light_angle):
+    def prepare_input(self, input_shadow_tensor, input_rgb_tensor, light_angle):
         # light_angle = self.normalize(light_angle)
         # light_angle_tensor = torch.unsqueeze(torch.full_like(a_tensor[:, 0, :, :], light_angle), 1)
         # print("Shapes: ", np.shape(a_tensor), np.shape(light_angle))
-        concat_input = torch.cat([a_tensor, input_rgb_tensor, light_angle], 1)
+        concat_input = torch.cat([input_shadow_tensor, input_rgb_tensor, light_angle], 1)
         return concat_input
 
-    def train(self, a_tensor, b_tensor, input_rgb_tensor, light_angle):
+    def train(self, input_rgb_tensor, input_shadow_tensor, light_angle_tensor,
+              albedo_tensor, shading_tensor, target_shadow_tensor, target_rgb_tensor):
         with amp.autocast():
-            a2b = self.G_A(self.prepare_input(a_tensor, input_rgb_tensor, light_angle))
+            shadow_like = self.G_A(self.prepare_input(input_shadow_tensor, input_rgb_tensor, light_angle_tensor))
 
             self.D_A.train()
             self.optimizerD.zero_grad()
 
-            prediction = self.D_A(b_tensor)
+            prediction = self.D_A(target_shadow_tensor)
             real_tensor = torch.ones_like(prediction)
             fake_tensor = torch.zeros_like(prediction)
 
             # print("A2B shape: ", np.shape(a2b))
-            D_A_real_loss = self.adversarial_loss(self.D_A(b_tensor), real_tensor) * self.adv_weight
-            D_A_fake_loss = self.adversarial_loss(self.D_A(a2b.detach()), fake_tensor) * self.adv_weight
+            D_A_real_loss = self.adversarial_loss(self.D_A(target_shadow_tensor), real_tensor) * self.adv_weight
+            D_A_fake_loss = self.adversarial_loss(self.D_A(shadow_like.detach()), fake_tensor) * self.adv_weight
 
             errD = D_A_real_loss + D_A_fake_loss
 
@@ -620,18 +621,21 @@ class ShadowRelightTrainerRGB:
             self.G_A.train()
             self.optimizerG.zero_grad()
 
-            a2b = self.G_A(self.prepare_input(a_tensor, input_rgb_tensor, light_angle))
+            shadow_like = self.G_A(self.prepare_input(input_shadow_tensor, input_rgb_tensor, light_angle_tensor))
 
-            likeness_loss = self.l1_loss(a2b, b_tensor) * self.l1_weight
-            lpip_loss = self.lpip_loss(a2b, b_tensor) * self.lpip_weight
-            ssim_loss = self.ssim_loss(a2b, b_tensor) * self.ssim_weight
-            bce_loss_val = self.bce_loss_term(a2b, b_tensor) * self.bce_weight
+            likeness_loss = self.l1_loss(shadow_like, target_shadow_tensor) * self.l1_weight
+            lpip_loss = self.lpip_loss(shadow_like, target_shadow_tensor) * self.lpip_weight
+            ssim_loss = self.ssim_loss(shadow_like, target_shadow_tensor) * self.ssim_weight
+            bce_loss_val = self.bce_loss_term(shadow_like, target_shadow_tensor) * self.bce_weight
 
-            prediction = self.D_A(a2b)
+            prediction = self.D_A(shadow_like)
             real_tensor = torch.ones_like(prediction)
             A_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            errG = A_adv_loss + likeness_loss + lpip_loss + ssim_loss + bce_loss_val
+            rgb_like = tensor_utils.produce_rgb(albedo_tensor, shading_tensor, self.default_light_color, shadow_like)
+            rgb_l1_loss = self.l1_loss(rgb_like, target_rgb_tensor) * self.l1_weight
+
+            errG = A_adv_loss + likeness_loss + lpip_loss + ssim_loss + bce_loss_val + rgb_l1_loss
 
             self.fp16_scaler.scale(errG).backward()
             self.fp16_scaler.step(self.optimizerG)
@@ -647,23 +651,30 @@ class ShadowRelightTrainerRGB:
             self.losses_dict[constants.G_ADV_LOSS_KEY].append(A_adv_loss.item())
             self.losses_dict[constants.D_A_FAKE_LOSS_KEY].append(D_A_fake_loss.item())
             self.losses_dict[constants.D_A_REAL_LOSS_KEY].append(D_A_real_loss.item())
+            self.losses_dict[self.RGB_RECONSTRUCTION_LOSS_KEY].append(rgb_l1_loss.item())
 
-    def test(self, a_tensor, input_rgb_tensor, light_angle):
+    def test(self, input_shadow_tensor, input_rgb_tensor, light_angle):
         with torch.no_grad():
-            a2b = self.G_A(self.prepare_input(a_tensor, input_rgb_tensor, light_angle))
+            a2b = self.G_A(self.prepare_input(input_shadow_tensor, input_rgb_tensor, light_angle))
         return a2b
 
     def visdom_plot(self, iteration):
         self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict, constants.SHADOWMAP_RELIGHT_CHECKPATH)
 
-    def visdom_visualize(self, a_tensor, b_tensor, input_rgb_tensor, light_angle, label = "Training"):
+    def visdom_visualize(self, input_rgb_tensor, input_shadow_tensor, light_angle_tensor,
+              albedo_tensor, shading_tensor, target_shadow_tensor, target_rgb_tensor, label="Training"):
         with torch.no_grad():
-            a2b = self.G_A(self.prepare_input(a_tensor, input_rgb_tensor, light_angle))
+            shadow_like = self.G_A(self.prepare_input(input_shadow_tensor, input_rgb_tensor, light_angle_tensor))
+            rgb_like = tensor_utils.produce_rgb(albedo_tensor, shading_tensor, self.default_light_color, shadow_like)
 
-            self.visdom_reporter.plot_image(a_tensor, str(label) + " A images - " + constants.SHADOWMAP_RELIGHT_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(input_rgb_tensor,  str(label) + " Input RGB - " + constants.SHADOWMAP_RELIGHT_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(a2b,  str(label) + " A2B images - " + constants.SHADOWMAP_RELIGHT_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(b_tensor,  str(label) + " B images - " + constants.SHADOWMAP_RELIGHT_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(rgb_like, str(label) + " RGB Reconstruction - " + constants.RELIGHTING_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(target_rgb_tensor, str(label) + " Target RGB Images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
+
+            self.visdom_reporter.plot_image(shadow_like, str(label) + " RGB2Shadow images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(target_shadow_tensor, str(label) + " Shadow images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
+
+
 
     def load_saved_state(self, checkpoint):
         self.G_A.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
