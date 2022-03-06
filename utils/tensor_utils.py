@@ -270,6 +270,32 @@ def measure_ssim(img1, img2):
 
     return structural_similarity(img1, img2, multichannel=True, gaussian_weights=True, sigma=1.5)
 
+def produce_rgb(albedo_tensor, shading_tensor, light_color, shadowmap_tensor):
+    albedo_tensor = albedo_tensor.transpose(0, 1)
+    shading_tensor = shading_tensor.transpose(0, 1)
+    shadowmap_tensor = shadowmap_tensor.transpose(0, 1)
+    light_color = torch.from_numpy(np.asarray(light_color.split(","), dtype=np.int32))
+
+    # print("Shading Range: ", torch.min(shading_tensor).item(), torch.max(shading_tensor).item(), " Mean: ", torch.mean(shading_tensor).item())
+    # print("ShadowMap Range: ", torch.min(shadowmap_tensor).item(), torch.max(shadowmap_tensor).item(), " Mean: ", torch.mean(shading_tensor).item())
+    # print("Light Range: ", light_color)
+
+    # normalize/remove normalization
+    albedo_tensor = (albedo_tensor * 0.5) + 0.5
+    shading_tensor = (shading_tensor * 0.5) + 0.5
+    shadowmap_tensor = (shadowmap_tensor * 0.5) + 0.5
+    light_color = light_color / 255.0
+
+    # shadowmap_tensor = torch.clip(shadowmap_tensor, 0.75, 1.0) #remove shadow
+
+    rgb_img_like = torch.full_like(albedo_tensor, 0)
+    rgb_img_like[0] = torch.clip(albedo_tensor[0] * shading_tensor[0] * light_color[0] * shadowmap_tensor, 0.0, 1.0)
+    rgb_img_like[1] = torch.clip(albedo_tensor[1] * shading_tensor[1] * light_color[1] * shadowmap_tensor, 0.0, 1.0)
+    rgb_img_like[2] = torch.clip(albedo_tensor[2] * shading_tensor[2] * light_color[2] * shadowmap_tensor, 0.0, 1.0)
+
+    rgb_img_like = rgb_img_like.transpose(0, 1)
+    return rgb_img_like
+
 class GaussianSmoothing(nn.Module):
     """
     Apply gaussian smoothing on a
