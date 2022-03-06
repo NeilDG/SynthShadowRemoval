@@ -311,30 +311,30 @@ class RelightingTrainer:
             self.visdom_reporter.plot_image(rgb2shadow, str(label) + " RGB2Shadow images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(shadow_tensor, str(label) + " Shadow images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
 
-            # # plot metrics
-            # rgb2albedo = (rgb2albedo * 0.5) + 0.5
-            # albedo_tensor = (albedo_tensor * 0.5) + 0.5
-            # rgb2shading = (rgb2shading * 0.5) + 0.5
-            # shading_tensor = (shading_tensor * 0.5) + 0.5
-            # rgb2shadow = (rgb2shadow * 0.5) + 0.5
-            # shadow_tensor = (shadow_tensor * 0.5) + 0.5
-            # target_rgb_tensor = (target_rgb_tensor * 0.5) + 0.5
-            #
-            # psnr_albedo = np.round(kornia.losses.psnr(rgb2albedo, albedo_tensor, max_val=1.0).item(), 4)
-            # ssim_albedo = np.round(1.0 - kornia.losses.ssim_loss(rgb2albedo, albedo_tensor, 5).item(), 4)
-            # psnr_shading = np.round(kornia.losses.psnr(rgb2shading, shading_tensor, max_val=1.0).item(), 4)
-            # ssim_shading = np.round(1.0 - kornia.losses.ssim_loss(rgb2shading, shading_tensor, 5).item(), 4)
-            # psnr_shadow = np.round(kornia.losses.psnr(rgb2shadow, shadow_tensor, max_val=1.0).item(), 4)
-            # ssim_shadow = np.round(1.0 - kornia.losses.ssim_loss(rgb2shadow, shadow_tensor, 5).item(), 4)
-            # psnr_rgb = np.round(kornia.losses.psnr(rgb_like, target_rgb_tensor, max_val=1.0).item(), 4)
-            # ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb_like, target_rgb_tensor, 5).item(), 4)
-            # display_text = str(label) + " - Versions: " + constants.RELIGHTING_VERSION + constants.ITERATION +\
-            #                "<br> Albedo PSNR: " + str(psnr_albedo) + "<br> Albedo SSIM: " + str(ssim_albedo) +\
-            #                "<br> Shading PSNR: " + str(psnr_shading) + "<br> Shading SSIM: " + str(ssim_shading) + \
-            #                "<br> Shadow PSNR: " + str(psnr_shadow) + "<br> Shadow SSIM: " + str(ssim_shadow) + \
-            #                "<br> RGB Reconstruction PSNR: " + str(psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ssim_rgb)
-            #
-            # self.visdom_reporter.plot_text(display_text)
+            # plot metrics
+            rgb2albedo = (rgb2albedo * 0.5) + 0.5
+            albedo_tensor = (albedo_tensor * 0.5) + 0.5
+            rgb2shading = (rgb2shading * 0.5) + 0.5
+            shading_tensor = (shading_tensor * 0.5) + 0.5
+            rgb2shadow = (rgb2shadow * 0.5) + 0.5
+            shadow_tensor = (shadow_tensor * 0.5) + 0.5
+            target_rgb_tensor = (target_rgb_tensor * 0.5) + 0.5
+
+            psnr_albedo = np.round(kornia.metrics.psnr(rgb2albedo, albedo_tensor, max_val=1.0).item(), 4)
+            ssim_albedo = np.round(1.0 - kornia.losses.ssim_loss(rgb2albedo, albedo_tensor, 5).item(), 4)
+            psnr_shading = np.round(kornia.metrics.psnr(rgb2shading, shading_tensor, max_val=1.0).item(), 4)
+            ssim_shading = np.round(1.0 - kornia.losses.ssim_loss(rgb2shading, shading_tensor, 5).item(), 4)
+            psnr_shadow = np.round(kornia.metrics.psnr(rgb2shadow, shadow_tensor, max_val=1.0).item(), 4)
+            ssim_shadow = np.round(1.0 - kornia.losses.ssim_loss(rgb2shadow, shadow_tensor, 5).item(), 4)
+            psnr_rgb = np.round(kornia.metrics.psnr(rgb_like, target_rgb_tensor, max_val=1.0).item(), 4)
+            ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb_like, target_rgb_tensor, 5).item(), 4)
+            display_text = str(label) + " - Versions: " + constants.RELIGHTING_VERSION + constants.ITERATION +\
+                           "<br> Albedo PSNR: " + str(psnr_albedo) + "<br> Albedo SSIM: " + str(ssim_albedo) +\
+                           "<br> Shading PSNR: " + str(psnr_shading) + "<br> Shading SSIM: " + str(ssim_shading) + \
+                           "<br> Shadow PSNR: " + str(psnr_shadow) + "<br> Shadow SSIM: " + str(ssim_shadow) + \
+                           "<br> RGB Reconstruction PSNR: " + str(psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ssim_rgb)
+
+            self.visdom_reporter.plot_text(display_text)
 
     # must have a shading generator network first
     def visdom_infer(self, rw_tensor):

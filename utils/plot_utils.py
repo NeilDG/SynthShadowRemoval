@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import torchvision.utils as vutils
 import visdom
 
-SALIKSIK_SERVER = "192.168.134.223" #IMPORTANT: No HTTP
+SALIKSIK_SERVER = "192.168.134.223" #IMPORTmsANT: No HTTP
 
 class VisdomReporter:
     _sharedInstance = None

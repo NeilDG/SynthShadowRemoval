@@ -164,8 +164,7 @@ def main(argv):
         #plot metrics
         shadow_relight_tensor = (trainer.test(input_shadow_tensor, input_rgb_tensor, light_angle_tensor) * 0.5) + 0.5
         target_shadow_tensor = (target_shadow_tensor * 0.5) + 0.5
-
-        psnr_relight = np.round(kornia.losses.psnr(shadow_relight_tensor, target_shadow_tensor, max_val=1.0).item(), 4)
+        psnr_relight = np.round(kornia.metrics.psnr(shadow_relight_tensor, target_shadow_tensor, max_val=1.0).item(), 4)
         ssim_relight = np.round(1.0 - kornia.losses.ssim_loss(shadow_relight_tensor, target_shadow_tensor, 5).item(), 4)
 
         display_text = "Versions: " + opts.version_name + str(opts.iteration) + \
