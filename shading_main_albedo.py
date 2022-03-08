@@ -49,8 +49,8 @@ def update_config(opts):
     if (constants.server_config == 1):
         print("Using COARE configuration ", opts.version_name)
         constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/"
-        constants.DATASET_PREFIX_5_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 4/"
-        constants.DATASET_ALBEDO_5_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 4/albedo/"
+        constants.DATASET_PREFIX_6_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 4/"
+        constants.DATASET_ALBEDO_6_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 4/albedo/"
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
@@ -61,8 +61,8 @@ def update_config(opts):
     elif (constants.server_config == 3):
         print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.SHADOWMAP_CHECKPATH)
         constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/"
-        constants.DATASET_PREFIX_5_PATH = "/home/neil_delgallego/SynthWeather Dataset 4/"
-        constants.DATASET_ALBEDO_5_PATH = "/home/neil_delgallego/SynthWeather Dataset 4/albedo/"
+        constants.DATASET_PREFIX_6_PATH = "/home/neil_delgallego/SynthWeather Dataset 4/"
+        constants.DATASET_ALBEDO_6_PATH = "/home/neil_delgallego/SynthWeather Dataset 4/albedo/"
 
 def show_images(img_tensor, caption):
     device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
@@ -89,10 +89,10 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    albedo_path = constants.DATASET_ALBEDO_5_PATH
+    albedo_path = constants.DATASET_ALBEDO_6_PATH
     #rgb_path = constants.DATASET_PREFIX_4_PATH + opts.mode + "/" + str(opts.light_angle) + "deg/" + "rgb/"
-    rgb_path = constants.DATASET_PREFIX_5_PATH + "no_shadows/"
-    map_path = constants.DATASET_PREFIX_5_PATH + "shading/"
+    rgb_path = constants.DATASET_PREFIX_6_PATH + "no_shadows/"
+    map_path = constants.DATASET_PREFIX_6_PATH + "shading/"
 
     # Create the dataloader
     print(rgb_path, map_path)

@@ -54,7 +54,7 @@ class RelightingTrainer:
             self.G_A = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
             self.G_A = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
-        elif (net_config == 5):
+        elif (net_config == 4):
             self.G_A = unet_gan.UnetGeneratorV2(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         else:
             self.G_A = cycle_gan.GeneratorV2(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
@@ -63,17 +63,17 @@ class RelightingTrainer:
 
     def initialize_shading_network(self, net_config, num_blocks):
         if (net_config == 1):
-            self.G_S = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
+            self.G_S = cycle_gan.Generator(input_nc=3, output_nc=1, n_residual_blocks=num_blocks).to(self.gpu_device)
         elif (net_config == 2):
-            self.G_S = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
+            self.G_S = unet_gan.UnetGenerator(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
-            self.G_S = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
-        elif (net_config == 5):
-            self.G_S = unet_gan.UnetGeneratorV2(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
+            self.G_S = cycle_gan.Generator(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
+        elif (net_config == 4):
+            self.G_S = unet_gan.UnetGeneratorV2(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         else:
-            self.G_S = cycle_gan.GeneratorV2(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
+            self.G_S = cycle_gan.GeneratorV2(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
-        self.D_S = cycle_gan.Discriminator(input_nc=3, use_bce=self.use_bce).to(self.gpu_device)  # use CycleGAN's discriminator
+        self.D_S = cycle_gan.Discriminator(input_nc=1, use_bce=self.use_bce).to(self.gpu_device)  # use CycleGAN's discriminator
 
     def initialize_shadow_network(self, net_config, num_blocks):
         if (net_config == 1):
@@ -82,7 +82,7 @@ class RelightingTrainer:
             self.G_Z = unet_gan.UnetGenerator(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
             self.G_Z = cycle_gan.Generator(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
-        elif (net_config == 5):
+        elif (net_config == 4):
             self.G_Z = unet_gan.UnetGeneratorV2(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         else:
             self.G_Z = cycle_gan.GeneratorV2(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
@@ -312,29 +312,29 @@ class RelightingTrainer:
             self.visdom_reporter.plot_image(shadow_tensor, str(label) + " Shadow images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
 
             # plot metrics
-            rgb2albedo = (rgb2albedo * 0.5) + 0.5
-            albedo_tensor = (albedo_tensor * 0.5) + 0.5
-            rgb2shading = (rgb2shading * 0.5) + 0.5
-            shading_tensor = (shading_tensor * 0.5) + 0.5
-            rgb2shadow = (rgb2shadow * 0.5) + 0.5
-            shadow_tensor = (shadow_tensor * 0.5) + 0.5
-            target_rgb_tensor = (target_rgb_tensor * 0.5) + 0.5
-
-            psnr_albedo = np.round(kornia.metrics.psnr(rgb2albedo, albedo_tensor, max_val=1.0).item(), 4)
-            ssim_albedo = np.round(1.0 - kornia.losses.ssim_loss(rgb2albedo, albedo_tensor, 5).item(), 4)
-            psnr_shading = np.round(kornia.metrics.psnr(rgb2shading, shading_tensor, max_val=1.0).item(), 4)
-            ssim_shading = np.round(1.0 - kornia.losses.ssim_loss(rgb2shading, shading_tensor, 5).item(), 4)
-            psnr_shadow = np.round(kornia.metrics.psnr(rgb2shadow, shadow_tensor, max_val=1.0).item(), 4)
-            ssim_shadow = np.round(1.0 - kornia.losses.ssim_loss(rgb2shadow, shadow_tensor, 5).item(), 4)
-            psnr_rgb = np.round(kornia.metrics.psnr(rgb_like, target_rgb_tensor, max_val=1.0).item(), 4)
-            ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb_like, target_rgb_tensor, 5).item(), 4)
-            display_text = str(label) + " - Versions: " + constants.RELIGHTING_VERSION + constants.ITERATION +\
-                           "<br> Albedo PSNR: " + str(psnr_albedo) + "<br> Albedo SSIM: " + str(ssim_albedo) +\
-                           "<br> Shading PSNR: " + str(psnr_shading) + "<br> Shading SSIM: " + str(ssim_shading) + \
-                           "<br> Shadow PSNR: " + str(psnr_shadow) + "<br> Shadow SSIM: " + str(ssim_shadow) + \
-                           "<br> RGB Reconstruction PSNR: " + str(psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ssim_rgb)
-
-            self.visdom_reporter.plot_text(display_text)
+            # rgb2albedo = (rgb2albedo * 0.5) + 0.5
+            # albedo_tensor = (albedo_tensor * 0.5) + 0.5
+            # rgb2shading = (rgb2shading * 0.5) + 0.5
+            # shading_tensor = (shading_tensor * 0.5) + 0.5
+            # rgb2shadow = (rgb2shadow * 0.5) + 0.5
+            # shadow_tensor = (shadow_tensor * 0.5) + 0.5
+            # target_rgb_tensor = (target_rgb_tensor * 0.5) + 0.5
+            #
+            # psnr_albedo = np.round(kornia.metrics.psnr(rgb2albedo, albedo_tensor, max_val=1.0).item(), 4)
+            # ssim_albedo = np.round(1.0 - kornia.losses.ssim_loss(rgb2albedo, albedo_tensor, 5).item(), 4)
+            # psnr_shading = np.round(kornia.metrics.psnr(rgb2shading, shading_tensor, max_val=1.0).item(), 4)
+            # ssim_shading = np.round(1.0 - kornia.losses.ssim_loss(rgb2shading, shading_tensor, 5).item(), 4)
+            # psnr_shadow = np.round(kornia.metrics.psnr(rgb2shadow, shadow_tensor, max_val=1.0).item(), 4)
+            # ssim_shadow = np.round(1.0 - kornia.losses.ssim_loss(rgb2shadow, shadow_tensor, 5).item(), 4)
+            # psnr_rgb = np.round(kornia.metrics.psnr(rgb_like, target_rgb_tensor, max_val=1.0).item(), 4)
+            # ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb_like, target_rgb_tensor, 5).item(), 4)
+            # display_text = str(label) + " - Versions: " + constants.RELIGHTING_VERSION + constants.ITERATION +\
+            #                "<br> Albedo PSNR: " + str(psnr_albedo) + "<br> Albedo SSIM: " + str(ssim_albedo) +\
+            #                "<br> Shading PSNR: " + str(psnr_shading) + "<br> Shading SSIM: " + str(ssim_shading) + \
+            #                "<br> Shadow PSNR: " + str(psnr_shadow) + "<br> Shadow SSIM: " + str(ssim_shadow) + \
+            #                "<br> RGB Reconstruction PSNR: " + str(psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ssim_rgb)
+            #
+            # self.visdom_reporter.plot_text(display_text)
 
     # must have a shading generator network first
     def visdom_infer(self, rw_tensor):

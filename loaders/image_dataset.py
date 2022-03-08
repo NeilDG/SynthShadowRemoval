@@ -493,7 +493,7 @@ class ImageRelightDataset(data.Dataset):
 
         img_b_path = self.shading_dir + file_name
         shading = cv2.imread(img_b_path) #shading
-        shading = cv2.cvtColor(shading, cv2.COLOR_BGR2RGB)
+        shading = cv2.cvtColor(shading, cv2.COLOR_BGR2GRAY)
 
         #randomize light angle
         light_angle_a = np.random.choice(self.light_angles)
@@ -546,7 +546,7 @@ class ImageRelightDataset(data.Dataset):
 
         input_rgb = self.normalize_op(input_rgb)
         albedo = self.normalize_op(albedo)
-        shading = self.normalize_op(shading)
+        shading = self.normalize_op_grey(shading)
         input_shadow_map = self.normalize_op_grey(input_shadow_map)
         target_shadow_map = self.normalize_op_grey(target_shadow_map)
         target_rgb = self.normalize_op(target_rgb)

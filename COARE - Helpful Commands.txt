@@ -32,13 +32,13 @@ sbatch script_8.slurm
 sbatch --dependency=afterany:275293 script_debug.slurm
 sbatch -w saliksik-gpu-06 slurm_install_gpu.slurm
 sbatch -w saliksik-gpu-06 script_1.slurm
-sbatch -w saliksik-gpu-06 script_2.slurm
+sbatch -w saliksik-gpu-04 script_2.slurm
 sbatch -w saliksik-gpu-05 script_3.slurm
-sbatch -w saliksik-gpu-06 script_4.slurm
+sbatch -w saliksik-gpu-04 script_4.slurm
 sbatch -w saliksik-gpu-05 script_5.slurm
-sbatch -w saliksik-gpu-06 script_6.slurm
+sbatch -w saliksik-gpu-04 script_6.slurm
 sbatch -w saliksik-gpu-05 script_7.slurm
-sbatch -w saliksik-gpu-06 script_8.slurm
+sbatch -w saliksik-gpu-04 script_8.slurm
 
 //Check status of job
 clear
