@@ -287,7 +287,8 @@ def produce_rgb(albedo_tensor, shading_tensor, light_color, shadowmap_tensor):
     shadowmap_tensor = (shadowmap_tensor * 0.5) + 0.5
     light_color = light_color / 255.0
 
-    # shadowmap_tensor = torch.clip(shadowmap_tensor, 0.75, 1.0) #remove shadow
+    # shading_tensor = torch.clip(shading_tensor, 1.0, 1.0)
+    # shadowmap_tensor = torch.clip(shadowmap_tensor, 1.0, 1.0) #remove shadow
 
     rgb_img_like = torch.full_like(albedo_tensor, 0)
     rgb_img_like[0] = torch.clip(albedo_tensor[0] * shading_tensor * light_color[0] * shadowmap_tensor, 0.0, 1.0)

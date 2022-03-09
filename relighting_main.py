@@ -99,6 +99,11 @@ def main(argv):
     test_loader = dataset_loader.load_map_test_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
 
+    GTA_BASE_PATH = "E:/IID-TestDataset/GTA/"
+    RGB_PATH = GTA_BASE_PATH + "/input/"
+    ALBEDO_PATH = GTA_BASE_PATH + "/albedo_white/"
+    gta_loader = dataset_loader.load_gta_dataset(RGB_PATH, ALBEDO_PATH, opts)
+
     index = 0
     start_epoch = 0
     iteration = 0
@@ -160,6 +165,11 @@ def main(argv):
         _, input_rgb_batch = next(iter(rw_loader))
         input_rgb_tensor = input_rgb_batch.to(device)
         trainer.visdom_infer(input_rgb_tensor)
+
+        gta_rgb, gta_albedo = next(iter(gta_loader))
+        gta_rgb_tensor = gta_rgb.to(device)
+        trainer.visdom_measure_gta(gta_rgb_tensor, gta_albedo)
+
 
     else:
         print("Starting Training Loop...")

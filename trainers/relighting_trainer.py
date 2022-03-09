@@ -339,13 +339,41 @@ class RelightingTrainer:
     # must have a shading generator network first
     def visdom_infer(self, rw_tensor):
         with torch.no_grad():
-            rgb2albedo = self.G_A(rw_tensor)
-            rgb2shading = self.G_S(rw_tensor)
-            rgb2shadow = self.G_Z(rw_tensor)
+            rgb2albedo = self.infer_albedo(rw_tensor)
+            rgb2shading = self.infer_shading(rw_tensor)
+            rgb2shadow = self.infer_shadow(rw_tensor)
             rgb_like = tensor_utils.produce_rgb(rgb2albedo, rgb2shading, self.default_light_color, rgb2shadow)
 
             self.visdom_reporter.plot_image(rw_tensor, "Real World images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(rgb_like, "Real World A2B images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
+
+    def visdom_measure_gta(self, gta_rgb, gta_albedo):
+        with torch.no_grad():
+            rgb2albedo = self.infer_albedo(gta_rgb)
+            rgb2shading = self.infer_shading(gta_rgb)
+            rgb2shadow = self.infer_shadow(gta_rgb)
+            rgb_like = tensor_utils.produce_rgb(rgb2albedo, rgb2shading, self.default_light_color, rgb2shadow)
+
+            self.visdom_reporter.plot_image(gta_albedo, "GTA Albedo - " + constants.RELIGHTING_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(rgb2albedo, "GTA Albedo-Like - " + constants.RELIGHTING_VERSION + constants.ITERATION)
+
+            self.visdom_reporter.plot_image(rgb2shading, "GTA Shading-Like - " + constants.RELIGHTING_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(rgb2shadow, "GTA Shadow-Like - " + constants.RELIGHTING_VERSION + constants.ITERATION)
+
+            self.visdom_reporter.plot_image(gta_rgb, "GTA RGB - " + constants.RELIGHTING_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(rgb_like, "GTA RGB-Like - " + constants.RELIGHTING_VERSION + constants.ITERATION)
+
+    def infer_albedo(self, rw_tensor):
+        with torch.no_grad():
+            return self.G_A(rw_tensor)
+
+    def infer_shading(self, rw_tensor):
+        with torch.no_grad():
+            return self.G_S(rw_tensor)
+
+    def infer_shadow(self, rw_tensor):
+        with torch.no_grad():
+            return self.G_Z(rw_tensor)
 
     def load_saved_state(self, checkpoint):
         self.G_A.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])

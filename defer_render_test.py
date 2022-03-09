@@ -13,6 +13,8 @@ import torch
 from torch.nn import functional as F
 from utils import plot_utils
 import torchvision.transforms as transforms
+from model import vanilla_cycle_gan as cycle_gan
+from model import unet_gan
 
 parser = OptionParser()
 parser.add_option('--shading_multiplier', type=float, default=1.0)
@@ -438,6 +440,33 @@ def reconstruct_rgb(albedo_tensor, shading_tensor):
     rgb_img_like = rgb_img_like.transpose(0, 1)
     return rgb_img_like
 
+def convert_gta_albedo():
+    GTA_BASE_PATH = "E:/IID-TestDataset/GTA/"
+    ALBEDO_PATH = GTA_BASE_PATH + "/albedo/"
+    OUTPUT_PATH = GTA_BASE_PATH + "/albedo_white/"
+
+    albedo_list = glob.glob(ALBEDO_PATH + "*.png")
+    IMG_SIZE = (320, 240)
+
+    for i, albedo_path in enumerate(albedo_list, 0):
+        filename = albedo_path.split("\\")[-1]
+        print(filename)
+
+        albedo_img = tensor_utils.load_metric_compatible_img(albedo_path, cv2.COLOR_BGR2RGB, True, False, IMG_SIZE)
+        img_mask = cv2.inRange(albedo_img[:, :, 0], 0.0, 0.00001)  # mask for getting zero pixels to be excluded
+        img_mask = cv2.medianBlur(img_mask, 9)
+        img_mask = np.asarray([img_mask, img_mask, img_mask])
+        img_mask = np.moveaxis(img_mask, 0, 2)
+
+        img_ones = np.full_like(img_mask, 1.0)
+        albedo_img = np.clip(albedo_img + (img_ones * img_mask), 0.00001, 1.0)
+        albedo_img = np.clip(albedo_img, 0.00001, 1.0)
+
+        albedo_img = cv2.normalize(albedo_img, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        albedo_img = cv2.cvtColor(albedo_img, cv2.COLOR_RGB2BGR)
+
+        cv2.imwrite(OUTPUT_PATH + filename, albedo_img)
+
 def measure_performance():
 
     visdom_reporter = plot_utils.VisdomReporter()
@@ -493,21 +522,21 @@ def measure_performance():
         albedo_c_img = tensor_utils.load_metric_compatible_albedo(c_path, cv2.COLOR_BGR2RGB, True, True, IMG_SIZE)
         albedo_d_img = tensor_utils.load_metric_compatible_albedo(d_path, cv2.COLOR_BGR2RGB, True, True, IMG_SIZE)
 
-        psnr_albedo_a = np.round(kornia.metrics.psnr(albedo_a_img, albedo_img, max_val=1.0).item(), 4)
-        ssim_albedo_a = np.round(1.0 - kornia.losses.ssim_loss(albedo_a_img, albedo_img, 5).item(), 4)
-        psnr_albedo_b = np.round(kornia.metrics.psnr(albedo_b_img, albedo_img, max_val=1.0).item(), 4)
-        ssim_albedo_b = np.round(1.0 - kornia.losses.ssim_loss(albedo_b_img, albedo_img, 5).item(), 4)
-        psnr_albedo_c = np.round(kornia.metrics.psnr(albedo_c_img, albedo_img, max_val=1.0).item(), 4)
-        ssim_albedo_c = np.round(1.0 - kornia.losses.ssim_loss(albedo_c_img, albedo_img, 5).item(), 4)
-        psnr_albedo_d = np.round(kornia.metrics.psnr(albedo_d_img, albedo_img, max_val=1.0).item(), 4)
-        ssim_albedo_d = np.round(1.0 - kornia.losses.ssim_loss(albedo_d_img, albedo_img, 5).item(), 4)
-        display_text = "Image " +str(i)+ " Albedo <br>" \
-                                     "li_eccv18 PSNR: " + str(psnr_albedo_a) + "<br> SSIM: " + str(ssim_albedo_a) + "<br>" \
-                                     "yu_cvpr19 PSNR: " + str(psnr_albedo_b) + "<br> SSIM: " + str(ssim_albedo_b) + "<br>" \
-                                     "yu_eccv20 PSNR: " + str(psnr_albedo_c) + "<br> SSIM: " + str(ssim_albedo_c) + "<br>" \
-                                     "zhu_iccp21 PSNR: " + str(psnr_albedo_d) + "<br> SSIM: " + str(ssim_albedo_d) + "<br>"
-
-        visdom_reporter.plot_text(display_text)
+        # psnr_albedo_a = np.round(kornia.metrics.psnr(albedo_a_img, albedo_img, max_val=1.0).item(), 4)
+        # ssim_albedo_a = np.round(1.0 - kornia.losses.ssim_loss(albedo_a_img, albedo_img, 5).item(), 4)
+        # psnr_albedo_b = np.round(kornia.metrics.psnr(albedo_b_img, albedo_img, max_val=1.0).item(), 4)
+        # ssim_albedo_b = np.round(1.0 - kornia.losses.ssim_loss(albedo_b_img, albedo_img, 5).item(), 4)
+        # psnr_albedo_c = np.round(kornia.metrics.psnr(albedo_c_img, albedo_img, max_val=1.0).item(), 4)
+        # ssim_albedo_c = np.round(1.0 - kornia.losses.ssim_loss(albedo_c_img, albedo_img, 5).item(), 4)
+        # psnr_albedo_d = np.round(kornia.metrics.psnr(albedo_d_img, albedo_img, max_val=1.0).item(), 4)
+        # ssim_albedo_d = np.round(1.0 - kornia.losses.ssim_loss(albedo_d_img, albedo_img, 5).item(), 4)
+        # display_text = "Image " +str(i)+ " Albedo <br>" \
+        #                              "li_eccv18 PSNR: " + str(psnr_albedo_a) + "<br> SSIM: " + str(ssim_albedo_a) + "<br>" \
+        #                              "yu_cvpr19 PSNR: " + str(psnr_albedo_b) + "<br> SSIM: " + str(ssim_albedo_b) + "<br>" \
+        #                              "yu_eccv20 PSNR: " + str(psnr_albedo_c) + "<br> SSIM: " + str(ssim_albedo_c) + "<br>" \
+        #                              "zhu_iccp21 PSNR: " + str(psnr_albedo_d) + "<br> SSIM: " + str(ssim_albedo_d) + "<br>"
+        #
+        # visdom_reporter.plot_text(display_text)
 
         if(i == 0):
             albedo_tensor = albedo_img
@@ -537,21 +566,21 @@ def measure_performance():
         shading_c_img = derive_shading(rgb_img, c_img)
         shading_d_img = derive_shading(rgb_img, d_img)
 
-        psnr_shading_a = np.round(kornia.metrics.psnr(shading_a_img, shading_img, max_val=1.0).item(), 4)
-        ssim_shading_a = np.round(1.0 - kornia.losses.ssim_loss(shading_a_img, shading_img, 5).item(), 4)
-        psnr_shading_b = np.round(kornia.metrics.psnr(shading_b_img, shading_img, max_val=1.0).item(), 4)
-        ssim_shading_b = np.round(1.0 - kornia.losses.ssim_loss(shading_b_img, shading_img, 5).item(), 4)
-        psnr_shading_c = np.round(kornia.metrics.psnr(shading_c_img, shading_img, max_val=1.0).item(), 4)
-        ssim_shading_c = np.round(1.0 - kornia.losses.ssim_loss(shading_c_img, shading_img, 5).item(), 4)
-        psnr_shading_d = np.round(kornia.metrics.psnr(shading_d_img, shading_img, max_val=1.0).item(), 4)
-        ssim_shading_d = np.round(1.0 - kornia.losses.ssim_loss(shading_d_img, shading_img, 5).item(), 4)
-        display_text = "Image " +str(i)+ " Shading <br>" \
-                                     "li_eccv18 PSNR: " + str(psnr_shading_a) + "<br> SSIM: " + str(ssim_shading_a) + "<br>" \
-                                     "yu_cvpr19 PSNR: " + str(psnr_shading_b) + "<br> SSIM: " + str(ssim_shading_b) + "<br>" \
-                                     "yu_eccv20 PSNR: " + str(psnr_shading_c) + "<br> SSIM: " + str(ssim_shading_c) + "<br>" \
-                                     "zhu_iccp21 PSNR: " + str(psnr_shading_d) + "<br> SSIM: " + str(ssim_shading_d) + "<br>"
-
-        visdom_reporter.plot_text(display_text)
+        # psnr_shading_a = np.round(kornia.metrics.psnr(shading_a_img, shading_img, max_val=1.0).item(), 4)
+        # ssim_shading_a = np.round(1.0 - kornia.losses.ssim_loss(shading_a_img, shading_img, 5).item(), 4)
+        # psnr_shading_b = np.round(kornia.metrics.psnr(shading_b_img, shading_img, max_val=1.0).item(), 4)
+        # ssim_shading_b = np.round(1.0 - kornia.losses.ssim_loss(shading_b_img, shading_img, 5).item(), 4)
+        # psnr_shading_c = np.round(kornia.metrics.psnr(shading_c_img, shading_img, max_val=1.0).item(), 4)
+        # ssim_shading_c = np.round(1.0 - kornia.losses.ssim_loss(shading_c_img, shading_img, 5).item(), 4)
+        # psnr_shading_d = np.round(kornia.metrics.psnr(shading_d_img, shading_img, max_val=1.0).item(), 4)
+        # ssim_shading_d = np.round(1.0 - kornia.losses.ssim_loss(shading_d_img, shading_img, 5).item(), 4)
+        # display_text = "Image " +str(i)+ " Shading <br>" \
+        #                              "li_eccv18 PSNR: " + str(psnr_shading_a) + "<br> SSIM: " + str(ssim_shading_a) + "<br>" \
+        #                              "yu_cvpr19 PSNR: " + str(psnr_shading_b) + "<br> SSIM: " + str(ssim_shading_b) + "<br>" \
+        #                              "yu_eccv20 PSNR: " + str(psnr_shading_c) + "<br> SSIM: " + str(ssim_shading_c) + "<br>" \
+        #                              "zhu_iccp21 PSNR: " + str(psnr_shading_d) + "<br> SSIM: " + str(ssim_shading_d) + "<br>"
+        #
+        # visdom_reporter.plot_text(display_text)
 
         if (i == 0):
             shading_tensor = shading_img
@@ -567,111 +596,116 @@ def measure_performance():
             shading_d_tensor = torch.cat([shading_d_tensor, shading_d_img], 0)
 
         #rgb reconstruction
-        # rgb_gt = tensor_utils.load_metric_compatible_img(rgb_path, cv2.COLOR_BGR2RGB, True, True, IMG_SIZE)
-        # rgb_a = reconstruct_rgb(albedo_a_img, shading_a_img)
-        # rgb_b = reconstruct_rgb(albedo_b_img, shading_b_img)
-        # rgb_c = reconstruct_rgb(albedo_c_img, shading_c_img)
-        # rgb_d = reconstruct_rgb(albedo_d_img, shading_d_img)
-        #
-        # print(np.shape(rgb_gt), np.shape(rgb_a))
-        #
-        # psnr_rgb_a = np.round(kornia.metrics.psnr(rgb_a, rgb_gt, max_val=1.0).item(), 4)
-        # ssim_rgb_a = np.round(1.0 - kornia.losses.ssim_loss(rgb_a, rgb_gt, 5).item(), 4)
-        # psnr_rgb_b = np.round(kornia.metrics.psnr(rgb_b, rgb_gt, max_val=1.0).item(), 4)
-        # ssim_rgb_b = np.round(1.0 - kornia.losses.ssim_loss(rgb_b, rgb_gt, 5).item(), 4)
-        # psnr_rgb_c = np.round(kornia.metrics.psnr(rgb_c, rgb_gt, max_val=1.0).item(), 4)
-        # ssim_rgb_c = np.round(1.0 - kornia.losses.ssim_loss(rgb_c, rgb_gt, 5).item(), 4)
-        # psnr_rgb_d = np.round(kornia.metrics.psnr(rgb_d, rgb_gt, max_val=1.0).item(), 4)
-        # ssim_rgb_d = np.round(1.0 - kornia.losses.ssim_loss(rgb_d, rgb_gt, 5).item(), 4)
-        # display_text = "Image " +str(i)+ " RGB <br>" \
-        #                              "li_eccv18 PSNR: " + str(psnr_rgb_a) + "<br> SSIM: " + str(ssim_rgb_a) + "<br>" \
-        #                              "yu_cvpr19 PSNR: " + str(psnr_rgb_b) + "<br> SSIM: " + str(ssim_rgb_b) + "<br>" \
-        #                              "yu_eccv20 PSNR: " + str(psnr_rgb_c) + "<br> SSIM: " + str(ssim_rgb_c) + "<br>" \
-        #                              "zhu_iccp21 PSNR: " + str(psnr_rgb_d) + "<br> SSIM: " + str(ssim_rgb_d) + "<br>"
-        #
-        # visdom_reporter.plot_text(display_text)
-        #
-        # if (i == 0):
-        #     rgb_tensor = rgb_gt
-        #     rgb_a_tensor = rgb_a
-        #     rgb_b_tensor = rgb_b
-        #     rgb_c_tensor = rgb_c
-        #     rgb_d_tensor = rgb_d
-        # else:
-        #     rgb_tensor = torch.cat([rgb_tensor, rgb_gt], 0)
-        #     rgb_a_tensor = torch.cat([rgb_a_tensor, rgb_a], 0)
-        #     rgb_b_tensor = torch.cat([rgb_b_tensor, rgb_b], 0)
-        #     rgb_c_tensor = torch.cat([rgb_c_tensor, rgb_c], 0)
-        #     rgb_d_tensor = torch.cat([rgb_d_tensor, rgb_d], 0)
+        rgb_gt = tensor_utils.load_metric_compatible_img(rgb_path, cv2.COLOR_BGR2RGB, True, True, IMG_SIZE)
+        rgb_a = reconstruct_rgb(albedo_a_img, shading_a_img)
+        rgb_b = reconstruct_rgb(albedo_b_img, shading_b_img)
+        rgb_c = reconstruct_rgb(albedo_c_img, shading_c_img)
+        albedo_d_img = rgb_gt / shading_d_img
+        rgb_d = reconstruct_rgb(albedo_d_img, shading_d_img)
 
-    psnr_albedo_a = np.round(kornia.metrics.psnr(albedo_a_tensor, albedo_tensor, max_val=1.0).item(), 4)
-    ssim_albedo_a = np.round(1.0 - kornia.losses.ssim_loss(albedo_a_tensor, albedo_tensor, 5).item(), 4)
-    psnr_albedo_b = np.round(kornia.metrics.psnr(albedo_b_tensor, albedo_tensor, max_val=1.0).item(), 4)
-    ssim_albedo_b = np.round(1.0 - kornia.losses.ssim_loss(albedo_b_tensor, albedo_tensor, 5).item(), 4)
-    psnr_albedo_c = np.round(kornia.metrics.psnr(albedo_c_tensor, albedo_tensor, max_val=1.0).item(), 4)
-    ssim_albedo_c = np.round(1.0 - kornia.losses.ssim_loss(albedo_c_tensor, albedo_tensor, 5).item(), 4)
-    psnr_albedo_d = np.round(kornia.metrics.psnr(albedo_d_tensor, albedo_tensor, max_val=1.0).item(), 4)
-    ssim_albedo_d = np.round(1.0 - kornia.losses.ssim_loss(albedo_d_tensor, albedo_tensor, 5).item(), 4)
-    display_text = "Mean Albedo PSNR: " + str(psnr_albedo_a) + "<br> Albedo SSIM: " + str(ssim_albedo_a) + "<br>" \
-                                 "li_eccv18 PSNR: " + str(psnr_albedo_a) + "<br> SSIM: " + str(ssim_albedo_a) + "<br>" \
-                                 "yu_cvpr19 PSNR: " + str(psnr_albedo_b) + "<br> SSIM: " + str(ssim_albedo_b) + "<br>" \
-                                 "yu_eccv20 PSNR: " + str(psnr_albedo_c) + "<br> SSIM: " + str(ssim_albedo_c) + "<br>" \
-                                 "zhu_iccp21 PSNR: " + str(psnr_albedo_d) + "<br> SSIM: " + str(ssim_albedo_d) + "<br>"
+        print(np.shape(rgb_gt), np.shape(rgb_a))
 
-    visdom_reporter.plot_text(display_text)
+        psnr_rgb_a = np.round(kornia.metrics.psnr(rgb_a, rgb_gt, max_val=1.0).item(), 4)
+        ssim_rgb_a = np.round(1.0 - kornia.losses.ssim_loss(rgb_a, rgb_gt, 5).item(), 4)
+        psnr_rgb_b = np.round(kornia.metrics.psnr(rgb_b, rgb_gt, max_val=1.0).item(), 4)
+        ssim_rgb_b = np.round(1.0 - kornia.losses.ssim_loss(rgb_b, rgb_gt, 5).item(), 4)
+        psnr_rgb_c = np.round(kornia.metrics.psnr(rgb_c, rgb_gt, max_val=1.0).item(), 4)
+        ssim_rgb_c = np.round(1.0 - kornia.losses.ssim_loss(rgb_c, rgb_gt, 5).item(), 4)
+        psnr_rgb_d = np.round(kornia.metrics.psnr(rgb_d, rgb_gt, max_val=1.0).item(), 4)
+        ssim_rgb_d = np.round(1.0 - kornia.losses.ssim_loss(rgb_d, rgb_gt, 5).item(), 4)
+        display_text = "Image " +str(i)+ " RGB <br>" \
+                                     "li_eccv18 PSNR: " + str(psnr_rgb_a) + "<br> SSIM: " + str(ssim_rgb_a) + "<br>" \
+                                     "yu_cvpr19 PSNR: " + str(psnr_rgb_b) + "<br> SSIM: " + str(ssim_rgb_b) + "<br>" \
+                                     "yu_eccv20 PSNR: " + str(psnr_rgb_c) + "<br> SSIM: " + str(ssim_rgb_c) + "<br>" \
+                                     "zhu_iccp21 PSNR: " + str(psnr_rgb_d) + "<br> SSIM: " + str(ssim_rgb_d) + "<br>"
 
-    visdom_reporter.plot_image(albedo_tensor, "Albedo GT")
-    visdom_reporter.plot_image(albedo_a_tensor, "Albedo li_eccv18")
-    visdom_reporter.plot_image(albedo_b_tensor, "Albedo yu_cvpr19")
-    visdom_reporter.plot_image(albedo_c_tensor, "Albedo yu_eccv20")
-    visdom_reporter.plot_image(albedo_d_tensor, "Albedo zhu_iccp21")
+        visdom_reporter.plot_text(display_text)
 
-    psnr_a = np.round(kornia.metrics.psnr(shading_a_tensor, shading_tensor, max_val=1.0).item(), 4)
-    ssim_a = np.round(1.0 - kornia.losses.ssim_loss(shading_a_tensor, shading_tensor, 5).item(), 4)
-    psnr_b = np.round(kornia.metrics.psnr(shading_b_tensor, shading_tensor, max_val=1.0).item(), 4)
-    ssim_b = np.round(1.0 - kornia.losses.ssim_loss(shading_b_tensor, shading_tensor, 5).item(), 4)
-    psnr_c = np.round(kornia.metrics.psnr(shading_c_tensor, shading_tensor, max_val=1.0).item(), 4)
-    ssim_c = np.round(1.0 - kornia.losses.ssim_loss(shading_c_tensor, shading_tensor, 5).item(), 4)
-    psnr_d = np.round(kornia.metrics.psnr(shading_d_tensor, shading_tensor, max_val=1.0).item(), 4)
-    ssim_d = np.round(1.0 - kornia.losses.ssim_loss(shading_d_tensor, shading_tensor, 5).item(), 4)
-    display_text = "Mean Shading <br>" \
-                                 "li_eccv18 PSNR: " + str(psnr_a) + "<br> SSIM: " + str(ssim_a) + "<br>" \
-                                 "yu_cvpr19 PSNR: " + str(psnr_b) + "<br> SSIM: " + str(ssim_b) + "<br>" \
-                                 "yu_eccv20 PSNR: " + str(psnr_c) + "<br> SSIM: " + str(ssim_c) + "<br>" \
-                                 "zhu_iccp21 PSNR: " + str(psnr_d) + "<br> SSIM: " + str(ssim_d) + "<br>"
+        if (i == 0):
+            rgb_tensor = rgb_gt
+            rgb_a_tensor = rgb_a
+            rgb_b_tensor = rgb_b
+            rgb_c_tensor = rgb_c
+            rgb_d_tensor = rgb_d
+        else:
+            rgb_tensor = torch.cat([rgb_tensor, rgb_gt], 0)
+            rgb_a_tensor = torch.cat([rgb_a_tensor, rgb_a], 0)
+            rgb_b_tensor = torch.cat([rgb_b_tensor, rgb_b], 0)
+            rgb_c_tensor = torch.cat([rgb_c_tensor, rgb_c], 0)
+            rgb_d_tensor = torch.cat([rgb_d_tensor, rgb_d], 0)
 
-    visdom_reporter.plot_text(display_text)
-
-    visdom_reporter.plot_image(shading_tensor, "Shading GT")
-    visdom_reporter.plot_image(shading_a_tensor, "Shading li_eccv18")
-    visdom_reporter.plot_image(shading_b_tensor, "Shading yu_cvpr19")
-    visdom_reporter.plot_image(shading_c_tensor, "Shading yu_eccv20")
-    visdom_reporter.plot_image(shading_d_tensor, "Shading zhu_iccp21")
-
-    # psnr_a = np.round(kornia.metrics.psnr(rgb_a_tensor, rgb_tensor, max_val=1.0).item(), 4)
-    # ssim_a = np.round(1.0 - kornia.losses.ssim_loss(rgb_a_tensor, rgb_tensor, 5).item(), 4)
-    # psnr_b = np.round(kornia.metrics.psnr(rgb_b_tensor, rgb_tensor, max_val=1.0).item(), 4)
-    # ssim_b = np.round(1.0 - kornia.losses.ssim_loss(rgb_b_tensor, rgb_tensor, 5).item(), 4)
-    # psnr_c = np.round(kornia.metrics.psnr(rgb_c_tensor, rgb_tensor, max_val=1.0).item(), 4)
-    # ssim_c = np.round(1.0 - kornia.losses.ssim_loss(rgb_c_tensor, rgb_tensor, 5).item(), 4)
-    # psnr_d = np.round(kornia.metrics.psnr(rgb_d_tensor, rgb_tensor, max_val=1.0).item(), 4)
-    # ssim_d = np.round(1.0 - kornia.losses.ssim_loss(rgb_d_tensor, rgb_tensor, 5).item(), 4)
-    # display_text = "Image " + str(i) + " RGB <br>" \
-    #                 "li_eccv18 PSNR: " + str(psnr_a) + "<br> SSIM: " + str(ssim_a) + "<br>" \
-    #                 "yu_cvpr19 PSNR: " + str(psnr_b) + "<br> SSIM: " + str(ssim_b) + "<br>" \
-    #                 "yu_eccv20 PSNR: " + str(psnr_c) + "<br> SSIM: " + str(ssim_c) + "<br>" \
-    #                 "zhu_iccp21 PSNR: " + str(psnr_d) + "<br> SSIM: " + str(ssim_d) + "<br>"
+    # psnr_albedo_a = np.round(kornia.metrics.psnr(albedo_a_tensor, albedo_tensor, max_val=1.0).item(), 4)
+    # ssim_albedo_a = np.round(1.0 - kornia.losses.ssim_loss(albedo_a_tensor, albedo_tensor, 5).item(), 4)
+    # psnr_albedo_b = np.round(kornia.metrics.psnr(albedo_b_tensor, albedo_tensor, max_val=1.0).item(), 4)
+    # ssim_albedo_b = np.round(1.0 - kornia.losses.ssim_loss(albedo_b_tensor, albedo_tensor, 5).item(), 4)
+    # psnr_albedo_c = np.round(kornia.metrics.psnr(albedo_c_tensor, albedo_tensor, max_val=1.0).item(), 4)
+    # ssim_albedo_c = np.round(1.0 - kornia.losses.ssim_loss(albedo_c_tensor, albedo_tensor, 5).item(), 4)
+    # psnr_albedo_d = np.round(kornia.metrics.psnr(albedo_d_tensor, albedo_tensor, max_val=1.0).item(), 4)
+    # ssim_albedo_d = np.round(1.0 - kornia.losses.ssim_loss(albedo_d_tensor, albedo_tensor, 5).item(), 4)
+    # display_text = "Mean Albedo PSNR: " + str(psnr_albedo_a) + "<br> Albedo SSIM: " + str(ssim_albedo_a) + "<br>" \
+    #                              "li_eccv18 PSNR: " + str(psnr_albedo_a) + "<br> SSIM: " + str(ssim_albedo_a) + "<br>" \
+    #                              "yu_cvpr19 PSNR: " + str(psnr_albedo_b) + "<br> SSIM: " + str(ssim_albedo_b) + "<br>" \
+    #                              "yu_eccv20 PSNR: " + str(psnr_albedo_c) + "<br> SSIM: " + str(ssim_albedo_c) + "<br>" \
+    #                              "zhu_iccp21 PSNR: " + str(psnr_albedo_d) + "<br> SSIM: " + str(ssim_albedo_d) + "<br>"
     #
     # visdom_reporter.plot_text(display_text)
     #
-    # visdom_reporter.plot_image(rgb_tensor, "RGB GT")
-    # visdom_reporter.plot_image(rgb_a_tensor, "RGB li_eccv18")
-    # visdom_reporter.plot_image(rgb_b_tensor, "RGB yu_cvpr19")
-    # visdom_reporter.plot_image(rgb_c_tensor, "RGB yu_eccv20")
-    # visdom_reporter.plot_image(rgb_d_tensor, "RGB zhu_iccp21")
+    # visdom_reporter.plot_image(albedo_tensor, "Albedo GT")
+    # visdom_reporter.plot_image(albedo_a_tensor, "Albedo li_eccv18")
+    # visdom_reporter.plot_image(albedo_b_tensor, "Albedo yu_cvpr19")
+    # visdom_reporter.plot_image(albedo_c_tensor, "Albedo yu_eccv20")
+    # visdom_reporter.plot_image(albedo_d_tensor, "Albedo zhu_iccp21")
+    #
+    # psnr_a = np.round(kornia.metrics.psnr(shading_a_tensor, shading_tensor, max_val=1.0).item(), 4)
+    # ssim_a = np.round(1.0 - kornia.losses.ssim_loss(shading_a_tensor, shading_tensor, 5).item(), 4)
+    # psnr_b = np.round(kornia.metrics.psnr(shading_b_tensor, shading_tensor, max_val=1.0).item(), 4)
+    # ssim_b = np.round(1.0 - kornia.losses.ssim_loss(shading_b_tensor, shading_tensor, 5).item(), 4)
+    # psnr_c = np.round(kornia.metrics.psnr(shading_c_tensor, shading_tensor, max_val=1.0).item(), 4)
+    # ssim_c = np.round(1.0 - kornia.losses.ssim_loss(shading_c_tensor, shading_tensor, 5).item(), 4)
+    # psnr_d = np.round(kornia.metrics.psnr(shading_d_tensor, shading_tensor, max_val=1.0).item(), 4)
+    # ssim_d = np.round(1.0 - kornia.losses.ssim_loss(shading_d_tensor, shading_tensor, 5).item(), 4)
+    # display_text = "Mean Shading <br>" \
+    #                              "li_eccv18 PSNR: " + str(psnr_a) + "<br> SSIM: " + str(ssim_a) + "<br>" \
+    #                              "yu_cvpr19 PSNR: " + str(psnr_b) + "<br> SSIM: " + str(ssim_b) + "<br>" \
+    #                              "yu_eccv20 PSNR: " + str(psnr_c) + "<br> SSIM: " + str(ssim_c) + "<br>" \
+    #                              "zhu_iccp21 PSNR: " + str(psnr_d) + "<br> SSIM: " + str(ssim_d) + "<br>"
+    #
+    # visdom_reporter.plot_text(display_text)
+    #
+    # visdom_reporter.plot_image(shading_tensor, "Shading GT")
+    # visdom_reporter.plot_image(shading_a_tensor, "Shading li_eccv18")
+    # visdom_reporter.plot_image(shading_b_tensor, "Shading yu_cvpr19")
+    # visdom_reporter.plot_image(shading_c_tensor, "Shading yu_eccv20")
+    # visdom_reporter.plot_image(shading_d_tensor, "Shading zhu_iccp21")
+
+    psnr_a = np.round(kornia.metrics.psnr(rgb_a_tensor, rgb_tensor, max_val=1.0).item(), 4)
+    ssim_a = np.round(1.0 - kornia.losses.ssim_loss(rgb_a_tensor, rgb_tensor, 5).item(), 4)
+    psnr_b = np.round(kornia.metrics.psnr(rgb_b_tensor, rgb_tensor, max_val=1.0).item(), 4)
+    ssim_b = np.round(1.0 - kornia.losses.ssim_loss(rgb_b_tensor, rgb_tensor, 5).item(), 4)
+    psnr_c = np.round(kornia.metrics.psnr(rgb_c_tensor, rgb_tensor, max_val=1.0).item(), 4)
+    ssim_c = np.round(1.0 - kornia.losses.ssim_loss(rgb_c_tensor, rgb_tensor, 5).item(), 4)
+    psnr_d = np.round(kornia.metrics.psnr(rgb_d_tensor, rgb_tensor, max_val=1.0).item(), 4)
+    ssim_d = np.round(1.0 - kornia.losses.ssim_loss(rgb_d_tensor, rgb_tensor, 5).item(), 4)
+    display_text = "Image " + str(i) + " RGB <br>" \
+                    "li_eccv18 PSNR: " + str(psnr_a) + "<br> SSIM: " + str(ssim_a) + "<br>" \
+                    "yu_cvpr19 PSNR: " + str(psnr_b) + "<br> SSIM: " + str(ssim_b) + "<br>" \
+                    "yu_eccv20 PSNR: " + str(psnr_c) + "<br> SSIM: " + str(ssim_c) + "<br>" \
+                    "zhu_iccp21 PSNR: " + str(psnr_d) + "<br> SSIM: " + str(ssim_d) + "<br>"
+
+    visdom_reporter.plot_text(display_text)
+
+    visdom_reporter.plot_image(rgb_tensor, "RGB GT")
+    visdom_reporter.plot_image(rgb_a_tensor, "RGB li_eccv18")
+    visdom_reporter.plot_image(rgb_b_tensor, "RGB yu_cvpr19")
+    visdom_reporter.plot_image(rgb_c_tensor, "RGB yu_eccv20")
+    visdom_reporter.plot_image(rgb_d_tensor, "RGB zhu_iccp21")
 
 
-def main():
+
+def main(argv):
+    (opts, args) = parser.parse_args(argv)
+    print(opts)
+    convert_gta_albedo()
     # test_lighting()
     #test_deferred_render()
     # compute_and_produce_rgb_v2("azimuth", "0deg", sys.argv)
@@ -687,9 +721,7 @@ def main():
     # produce_rgbs("azimuth", "144deg")
 
     # measure_shading_diff("E:/SynthWeather Dataset 4/azimuth/0deg/shading/", "E:/SynthWeather Dataset 4/azimuth/144deg/shading/")
-
-    measure_performance()
-
+    # measure_performance()
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv)
