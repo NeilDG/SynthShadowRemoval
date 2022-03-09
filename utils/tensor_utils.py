@@ -297,6 +297,30 @@ def produce_rgb(albedo_tensor, shading_tensor, light_color, shadowmap_tensor):
     rgb_img_like = rgb_img_like.transpose(0, 1)
     return rgb_img_like
 
+
+def load_metric_compatible_albedo(img_path, cvt_color: int, normalize: bool, convert_to_tensor: bool, size):
+    img = cv2.imread(img_path)
+    img = cv2.cvtColor(img, cvt_color)
+    img = cv2.resize(img, size, interpolation=cv2.INTER_CUBIC)
+    if (normalize):
+        img = cv2.normalize(img, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+
+    img_mask = cv2.inRange(img[:, :, 0], 0.0, 0.01)  # mask for getting zero pixels to be excluded
+    img_mask = np.asarray([img_mask, img_mask, img_mask])
+    img_mask = np.moveaxis(img_mask, 0, 2)
+
+    img_ones = np.full_like(img_mask, 1.0)
+    img = np.clip(img + (img_ones * img_mask), 0.01, 1.0)
+
+    if (convert_to_tensor):
+        transform_op = transforms.ToTensor()
+        tensor_img = transform_op(img)
+        tensor_img = torch.unsqueeze(tensor_img, 0)
+        return tensor_img
+
+    else:
+        return img
+
 def load_metric_compatible_img(img_path, cvt_color:int, normalize:bool, convert_to_tensor:bool, size):
     img = cv2.imread(img_path)
     img = cv2.cvtColor(img, cvt_color)
