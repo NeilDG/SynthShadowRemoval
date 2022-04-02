@@ -9,7 +9,6 @@ import torchvision.utils as vutils
 import numpy as np
 import matplotlib.pyplot as plt
 from loaders import dataset_loader
-from model import iteration_table
 from trainers import relighting_trainer
 from trainers import early_stopper
 from utils import tensor_utils
@@ -22,7 +21,7 @@ parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
 parser.add_option('--load_previous', type=int, help="Load previous?", default=0)
 parser.add_option('--iteration', type=int, help="Style version?", default="1")
 parser.add_option('--adv_weight', type=float, help="Weight", default="1.0")
-parser.add_option('--bce_weight', type=float, help="Weight", default="0.0")
+parser.add_option('--rgb_l1_weight', type=float, help="Weight", default="1.0")
 parser.add_option('--num_blocks', type=int)
 parser.add_option('--net_config', type=int)
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
@@ -47,8 +46,8 @@ def update_config(opts):
     if (constants.server_config == 1):
         print("Using COARE configuration ", opts.version_name)
         constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/"
-        constants.DATASET_PREFIX_5_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 5/"
-        constants.DATASET_ALBEDO_5_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 5/albedo/"
+        constants.DATASET_PREFIX_6_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 6/"
+        constants.DATASET_ALBEDO_6_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 6/albedo/"
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
@@ -59,8 +58,8 @@ def update_config(opts):
     elif (constants.server_config == 3):
         print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.RELIGHTING_CHECKPATH)
         constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/"
-        constants.DATASET_PREFIX_5_PATH = "/home/neil_delgallego/SynthWeather Dataset 5/"
-        constants.DATASET_ALBEDO_5_PATH = "/home/neil_delgallego/SynthWeather Dataset 5/albedo/"
+        constants.DATASET_PREFIX_6_PATH = "/home/neil_delgallego/SynthWeather Dataset 6/"
+        constants.DATASET_ALBEDO_6_PATH = "/home/neil_delgallego/SynthWeather Dataset 6/albedo/"
 
 def show_images(img_tensor, caption):
     device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
@@ -87,10 +86,10 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    albedo_dir = constants.DATASET_ALBEDO_5_PATH
-    shading_dir = constants.DATASET_PREFIX_5_PATH + "shading/"
-    rgb_dir = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "rgb/"
-    shadow_dir = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "shadow_map/"
+    albedo_dir = constants.DATASET_ALBEDO_6_PATH
+    shading_dir = constants.DATASET_PREFIX_6_PATH + "shading/"
+    rgb_dir = constants.DATASET_PREFIX_6_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "rgb/"
+    shadow_dir = constants.DATASET_PREFIX_6_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "shadow_map/"
 
     print(rgb_dir, albedo_dir, shading_dir, shadow_dir)
 
@@ -98,6 +97,11 @@ def main(argv):
     train_loader = dataset_loader.load_map_train_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts)
     test_loader = dataset_loader.load_map_test_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
+
+    GTA_BASE_PATH = "E:/IID-TestDataset/GTA/"
+    RGB_PATH = GTA_BASE_PATH + "/input/"
+    ALBEDO_PATH = GTA_BASE_PATH + "/albedo_white/"
+    gta_loader = dataset_loader.load_gta_dataset(RGB_PATH, ALBEDO_PATH, opts)
 
     index = 0
     start_epoch = 0
@@ -115,10 +119,9 @@ def main(argv):
 
         # print(light_angle_batch)
 
-    it_table = iteration_table.IterationTable()
-    trainer = relighting_trainer.RelightingTrainer(device, opts, it_table.is_bce_enabled(opts.iteration))
-    trainer.update_penalties(opts.adv_weight, it_table.get_l1_weight(opts.iteration), it_table.get_lpip_weight(opts.iteration),
-                             it_table.get_ssim_weight(opts.iteration), opts.bce_weight)
+
+    trainer = relighting_trainer.RelightingTrainer(device, opts)
+    trainer.update_penalties(opts.adv_weight, opts.rgb_l1_weight)
 
     last_metric = 10000.0
     stopper_method = early_stopper.EarlyStopper(opts.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, 2000, last_metric)
@@ -156,10 +159,16 @@ def main(argv):
         light_angle_tensor = light_angle_batch.to(device)
 
         trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor, "Test")
+        trainer.visdom_measure(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor, "Test")
 
         _, input_rgb_batch = next(iter(rw_loader))
         input_rgb_tensor = input_rgb_batch.to(device)
         trainer.visdom_infer(input_rgb_tensor)
+
+        gta_rgb, gta_albedo = next(iter(gta_loader))
+        gta_rgb_tensor = gta_rgb.to(device)
+        trainer.visdom_measure_gta(gta_rgb_tensor, gta_albedo)
+
 
     else:
         print("Starting Training Loop...")

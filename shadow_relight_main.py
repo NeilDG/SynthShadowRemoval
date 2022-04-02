@@ -50,8 +50,8 @@ def update_config(opts):
     if (constants.server_config == 1):
         print("Using COARE configuration ", opts.version_name)
         constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/"
-        constants.DATASET_PREFIX_5_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 5/"
-        constants.DATASET_ALBEDO_5_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 5/albedo/"
+        constants.DATASET_PREFIX_6_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 5/"
+        constants.DATASET_ALBEDO_6_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 5/albedo/"
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
@@ -62,8 +62,8 @@ def update_config(opts):
     elif (constants.server_config == 3):
         print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.SHADOWMAP_RELIGHT_CHECKPATH)
         constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/"
-        constants.DATASET_PREFIX_5_PATH = "/home/neil_delgallego/SynthWeather Dataset 5/"
-        constants.DATASET_ALBEDO_5_PATH = "/home/neil_delgallego/SynthWeather Dataset 5/albedo/"
+        constants.DATASET_PREFIX_6_PATH = "/home/neil_delgallego/SynthWeather Dataset 5/"
+        constants.DATASET_ALBEDO_6_PATH = "/home/neil_delgallego/SynthWeather Dataset 5/albedo/"
 
 
 def show_images(img_tensor, caption):
@@ -91,11 +91,11 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    sample_path = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + "0deg/" + "shadow_map/"
-    albedo_dir = constants.DATASET_ALBEDO_5_PATH
-    shading_dir = constants.DATASET_PREFIX_5_PATH + "shading/"
-    rgb_dir = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "rgb/"
-    shadow_dir = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "shadow_map/"
+    sample_path = constants.DATASET_PREFIX_6_PATH + opts.mode + "/" + "0deg/" + "shadow_map/"
+    albedo_dir = constants.DATASET_ALBEDO_6_PATH
+    shading_dir = constants.DATASET_PREFIX_6_PATH + "shading/"
+    rgb_dir = constants.DATASET_PREFIX_6_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "rgb/"
+    shadow_dir = constants.DATASET_PREFIX_6_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "shadow_map/"
 
     print(rgb_dir, albedo_dir, shading_dir, shadow_dir)
 

@@ -493,7 +493,7 @@ class ImageRelightDataset(data.Dataset):
 
         img_b_path = self.shading_dir + file_name
         shading = cv2.imread(img_b_path) #shading
-        shading = cv2.cvtColor(shading, cv2.COLOR_BGR2RGB)
+        shading = cv2.cvtColor(shading, cv2.COLOR_BGR2GRAY)
 
         #randomize light angle
         light_angle_a = np.random.choice(self.light_angles)
@@ -546,7 +546,7 @@ class ImageRelightDataset(data.Dataset):
 
         input_rgb = self.normalize_op(input_rgb)
         albedo = self.normalize_op(albedo)
-        shading = self.normalize_op(shading)
+        shading = self.normalize_op_grey(shading)
         input_shadow_map = self.normalize_op_grey(input_shadow_map)
         target_shadow_map = self.normalize_op_grey(target_shadow_map)
         target_rgb = self.normalize_op(target_rgb)
@@ -714,6 +714,54 @@ class RealWorldTrainDataset(data.Dataset):
 
     def __len__(self):
         return len(self.image_list_a)
+
+
+class GTATestDataset(data.Dataset):
+    def __init__(self, rgb_list, albedo_list, opts):
+        self.rgb_list = rgb_list
+        self.albedo_list = albedo_list
+        self.patch_size = (opts.patch_size, opts.patch_size)
+        self.light_angles = [0, 36, 72, 108, 144]
+
+        self.initial_op = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize((256, 256))])
+
+        self.normalize_op = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        self.normalize_op_grey = transforms.Normalize((0.5), (0.5))
+
+        self.final_transform_op = transforms.Compose([
+            # transforms.Resize(constants.TEST_IMAGE_SIZE),
+            transforms.ToTensor()
+        ])
+
+        self.mask_op = transforms.Compose([
+            # transforms.Resize(constants.TEST_IMAGE_SIZE),
+            transforms.ToTensor()
+        ])
+
+    def __getitem__(self, idx):
+        # file_name = "synth_" + str(idx) + ".png"
+
+        albedo = cv2.imread(self.albedo_list[idx])  # albedo
+        albedo = cv2.cvtColor(albedo, cv2.COLOR_BGR2RGB)
+
+        input_rgb = cv2.imread(self.rgb_list[idx])  # input rgb
+        input_rgb = cv2.cvtColor(input_rgb, cv2.COLOR_BGR2RGB)
+
+        input_rgb = self.initial_op(input_rgb)
+        albedo = self.initial_op(albedo)
+
+        input_rgb = self.final_transform_op(input_rgb)
+        albedo = self.final_transform_op(albedo)
+
+        input_rgb = self.normalize_op(input_rgb)
+        albedo = self.normalize_op(albedo)
+
+        return input_rgb, albedo
+
+    def __len__(self):
+        return len(self.rgb_list)
 
 class ShadowPriorDataset(data.Dataset):
     def __init__(self, image_list_a, transform_config, opts):

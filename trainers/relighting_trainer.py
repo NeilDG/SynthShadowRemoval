@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Cycle consistent relighting trainer
 import kornia
-
+from model import iteration_table
 from model import ffa_gan as ffa
 from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
@@ -11,6 +11,7 @@ import torch.cuda.amp as amp
 import itertools
 import numpy as np
 import torch.nn as nn
+from model.iteration_table import IterationTable
 from utils import plot_utils
 from utils import tensor_utils
 from custom_losses import ssim_loss
@@ -18,11 +19,14 @@ import lpips
 
 class RelightingTrainer:
 
-    def __init__(self, gpu_device, opts, use_bce):
+    def __init__(self, gpu_device, opts):
         self.gpu_device = gpu_device
         self.g_lr = opts.g_lr
         self.d_lr = opts.d_lr
-        self.use_bce = use_bce
+
+        self.iteration = opts.iteration
+        self.it_table = iteration_table.IterationTable()
+        self.use_bce = self.it_table.is_bce_enabled(self.iteration, IterationTable.NetworkType.ALBEDO)
 
         self.lpips_loss = lpips.LPIPS(net='vgg').to(self.gpu_device)
         self.ssim_loss = ssim_loss.SSIM()
@@ -54,7 +58,7 @@ class RelightingTrainer:
             self.G_A = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
             self.G_A = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
-        elif (net_config == 5):
+        elif (net_config == 4):
             self.G_A = unet_gan.UnetGeneratorV2(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         else:
             self.G_A = cycle_gan.GeneratorV2(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
@@ -63,17 +67,17 @@ class RelightingTrainer:
 
     def initialize_shading_network(self, net_config, num_blocks):
         if (net_config == 1):
-            self.G_S = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
+            self.G_S = cycle_gan.Generator(input_nc=3, output_nc=1, n_residual_blocks=num_blocks).to(self.gpu_device)
         elif (net_config == 2):
-            self.G_S = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
+            self.G_S = unet_gan.UnetGenerator(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
-            self.G_S = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
-        elif (net_config == 5):
-            self.G_S = unet_gan.UnetGeneratorV2(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
+            self.G_S = cycle_gan.Generator(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
+        elif (net_config == 4):
+            self.G_S = unet_gan.UnetGeneratorV2(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         else:
-            self.G_S = cycle_gan.GeneratorV2(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
+            self.G_S = cycle_gan.GeneratorV2(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
-        self.D_S = cycle_gan.Discriminator(input_nc=3, use_bce=self.use_bce).to(self.gpu_device)  # use CycleGAN's discriminator
+        self.D_S = cycle_gan.Discriminator(input_nc=1, use_bce=self.use_bce).to(self.gpu_device)  # use CycleGAN's discriminator
 
     def initialize_shadow_network(self, net_config, num_blocks):
         if (net_config == 1):
@@ -82,7 +86,7 @@ class RelightingTrainer:
             self.G_Z = unet_gan.UnetGenerator(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
             self.G_Z = cycle_gan.Generator(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
-        elif (net_config == 5):
+        elif (net_config == 4):
             self.G_Z = unet_gan.UnetGeneratorV2(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         else:
             self.G_Z = cycle_gan.GeneratorV2(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
@@ -142,23 +146,34 @@ class RelightingTrainer:
     def ssim_loss(self, pred, target):
         return kornia.losses.ssim_loss(pred, target)
 
-    def update_penalties(self, adv_weight, l1_weight, lpip_weight, ssim_weight, bce_weight):
+    def update_penalties(self, adv_weight, rgb_l1_weight):
         # what penalties to use for losses?
         self.adv_weight = adv_weight
-        self.l1_weight = l1_weight
-        self.lpip_weight = lpip_weight
-        self.ssim_weight = ssim_weight
-        self.bce_weight = bce_weight
+        self.rgb_l1_weight = rgb_l1_weight
 
         print("Version: ", constants.RELIGHTING_CHECKPATH)
         print("Learning rate for G: ", str(self.g_lr))
         print("Learning rate for D: ", str(self.d_lr))
         print("====================================")
         print("Adv weight: ", str(self.adv_weight))
-        print("Likeness weight: ", str(self.l1_weight))
-        print("LPIP weight: ", str(self.lpip_weight))
-        print("SSIM weight: ", str(self.ssim_weight))
-        print("BCE weight: ", str(self.bce_weight))
+
+        print("======ALBEDO======")
+        print("Likeness weight: ", str(self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.ALBEDO)))
+        print("LPIP weight: ", str(self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.ALBEDO)))
+        print("SSIM weight: ", str(self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.ALBEDO)))
+        print("BCE weight: ", str(self.it_table.get_bce_weight(self.iteration, IterationTable.NetworkType.ALBEDO)))
+
+        print("======SHADING======")
+        print("Likeness weight: ", str(self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.SHADING)))
+        print("LPIP weight: ", str(self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.SHADING)))
+        print("SSIM weight: ", str(self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.SHADING)))
+        print("BCE weight: ", str(self.it_table.get_bce_weight(self.iteration, IterationTable.NetworkType.ALBEDO)))
+
+        print("======SHADOW======")
+        print("Likeness weight: ", str(self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.SHADOW)))
+        print("LPIP weight: ", str(self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.SHADOW)))
+        print("SSIM weight: ", str(self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.SHADOW)))
+        print("BCE weight: ", str(self.it_table.get_bce_weight(self.iteration, IterationTable.NetworkType.ALBEDO)))
 
     # def produce_rgb(self, albedo_tensor, shading_tensor, light_color, shadowmap_tensor):
     #     albedo_tensor = albedo_tensor.transpose(0, 1)
@@ -227,10 +242,10 @@ class RelightingTrainer:
             #albedo generator
             self.G_A.train()
             rgb2albedo = self.G_A(input_rgb_tensor)
-            A_likeness_loss = self.l1_loss(rgb2albedo, albedo_tensor) * self.l1_weight
-            A_lpip_loss = self.lpip_loss(rgb2albedo, albedo_tensor) * self.lpip_weight
-            # A_ssim_loss = self.ssim_loss(rgb2albedo, albedo_tensor) * self.ssim_weight
-            A_bce_loss = self.bce_loss_term(rgb2albedo, albedo_tensor) * self.bce_weight
+            A_likeness_loss = self.l1_loss(rgb2albedo, albedo_tensor) * self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
+            A_lpip_loss = self.lpip_loss(rgb2albedo, albedo_tensor) * self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
+            A_ssim_loss = self.ssim_loss(rgb2albedo, albedo_tensor) * self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
+            A_bce_loss = self.bce_loss_term(rgb2albedo, albedo_tensor) * self.it_table.get_bce_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
             prediction = self.D_A(rgb2albedo)
             real_tensor = torch.ones_like(prediction)
             A_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
@@ -238,31 +253,31 @@ class RelightingTrainer:
             #shading generator
             self.G_S.train()
             rgb2shading = self.G_S(input_rgb_tensor)
-            S_likeness_loss = self.l1_loss(rgb2shading, shading_tensor) * self.l1_weight
-            S_lpip_loss = self.lpip_loss(rgb2shading, shading_tensor) * self.lpip_weight
-            # S_ssim_loss = self.ssim_loss(rgb2shading, shading_tensor) * self.ssim_weight
-            S_bce_loss = self.bce_loss_term(rgb2shading, shading_tensor) * self.bce_weight
+            S_likeness_loss = self.l1_loss(rgb2shading, shading_tensor) * self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.SHADING)
+            S_lpip_loss = self.lpip_loss(rgb2shading, shading_tensor) * self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.SHADING)
+            S_ssim_loss = self.ssim_loss(rgb2shading, shading_tensor) * self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.SHADING)
+            S_bce_loss = self.bce_loss_term(rgb2shading, shading_tensor) * self.it_table.get_bce_weight(self.iteration, IterationTable.NetworkType.SHADING)
             prediction = self.D_S(rgb2shading)
             real_tensor = torch.ones_like(prediction)
             S_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            # shading generator
+            # shadow generator
             self.G_Z.train()
             rgb2shadow = self.G_Z(input_rgb_tensor)
-            Z_likeness_loss = self.l1_loss(rgb2shadow, shadow_tensor) * self.l1_weight
-            Z_lpip_loss = self.lpip_loss(rgb2shadow, shadow_tensor) * self.lpip_weight
-            # Z_ssim_loss = self.ssim_loss(rgb2shadow, shadow_tensor) * self.ssim_weight
-            Z_bce_loss = self.bce_loss_term(rgb2shadow, shadow_tensor) * self.bce_weight
+            Z_likeness_loss = self.l1_loss(rgb2shadow, shadow_tensor) * self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.SHADOW)
+            Z_lpip_loss = self.lpip_loss(rgb2shadow, shadow_tensor) * self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.SHADOW)
+            Z_ssim_loss = self.ssim_loss(rgb2shadow, shadow_tensor) * self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.SHADOW)
+            Z_bce_loss = self.bce_loss_term(rgb2shadow, shadow_tensor) * self.it_table.get_bce_weight(self.iteration, IterationTable.NetworkType.SHADOW)
             prediction = self.D_Z(rgb2shadow)
             real_tensor = torch.ones_like(prediction)
             Z_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
             rgb_like = tensor_utils.produce_rgb(rgb2albedo, rgb2shading, self.default_light_color, rgb2shadow)
-            rgb_l1_loss = self.l1_loss(rgb_like, target_rgb_tensor) * self.l1_weight
+            rgb_l1_loss = self.l1_loss(rgb_like, target_rgb_tensor) * self.rgb_l1_weight
 
-            errG = A_likeness_loss + A_lpip_loss + A_bce_loss + A_adv_loss + \
-                   S_likeness_loss + S_lpip_loss + S_bce_loss + S_adv_loss + \
-                   Z_likeness_loss + Z_lpip_loss + Z_bce_loss + Z_adv_loss + rgb_l1_loss
+            errG = A_likeness_loss + A_lpip_loss + A_ssim_loss + A_bce_loss + A_adv_loss + \
+                   S_likeness_loss + S_lpip_loss + S_ssim_loss + S_bce_loss + S_adv_loss + \
+                   Z_likeness_loss + Z_lpip_loss + Z_ssim_loss + Z_bce_loss + Z_adv_loss + rgb_l1_loss
 
             self.fp16_scaler.scale(errG).backward()
             self.fp16_scaler.step(self.optimizerG)
@@ -311,6 +326,13 @@ class RelightingTrainer:
             self.visdom_reporter.plot_image(rgb2shadow, str(label) + " RGB2Shadow images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(shadow_tensor, str(label) + " Shadow images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
 
+    def visdom_measure(self, input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor, target_rgb_tensor, label="Training"):
+        with torch.no_grad():
+            rgb2albedo = self.G_A(input_rgb_tensor)
+            rgb2shading = self.G_S(input_rgb_tensor)
+            rgb2shadow = self.G_Z(input_rgb_tensor)
+            rgb_like = tensor_utils.produce_rgb(rgb2albedo, rgb2shading, self.default_light_color, rgb2shadow)
+
             # plot metrics
             rgb2albedo = (rgb2albedo * 0.5) + 0.5
             albedo_tensor = (albedo_tensor * 0.5) + 0.5
@@ -328,8 +350,8 @@ class RelightingTrainer:
             ssim_shadow = np.round(1.0 - kornia.losses.ssim_loss(rgb2shadow, shadow_tensor, 5).item(), 4)
             psnr_rgb = np.round(kornia.metrics.psnr(rgb_like, target_rgb_tensor, max_val=1.0).item(), 4)
             ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb_like, target_rgb_tensor, 5).item(), 4)
-            display_text = str(label) + " - Versions: " + constants.RELIGHTING_VERSION + constants.ITERATION +\
-                           "<br> Albedo PSNR: " + str(psnr_albedo) + "<br> Albedo SSIM: " + str(ssim_albedo) +\
+            display_text = str(label) + " - Versions: " + constants.RELIGHTING_VERSION + constants.ITERATION + \
+                           "<br> Albedo PSNR: " + str(psnr_albedo) + "<br> Albedo SSIM: " + str(ssim_albedo) + \
                            "<br> Shading PSNR: " + str(psnr_shading) + "<br> Shading SSIM: " + str(ssim_shading) + \
                            "<br> Shadow PSNR: " + str(psnr_shadow) + "<br> Shadow SSIM: " + str(ssim_shadow) + \
                            "<br> RGB Reconstruction PSNR: " + str(psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ssim_rgb)
@@ -339,13 +361,41 @@ class RelightingTrainer:
     # must have a shading generator network first
     def visdom_infer(self, rw_tensor):
         with torch.no_grad():
-            rgb2albedo = self.G_A(rw_tensor)
-            rgb2shading = self.G_S(rw_tensor)
-            rgb2shadow = self.G_Z(rw_tensor)
+            rgb2albedo = self.infer_albedo(rw_tensor)
+            rgb2shading = self.infer_shading(rw_tensor)
+            rgb2shadow = self.infer_shadow(rw_tensor)
             rgb_like = tensor_utils.produce_rgb(rgb2albedo, rgb2shading, self.default_light_color, rgb2shadow)
 
             self.visdom_reporter.plot_image(rw_tensor, "Real World images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(rgb_like, "Real World A2B images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
+
+    def visdom_measure_gta(self, gta_rgb, gta_albedo):
+        with torch.no_grad():
+            rgb2albedo = self.infer_albedo(gta_rgb)
+            rgb2shading = self.infer_shading(gta_rgb)
+            rgb2shadow = self.infer_shadow(gta_rgb)
+            rgb_like = tensor_utils.produce_rgb(rgb2albedo, rgb2shading, self.default_light_color, rgb2shadow)
+
+            self.visdom_reporter.plot_image(gta_albedo, "GTA Albedo - " + constants.RELIGHTING_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(rgb2albedo, "GTA Albedo-Like - " + constants.RELIGHTING_VERSION + constants.ITERATION)
+
+            self.visdom_reporter.plot_image(rgb2shading, "GTA Shading-Like - " + constants.RELIGHTING_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(rgb2shadow, "GTA Shadow-Like - " + constants.RELIGHTING_VERSION + constants.ITERATION)
+
+            self.visdom_reporter.plot_image(gta_rgb, "GTA RGB - " + constants.RELIGHTING_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(rgb_like, "GTA RGB-Like - " + constants.RELIGHTING_VERSION + constants.ITERATION)
+
+    def infer_albedo(self, rw_tensor):
+        with torch.no_grad():
+            return self.G_A(rw_tensor)
+
+    def infer_shading(self, rw_tensor):
+        with torch.no_grad():
+            return self.G_S(rw_tensor)
+
+    def infer_shadow(self, rw_tensor):
+        with torch.no_grad():
+            return self.G_Z(rw_tensor)
 
     def load_saved_state(self, checkpoint):
         self.G_A.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])

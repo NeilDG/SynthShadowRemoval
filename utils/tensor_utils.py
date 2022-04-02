@@ -18,6 +18,7 @@ import torch
 from utils import pytorch_colors
 import matplotlib.pyplot as plt
 from skimage.metrics import structural_similarity
+import torchvision.transforms as transforms
 import constants
 
 # for attaching hooks on pretrained models
@@ -286,15 +287,56 @@ def produce_rgb(albedo_tensor, shading_tensor, light_color, shadowmap_tensor):
     shadowmap_tensor = (shadowmap_tensor * 0.5) + 0.5
     light_color = light_color / 255.0
 
-    # shadowmap_tensor = torch.clip(shadowmap_tensor, 0.75, 1.0) #remove shadow
+    # shading_tensor = torch.clip(shading_tensor, 1.0, 1.0)
+    # shadowmap_tensor = torch.clip(shadowmap_tensor, 1.0, 1.0) #remove shadow
 
     rgb_img_like = torch.full_like(albedo_tensor, 0)
-    rgb_img_like[0] = torch.clip(albedo_tensor[0] * shading_tensor[0] * light_color[0] * shadowmap_tensor, 0.0, 1.0)
-    rgb_img_like[1] = torch.clip(albedo_tensor[1] * shading_tensor[1] * light_color[1] * shadowmap_tensor, 0.0, 1.0)
-    rgb_img_like[2] = torch.clip(albedo_tensor[2] * shading_tensor[2] * light_color[2] * shadowmap_tensor, 0.0, 1.0)
+    rgb_img_like[0] = torch.clip(albedo_tensor[0] * shading_tensor * light_color[0] * shadowmap_tensor, 0.0, 1.0)
+    rgb_img_like[1] = torch.clip(albedo_tensor[1] * shading_tensor * light_color[1] * shadowmap_tensor, 0.0, 1.0)
+    rgb_img_like[2] = torch.clip(albedo_tensor[2] * shading_tensor * light_color[2] * shadowmap_tensor, 0.0, 1.0)
 
     rgb_img_like = rgb_img_like.transpose(0, 1)
     return rgb_img_like
+
+
+def load_metric_compatible_albedo(img_path, cvt_color: int, normalize: bool, convert_to_tensor: bool, size):
+    img = cv2.imread(img_path)
+    img = cv2.cvtColor(img, cvt_color)
+    img = cv2.resize(img, size, interpolation=cv2.INTER_CUBIC)
+    if (normalize):
+        img = cv2.normalize(img, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+
+    img_mask = cv2.inRange(img[:, :, 0], 0.0, 0.01)  # mask for getting zero pixels to be excluded
+    img_mask = np.asarray([img_mask, img_mask, img_mask])
+    img_mask = np.moveaxis(img_mask, 0, 2)
+
+    img_ones = np.full_like(img_mask, 1.0)
+    img = np.clip(img + (img_ones * img_mask), 0.01, 1.0)
+
+    if (convert_to_tensor):
+        transform_op = transforms.ToTensor()
+        tensor_img = transform_op(img)
+        tensor_img = torch.unsqueeze(tensor_img, 0)
+        return tensor_img
+
+    else:
+        return img
+
+def load_metric_compatible_img(img_path, cvt_color:int, normalize:bool, convert_to_tensor:bool, size):
+    img = cv2.imread(img_path)
+    img = cv2.cvtColor(img, cvt_color)
+    img = cv2.resize(img, size, interpolation=cv2.INTER_CUBIC)
+    if(normalize):
+        img = cv2.normalize(img, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+
+    if(convert_to_tensor):
+        transform_op = transforms.ToTensor()
+        tensor_img = transform_op(img)
+        tensor_img = torch.unsqueeze(tensor_img, 0)
+        return tensor_img
+
+    else:
+        return img
 
 class GaussianSmoothing(nn.Module):
     """

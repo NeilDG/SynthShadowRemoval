@@ -109,10 +109,10 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    albedo_dir = constants.DATASET_ALBEDO_5_PATH
-    shading_dir = constants.DATASET_PREFIX_5_PATH + "shading/"
-    rgb_dir = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "rgb/"
-    shadow_dir = constants.DATASET_PREFIX_5_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "shadow_map/"
+    albedo_dir = constants.DATASET_ALBEDO_6_PATH
+    shading_dir = constants.DATASET_PREFIX_6_PATH + "shading/"
+    rgb_dir = constants.DATASET_PREFIX_6_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "rgb/"
+    shadow_dir = constants.DATASET_PREFIX_6_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "shadow_map/"
 
     print(rgb_dir, albedo_dir, shading_dir, shadow_dir)
 

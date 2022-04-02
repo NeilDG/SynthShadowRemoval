@@ -301,3 +301,17 @@ def load_shadow_priors_test(path_a, opts):
     )
 
     return data_loader
+
+def load_gta_dataset(rgb_dir, albedo_dir, opts):
+    rgb_list = assemble_unpaired_data(rgb_dir, opts.img_to_load)
+    albedo_list = assemble_unpaired_data(albedo_dir, opts.img_to_load)
+    print("Length of images: %d %d" % (len(rgb_list), len(albedo_list)))
+
+    data_loader = torch.utils.data.DataLoader(
+        image_dataset.GTATestDataset(rgb_list, albedo_list, opts),
+        batch_size=4,
+        num_workers=1,
+        shuffle=False
+    )
+
+    return data_loader
