@@ -353,6 +353,11 @@ def produce_color_images(INPUT_PATH, SAVE_PATH, CHECKPT_NAME, net_config):
 
     device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
 
+    try:
+        os.mkdir(SAVE_PATH)
+    except OSError as error:
+        print("Save path already exists. Skipping.", error)
+
     # load color transfer
     if (net_config == 1):
         print("Using vanilla cycle GAN")
@@ -374,16 +379,16 @@ def produce_color_images(INPUT_PATH, SAVE_PATH, CHECKPT_NAME, net_config):
 
     # Plot some training images
     name_batch, dirty_batch, clean_batch = next(iter(dataloader))
-    plt.figure(figsize=constants.FIG_SIZE)
+    plt.figure(figsize=(16, 16))
     plt.axis("off")
     plt.title("Training - Old Images")
-    plt.imshow(np.transpose(torchutils.make_grid(dirty_batch.to(device)[:constants.infer_size], nrow=8, padding=2, normalize=True).cpu(), (1, 2, 0)))
+    plt.imshow(np.transpose(torchutils.make_grid(dirty_batch.to(device)[:16], nrow=8, padding=2, normalize=True).cpu(), (1, 2, 0)))
     plt.show()
 
-    plt.figure(figsize=constants.FIG_SIZE)
+    plt.figure(figsize=(16, 16))
     plt.axis("off")
     plt.title("Training - New Images")
-    plt.imshow(np.transpose(torchutils.make_grid(clean_batch.to(device)[:constants.infer_size], nrow=8, padding=2, normalize=True).cpu(), (1, 2, 0)))
+    plt.imshow(np.transpose(torchutils.make_grid(clean_batch.to(device)[:16], nrow=8, padding=2, normalize=True).cpu(), (1, 2, 0)))
     plt.show()
 
     for i, (name, dirty_batch, clean_batch) in enumerate(dataloader, 0):
@@ -526,8 +531,8 @@ def main():
     # create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/Elevation/default_144deg_001.mp4",
     #                        "E:/SynthWeather Dataset 4/elevation/144deg/rgb/", "synth_%d.png", (256, 256), 0)
 
-    create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/default_noshadows_003.mp4",
-                           "E:/SynthWeather Dataset 5 - RAW/no_shadows/", "synth_%d.png", (256, 256), 0)
+    # create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/default_noshadows_003.mp4",
+    #                        "E:/SynthWeather Dataset 5 - RAW/no_shadows/", "synth_%d.png", (256, 256), 0)
     # create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/Azimuth/default_0deg_002.mp4",
     #                        "E:/SynthWeather Dataset 5 - RAW/azimuth/0deg/rgb/", "synth_%d.png", (256, 256), 0)
     # create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/Azimuth/default_36deg_002.mp4",
@@ -539,7 +544,8 @@ def main():
     # create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/Azimuth/default_144deg_002.mp4",
     #                        "E:/SynthWeather Dataset 5 - RAW/azimuth/144deg/rgb/", "synth_%d.png", (256, 256), 0)
     #create_hazy_data(0)
-    # produce_color_images("E:/Synth Hazy 4/clean/", "E:/Synth Hazy 4/clean - styled/",  "synth2places_v1.15_1.pt", net_config = 3)
+
+    produce_color_images("E:/SynthWeather Dataset 6/azimuth/0deg/rgb/", "E:/SynthWeather Dataset 6/azimuth/0deg/rgb - styled/",  "synth2rgb_v3.00_1.pt", net_config = 2)
 
 if __name__=="__main__": 
     main()   

@@ -47,7 +47,7 @@ class Generator(nn.Module):
         # Initial convolution block       
         model = [   nn.ReflectionPad2d(2),
                     nn.Conv2d(input_nc, 64, 8),
-                    nn.BatchNorm2d(64),
+                    nn.InstanceNorm2d(64),
                     nn.ReLU(inplace=True) ]
 
         # Downsampling
@@ -55,7 +55,7 @@ class Generator(nn.Module):
         out_features = in_features*2
         for _ in range(downsampling_blocks):
             model += [  nn.Conv2d(in_features, out_features, 4, stride=2, padding=1),
-                        nn.BatchNorm2d(out_features),
+                        nn.InstanceNorm2d(out_features),
                         nn.ReLU(inplace=True)
                     ]
 
@@ -72,7 +72,7 @@ class Generator(nn.Module):
         out_features = in_features//2
         for _ in range(downsampling_blocks):
             model += [  nn.ConvTranspose2d(in_features, out_features, 4, stride=2, padding=1, output_padding=1),
-                        nn.BatchNorm2d(out_features),
+                        nn.InstanceNorm2d(out_features),
                         nn.ReLU(inplace=True)]
 
             if (has_dropout):

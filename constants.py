@@ -34,6 +34,7 @@ OPTIMIZER_KEY = "optimizer"
 GENERATOR_KEY = "generator"
 DISCRIMINATOR_KEY = "discriminator"
 
+STYLE_TRANSFER_VERSION = "synth2rgb_v1.00"
 EMBEDDING_VERSION = "embedding_v1.00"
 FFA_TRANSFER_VERSION = "synthplaces2sunny_v1.01"
 MAPPER_VERSION = "rgb2albedo_v1.00"
@@ -44,6 +45,8 @@ SHADOWMAP_VERSION = "rgb2shadowmap_v1.00"
 SHADOWMAP_RELIGHT_VERSION = "shadow2relight_v1.00"
 
 ITERATION = "1"
+
+STYLE_TRANSFER_CHECKPATH = 'checkpoint/' + STYLE_TRANSFER_VERSION + "_" + ITERATION + '.pt'
 EMBEDDING_CHECKPATH = 'checkpoint/' + EMBEDDING_VERSION + "_" + ITERATION + '.pt'
 MAPPER_CHECKPATH = 'checkpoint/' + MAPPER_VERSION + "_" + ITERATION + '.pt'
 IID_CHECKPATH = 'checkpoint/' + IID_VERSION + "_" + ITERATION + '.pt'
@@ -79,5 +82,8 @@ num_epochs = 600
 #Running on local = 0, Running on COARE = 1, Running on CCS server = 2
 server_config = 0
 num_workers = 12
+
+imgy_dir = "E:/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
+imgx_dir = "E:/Places Dataset/*.jpg"
 
     

@@ -91,7 +91,6 @@ class EmbeddingTrainer:
             print("Adv weight: ", str(self.adv_weight), file=f)
             print("Likeness weight: ", str(self.likeness_weight), file=f)
 
-
     def train(self, input_tensor):
         with amp.autocast():
             fake_input = self.G_A(input_tensor)

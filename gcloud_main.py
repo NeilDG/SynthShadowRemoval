@@ -61,10 +61,35 @@ def train_relighting():
     os.system("python \"relighting_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=128 --batch_size=40 --net_config=2 --num_blocks=0 "
               "--mode=azimuth --min_epochs=50 --version_name=\"maps2rgb_rgb2maps_v4.01\" --iteration=8")
 
+def train_domain_adaptation():
+    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=2 --num_blocks=0 --patch_size=32 --batch_size=1024 "
+              "--min_epochs=15 --version_name=\"synth2rgb_v3.01\" --iteration=1")
+
+    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=2 --num_blocks=0 --patch_size=32 --batch_size=1024 "
+              "--min_epochs=15 --version_name=\"synth2rgb_v3.01\" --iteration=2")
+
+    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=2 --num_blocks=0 --patch_size=32 --batch_size=1024 "
+              "--min_epochs=15 --version_name=\"synth2rgb_v3.01\" --iteration=9")
+
+    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=2 --num_blocks=0 --patch_size=32 --batch_size=1024 "
+              "--min_epochs=15 --version_name=\"synth2rgb_v3.01\" --iteration=10")
+
+    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=2 --num_blocks=0 --patch_size=32 --batch_size=1024 "
+              "--min_epochs=15 --version_name=\"synth2rgb_v3.01\" --iteration=11")
+
+    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=2 --num_blocks=0 --patch_size=32 --batch_size=1024 "
+              "--min_epochs=15 --version_name=\"synth2rgb_v3.01\" --iteration=12")
+
+    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=2 --num_blocks=0 --patch_size=32 --batch_size=1024 "
+              "--min_epochs=15 --version_name=\"synth2rgb_v3.01\" --iteration=3")
+
+    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=2 --num_blocks=0 --patch_size=32 --batch_size=1024 "
+              "--min_epochs=15 --version_name=\"synth2rgb_v3.01\" --iteration=4")
 
 def main():
     # train_shadow_relight()
-    train_relighting()
+    # train_relighting()
+    train_domain_adaptation()
 
 
 if __name__ == "__main__":
