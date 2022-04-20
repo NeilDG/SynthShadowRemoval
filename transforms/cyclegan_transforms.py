@@ -15,11 +15,12 @@ class CycleGANTransform(nn.Module):
         super(CycleGANTransform, self).__init__()
 
         self.patch_size = (opts.patch_size, opts.patch_size)
+        self.grid_size = (opts.patch_size / 16, opts.patch_size / 16)
 
         self.transform_op = kornia.augmentation.PatchSequential(
             kornia.augmentation.RandomVerticalFlip(p=0.5),
             kornia.augmentation.RandomHorizontalFlip(p=0.5),
-        grid_size=(self.patch_size),
+        grid_size=(self.grid_size),
         patchwise_apply=False,
         same_on_batch=True)
 

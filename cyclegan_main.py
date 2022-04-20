@@ -101,14 +101,14 @@ def main(argv):
         imgx_tensor = imgx_batch.to(device)
         imgy_tensor = imgy_batch.to(device)
 
-        # gt.train(imgx_tensor, imgy_tensor)
+        gt.train(imgx_tensor, imgy_tensor)
         gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
 
         imgx_batch, imgy_batch = next(iter(test_loader))
         imgx_tensor = imgx_batch.to(device)
         imgy_tensor = imgy_batch.to(device)
 
-        # gt.train(imgx_tensor, imgy_tensor)
+        gt.train(imgx_tensor, imgy_tensor)
         gt.visdom_visualize(imgx_tensor, imgy_tensor, "Test")
 
     else:
@@ -126,16 +126,16 @@ def main(argv):
                 x2y, _ = gt.test(imgx_tensor, imgy_tensor)
                 stopper_method.test(gt, epoch, iteration, x2y, imgy_tensor)  # stop training if reconstruction no longer becomes close to Y
 
-                if (i % 900 == 0):
-                    gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
+                # if (i % 900 == 0):
+                gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
 
-                    gt.save_states_checkpt(epoch, iteration)
-                    imgx_batch, imgy_batch = test_data
-                    imgx_tensor = imgx_batch.to(device)
-                    imgy_tensor = imgy_batch.to(device)
+                gt.save_states_checkpt(epoch, iteration)
+                imgx_batch, imgy_batch = test_data
+                imgx_tensor = imgx_batch.to(device)
+                imgy_tensor = imgy_batch.to(device)
 
-                    gt.visdom_visualize(imgx_tensor, imgy_tensor, "Test")
-                    gt.visdom_plot(iteration)
+                gt.visdom_visualize(imgx_tensor, imgy_tensor, "Test")
+                gt.visdom_plot(iteration)
 
                 if (stopper_method.did_stop_condition_met()):
                         break
