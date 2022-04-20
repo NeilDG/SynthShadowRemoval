@@ -311,7 +311,8 @@ def load_gta_dataset(rgb_dir, albedo_dir, opts):
         image_dataset.GTATestDataset(rgb_list, albedo_list, opts),
         batch_size=4,
         num_workers=1,
-        shuffle=False
+        shuffle=False,
+        pin_memory=True
     )
 
     return data_loader
@@ -336,7 +337,9 @@ def load_da_dataset_train(imgx_dir, imgy_dir, opts):
         image_dataset.GenericPairedDataset(imgx_list, imgy_list, 1, opts),
         batch_size=opts.batch_size,
         num_workers = opts.num_workers,
-        shuffle=False
+        shuffle=False,
+        pin_memory=True
+
     )
 
     return data_loader
@@ -359,7 +362,8 @@ def load_da_dataset_test(imgx_dir, imgy_dir, opts):
         image_dataset.GenericPairedDataset(imgx_list, imgy_list, 2, opts),
         batch_size=4,
         num_workers=1,
-        shuffle=False
+        shuffle=False,
+        pin_memory=True
     )
 
     return data_loader

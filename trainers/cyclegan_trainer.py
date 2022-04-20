@@ -18,7 +18,7 @@ from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
 from utils import plot_utils
 from utils import pytorch_colors
-
+from transforms import cyclegan_transforms
 
 class DomainAdaptIterationTable():
     def __init__(self):
@@ -59,6 +59,18 @@ class DomainAdaptIterationTable():
 
         iteration = 12
         self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=0.0, id_weight=0.0, lpip_weight=10.0, cycle_weight=10.0, adv_weight=1.0, is_bce=1)
+
+        iteration = 13
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=1.0, id_weight=0.0, lpip_weight=1.0, cycle_weight=10.0, adv_weight=1.0, is_bce=0)
+
+        iteration = 14
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=1.0, id_weight=0.0, lpip_weight=1.0, cycle_weight=10.0, adv_weight=1.0, is_bce=1)
+
+        iteration = 15
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=10.0, id_weight=0.0, lpip_weight=10.0, cycle_weight=10.0, adv_weight=1.0, is_bce=0)
+
+        iteration = 16
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=10.0, id_weight=0.0, lpip_weight=10.0, cycle_weight=10.0, adv_weight=1.0, is_bce=1)
 
     def get_version(self, iteration):
         return self.iteration_table[str(iteration)]
@@ -104,6 +116,8 @@ class CycleGANTrainer:
 
         self.D_A = cycle_gan.Discriminator(use_bce=self.use_bce).to(self.gpu_device)  # use CycleGAN's discriminator
         self.D_B = cycle_gan.Discriminator(use_bce=self.use_bce).to(self.gpu_device)
+
+        self.transform_op = cyclegan_transforms.CycleGANTransform(opts).to(self.gpu_device)
 
         self.visdom_reporter = plot_utils.VisdomReporter()
         self.optimizerG = torch.optim.Adam(itertools.chain(self.G_A.parameters(), self.G_B.parameters()), lr=self.g_lr)
@@ -181,6 +195,9 @@ class CycleGANTrainer:
 
     def train(self, dirty_tensor, clean_tensor):
         with amp.autocast():
+            dirty_tensor = self.transform_op(dirty_tensor)
+            clean_tensor = self.transform_op(clean_tensor)
+
             clean_like = self.G_A(dirty_tensor)
             dirty_like = self.G_B(clean_tensor)
 
@@ -264,8 +281,12 @@ class CycleGANTrainer:
     def visdom_plot(self, iteration):
         self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict, constants.STYLE_TRANSFER_CHECKPATH)
 
-    def visdom_visualize(self, tensor_x, tensor_y, label="Training"):
+    def visdom_visualize(self, tensor_x, tensor_y, label="Train"):
         with torch.no_grad():
+            if(label == "Train"):
+                tensor_x = self.transform_op(tensor_x)
+                tensor_y = self.transform_op(tensor_y)
+
             x2y = self.G_A(tensor_x)
             y2x = self.G_B(tensor_y)
 

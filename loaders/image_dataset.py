@@ -111,11 +111,19 @@ class GenericPairedDataset(data.Dataset):
         self.patch_size = (opts.patch_size, opts.patch_size)
 
         if(transform_config == 1):
+            # self.transform_op = transforms.Compose([
+            #     transforms.ToPILImage(),
+            #     transforms.Resize((256, 256)),
+            #     transforms.RandomCrop(self.patch_size),
+            #     transforms.RandomVerticalFlip(),
+            #     transforms.RandomHorizontalFlip(),
+            #     transforms.ToTensor(),
+            #     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+            # ])
+
             self.transform_op = transforms.Compose([
                 transforms.ToPILImage(),
-                transforms.RandomCrop(self.patch_size),
-                transforms.RandomVerticalFlip(),
-                transforms.RandomHorizontalFlip(),
+                transforms.Resize((256, 256)),
                 transforms.ToTensor(),
                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
             ])
@@ -123,7 +131,7 @@ class GenericPairedDataset(data.Dataset):
         else:
             self.transform_op = transforms.Compose([
                 transforms.ToPILImage(),
-                transforms.RandomCrop((128, 128)),
+                transforms.Resize((256, 256)),
                 transforms.ToTensor(),
                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
             ])

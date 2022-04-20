@@ -29,7 +29,7 @@ parser.add_option('--iteration', type=int, help="Style version?", default="1")
 parser.add_option('--num_blocks', type=int)
 parser.add_option('--net_config', type=int)
 parser.add_option('--g_lr', type=float, help="LR", default="0.00002")
-parser.add_option('--d_lr', type=float, help="LR", default="0.00005")
+parser.add_option('--d_lr', type=float, help="LR", default="0.00002")
 parser.add_option('--batch_size', type=int, help="batch_size", default="128")
 parser.add_option('--patch_size', type=int, help="patch_size", default="64")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
@@ -101,14 +101,14 @@ def main(argv):
         imgx_tensor = imgx_batch.to(device)
         imgy_tensor = imgy_batch.to(device)
 
-        gt.train(imgx_tensor, imgy_tensor)
-        gt.visdom_visualize(imgx_tensor, imgy_tensor, "Training")
+        # gt.train(imgx_tensor, imgy_tensor)
+        gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
 
         imgx_batch, imgy_batch = next(iter(test_loader))
         imgx_tensor = imgx_batch.to(device)
         imgy_tensor = imgy_batch.to(device)
 
-        gt.train(imgx_tensor, imgy_tensor)
+        # gt.train(imgx_tensor, imgy_tensor)
         gt.visdom_visualize(imgx_tensor, imgy_tensor, "Test")
 
     else:
@@ -127,6 +127,8 @@ def main(argv):
                 stopper_method.test(gt, epoch, iteration, x2y, imgy_tensor)  # stop training if reconstruction no longer becomes close to Y
 
                 if (i % 900 == 0):
+                    gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
+
                     gt.save_states_checkpt(epoch, iteration)
                     imgx_batch, imgy_batch = test_data
                     imgx_tensor = imgx_batch.to(device)
