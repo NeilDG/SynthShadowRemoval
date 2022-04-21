@@ -114,10 +114,10 @@ class CycleGANTrainer:
             self.G_A = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
             self.G_B = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
 
-        self.D_A = cycle_gan.Discriminator(use_bce=self.use_bce).to(self.gpu_device)  # use CycleGAN's discriminator
-        self.D_B = cycle_gan.Discriminator(use_bce=self.use_bce).to(self.gpu_device)
+        self.D_A = cycle_gan.Discriminator().to(self.gpu_device)  # use CycleGAN's discriminator
+        self.D_B = cycle_gan.Discriminator().to(self.gpu_device)
 
-        self.transform_op = cyclegan_transforms.CycleGANTransform(opts).to(self.gpu_device)
+        self.transform_op = cyclegan_transforms.CycleGANTransform(opts).to(self.gpu_device).requires_grad_(False)
 
         self.visdom_reporter = plot_utils.VisdomReporter()
         self.optimizerG = torch.optim.Adam(itertools.chain(self.G_A.parameters(), self.G_B.parameters()), lr=self.g_lr)
@@ -195,8 +195,8 @@ class CycleGANTrainer:
 
     def train(self, dirty_tensor, clean_tensor):
         with amp.autocast():
-            dirty_tensor = self.transform_op(dirty_tensor)
-            clean_tensor = self.transform_op(clean_tensor)
+            dirty_tensor = self.transform_op(dirty_tensor).detach()
+            clean_tensor = self.transform_op(clean_tensor).detach()
 
             clean_like = self.G_A(dirty_tensor)
             dirty_like = self.G_B(clean_tensor)
@@ -284,8 +284,8 @@ class CycleGANTrainer:
     def visdom_visualize(self, tensor_x, tensor_y, label="Train"):
         with torch.no_grad():
             if(label == "Train"):
-                tensor_x = self.transform_op(tensor_x)
-                tensor_y = self.transform_op(tensor_y)
+                tensor_x = self.transform_op(tensor_x).detach()
+                tensor_y = self.transform_op(tensor_y).detach()
 
             x2y = self.G_A(tensor_x)
             y2x = self.G_B(tensor_y)
@@ -361,7 +361,7 @@ class CycleGANTrainer:
         print("Saved model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
 
         # clear plots to avoid potential sudden jumps in visualization due to unstable gradients during early training
-        if (epoch % 20 == 0):
+        if (iteration % 200 == 0):
             self.losses_dict[constants.G_LOSS_KEY].clear()
             self.losses_dict[constants.D_OVERALL_LOSS_KEY].clear()
             self.losses_dict[constants.IDENTITY_LOSS_KEY].clear()

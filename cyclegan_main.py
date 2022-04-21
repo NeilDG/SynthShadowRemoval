@@ -29,7 +29,7 @@ parser.add_option('--iteration', type=int, help="Style version?", default="1")
 parser.add_option('--num_blocks', type=int)
 parser.add_option('--net_config', type=int)
 parser.add_option('--g_lr', type=float, help="LR", default="0.00002")
-parser.add_option('--d_lr', type=float, help="LR", default="0.00002")
+parser.add_option('--d_lr', type=float, help="LR", default="0.00005")
 parser.add_option('--batch_size', type=int, help="batch_size", default="128")
 parser.add_option('--patch_size', type=int, help="patch_size", default="64")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
@@ -69,7 +69,8 @@ def main(argv):
     print("Server config? %d Has GPU available? %d Count: %d" % (constants.server_config, torch.cuda.is_available(), torch.cuda.device_count()))
     print("Torch CUDA version: %s" % torch.version.cuda)
     
-    manualSeed = random.randint(1, 10000) # use if you want new results
+    # manualSeed = random.randint(1, 10000) # use if you want new results
+    manualSeed = 1
     random.seed(manualSeed)
     torch.manual_seed(manualSeed)
 
@@ -126,16 +127,16 @@ def main(argv):
                 x2y, _ = gt.test(imgx_tensor, imgy_tensor)
                 stopper_method.test(gt, epoch, iteration, x2y, imgy_tensor)  # stop training if reconstruction no longer becomes close to Y
 
-                # if (i % 900 == 0):
-                gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
+                if (i % 200 == 0):
+                    gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
 
-                gt.save_states_checkpt(epoch, iteration)
-                imgx_batch, imgy_batch = test_data
-                imgx_tensor = imgx_batch.to(device)
-                imgy_tensor = imgy_batch.to(device)
+                    gt.save_states_checkpt(epoch, iteration)
+                    imgx_batch, imgy_batch = test_data
+                    imgx_tensor = imgx_batch.to(device)
+                    imgy_tensor = imgy_batch.to(device)
 
-                gt.visdom_visualize(imgx_tensor, imgy_tensor, "Test")
-                gt.visdom_plot(iteration)
+                    gt.visdom_visualize(imgx_tensor, imgy_tensor, "Test")
+                    gt.visdom_plot(iteration)
 
                 if (stopper_method.did_stop_condition_met()):
                         break

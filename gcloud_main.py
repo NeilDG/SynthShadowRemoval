@@ -62,28 +62,28 @@ def train_relighting():
               "--mode=azimuth --min_epochs=50 --version_name=\"maps2rgb_rgb2maps_v4.01\" --iteration=8")
 
 def train_domain_adaptation():
-    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=512 "
+    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=32 "
               "--min_epochs=15 --version_name=\"synth2rgb_v3.02\" --iteration=1")
 
-    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=512 "
+    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=32 "
               "--min_epochs=15 --version_name=\"synth2rgb_v3.02\" --iteration=2")
 
-    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=512 "
+    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=32 "
               "--min_epochs=15 --version_name=\"synth2rgb_v3.02\" --iteration=3")
 
-    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=512 "
+    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=32 "
               "--min_epochs=15 --version_name=\"synth2rgb_v3.02\" --iteration=4")
 
-    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=512 "
+    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=32 "
               "--min_epochs=15 --version_name=\"synth2rgb_v3.02\" --iteration=13")
 
-    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=512 "
+    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=32 "
               "--min_epochs=15 --version_name=\"synth2rgb_v3.02\" --iteration=14")
 
-    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=512 "
+    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=32 "
               "--min_epochs=15 --version_name=\"synth2rgb_v3.02\" --iteration=15")
 
-    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=512 "
+    os.system("python \"cyclegan_main.py\" --server_config=3 --num_workers=8 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=32 "
               "--min_epochs=15 --version_name=\"synth2rgb_v3.02\" --iteration=16")
 
 def main():
