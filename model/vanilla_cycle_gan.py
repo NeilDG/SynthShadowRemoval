@@ -47,7 +47,7 @@ class Generator(nn.Module):
         # Initial convolution block       
         model = [   nn.ReflectionPad2d(2),
                     nn.Conv2d(input_nc, 64, 8),
-                    nn.BatchNorm2d(64),
+                    nn.InstanceNorm2d(64),
                     nn.ReLU(inplace=True) ]
 
         # Downsampling
@@ -55,7 +55,7 @@ class Generator(nn.Module):
         out_features = in_features*2
         for _ in range(downsampling_blocks):
             model += [  nn.Conv2d(in_features, out_features, 4, stride=2, padding=1),
-                        nn.BatchNorm2d(out_features),
+                        nn.InstanceNorm2d(out_features),
                         nn.ReLU(inplace=True)
                     ]
 
@@ -72,7 +72,7 @@ class Generator(nn.Module):
         out_features = in_features//2
         for _ in range(downsampling_blocks):
             model += [  nn.ConvTranspose2d(in_features, out_features, 4, stride=2, padding=1, output_padding=1),
-                        nn.BatchNorm2d(out_features),
+                        nn.InstanceNorm2d(out_features),
                         nn.ReLU(inplace=True)]
 
             if (has_dropout):
@@ -163,7 +163,7 @@ class Classifier(nn.Module):
         return self.model(x)
 
 class Discriminator(nn.Module):
-    def __init__(self, input_nc = 3, use_bce = 0):
+    def __init__(self, input_nc = 3):
         super(Discriminator, self).__init__()
 
         # A bunch of convolutions one after another
@@ -184,8 +184,6 @@ class Discriminator(nn.Module):
 
         # FCN classification layer
         model += [nn.Conv2d(512, 1, 4, padding=1)]
-        if(use_bce == 1):
-            model += [nn.Sigmoid()]
 
         self.model = nn.Sequential(*model)
         self.model.apply(weights_init)
