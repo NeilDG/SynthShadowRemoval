@@ -8,6 +8,7 @@ Created on Mon Jun 29 14:30:24 2020
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from model.modules import cbam_module
 
 def weights_init(m):
         classname = m.__class__.__name__
@@ -41,7 +42,8 @@ class ResidualBlock(nn.Module):
         return x + self.conv_block(x)
 
 class Generator(nn.Module):
-    def __init__(self, input_nc=3, output_nc=3, downsampling_blocks = 2, n_residual_blocks=6, has_dropout = True):
+    def __init__(self, input_nc=3, output_nc=3, downsampling_blocks = 2, n_residual_blocks=6, has_dropout = True,
+                 use_cbam = False):
         super(Generator, self).__init__()
 
         # Initial convolution block       
@@ -62,11 +64,14 @@ class Generator(nn.Module):
             if(has_dropout):
                 model +=[nn.Dropout2d(p = 0.4)]
             in_features = out_features
-            out_features = clamp(in_features*2, 8192)
+            out_features = clamp(in_features*2, 32768)
 
         # Residual blocks
         for _ in range(n_residual_blocks):
-            model += [ResidualBlock(in_features)]
+            if(use_cbam == True):
+                model += [cbam_module.CbamResblock(in_features)]
+            else:
+                model += [ResidualBlock(in_features)]
 
         # Upsampling
         out_features = in_features//2

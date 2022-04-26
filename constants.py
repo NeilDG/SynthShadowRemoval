@@ -84,6 +84,6 @@ server_config = 0
 num_workers = 12
 
 imgy_dir = "E:/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
-imgx_dir = "E:/Places Dataset/*.jpg"
-
+# imgx_dir = "E:/Places Dataset/*.jpg"
+imgx_dir = "E:/GTAV_Processed/images/*.png"
     

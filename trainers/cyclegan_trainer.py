@@ -16,6 +16,7 @@ from lpips import lpips
 import constants
 from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
+from model import new_style_transfer_gan
 from utils import plot_utils
 from utils import pytorch_colors
 from transforms import cyclegan_transforms
@@ -43,10 +44,10 @@ class DomainAdaptIterationTable():
         self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=1.0, id_weight=10.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, is_bce=1)
 
         iteration = 7
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=10.0, id_weight=10.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, is_bce=0)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=10.0, id_weight=1.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, is_bce=0)
 
         iteration = 8
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=10.0, id_weight=10.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, is_bce=1)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=10.0, id_weight=1.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, is_bce=1)
 
         iteration = 9
         self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=0.0, id_weight=0.0, lpip_weight=1.0, cycle_weight=10.0, adv_weight=1.0, is_bce=0)
@@ -109,10 +110,14 @@ class CycleGANTrainer:
             print("Using vanilla cycle GAN")
             self.G_A = cycle_gan.Generator(n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
             self.G_B = cycle_gan.Generator(n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
-        else:
+        elif(net_config == 2):
             print("Using U-Net GAN")
             self.G_A = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
             self.G_B = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
+        else:
+            print("Using CBAM CycleGAN")
+            self.G_A = cycle_gan.Generator(n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
+            self.G_B = cycle_gan.Generator(n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
 
         self.D_A = cycle_gan.Discriminator().to(self.gpu_device)  # use CycleGAN's discriminator
         self.D_B = cycle_gan.Discriminator().to(self.gpu_device)
@@ -221,7 +226,7 @@ class CycleGANTrainer:
 
             errD = D_A_real_loss + D_A_fake_loss + D_B_real_loss + D_B_fake_loss
             self.fp16_scaler.scale(errD).backward()
-            if (self.fp16_scaler.scale(errD).item() > 0.2):
+            if (self.fp16_scaler.scale(errD).item() > 0.0):
                 self.fp16_scaler.step(self.optimizerD)
                 self.schedulerD.step(errD)
 
@@ -291,10 +296,10 @@ class CycleGANTrainer:
             y2x = self.G_B(tensor_y)
 
             self.visdom_reporter.plot_image(tensor_x, str(label) + " Input X Images - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(y2x, str(label) + " X Image Reconstruction - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(x2y, str(label) + " X2Y Transfer " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
 
             self.visdom_reporter.plot_image(tensor_y, str(label) + " Input Y Images - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(x2y, str(label) + " Y Image Reconstruction - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(y2x, str(label) + " Y2X Transfer - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
 
     def load_saved_state(self, checkpoint):
         self.G_A.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
