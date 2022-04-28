@@ -113,16 +113,16 @@ def train_domain_adaptation():
     # os.system("python \"cyclegan_main.py\" --num_workers=12 --img_to_load=5000 --load_previous=0 --test_mode=0 --net_config=3 --num_blocks=6 --patch_size=32 --batch_size=64 "
     #           "--min_epochs=15 --version_name=\"synth2rgb_v3.06\" --iteration=2")
 
-    os.system("python \"cyclegan_main.py\" --num_workers=12 --img_to_load=10000 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=64 "
-              "--min_epochs=15 --version_name=\"synth2rgb_v3.04\" --iteration=1")
+    # os.system("python \"cyclegan_main.py\" --num_workers=12 --img_to_load=10000 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=64 "
+    #           "--min_epochs=15 --version_name=\"synth2rgb_v3.04\" --iteration=1")
+    #
+    # os.system("python \"cyclegan_main.py\" --num_workers=12 --img_to_load=10000 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=64 "
+    #           "--min_epochs=15 --version_name=\"synth2rgb_v3.04\" --iteration=2")
 
-    os.system("python \"cyclegan_main.py\" --num_workers=12 --img_to_load=10000 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=64 "
-              "--min_epochs=15 --version_name=\"synth2rgb_v3.04\" --iteration=2")
+    os.system("python \"cyclegan_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=0 --net_config=1 --num_blocks=9 --patch_size=32 --batch_size=512 "
+              "--min_epochs=15 --g_lr=0.00002 --d_lr=0.00005 --version_name=\"synth2rgb_v3.04\" --iteration=3")
 
-    os.system("python \"cyclegan_main.py\" --num_workers=12 --img_to_load=10000 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=64 "
-              "--min_epochs=15 --version_name=\"synth2rgb_v3.04\" --iteration=3")
-
-    os.system("python \"cyclegan_main.py\" --num_workers=12 --img_to_load=10000 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=64 "
+    os.system("python \"cyclegan_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 --patch_size=32 --batch_size=512 "
               "--min_epochs=15 --version_name=\"synth2rgb_v3.04\" --iteration=4")
 
 def main():
@@ -132,7 +132,7 @@ def main():
     # train_shadow_relight()
     # train_relighting()
     train_domain_adaptation()
-    # os.system("shutdown /s /t 1")
+    os.system("shutdown /s /t 1")
 
 
 if __name__ == "__main__":

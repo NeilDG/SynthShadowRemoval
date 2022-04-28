@@ -25,67 +25,69 @@ class DomainAdaptIterationTable():
     def __init__(self):
         self.iteration_table = {}
 
+        #disc_mode = 0, 1, 2. 0 = MSELoss, 1 = BCE Loss, 2 = L1 Loss
+
         iteration = 1
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=1.0, id_weight=0.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, is_bce=0)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=1.0, id_weight=0.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=0)
 
         iteration = 2
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=1.0, id_weight=0.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, is_bce=1)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=1.0, id_weight=0.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=1)
 
         iteration = 3
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=0.0, id_weight=0.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, is_bce=0)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=0.0, id_weight=0.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=0)
 
         iteration = 4
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=0.0, id_weight=0.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, is_bce=1)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=0.0, id_weight=0.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=1)
 
         iteration = 5
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=1.0, id_weight=10.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, is_bce=0)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=1.0, id_weight=10.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=0)
 
         iteration = 6
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=1.0, id_weight=10.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, is_bce=1)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=1.0, id_weight=10.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=1)
 
         iteration = 7
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=10.0, id_weight=1.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, is_bce=0)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=10.0, id_weight=1.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=0)
 
         iteration = 8
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=10.0, id_weight=1.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, is_bce=1)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=10.0, id_weight=1.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=1)
 
         iteration = 9
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=0.0, id_weight=0.0, lpip_weight=1.0, cycle_weight=10.0, adv_weight=1.0, is_bce=0)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=0.0, id_weight=0.0, lpip_weight=1.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=0)
 
         iteration = 10
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=0.0, id_weight=0.0, lpip_weight=1.0, cycle_weight=10.0, adv_weight=1.0, is_bce=1)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=0.0, id_weight=0.0, lpip_weight=1.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=1)
 
         iteration = 11
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=0.0, id_weight=0.0, lpip_weight=10.0, cycle_weight=10.0, adv_weight=1.0, is_bce=0)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=0.0, id_weight=0.0, lpip_weight=10.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=0)
 
         iteration = 12
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=0.0, id_weight=0.0, lpip_weight=10.0, cycle_weight=10.0, adv_weight=1.0, is_bce=1)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=0.0, id_weight=0.0, lpip_weight=10.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=1)
 
         iteration = 13
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=1.0, id_weight=0.0, lpip_weight=1.0, cycle_weight=10.0, adv_weight=1.0, is_bce=0)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=1.0, id_weight=0.0, lpip_weight=1.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=0)
 
         iteration = 14
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=1.0, id_weight=0.0, lpip_weight=1.0, cycle_weight=10.0, adv_weight=1.0, is_bce=1)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=1.0, id_weight=0.0, lpip_weight=1.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=1)
 
         iteration = 15
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=10.0, id_weight=0.0, lpip_weight=10.0, cycle_weight=10.0, adv_weight=1.0, is_bce=0)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=10.0, id_weight=0.0, lpip_weight=10.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=0)
 
         iteration = 16
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=10.0, id_weight=0.0, lpip_weight=10.0, cycle_weight=10.0, adv_weight=1.0, is_bce=1)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=10.0, id_weight=0.0, lpip_weight=10.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=1)
 
     def get_version(self, iteration):
         return self.iteration_table[str(iteration)]
 
 
 class IterationParameters():
-    def __init__(self, iteration, l1_weight, id_weight, lpip_weight, cycle_weight, adv_weight, is_bce):
+    def __init__(self, iteration, l1_weight, id_weight, lpip_weight, cycle_weight, adv_weight, disc_mode):
         self.iteration = iteration
         self.l1_weight = l1_weight
         self.id_weight = id_weight
         self.lpip_weight = lpip_weight
         self.cycle_weight = cycle_weight
         self.adv_weight = adv_weight
-        self.is_bce = is_bce
+        self.disc_mode = disc_mode
 
 class CycleGANTrainer:
 
@@ -98,10 +100,11 @@ class CycleGANTrainer:
         self.iteration = opts.iteration
         net_config = opts.net_config
         it_params = DomainAdaptIterationTable().get_version(self.iteration)
-        self.use_bce = it_params.is_bce
+        self.disc_mode = it_params.disc_mode
         num_blocks = opts.num_blocks
 
         self.lpips_loss = lpips.LPIPS(net='vgg').to(self.gpu_device)
+        self.mse_loss = nn.MSELoss()
         self.l1_loss = nn.L1Loss()
         self.bce_loss = nn.BCEWithLogitsLoss()
         self.update_penalties(it_params.adv_weight, it_params.id_weight, it_params.l1_weight, it_params.lpip_weight, it_params.cycle_weight)
@@ -174,9 +177,12 @@ class CycleGANTrainer:
         print("Likeness weight: ", self.likeness_weight)
         print("LPIP weight: ", self.lpip_weight)
         print("Cycle weight: ", self.cycle_weight)
+        print("Disc Mode: ", self.disc_mode)
 
     def adversarial_loss(self, pred, target):
-        if(self.use_bce == 1):
+        if(self.disc_mode == 0):
+            return self.mse_loss(pred, target)
+        elif(self.disc_mode == 1):
             return self.bce_loss(pred, target)
         else:
             return self.l1_loss(pred, target)
@@ -198,62 +204,37 @@ class CycleGANTrainer:
         result = torch.mean(result)
         return result
 
-    def train(self, dirty_tensor, clean_tensor):
+    def train(self, tensor_x, tensor_y, iteration):
         with amp.autocast():
-            dirty_tensor = self.transform_op(dirty_tensor).detach()
-            clean_tensor = self.transform_op(clean_tensor).detach()
+            # dirty_tensor = self.transform_op(dirty_tensor).detach()
+            # clean_tensor = self.transform_op(clean_tensor).detach()
 
-            clean_like = self.G_A(dirty_tensor)
-            dirty_like = self.G_B(clean_tensor)
-
-            self.D_A.train()
-            self.D_B.train()
-            self.optimizerD.zero_grad()
-
-            prediction = self.D_A(clean_tensor)
-            real_tensor = torch.ones_like(prediction)
-            fake_tensor = torch.zeros_like(prediction)
-
-            D_A_real_loss = self.adversarial_loss(self.D_A(clean_tensor), real_tensor) * self.adv_weight
-            D_A_fake_loss = self.adversarial_loss(self.D_A(clean_like.detach()), fake_tensor) * self.adv_weight
-
-            prediction = self.D_B(dirty_tensor)
-            real_tensor = torch.ones_like(prediction)
-            fake_tensor = torch.zeros_like(prediction)
-
-            D_B_real_loss = self.adversarial_loss(self.D_B(dirty_tensor), real_tensor) * self.adv_weight
-            D_B_fake_loss = self.adversarial_loss(self.D_B(dirty_like.detach()), fake_tensor) * self.adv_weight
-
-            errD = D_A_real_loss + D_A_fake_loss + D_B_real_loss + D_B_fake_loss
-            self.fp16_scaler.scale(errD).backward()
-            if (self.fp16_scaler.scale(errD).item() > 0.0):
-                self.fp16_scaler.step(self.optimizerD)
-                self.schedulerD.step(errD)
-
+            #optimize G-----------------------
             self.G_A.train()
             self.G_B.train()
             self.optimizerG.zero_grad()
 
-            identity_like = self.G_A(clean_tensor)
-            clean_like = self.G_A(dirty_tensor)
+            identity_like = self.G_A(tensor_y)
+            y_like = self.G_A(tensor_x)
 
-            A_identity_loss = self.identity_loss(identity_like, clean_tensor) * self.id_weight
-            A_likeness_loss = self.likeness_loss(clean_like, clean_tensor) * self.likeness_weight
-            A_lpip_loss = self.lpip_loss(clean_like, clean_tensor) * self.lpip_weight
-            A_cycle_loss = self.cycle_loss(self.G_B(self.G_A(dirty_tensor)), dirty_tensor) * self.cycle_weight
+            A_identity_loss = self.identity_loss(identity_like, tensor_y) * self.id_weight
+            A_likeness_loss = self.likeness_loss(y_like, tensor_y) * self.likeness_weight
+            A_lpip_loss = self.lpip_loss(y_like, tensor_y) * self.lpip_weight
+            A_cycle_loss = self.cycle_loss(self.G_B(self.G_A(tensor_x)), tensor_x) * self.cycle_weight
 
-            identity_like = self.G_B(dirty_tensor)
-            dirty_like = self.G_B(clean_tensor)
-            B_identity_loss = self.identity_loss(identity_like, dirty_tensor) * self.id_weight
-            B_likeness_loss = self.likeness_loss(dirty_like, dirty_tensor) * self.likeness_weight
-            B_lpip_loss = self.lpip_loss(dirty_like, dirty_tensor) * self.lpip_weight
-            B_cycle_loss = self.cycle_loss(self.G_A(self.G_B(clean_tensor)), clean_tensor) * self.cycle_weight
+            identity_like = self.G_B(tensor_x)
+            x_like = self.G_B(tensor_y)
 
-            prediction = self.D_A(clean_like)
+            B_identity_loss = self.identity_loss(identity_like, tensor_x) * self.id_weight
+            B_likeness_loss = self.likeness_loss(x_like, tensor_x) * self.likeness_weight
+            B_lpip_loss = self.lpip_loss(x_like, tensor_x) * self.lpip_weight
+            B_cycle_loss = self.cycle_loss(self.G_A(self.G_B(tensor_y)), tensor_y) * self.cycle_weight
+
+            prediction = self.D_A(y_like)
             real_tensor = torch.ones_like(prediction)
             A_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            prediction = self.D_B(dirty_like)
+            prediction = self.D_B(x_like)
             real_tensor = torch.ones_like(prediction)
             B_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
@@ -263,6 +244,34 @@ class CycleGANTrainer:
             self.fp16_scaler.step(self.optimizerG)
             self.schedulerG.step(errG)
             self.fp16_scaler.update()
+
+            # optimize D-----------------------
+            y_like = self.G_A(tensor_x)
+            x_like = self.G_B(tensor_y)
+
+            self.D_A.train()
+            self.D_B.train()
+            self.optimizerD.zero_grad()
+
+            prediction = self.D_A(tensor_y)
+            real_tensor = torch.ones_like(prediction) * 1.0
+            fake_tensor = torch.zeros_like(prediction)
+
+            D_A_real_loss = self.adversarial_loss(self.D_A(tensor_y), real_tensor) * self.adv_weight
+            D_A_fake_loss = self.adversarial_loss(self.D_A(y_like.detach()), fake_tensor) * self.adv_weight
+
+            prediction = self.D_B(tensor_x)
+            real_tensor = torch.ones_like(prediction)
+            fake_tensor = torch.zeros_like(prediction)
+
+            D_B_real_loss = self.adversarial_loss(self.D_B(tensor_x), real_tensor) * self.adv_weight
+            D_B_fake_loss = self.adversarial_loss(self.D_B(x_like.detach()), fake_tensor) * self.adv_weight
+
+            errD = D_A_real_loss + D_A_fake_loss + D_B_real_loss + D_B_fake_loss
+            self.fp16_scaler.scale(errD).backward()
+            if (self.fp16_scaler.scale(errD).item() > 0.0):
+                self.fp16_scaler.step(self.optimizerD)
+                self.schedulerD.step(errD)
 
         # what to put to losses dict for visdom reporting?
         self.losses_dict[constants.G_LOSS_KEY].append(errG.item())
@@ -277,6 +286,20 @@ class CycleGANTrainer:
         self.losses_dict[constants.D_B_REAL_LOSS_KEY].append(D_B_real_loss.item())
         self.losses_dict[constants.CYCLE_LOSS_KEY].append(A_cycle_loss.item() + B_cycle_loss.item())
 
+        # clear plots to avoid potential sudden jumps in visualization due to unstable gradients during early training
+        if (iteration % 200 == 0):
+            self.losses_dict[constants.G_LOSS_KEY].clear()
+            self.losses_dict[constants.D_OVERALL_LOSS_KEY].clear()
+            self.losses_dict[constants.IDENTITY_LOSS_KEY].clear()
+            self.losses_dict[constants.LIKENESS_LOSS_KEY].clear()
+            self.losses_dict[constants.SMOOTHNESS_LOSS_KEY].clear()
+            self.losses_dict[constants.G_ADV_LOSS_KEY].clear()
+            self.losses_dict[constants.D_A_FAKE_LOSS_KEY].clear()
+            self.losses_dict[constants.D_A_REAL_LOSS_KEY].clear()
+            self.losses_dict[constants.D_B_FAKE_LOSS_KEY].clear()
+            self.losses_dict[constants.D_B_REAL_LOSS_KEY].clear()
+            self.losses_dict[constants.CYCLE_LOSS_KEY].clear()
+
     def test(self, tensor_x, tensor_y):
         with torch.no_grad():
             x2y = self.G_A(tensor_x)
@@ -288,9 +311,9 @@ class CycleGANTrainer:
 
     def visdom_visualize(self, tensor_x, tensor_y, label="Train"):
         with torch.no_grad():
-            if(label == "Train"):
-                tensor_x = self.transform_op(tensor_x).detach()
-                tensor_y = self.transform_op(tensor_y).detach()
+            # if(label == "Train"):
+            #     tensor_x = self.transform_op(tensor_x).detach()
+            #     tensor_y = self.transform_op(tensor_y).detach()
 
             x2y = self.G_A(tensor_x)
             y2x = self.G_B(tensor_y)
@@ -364,17 +387,3 @@ class CycleGANTrainer:
 
         torch.save(save_dict, constants.STYLE_TRANSFER_CHECKPATH + ".checkpt")
         print("Saved model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
-
-        # clear plots to avoid potential sudden jumps in visualization due to unstable gradients during early training
-        if (iteration % 200 == 0):
-            self.losses_dict[constants.G_LOSS_KEY].clear()
-            self.losses_dict[constants.D_OVERALL_LOSS_KEY].clear()
-            self.losses_dict[constants.IDENTITY_LOSS_KEY].clear()
-            self.losses_dict[constants.LIKENESS_LOSS_KEY].clear()
-            self.losses_dict[constants.SMOOTHNESS_LOSS_KEY].clear()
-            self.losses_dict[constants.G_ADV_LOSS_KEY].clear()
-            self.losses_dict[constants.D_A_FAKE_LOSS_KEY].clear()
-            self.losses_dict[constants.D_A_REAL_LOSS_KEY].clear()
-            self.losses_dict[constants.D_B_FAKE_LOSS_KEY].clear()
-            self.losses_dict[constants.D_B_REAL_LOSS_KEY].clear()
-            self.losses_dict[constants.CYCLE_LOSS_KEY].clear()
