@@ -363,7 +363,7 @@ def load_da_dataset_test(imgx_dir, imgy_dir, opts):
         batch_size=4,
         num_workers=1,
         shuffle=False,
-        pin_memory=True
+        pin_memory=False
     )
 
     return data_loader

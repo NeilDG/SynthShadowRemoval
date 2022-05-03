@@ -10,13 +10,32 @@ import torch.nn as nn
 import torch.nn.functional as F
 from model.modules import cbam_module
 
-def weights_init(m):
+def dc_gan_weights_init(m):
         classname = m.__class__.__name__
         if classname.find('Conv') != -1:
             nn.init.normal_(m.weight.data, 0.0, 0.02)
         elif classname.find('BatchNorm') != -1:
             nn.init.normal_(m.weight.data, 1.0, 0.02)
             nn.init.constant_(m.bias.data, 0)
+
+
+def normal_weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        nn.init.normal_(m.weight.data, 0.0, 0.02)
+        nn.init.constant_(m.bias.data, 0.0)
+
+    elif classname.find('BatchNorm') != -1:
+        nn.init.normal_(m.weight.data, 1.0, 0.02)
+        nn.init.constant_(m.bias.data, 0)
+
+def xavier_weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        nn.init.xavier_normal_(m.weight.data, nn.init.calculate_gain('tanh'))
+    elif classname.find('BatchNorm') != -1:
+        nn.init.normal_(m.weight.data, 1.0, 0.02)
+        nn.init.constant_(m.bias.data, 0)
             
 def clamp(value, max):
     if(value > max):
@@ -30,11 +49,11 @@ class ResidualBlock(nn.Module):
 
         conv_block = [  nn.ReflectionPad2d(1),
                         nn.Conv2d(in_features, in_features, 3),
-                        nn.InstanceNorm2d(in_features),
+                        nn.BatchNorm2d(in_features),
                         nn.ReLU(inplace=True),
                         nn.ReflectionPad2d(1),
                         nn.Conv2d(in_features, in_features, 3),
-                        nn.InstanceNorm2d(in_features)  ]
+                        nn.BatchNorm2d(in_features)  ]
 
         self.conv_block = nn.Sequential(*conv_block)
 
@@ -49,7 +68,7 @@ class Generator(nn.Module):
         # Initial convolution block       
         model = [   nn.ReflectionPad2d(2),
                     nn.Conv2d(input_nc, 64, 8),
-                    nn.InstanceNorm2d(64),
+                    nn.BatchNorm2d(64),
                     nn.ReLU(inplace=True) ]
 
         # Downsampling
@@ -57,7 +76,7 @@ class Generator(nn.Module):
         out_features = in_features*2
         for _ in range(downsampling_blocks):
             model += [  nn.Conv2d(in_features, out_features, 4, stride=2, padding=1),
-                        nn.InstanceNorm2d(out_features),
+                        nn.BatchNorm2d(out_features),
                         nn.ReLU(inplace=True)
                     ]
 
@@ -77,7 +96,7 @@ class Generator(nn.Module):
         out_features = in_features//2
         for _ in range(downsampling_blocks):
             model += [  nn.ConvTranspose2d(in_features, out_features, 4, stride=2, padding=1, output_padding=1),
-                        nn.InstanceNorm2d(out_features),
+                        nn.BatchNorm2d(out_features),
                         nn.ReLU(inplace=True)]
 
             if (has_dropout):
@@ -91,7 +110,7 @@ class Generator(nn.Module):
                     nn.Tanh() ]
 
         self.model = nn.Sequential(*model)
-        self.model.apply(weights_init)
+        self.model.apply(xavier_weights_init)
 
     def forward(self, x):
         return self.model(x)
@@ -162,7 +181,7 @@ class Classifier(nn.Module):
                     nn.Softmax2d() ]
 
         self.model = nn.Sequential(*model)
-        self.model.apply(weights_init)
+        self.model.apply(dc_gan_weights_init)
 
     def forward(self, x):
         return self.model(x)
@@ -191,7 +210,7 @@ class Discriminator(nn.Module):
         model += [nn.Conv2d(512, 1, 4, padding=1)]
 
         self.model = nn.Sequential(*model)
-        self.model.apply(weights_init)
+        self.model.apply(xavier_weights_init)
 
     def forward(self, x):
         x =  self.model(x)
@@ -222,7 +241,7 @@ class FeatureDiscriminator(nn.Module):
                                         nn.Sigmoid())
         
         self.model = nn.Sequential(*self.conv_blocks)
-        self.apply(weights_init)
+        self.apply(dc_gan_weights_init)
 
     def forward(self, feature_tensor):
         return self.model(feature_tensor)

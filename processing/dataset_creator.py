@@ -511,19 +511,20 @@ def produce_pseudo_albedo_images():
 parser = OptionParser()
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
 parser.add_option('--batch_size', type=int, help="batch_size", default="128")
-parser.add_option('--patch_size', type=int, help="patch_size", default="256")
+parser.add_option('--patch_size', type=int, help="patch_size", default="32")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 
 def create_patches(argv):
     (opts, args) = parser.parse_args(argv)
 
     IMG_DIR_X = "E:/Image Transfer - Patches/X/"
-    IMG_DIR_Y = "E:/Image Transfer - Patches/Y/"
+    IMG_DIR_Y = "E:/Image Transfer - Patches/places/"
     device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
 
     transform_op = cyclegan_transforms.CycleGANTransform(opts).to(device)
 
-    train_loader = dataset_loader.load_da_dataset_train(constants.imgx_dir_test, constants.imgy_dir_test, opts)
+    places_path = "E:/Places Dataset/*.jpg"
+    train_loader = dataset_loader.load_da_dataset_train(places_path, places_path, opts)
 
     img_num_x = 0
     img_num_y = 0
@@ -533,7 +534,7 @@ def create_patches(argv):
         imgy_tensor = imgy_batch.to(device)
 
         # imgx_tensor = transform_op(imgx_tensor)
-        # imgy_tensor = transform_op(imgy_tensor)
+        imgy_tensor = transform_op(imgy_tensor)
 
         imgx_tensor = (imgx_tensor * 0.5) + 0.5
         imgy_tensor = (imgy_tensor * 0.5) + 0.5

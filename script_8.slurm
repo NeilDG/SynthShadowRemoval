@@ -23,10 +23,10 @@ srun python cyclegan_main.py \
 --iteration=$ITERATION \
 --server_config=1 \
 --num_workers=6 \
---batch_size=512 \
+--batch_size=16 \
 --patch_size=32 \
---version_name="synth2rgb_v3.00" --min_epochs=20 --net_config=1 --num_blocks=10 \
---img_to_load=-1 --load_previous=1
+--version_name="synth2rgb_v3.00" --min_epochs=15 --net_config=1 --num_blocks=9 \
+--img_to_load=-1 --load_previous=0
 
 
 conda deactivate

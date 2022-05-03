@@ -50,6 +50,8 @@ def update_config(opts):
         print("Using COARE configuration ", opts.version_name)
         constants.imgx_dir = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
         constants.imgy_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
+        constants.imgx_dir_test = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
+        constants.imgy_dir_test = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
