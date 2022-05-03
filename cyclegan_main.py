@@ -50,6 +50,8 @@ def update_config(opts):
         print("Using COARE configuration ", opts.version_name)
         constants.imgx_dir = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
         constants.imgy_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
+        constants.imgx_dir_test = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
+        constants.imgy_dir_test = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
@@ -94,7 +96,7 @@ def main(argv):
     
     # Create the dataloader
     train_loader = dataset_loader.load_da_dataset_train(constants.imgx_dir, constants.imgy_dir, opts)
-    test_loader = dataset_loader.load_da_dataset_test(constants.imgx_dir, constants.imgy_dir, opts)
+    test_loader = dataset_loader.load_da_dataset_test(constants.imgx_dir_test, constants.imgy_dir_test, opts)
 
     if (opts.test_mode == 1):
         print("Plotting test images...")
@@ -102,14 +104,14 @@ def main(argv):
         imgx_tensor = imgx_batch.to(device)
         imgy_tensor = imgy_batch.to(device)
 
-        gt.train(imgx_tensor, imgy_tensor)
+        # gt.train(imgx_tensor, imgy_tensor, 0)
         gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
 
         imgx_batch, imgy_batch = next(iter(test_loader))
         imgx_tensor = imgx_batch.to(device)
         imgy_tensor = imgy_batch.to(device)
 
-        gt.train(imgx_tensor, imgy_tensor)
+        # gt.train(imgx_tensor, imgy_tensor)
         gt.visdom_visualize(imgx_tensor, imgy_tensor, "Test")
 
     else:
@@ -121,7 +123,7 @@ def main(argv):
                 imgx_tensor = imgx_batch.to(device)
                 imgy_tensor = imgy_batch.to(device)
 
-                gt.train(imgx_tensor, imgy_tensor)
+                gt.train(imgx_tensor, imgy_tensor, iteration)
                 iteration = iteration + 1
 
                 x2y, _ = gt.test(imgx_tensor, imgy_tensor)

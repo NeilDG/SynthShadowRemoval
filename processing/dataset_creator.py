@@ -5,6 +5,9 @@ Created on Tue Jul 14 20:11:02 2020
 @author: delgallegon
 """
 import os
+import sys
+from optparse import OptionParser
+
 import torch
 import cv2
 import numpy as np
@@ -18,6 +21,8 @@ from model import vanilla_cycle_gan as cycle_gan
 from model import ffa_gan
 from model import unet_gan
 import kornia
+from transforms import cyclegan_transforms
+from torchvision.utils import save_image
 
 DATASET_DIV2K_PATH = "E:/DIV2K_train_HR/"
 SAVE_PATH = "E:/VEMON_Transfer/train/C/"
@@ -503,7 +508,55 @@ def produce_pseudo_albedo_images():
                 cv2.imwrite(SAVE_PATH + img_name + ".png", style_img)
                 print("Prediction of %s from discriminator: %f. Saved styled image: %s" % (img_name, prediction[i].item(), img_name))
 
-def main():
+parser = OptionParser()
+parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
+parser.add_option('--batch_size', type=int, help="batch_size", default="128")
+parser.add_option('--patch_size', type=int, help="patch_size", default="32")
+parser.add_option('--num_workers', type=int, help="Workers", default="12")
+
+def create_patches(argv):
+    (opts, args) = parser.parse_args(argv)
+
+    IMG_DIR_X = "E:/Image Transfer - Patches/X/"
+    IMG_DIR_Y = "E:/Image Transfer - Patches/places/"
+    device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
+
+    transform_op = cyclegan_transforms.CycleGANTransform(opts).to(device)
+
+    places_path = "E:/Places Dataset/*.jpg"
+    train_loader = dataset_loader.load_da_dataset_train(places_path, places_path, opts)
+
+    img_num_x = 0
+    img_num_y = 0
+    for i, train_data in enumerate(train_loader):
+        imgx_batch, imgy_batch = train_data
+        imgx_tensor = imgx_batch.to(device)
+        imgy_tensor = imgy_batch.to(device)
+
+        # imgx_tensor = transform_op(imgx_tensor)
+        imgy_tensor = transform_op(imgy_tensor)
+
+        imgx_tensor = (imgx_tensor * 0.5) + 0.5
+        imgy_tensor = (imgy_tensor * 0.5) + 0.5
+
+        # for k in range(np.shape(imgx_tensor)[0]):
+        #     img_single = imgx_tensor[k]
+        #     file_path = IMG_DIR_X + "image_" + str(img_num_x) + ".png"
+        #     print("Image ", img_num_x, " Size: ", np.shape(img_single))
+        #     save_image(img_single, file_path)
+        #
+        #     img_num_x = img_num_x + 1
+
+        for k in range(np.shape(imgy_tensor)[0]):
+            img_single = imgy_tensor[k]
+            file_path = IMG_DIR_Y + "image_" + str(img_num_y) + ".png"
+            print("Image ", img_num_y, " Size: ", np.shape(img_single))
+            save_image(img_single, file_path)
+
+            img_num_y = img_num_y + 1
+
+
+def main(argv):
     # PATH_A = "D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/sunny_1_001.mp4"
     # SAVE_PATH_A = constants.DATASET_WEATHER_SUNNY_PATH
     # create_img_from_video_data(PATH_A, SAVE_PATH_A, 0)
@@ -545,7 +598,8 @@ def main():
     #                        "E:/SynthWeather Dataset 5 - RAW/azimuth/144deg/rgb/", "synth_%d.png", (256, 256), 0)
     #create_hazy_data(0)
 
-    produce_color_images("E:/SynthWeather Dataset 6/azimuth/0deg/rgb/", "E:/SynthWeather Dataset 6/azimuth/0deg/rgb - styled/",  "synth2rgb_v3.00_1.pt", net_config = 2)
+    # produce_color_images("E:/SynthWeather Dataset 6/azimuth/0deg/rgb/", "E:/SynthWeather Dataset 6/azimuth/0deg/rgb - styled/",  "synth2rgb_v3.00_1.pt", net_config = 2)
+    create_patches(argv)
 
 if __name__=="__main__": 
-    main()   
+    main(sys.argv)

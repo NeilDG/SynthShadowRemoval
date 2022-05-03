@@ -29,7 +29,7 @@ class CycleGANTransform(nn.Module):
         out_tensor = torch.flatten(out_tensor, 0, 1)
 
         out_tensor_size = len(out_tensor)
-        half_size = int(out_tensor_size / 4)
+        half_size = int(out_tensor_size)
 
         indices = torch.randperm(out_tensor_size)[:half_size] #select few of the patches
         out_tensor = out_tensor[indices]
