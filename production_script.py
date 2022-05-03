@@ -101,11 +101,11 @@ def train_relighting():
         "--mode=azimuth --min_epochs=50 --version_name=\"maps2rgb_rgb2maps_v3.03\" --iteration=8")
 
 def train_domain_adaptation():
-    os.system("python \"cyclegan_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=0 --net_config=1 --num_blocks=9 --patch_size=32 --batch_size=12 "
-              "--min_epochs=15 --g_lr=0.00002 --d_lr=0.00002 --version_name=\"synth2rgb_v3.04\" --iteration=3")
+    os.system("python \"cyclegan_main.py\" --server_config=4 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=9 --patch_size=32 --batch_size=4 "
+              "--min_epochs=15 --g_lr=0.0002 --d_lr=0.0002 --version_name=\"synth2rgb_v3.04\" --iteration=3")
 
-    # os.system("python \"cyclegan_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=9 --patch_size=32 --batch_size=16 "
-    #           "--min_epochs=15 --g_lr=0.00002 --d_lr=0.00002 --version_name=\"synth2rgb_v3.04\" --iteration=14")
+    os.system("python \"cyclegan_main.py\" --server_config=4 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=9 --patch_size=32 --batch_size=4 "
+        "--min_epochs=15 --g_lr=0.0002 --d_lr=0.0002 --version_name=\"synth2rgb_v3.04\" --iteration=4")
 
 def main():
     # train_albedo()

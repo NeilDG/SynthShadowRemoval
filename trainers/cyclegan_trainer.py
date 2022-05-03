@@ -209,81 +209,81 @@ class CycleGANTrainer:
         return result
 
     def train(self, tensor_x, tensor_y, iteration):
-        # with amp.autocast():
-        tensor_x = self.transform_op(tensor_x).detach()
-        tensor_y = self.transform_op(tensor_y).detach()
+        with amp.autocast():
+            tensor_x = self.transform_op(tensor_x).detach()
+            tensor_y = self.transform_op(tensor_y).detach()
 
-        # optimize D-----------------------
-        y_like = self.G_A(tensor_x)
-        x_like = self.G_B(tensor_y)
+            # optimize D-----------------------
+            y_like = self.G_A(tensor_x)
+            x_like = self.G_B(tensor_y)
 
-        self.D_A.train()
-        self.D_B.train()
-        self.optimizerD.zero_grad()
+            self.D_A.train()
+            self.D_B.train()
+            self.optimizerD.zero_grad()
 
-        prediction = self.D_A(tensor_y)
-        real_tensor = torch.ones_like(prediction)
-        fake_tensor = torch.zeros_like(prediction)
+            prediction = self.D_A(tensor_y)
+            real_tensor = torch.ones_like(prediction)
+            fake_tensor = torch.zeros_like(prediction)
 
-        D_A_real_loss = self.adversarial_loss(self.D_A_pool.query(self.D_A(tensor_y)), real_tensor) * self.adv_weight
-        D_A_fake_loss = self.adversarial_loss(self.D_B_pool.query(self.D_A(y_like.detach())), fake_tensor) * self.adv_weight
+            D_A_real_loss = self.adversarial_loss(self.D_A_pool.query(self.D_A(tensor_y)), real_tensor) * self.adv_weight
+            D_A_fake_loss = self.adversarial_loss(self.D_B_pool.query(self.D_A(y_like.detach())), fake_tensor) * self.adv_weight
 
-        prediction = self.D_B(tensor_x)
-        real_tensor = torch.ones_like(prediction)
-        fake_tensor = torch.zeros_like(prediction)
+            prediction = self.D_B(tensor_x)
+            real_tensor = torch.ones_like(prediction)
+            fake_tensor = torch.zeros_like(prediction)
 
-        D_B_real_loss = self.adversarial_loss(self.D_B(tensor_x), real_tensor) * self.adv_weight
-        D_B_fake_loss = self.adversarial_loss(self.D_B(x_like.detach()), fake_tensor) * self.adv_weight
+            D_B_real_loss = self.adversarial_loss(self.D_B(tensor_x), real_tensor) * self.adv_weight
+            D_B_fake_loss = self.adversarial_loss(self.D_B(x_like.detach()), fake_tensor) * self.adv_weight
 
-        errD = D_A_real_loss + D_A_fake_loss + D_B_real_loss + D_B_fake_loss
-        # self.fp16_scaler.scale(errD).backward()
-        # if (self.fp16_scaler.scale(errD).item() > 0.0):
-        #     self.fp16_scaler.step(self.optimizerD)
-        #     self.schedulerD.step(errD)
+            errD = D_A_real_loss + D_A_fake_loss + D_B_real_loss + D_B_fake_loss
+            self.schedulerD.step(errD)
+            self.fp16_scaler.scale(errD).backward()
+            if (self.fp16_scaler.scale(errD).item() > 0.2):
+                self.fp16_scaler.step(self.optimizerD)
 
-        self.schedulerD.step(errD)
-        errD.backward()
-        self.optimizerD.step()
+            # self.schedulerD.step(errD)
+            # errD.backward()
+            # self.optimizerD.step()
 
-        # optimize G-----------------------
-        self.G_A.train()
-        self.G_B.train()
-        self.optimizerG.zero_grad()
+            # optimize G-----------------------
+            self.G_A.train()
+            self.G_B.train()
+            self.optimizerG.zero_grad()
 
-        identity_like = self.G_A(tensor_y)
-        y_like = self.G_A(tensor_x)
+            identity_like = self.G_A(tensor_y)
+            y_like = self.G_A(tensor_x)
 
-        A_identity_loss = self.identity_loss(identity_like, tensor_y) * self.id_weight
-        A_likeness_loss = self.likeness_loss(y_like, tensor_y) * self.likeness_weight
-        A_lpip_loss = self.lpip_loss(y_like, tensor_y) * self.lpip_weight
-        A_cycle_loss = self.cycle_loss(self.G_B(self.G_A(tensor_x)), tensor_x) * self.cycle_weight
+            A_identity_loss = self.identity_loss(identity_like, tensor_y) * self.id_weight
+            A_likeness_loss = self.likeness_loss(y_like, tensor_y) * self.likeness_weight
+            A_lpip_loss = self.lpip_loss(y_like, tensor_y) * self.lpip_weight
+            A_cycle_loss = self.cycle_loss(self.G_B(self.G_A(tensor_x)), tensor_x) * self.cycle_weight
 
-        identity_like = self.G_B(tensor_x)
-        x_like = self.G_B(tensor_y)
+            identity_like = self.G_B(tensor_x)
+            x_like = self.G_B(tensor_y)
 
-        B_identity_loss = self.identity_loss(identity_like, tensor_x) * self.id_weight
-        B_likeness_loss = self.likeness_loss(x_like, tensor_x) * self.likeness_weight
-        B_lpip_loss = self.lpip_loss(x_like, tensor_x) * self.lpip_weight
-        B_cycle_loss = self.cycle_loss(self.G_A(self.G_B(tensor_y)), tensor_y) * self.cycle_weight
+            B_identity_loss = self.identity_loss(identity_like, tensor_x) * self.id_weight
+            B_likeness_loss = self.likeness_loss(x_like, tensor_x) * self.likeness_weight
+            B_lpip_loss = self.lpip_loss(x_like, tensor_x) * self.lpip_weight
+            B_cycle_loss = self.cycle_loss(self.G_A(self.G_B(tensor_y)), tensor_y) * self.cycle_weight
 
-        prediction = self.D_A(y_like)
-        real_tensor = torch.ones_like(prediction)
-        A_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
+            prediction = self.D_A(y_like)
+            real_tensor = torch.ones_like(prediction)
+            A_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-        prediction = self.D_B(x_like)
-        real_tensor = torch.ones_like(prediction)
-        B_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
+            prediction = self.D_B(x_like)
+            real_tensor = torch.ones_like(prediction)
+            B_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-        errG = A_identity_loss + B_identity_loss + A_likeness_loss + B_likeness_loss + A_lpip_loss + B_lpip_loss + A_adv_loss + B_adv_loss + A_cycle_loss + B_cycle_loss
+            errG = A_identity_loss + B_identity_loss + A_likeness_loss + B_likeness_loss + A_lpip_loss + B_lpip_loss + A_adv_loss + B_adv_loss + A_cycle_loss + B_cycle_loss
 
-        # self.fp16_scaler.scale(errG).backward()
-        # self.fp16_scaler.step(self.optimizerG)
-        # self.schedulerG.step(errG)
-        # self.fp16_scaler.update()
+            self.schedulerG.step(errG)
+            self.fp16_scaler.scale(errG).backward()
+            self.fp16_scaler.step(self.optimizerG)
+            self.fp16_scaler.update()
 
-        self.schedulerG.step(errG)
-        errG.backward()
-        self.optimizerG.step()
+            # self.schedulerG.step(errG)
+            # errG.backward()
+            # self.optimizerG.step()
 
         # what to put to losses dict for visdom reporting?
         self.losses_dict[constants.G_LOSS_KEY].append(errG.item())

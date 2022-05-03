@@ -47,7 +47,8 @@ def update_config(opts):
 
     # COARE
     if (constants.server_config == 1):
-        print("Using COARE configuration ", opts.version_name)
+        opts.num_workers = 6
+        print("Using COARE configuration. Workers: ", opts.num_workers, " ", opts.version_name)
         constants.imgx_dir = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
         constants.imgy_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
         constants.imgx_dir_test = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
@@ -55,13 +56,27 @@ def update_config(opts):
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
-        print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", constants.RELIGHTING_CHECKPATH)
+        opts.num_workers = 8
+        print("Using CCS configuration. Workers: ", opts.num_workers, " ", opts.version_name)
 
     # GCLOUD
     elif (constants.server_config == 3):
-        print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.RELIGHTING_CHECKPATH)
+        opts.num_workers = 8
+        print("Using GCloud configuration. Workers: ", opts.num_workers, " ", opts.version_name)
         constants.imgx_dir = "/home/neil_delgallego/Places Dataset/*.jpg"
         constants.imgy_dir = "/home/neil_delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
+
+    elif (constants.server_config == 4):
+        opts.num_workers = 6
+        constants.imgx_dir = "D:/Datasets/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
+        constants.imgy_dir = "D:/Datasets/GTAV_Processed/images/*.png"
+        constants.imgx_dir_test = constants.imgx_dir
+        constants.imgy_dir_test = constants.imgy_dir
+
+        print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers, " ", opts.version_name)
+    else:
+        opts.num_workers = 12
+        print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers, " ", opts.version_name)
 
 def main(argv):
     (opts, args) = parser.parse_args(argv)
