@@ -36,5 +36,5 @@ class CycleGANTransform(nn.Module):
         out_tensor = out_tensor[indices]
         out_tensor = self.transform_op(out_tensor)
 
-        print("Shape: ", np.shape(out_tensor))
+        # print("Shape: ", np.shape(out_tensor))
         return out_tensor
