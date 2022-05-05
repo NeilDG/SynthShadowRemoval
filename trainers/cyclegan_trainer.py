@@ -238,7 +238,7 @@ class CycleGANTrainer:
             errD = D_A_real_loss + D_A_fake_loss + D_B_real_loss + D_B_fake_loss
             self.schedulerD.step(errD)
             self.fp16_scaler.scale(errD).backward()
-            if (self.fp16_scaler.scale(errD).item() > 0.2):
+            if (self.fp16_scaler.scale(errD).item() > 0.0):
                 self.fp16_scaler.step(self.optimizerD)
 
             # self.schedulerD.step(errD)
