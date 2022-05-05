@@ -299,7 +299,7 @@ class CycleGANTrainer:
         self.losses_dict[constants.CYCLE_LOSS_KEY].append(A_cycle_loss.item() + B_cycle_loss.item())
 
         # clear plots to avoid potential sudden jumps in visualization due to unstable gradients during early training
-        if (iteration % 200 == 0):
+        if (iteration < 200 == 0):
             self.losses_dict[constants.G_LOSS_KEY].clear()
             self.losses_dict[constants.D_OVERALL_LOSS_KEY].clear()
             self.losses_dict[constants.IDENTITY_LOSS_KEY].clear()
