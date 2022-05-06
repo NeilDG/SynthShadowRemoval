@@ -274,10 +274,10 @@ def compute_and_produce_rgb_v2(type_prefix, degree_prefix, argv):
     (opts, args) = parser.parse_args(argv)
     print(opts)
 
-    RGB_PATH = "E:/SynthWeather Dataset 5 - RAW/" + type_prefix + "/" + degree_prefix + "/rgb/"
+    RGB_PATH = "E:/SynthWeather Dataset 6/" + type_prefix + "/" + degree_prefix + "/rgb/"
     print("RGB path: ", RGB_PATH)
     RGB_NOSHADOWS_PATH = "E:/SynthWeather Dataset 5 - RAW/no_shadows/"
-    ALBEDO_PATH = "E:/SynthWeather Dataset 5/albedo/"
+    ALBEDO_PATH = "E:/SynthWeather Dataset 6/albedo/"
 
     rgb_list = dataset_loader.assemble_unpaired_data(RGB_PATH, -1)
     noshadows_list = dataset_loader.assemble_unpaired_data(RGB_NOSHADOWS_PATH, -1)
@@ -302,8 +302,9 @@ def compute_and_produce_rgb_v2(type_prefix, degree_prefix, argv):
         albedo_img = cv2.normalize(albedo_img, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
 
         albedo_img = np.clip(albedo_img, 0.00001, 1.0)
-        light_color = np.asarray([255, 255, 255]) / 255.0 #values are extracted from Unity Engine
-        # light_color = light_color * 1.5
+        # light_color = np.asarray([255, 255, 255]) / 255.0 #values are extracted from Unity Engine
+        light_color = np.asarray([255, 255, 255]) / 255.0  # values are extracted from Unity Engine
+        light_color = light_color * 2.0
 
         #extract shadows
         noshadows_img = np.clip(noshadows_img, 0.00001, 1.0)
@@ -314,7 +315,7 @@ def compute_and_produce_rgb_v2(type_prefix, degree_prefix, argv):
         shadow_map = cv2.cvtColor(shadow_map, cv2.COLOR_BGR2GRAY)
         shadow_map = shadow_map * opts.shadow_multiplier
         shadow_map = np.clip(shadow_map, 0.00001, 1.0)
-
+        shadow_map = shadow_map * 1.5
 
         shading_component = np.full_like(albedo_img, 0.0)
         shading_component[:, :, 0] = noshadows_img[:, :, 0] / (albedo_img[:, :, 0] * light_color[0])
@@ -340,21 +341,21 @@ def compute_and_produce_rgb_v2(type_prefix, degree_prefix, argv):
         diff = rgb_img - rgb_img_like
         print("Difference: ", np.mean(diff))
 
-        # plt.imshow(rgb_img)
-        # plt.show()
-        #
-        # plt.imshow(albedo_img)
-        # plt.show()
-        #
-        # plt.imshow(shading_component, cmap='gray')
-        # plt.show()
-        #
-        # plt.imshow(shadow_map, cmap='gray')
-        # plt.show()
-        #
-        # plt.imshow(rgb_img_like)
-        # plt.show()
-        # break
+        plt.imshow(rgb_img)
+        plt.show()
+
+        plt.imshow(albedo_img)
+        plt.show()
+
+        plt.imshow(shading_component, cmap='gray')
+        plt.show()
+
+        plt.imshow(shadow_map, cmap='gray')
+        plt.show()
+
+        plt.imshow(rgb_img_like)
+        plt.show()
+        break
 
         # cv2.imwrite("E:/SynthWeather Dataset 6/" + type_prefix + "/" + degree_prefix + "/rgb/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(rgb_img_like, alpha=255.0), cv2.COLOR_BGR2RGB))
         # cv2.imwrite("E:/SynthWeather Dataset 6/shading/" + file_name, cv2.convertScaleAbs(shading_component, alpha=255.0))
@@ -717,8 +718,7 @@ def main(argv):
     print(opts)
     # convert_gta_albedo()
     # test_lighting()
-    #test_deferred_render()
-    # compute_and_produce_rgb_v2("azimuth", "0deg", sys.argv)
+    compute_and_produce_rgb_v2("azimuth", "0deg", sys.argv)
     # compute_and_produce_rgb_v2("azimuth", "36deg", sys.argv)
     # compute_and_produce_rgb_v2("azimuth", "72deg", sys.argv)
     # compute_and_produce_rgb_v2("azimuth", "108deg", sys.argv)
@@ -731,7 +731,7 @@ def main(argv):
     # produce_rgbs("azimuth", "144deg")
 
     # measure_shading_diff("E:/SynthWeather Dataset 4/azimuth/0deg/shading/", "E:/SynthWeather Dataset 4/azimuth/144deg/shading/")
-    measure_performance()
+    # measure_performance()
 
 if __name__ == "__main__":
     main(sys.argv)
