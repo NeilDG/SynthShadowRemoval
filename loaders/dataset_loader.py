@@ -335,7 +335,7 @@ def load_da_dataset_train(imgx_dir, imgy_dir, opts):
 
     data_loader = torch.utils.data.DataLoader(
         image_dataset.GenericPairedDataset(imgx_list, imgy_list, 1, opts),
-        batch_size=opts.batch_size,
+        batch_size=opts.img_per_iter,
         num_workers = opts.num_workers,
         shuffle=False,
         pin_memory=False

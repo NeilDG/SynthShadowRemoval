@@ -15,7 +15,6 @@ class CycleGANTransform(nn.Module):
         super(CycleGANTransform, self).__init__()
 
         self.patch_size = (opts.patch_size, opts.patch_size)
-        self.patches_per_image = opts.patches_per_image
 
         self.transform_op = kornia.augmentation.ImageSequential(
             kornia.augmentation.RandomVerticalFlip(p=0.5),
@@ -30,9 +29,8 @@ class CycleGANTransform(nn.Module):
         out_tensor = torch.flatten(out_tensor, 0, 1)
 
         out_tensor_size = len(out_tensor)
-        half_size = np.minimum(out_tensor_size, self.patches_per_image)
 
-        indices = torch.randperm(out_tensor_size)[:half_size] #select few of the patches
+        indices = torch.randperm(out_tensor_size)
         out_tensor = out_tensor[indices]
         out_tensor = self.transform_op(out_tensor)
 

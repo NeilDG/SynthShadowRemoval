@@ -30,9 +30,9 @@ parser.add_option('--num_blocks', type=int)
 parser.add_option('--net_config', type=int)
 parser.add_option('--g_lr', type=float, help="LR", default="0.00002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.00005")
-parser.add_option('--batch_size', type=int, help="batch_size", default="128")
+parser.add_option('--batch_size', type=int, help="Batch size of network before step is performed.", default="128")
 parser.add_option('--patch_size', type=int, help="patch_size", default="64")
-parser.add_option('--patches_per_image', type=int, help="Patches per image", default="1")
+parser.add_option('--img_per_iter', type=int, help="Num images to load per iteration", default="128")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--version_name', type=str, help="version_name")
 parser.add_option('--test_mode', type=int, help="Test mode?", default=0)
@@ -68,7 +68,7 @@ def update_config(opts):
         constants.imgy_dir = "/home/neil_delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
 
     elif (constants.server_config == 4):
-        opts.num_workers = 6
+        opts.num_workers = 10
         constants.imgx_dir = "D:/Datasets/Places Dataset/*.jpg"
         constants.imgy_dir = "D:/Datasets/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
         constants.imgx_dir_test = constants.imgx_dir
@@ -139,13 +139,13 @@ def main(argv):
                 imgx_tensor = imgx_batch.to(device)
                 imgy_tensor = imgy_batch.to(device)
 
-                gt.train(imgx_tensor, imgy_tensor, iteration)
+                gt.train(imgx_tensor, imgy_tensor, i)
                 iteration = iteration + 1
 
                 x2y, _ = gt.test(imgx_tensor, imgy_tensor)
                 stopper_method.test(gt, epoch, iteration, x2y, imgy_tensor)  # stop training if reconstruction no longer becomes close to Y
 
-                if (i % 200 == 0):
+                if (i % opts.batch_size == 0):
                     gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
 
                     gt.save_states_checkpt(epoch, iteration)

@@ -95,6 +95,7 @@ class CycleGANTrainer:
     def __init__(self, gpu_device, opts):
         self.gpu_device = gpu_device
         self.batch_size = opts.batch_size
+        self.img_per_iter = opts.img_per_iter
         self.g_lr = opts.g_lr
         self.d_lr = opts.d_lr
 
@@ -208,8 +209,28 @@ class CycleGANTrainer:
         result = torch.mean(result)
         return result
 
-    def train(self, tensor_x, tensor_y, iteration):
+    # def accumulate_input(self, input_x, input_y):
+    #     if(self.input_x == None):
+    #         self.input_x = input_x
+    #     else:
+    #         self.input_x = torch.cat([self.input_x, input_x], 0)
+    #
+    #     if (self.input_y == None):
+    #         self.input_y = input_y
+    #     else:
+    #         self.input_y = torch.cat([self.input_y, input_y], 0)
+    #
+    #     self.accumulated_size = max(np.shape(self.input_x)[0], np.shape(self.input_y)[0])
+    #     print("Accumulating input: ", np.shape(self.input_x), np.shape(self.input_y))
+    #
+    # def clear_input(self):
+    #     self.input_x = None
+    #     self.input_y = None
+    #     self.accumulated_size = 0
+
+    def train(self, tensor_x, tensor_y, img_batch):
         with amp.autocast():
+            print("Current batch: ", img_batch)
             tensor_x = self.transform_op(tensor_x).detach()
             tensor_y = self.transform_op(tensor_y).detach()
 
@@ -236,14 +257,10 @@ class CycleGANTrainer:
             D_B_fake_loss = self.adversarial_loss(self.D_B(x_like.detach()), fake_tensor) * self.adv_weight
 
             errD = D_A_real_loss + D_A_fake_loss + D_B_real_loss + D_B_fake_loss
-            self.schedulerD.step(errD)
             self.fp16_scaler.scale(errD).backward()
-            if (self.fp16_scaler.scale(errD).item() > 0.0):
+            if (self.fp16_scaler.scale(errD).item() > 0.0 and img_batch % self.batch_size == 0):
+                self.schedulerD.step(errD)
                 self.fp16_scaler.step(self.optimizerD)
-
-            # self.schedulerD.step(errD)
-            # errD.backward()
-            # self.optimizerD.step()
 
             # optimize G-----------------------
             self.G_A.train()
@@ -275,42 +292,38 @@ class CycleGANTrainer:
             B_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
             errG = A_identity_loss + B_identity_loss + A_likeness_loss + B_likeness_loss + A_lpip_loss + B_lpip_loss + A_adv_loss + B_adv_loss + A_cycle_loss + B_cycle_loss
-
-            self.schedulerG.step(errG)
             self.fp16_scaler.scale(errG).backward()
-            self.fp16_scaler.step(self.optimizerG)
-            self.fp16_scaler.update()
+            if(img_batch % self.batch_size == 0):
+                self.schedulerG.step(errG)
+                self.fp16_scaler.step(self.optimizerG)
+                self.fp16_scaler.update()
 
-            # self.schedulerG.step(errG)
-            # errG.backward()
-            # self.optimizerG.step()
+            # what to put to losses dict for visdom reporting?
+            self.losses_dict[constants.G_LOSS_KEY].append(errG.item())
+            self.losses_dict[constants.D_OVERALL_LOSS_KEY].append(errD.item())
+            self.losses_dict[constants.IDENTITY_LOSS_KEY].append(A_identity_loss.item() + B_identity_loss.item())
+            self.losses_dict[constants.LIKENESS_LOSS_KEY].append(B_likeness_loss.item())
+            self.losses_dict[constants.SMOOTHNESS_LOSS_KEY].append(A_lpip_loss.item() + B_lpip_loss.item())
+            self.losses_dict[constants.G_ADV_LOSS_KEY].append(A_adv_loss.item() + B_adv_loss.item())
+            self.losses_dict[constants.D_A_FAKE_LOSS_KEY].append(D_A_fake_loss.item())
+            self.losses_dict[constants.D_A_REAL_LOSS_KEY].append(D_A_real_loss.item())
+            self.losses_dict[constants.D_B_FAKE_LOSS_KEY].append(D_B_fake_loss.item())
+            self.losses_dict[constants.D_B_REAL_LOSS_KEY].append(D_B_real_loss.item())
+            self.losses_dict[constants.CYCLE_LOSS_KEY].append(A_cycle_loss.item() + B_cycle_loss.item())
 
-        # what to put to losses dict for visdom reporting?
-        self.losses_dict[constants.G_LOSS_KEY].append(errG.item())
-        self.losses_dict[constants.D_OVERALL_LOSS_KEY].append(errD.item())
-        self.losses_dict[constants.IDENTITY_LOSS_KEY].append(A_identity_loss.item() + B_identity_loss.item())
-        self.losses_dict[constants.LIKENESS_LOSS_KEY].append(B_likeness_loss.item())
-        self.losses_dict[constants.SMOOTHNESS_LOSS_KEY].append(A_lpip_loss.item() + B_lpip_loss.item())
-        self.losses_dict[constants.G_ADV_LOSS_KEY].append(A_adv_loss.item() + B_adv_loss.item())
-        self.losses_dict[constants.D_A_FAKE_LOSS_KEY].append(D_A_fake_loss.item())
-        self.losses_dict[constants.D_A_REAL_LOSS_KEY].append(D_A_real_loss.item())
-        self.losses_dict[constants.D_B_FAKE_LOSS_KEY].append(D_B_fake_loss.item())
-        self.losses_dict[constants.D_B_REAL_LOSS_KEY].append(D_B_real_loss.item())
-        self.losses_dict[constants.CYCLE_LOSS_KEY].append(A_cycle_loss.item() + B_cycle_loss.item())
-
-        # clear plots to avoid potential sudden jumps in visualization due to unstable gradients during early training
-        if (iteration < 200 == 0):
-            self.losses_dict[constants.G_LOSS_KEY].clear()
-            self.losses_dict[constants.D_OVERALL_LOSS_KEY].clear()
-            self.losses_dict[constants.IDENTITY_LOSS_KEY].clear()
-            self.losses_dict[constants.LIKENESS_LOSS_KEY].clear()
-            self.losses_dict[constants.SMOOTHNESS_LOSS_KEY].clear()
-            self.losses_dict[constants.G_ADV_LOSS_KEY].clear()
-            self.losses_dict[constants.D_A_FAKE_LOSS_KEY].clear()
-            self.losses_dict[constants.D_A_REAL_LOSS_KEY].clear()
-            self.losses_dict[constants.D_B_FAKE_LOSS_KEY].clear()
-            self.losses_dict[constants.D_B_REAL_LOSS_KEY].clear()
-            self.losses_dict[constants.CYCLE_LOSS_KEY].clear()
+        # # clear plots to avoid potential sudden jumps in visualization due to unstable gradients during early training
+        # if (iteration < 200 == 0):
+        #     self.losses_dict[constants.G_LOSS_KEY].clear()
+        #     self.losses_dict[constants.D_OVERALL_LOSS_KEY].clear()
+        #     self.losses_dict[constants.IDENTITY_LOSS_KEY].clear()
+        #     self.losses_dict[constants.LIKENESS_LOSS_KEY].clear()
+        #     self.losses_dict[constants.SMOOTHNESS_LOSS_KEY].clear()
+        #     self.losses_dict[constants.G_ADV_LOSS_KEY].clear()
+        #     self.losses_dict[constants.D_A_FAKE_LOSS_KEY].clear()
+        #     self.losses_dict[constants.D_A_REAL_LOSS_KEY].clear()
+        #     self.losses_dict[constants.D_B_FAKE_LOSS_KEY].clear()
+        #     self.losses_dict[constants.D_B_REAL_LOSS_KEY].clear()
+        #     self.losses_dict[constants.CYCLE_LOSS_KEY].clear()
 
     def test(self, tensor_x, tensor_y):
         with torch.no_grad():
