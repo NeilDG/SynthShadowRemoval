@@ -19,7 +19,8 @@ import matplotlib.pyplot as plt
 from loaders import dataset_loader
 from trainers import cyclegan_trainer, early_stopper
 import constants
-     
+from transforms import cyclegan_transforms
+
 parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
 parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:0")
@@ -68,7 +69,7 @@ def update_config(opts):
         constants.imgy_dir = "/home/neil_delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
 
     elif (constants.server_config == 4):
-        opts.num_workers = 10
+        opts.num_workers = 6
         constants.imgx_dir = "D:/Datasets/Places Dataset/*.jpg"
         constants.imgy_dir = "D:/Datasets/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
         constants.imgx_dir_test = constants.imgx_dir
@@ -145,7 +146,7 @@ def main(argv):
                 x2y, _ = gt.test(imgx_tensor, imgy_tensor)
                 stopper_method.test(gt, epoch, iteration, x2y, imgy_tensor)  # stop training if reconstruction no longer becomes close to Y
 
-                if (i % opts.batch_size == 0):
+                if (i % 32 == 0):
                     gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
 
                     gt.save_states_checkpt(epoch, iteration)

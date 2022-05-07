@@ -9,7 +9,7 @@
 #SBATCH --mail-user=neil.delgallego@dlsu.edu.ph
 #SBATCH --mail-type=END
 
-ITERATION=2
+ITERATION=1
 echo "CUDA_DEVICE=/dev/nvidia/$CUDA_VISIBLE_DEVICES"
 nvidia-smi
 
@@ -22,10 +22,10 @@ source activate NeilGAN_V2
 srun python cyclegan_main.py \
 --iteration=$ITERATION \
 --server_config=1 \
---num_workers=6 \
+--img_per_iter=8 \
 --batch_size=16 \
 --patch_size=32 \
---version_name="synth2rgb_v3.00" --min_epochs=15 --net_config=1 --num_blocks=9 \
+--version_name="synth2rgb_v4.01" --min_epochs=15 --net_config=1 --num_blocks=9 \
 --img_to_load=-1 --load_previous=0
 
 

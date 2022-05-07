@@ -130,7 +130,7 @@ class CycleGANTrainer:
         self.D_A_pool = image_pool.ImagePool(50)
         self.D_B_pool = image_pool.ImagePool(50)
 
-        self.transform_op = cyclegan_transforms.CycleGANTransform(opts).to(self.gpu_device).requires_grad_(False)
+        self.transform_op = cyclegan_transforms.CycleGANTransform(opts).requires_grad_(False)
 
         self.visdom_reporter = plot_utils.VisdomReporter()
         self.optimizerG = torch.optim.Adam(itertools.chain(self.G_A.parameters(), self.G_B.parameters()), lr=self.g_lr)
@@ -230,7 +230,7 @@ class CycleGANTrainer:
 
     def train(self, tensor_x, tensor_y, img_batch):
         with amp.autocast():
-            print("Current batch: ", img_batch)
+            # print("Current batch: ", img_batch)
             tensor_x = self.transform_op(tensor_x).detach()
             tensor_y = self.transform_op(tensor_y).detach()
 
@@ -298,18 +298,18 @@ class CycleGANTrainer:
                 self.fp16_scaler.step(self.optimizerG)
                 self.fp16_scaler.update()
 
-            # what to put to losses dict for visdom reporting?
-            self.losses_dict[constants.G_LOSS_KEY].append(errG.item())
-            self.losses_dict[constants.D_OVERALL_LOSS_KEY].append(errD.item())
-            self.losses_dict[constants.IDENTITY_LOSS_KEY].append(A_identity_loss.item() + B_identity_loss.item())
-            self.losses_dict[constants.LIKENESS_LOSS_KEY].append(B_likeness_loss.item())
-            self.losses_dict[constants.SMOOTHNESS_LOSS_KEY].append(A_lpip_loss.item() + B_lpip_loss.item())
-            self.losses_dict[constants.G_ADV_LOSS_KEY].append(A_adv_loss.item() + B_adv_loss.item())
-            self.losses_dict[constants.D_A_FAKE_LOSS_KEY].append(D_A_fake_loss.item())
-            self.losses_dict[constants.D_A_REAL_LOSS_KEY].append(D_A_real_loss.item())
-            self.losses_dict[constants.D_B_FAKE_LOSS_KEY].append(D_B_fake_loss.item())
-            self.losses_dict[constants.D_B_REAL_LOSS_KEY].append(D_B_real_loss.item())
-            self.losses_dict[constants.CYCLE_LOSS_KEY].append(A_cycle_loss.item() + B_cycle_loss.item())
+                # what to put to losses dict for visdom reporting?
+                self.losses_dict[constants.G_LOSS_KEY].append(errG.item())
+                self.losses_dict[constants.D_OVERALL_LOSS_KEY].append(errD.item())
+                self.losses_dict[constants.IDENTITY_LOSS_KEY].append(A_identity_loss.item() + B_identity_loss.item())
+                self.losses_dict[constants.LIKENESS_LOSS_KEY].append(B_likeness_loss.item())
+                self.losses_dict[constants.SMOOTHNESS_LOSS_KEY].append(A_lpip_loss.item() + B_lpip_loss.item())
+                self.losses_dict[constants.G_ADV_LOSS_KEY].append(A_adv_loss.item() + B_adv_loss.item())
+                self.losses_dict[constants.D_A_FAKE_LOSS_KEY].append(D_A_fake_loss.item())
+                self.losses_dict[constants.D_A_REAL_LOSS_KEY].append(D_A_real_loss.item())
+                self.losses_dict[constants.D_B_FAKE_LOSS_KEY].append(D_B_fake_loss.item())
+                self.losses_dict[constants.D_B_REAL_LOSS_KEY].append(D_B_real_loss.item())
+                self.losses_dict[constants.CYCLE_LOSS_KEY].append(A_cycle_loss.item() + B_cycle_loss.item())
 
         # # clear plots to avoid potential sudden jumps in visualization due to unstable gradients during early training
         # if (iteration < 200 == 0):
