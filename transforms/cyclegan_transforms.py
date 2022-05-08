@@ -21,9 +21,11 @@ class CycleGANTransform(nn.Module):
             kornia.augmentation.RandomHorizontalFlip(p=0.5),
             same_on_batch=True)
 
+        self.stride_choices = [4, 8, 12, 16, 24, 32]
+
 
     def forward(self, x):
-        stride = np.random.randint(4, self.patch_size)
+        stride = np.random.choice(self.stride_choices)
         patch_extract_op = kornia.contrib.ExtractTensorPatches(window_size=self.patch_size, stride=stride)
 
         out_tensor = patch_extract_op(x)
