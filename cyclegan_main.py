@@ -78,6 +78,10 @@ def update_config(opts):
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers, " ", opts.version_name)
     else:
         opts.num_workers = 12
+        constants.imgx_dir = "E:/Places Dataset/*.jpg"
+        constants.imgy_dir = "E:/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
+        constants.imgx_dir_test = constants.imgx_dir
+        constants.imgy_dir_test = constants.imgy_dir
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers, " ", opts.version_name)
 
 def main(argv):
