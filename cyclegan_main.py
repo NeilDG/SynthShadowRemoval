@@ -150,7 +150,7 @@ def main(argv):
                 x2y, _ = gt.test(imgx_tensor, imgy_tensor)
                 stopper_method.test(gt, epoch, iteration, x2y, imgy_tensor)  # stop training if reconstruction no longer becomes close to Y
 
-                if (i % 32 == 0):
+                if (i % 256 == 0):
                     gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
 
                     gt.save_states_checkpt(epoch, iteration)
