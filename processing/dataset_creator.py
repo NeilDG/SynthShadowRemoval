@@ -353,9 +353,10 @@ def create_img_from_video_data(VIDEO_PATH, SAVE_PATH, offset):
             print("Saved: synth_%d.png" % count)
             count += 1
 
-def produce_color_images(INPUT_PATH, SAVE_PATH, CHECKPT_NAME, net_config):
-    CHECKPT_ROOT = "D:/Documents/GithubProjects/SynthDehazing/checkpoint/"
+def produce_color_images(INPUT_PATH, SAVE_PATH, CHECKPT_NAME, net_config, argv):
+    (opts, args) = parser.parse_args(argv)
 
+    CHECKPT_ROOT = "D:/Documents/GithubProjects/NeuralNets-Experiment3/checkpoint/"
     device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
 
     try:
@@ -367,42 +368,38 @@ def produce_color_images(INPUT_PATH, SAVE_PATH, CHECKPT_NAME, net_config):
     if (net_config == 1):
         print("Using vanilla cycle GAN")
         color_transfer_gan = cycle_gan.Generator(n_residual_blocks=6, has_dropout=False).to(device)
-    elif (net_config == 3):
+    elif (net_config == 2):
         print("Using U-Net GAN")
-        color_transfer_gan = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=4).to(device)
+        color_transfer_gan = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=0).to(device)
     else:
         print("Using stable CycleGAN")
         color_transfer_gan = cycle_gan.Generator(downsampling_blocks=2, n_residual_blocks=10, has_dropout=False).to(device)
 
     color_transfer_checkpt = torch.load(CHECKPT_ROOT + CHECKPT_NAME, map_location=device)
-    color_transfer_gan.load_state_dict(color_transfer_checkpt[constants.GENERATOR_KEY + "A"])
+    color_transfer_gan.load_state_dict(color_transfer_checkpt[constants.GENERATOR_KEY + "B"])
     color_transfer_gan.eval()
     print("Color transfer GAN model loaded.")
     print("===================================================")
 
-    dataloader = dataset_loader.load_test_dataset(INPUT_PATH, constants.DATASET_PLACES_PATH, constants.infer_size, -1)
+    dataloader = dataset_loader.load_single_test_dataset(INPUT_PATH)
 
     # Plot some training images
-    name_batch, dirty_batch, clean_batch = next(iter(dataloader))
+    name_batch, img_batch = next(iter(dataloader))
     plt.figure(figsize=(16, 16))
     plt.axis("off")
     plt.title("Training - Old Images")
-    plt.imshow(np.transpose(torchutils.make_grid(dirty_batch.to(device)[:16], nrow=8, padding=2, normalize=True).cpu(), (1, 2, 0)))
+    plt.imshow(np.transpose(torchutils.make_grid(img_batch.to(device)[:16], nrow=8, padding=2, normalize=True).cpu(), (1, 2, 0)))
     plt.show()
 
-    plt.figure(figsize=(16, 16))
-    plt.axis("off")
-    plt.title("Training - New Images")
-    plt.imshow(np.transpose(torchutils.make_grid(clean_batch.to(device)[:16], nrow=8, padding=2, normalize=True).cpu(), (1, 2, 0)))
-    plt.show()
 
-    for i, (name, dirty_batch, clean_batch) in enumerate(dataloader, 0):
+    for i, (name, dirty_batch) in enumerate(dataloader, 0):
         with torch.no_grad():
             input_tensor = dirty_batch.to(device)
             result = color_transfer_gan(input_tensor)
+            # result = kornia.filters.median_blur(result, (3, 3))
 
             for i in range(0, len(result)):
-                img_name = name[i].split(".")[0]
+                img_name = name[i].split(".")[0].split("\\")[-1]
                 style_img = result[i].cpu().numpy()
                 style_img = ((style_img * 0.5) + 0.5) #remove normalization
                 style_img = np.rollaxis(style_img, 0, 3)
@@ -410,7 +407,7 @@ def produce_color_images(INPUT_PATH, SAVE_PATH, CHECKPT_NAME, net_config):
                 style_img = cv2.cvtColor(style_img, cv2.COLOR_BGR2RGB)
 
                 cv2.imwrite(SAVE_PATH + img_name + ".png", style_img)
-                print("Saved styled image: ", img_name)
+                print("Saved styled image: ", (SAVE_PATH + img_name + ".png"))
 
 def produce_single_color_img(IMG_PATH, CHECKPT_NAME, net_config):
     SAVE_PATH = "D:/Documents/GithubProjects/SynthDehazing/results/Single/"
@@ -598,8 +595,14 @@ def main(argv):
     #                        "E:/SynthWeather Dataset 5 - RAW/azimuth/144deg/rgb/", "synth_%d.png", (256, 256), 0)
     #create_hazy_data(0)
 
-    # produce_color_images("E:/SynthWeather Dataset 6/azimuth/0deg/rgb/", "E:/SynthWeather Dataset 6/azimuth/0deg/rgb - styled/",  "synth2rgb_v3.00_1.pt", net_config = 2)
-    create_patches(argv)
+    # produce_color_images("E:/SynthWeather Dataset 6/azimuth/0deg/rgb/", "E:/SynthWeather Dataset 6/azimuth/0deg/rgb - styled/",  "synth2rgb_v4.07_3.pt", 2, argv)
+    # produce_color_images("E:/SynthWeather Dataset 6/azimuth/0deg/rgb/", "E:/SynthWeather Dataset 6/azimuth/0deg/rgb - styled/", "synth2rgb_v4.07_3.pt", 2, argv)
+    # produce_color_images("E:/SynthWeather Dataset 6/azimuth/36deg/rgb/", "E:/SynthWeather Dataset 6/azimuth/36deg/rgb - styled/", "synth2rgb_v4.07_3.pt", 2, argv)
+    # produce_color_images("E:/SynthWeather Dataset 6/azimuth/72deg/rgb/", "E:/SynthWeather Dataset 6/azimuth/72deg/rgb - styled/", "synth2rgb_v4.07_3.pt", 2, argv)
+    # produce_color_images("E:/SynthWeather Dataset 6/azimuth/108deg/rgb/", "E:/SynthWeather Dataset 6/azimuth/108deg/rgb - styled/", "synth2rgb_v4.07_3.pt", 2, argv)
+    # produce_color_images("E:/SynthWeather Dataset 6/azimuth/144deg/rgb/", "E:/SynthWeather Dataset 6/azimuth/144deg/rgb - styled/", "synth2rgb_v4.07_3.pt", 2, argv)
+    produce_color_images("E:/SynthWeather Dataset 6/no_shadows/*.png", "E:/SynthWeather Dataset 6/no_shadows_styled/", "synth2rgb_v4.07_3.pt", 2, argv)
+    # create_patches(argv)
 
 if __name__=="__main__": 
     main(sys.argv)

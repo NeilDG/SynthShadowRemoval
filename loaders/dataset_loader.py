@@ -133,8 +133,8 @@ def load_single_train_dataset(path_a, opts):
 
     return data_loader
 
-def load_single_test_dataset(path_a, opts):
-    a_list = assemble_unpaired_data(path_a, opts.img_to_load)
+def load_single_test_dataset(path_a):
+    a_list = glob.glob(path_a)
     print("Length of images: %d" % len(a_list))
 
     data_loader = torch.utils.data.DataLoader(
@@ -142,84 +142,6 @@ def load_single_test_dataset(path_a, opts):
         batch_size=4,
         num_workers=1,
         shuffle=True
-    )
-
-    return data_loader
-
-def load_render_train_dataset(path_a, path_b, path_c, path_d, path_e, path_f, opts):
-    a_list = assemble_unpaired_data(path_a, opts.img_to_load)
-    print("Length of images: %d" % len(a_list))
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.RenderDataset(a_list, path_b, path_c, path_d, path_e, path_f, 1),
-        batch_size=opts.batch_size,
-        num_workers=opts.num_workers,
-        shuffle=True
-    )
-
-    return data_loader
-
-def load_render_test_dataset(path_a, path_b, path_c, path_d, path_e, path_f, opts):
-    a_list = assemble_unpaired_data(path_a, opts.img_to_load)
-    print("Length of images: %d" % len(a_list))
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.RenderDataset(a_list, path_b, path_c, path_d, path_e, path_f, 2),
-        batch_size=4,
-        num_workers=1,
-        shuffle=True
-    )
-
-    return data_loader
-
-def load_shading_train_dataset(path_a, path_c, opts):
-    a_list = assemble_unpaired_data(path_a, opts.img_to_load)
-    print("Length of images: %d" % len(a_list))
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.ShadingDataset(a_list, path_c, 1, opts),
-        batch_size=opts.batch_size,
-        num_workers=opts.num_workers,
-        shuffle=True
-    )
-
-    return data_loader
-
-def load_shading_test_dataset(path_a, path_c, opts):
-    a_list = assemble_unpaired_data(path_a, opts.img_to_load)
-    print("Length of images: %d" % len(a_list))
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.ShadingDataset(a_list, path_c, 2, opts),
-        batch_size=16,
-        num_workers=1,
-        shuffle=False
-    )
-
-    return data_loader
-
-def load_shading_train_recursive(path_a, path_c, opts):
-    a_list = glob.glob(path_a + "/*/rgb/*.png")
-    print("Length of images: %d" % len(a_list))
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.ShadingDataset(a_list, path_c, 1, opts),
-        batch_size=opts.batch_size,
-        num_workers=opts.num_workers,
-        shuffle=True
-    )
-
-    return data_loader
-
-def load_shading_test_recursive(path_a, path_c, opts):
-    a_list = glob.glob(path_a + "/*/rgb/*.png")
-    print("Length of images: %d" % len(a_list))
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.ShadingDataset(a_list, path_c, 2, opts),
-        batch_size=16,
-        num_workers=1,
-        shuffle=False
     )
 
     return data_loader
@@ -335,7 +257,7 @@ def load_da_dataset_train(imgx_dir, imgy_dir, opts):
 
     data_loader = torch.utils.data.DataLoader(
         image_dataset.GenericPairedDataset(imgx_list, imgy_list, 1, opts),
-        batch_size=opts.batch_size,
+        batch_size=opts.img_per_iter,
         num_workers = opts.num_workers,
         shuffle=False,
         pin_memory=False

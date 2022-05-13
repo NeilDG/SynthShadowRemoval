@@ -41,7 +41,7 @@ class EarlyStopper():
             self.last_metric = D_loss
             self.stop_counter = 0
             print("Early stopping mechanism reset. Best metric is now ", self.last_metric)
-            trainer.save_states(epoch, iteration)
+            trainer.save_states(epoch, iteration, self.last_metric)
 
         if (self.stop_counter == self.early_stop_tolerance):
             self.stop_condition_met = True

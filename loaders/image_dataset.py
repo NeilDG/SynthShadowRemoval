@@ -193,6 +193,9 @@ class ImageRelightDataset(data.Dataset):
             ])
 
     def __getitem__(self, idx):
+        if(idx == 9586):
+            idx = np.random.randint(0, 9585) #TEMP FIX for missing PNG file
+
         file_name = "synth_" + str(idx) + ".png"
 
         img_a_path = self.albedo_dir + file_name

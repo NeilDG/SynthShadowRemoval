@@ -10,22 +10,22 @@ class IterationTable():
         self.iteration_table = {}
 
         iteration = 5
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, l1_weight=20.0, lpip_weight=5.0, ssim_weight=0.0, bce_weight=0.0, is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, l1_weight=0.0, lpip_weight=0.0, ssim_weight=0.0, bce_weight=0.0, is_bce=0)
         self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=1.0, ssim_weight=0.0, bce_weight=0.0, is_bce=0)
         self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=1.0, ssim_weight=0.0, bce_weight=0.0, is_bce=0)
 
         iteration = 6
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, l1_weight=20.0, lpip_weight=5.0, ssim_weight=0.0, bce_weight=0.0, is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, l1_weight=0.0, lpip_weight=0.0, ssim_weight=0.0, bce_weight=0.0, is_bce=1)
         self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=1.0, ssim_weight=0.0, bce_weight=0.0, is_bce=1)
         self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=1.0, ssim_weight=0.0, bce_weight=0.0, is_bce=1)
 
         iteration = 7
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, l1_weight=5.0, lpip_weight=20.0, ssim_weight=0.0, bce_weight=0.0, is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, l1_weight=0.0, lpip_weight=0.0, ssim_weight=0.0, bce_weight=0.0, is_bce=0)
         self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, l1_weight=1.0, lpip_weight=10.0, ssim_weight=0.0, bce_weight=0.0, is_bce=0)
         self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, l1_weight=1.0, lpip_weight=10.0, ssim_weight=0.0, bce_weight=0.0, is_bce=0)
 
         iteration = 8
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, l1_weight=5.0, lpip_weight=20.0, ssim_weight=0.0, bce_weight=0.0, is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, l1_weight=0.0, lpip_weight=0.0, ssim_weight=0.0, bce_weight=0.0, is_bce=1)
         self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, l1_weight=1.0, lpip_weight=10.0, ssim_weight=0.0, bce_weight=0.0, is_bce=1)
         self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, l1_weight=1.0, lpip_weight=10.0, ssim_weight=0.0, bce_weight=0.0, is_bce=1)
 

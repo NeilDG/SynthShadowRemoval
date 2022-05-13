@@ -33,6 +33,7 @@ parser.add_option('--version_name', type=str, help="version_name")
 parser.add_option('--mode', type=str, default="elevation")
 parser.add_option('--test_mode', type=int, help="Test mode?", default=0)
 parser.add_option('--min_epochs', type=int, help="Min epochs", default=120)
+parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
 
 #--img_to_load=-1 --load_previous=1
 #Update config if on COARE
@@ -41,7 +42,7 @@ def update_config(opts):
     constants.ITERATION = str(opts.iteration)
     constants.RELIGHTING_VERSION = opts.version_name
     constants.RELIGHTING_CHECKPATH = 'checkpoint/' + constants.RELIGHTING_VERSION + "_" + constants.ITERATION + '.pt'
-
+    constants.plot_enabled = opts.plot_enabled
     # COARE
     if (constants.server_config == 1):
         print("Using COARE configuration ", opts.version_name)
@@ -60,6 +61,20 @@ def update_config(opts):
         constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/"
         constants.DATASET_PREFIX_6_PATH = "/home/neil_delgallego/SynthWeather Dataset 6/"
         constants.DATASET_ALBEDO_6_PATH = "/home/neil_delgallego/SynthWeather Dataset 6/albedo/"
+
+    elif (constants.server_config == 4):
+        opts.num_workers = 6
+        constants.DATASET_PLACES_PATH = "D:/Datasets/Places Dataset/*.jpg"
+        constants.DATASET_PREFIX_6_PATH = "D:/Datasets/SynthWeather Dataset 6/"
+        constants.DATASET_ALBEDO_6_PATH = "D:/Datasets/SynthWeather Dataset 6/albedo/"
+
+        print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers, " ", opts.version_name)
+    else:
+        opts.num_workers = 12
+        constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
+        constants.DATASET_PREFIX_6_PATH = "E:/SynthWeather Dataset 7/"
+        constants.DATASET_ALBEDO_6_PATH = "E:/SynthWeather Dataset 7/albedo/"
+        print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers, " ", opts.version_name)
 
 def show_images(img_tensor, caption):
     device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
@@ -96,7 +111,7 @@ def main(argv):
     # Create the dataloader
     train_loader = dataset_loader.load_map_train_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts)
     test_loader = dataset_loader.load_map_test_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts)
-    rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
+    rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
 
     GTA_BASE_PATH = "E:/IID-TestDataset/GTA/"
     RGB_PATH = GTA_BASE_PATH + "/input/"

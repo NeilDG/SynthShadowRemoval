@@ -88,6 +88,8 @@ imgx_dir = "E:/GTAV_Processed/images/*.png"
 imgx_dir_test = "E:/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
 imgy_dir_test = "E:/GTAV_Processed/images/*.png"
 
+plot_enabled = 1
+
 # imgx_dir = "E:/Image Transfer - Patches/trainA/*.png"
 # imgy_dir = "E:/Image Transfer - Patches/trainB/*.png"
 # imgx_dir_test = "E:/Image Transfer - Patches/testA/*.png"
