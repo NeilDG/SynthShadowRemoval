@@ -3,7 +3,7 @@
 import os
 
 def test_relighting():
-    os.system("python \"relighting_test.py\"  --net_config=2 --num_blocks=0 --version_name=\"maps2rgb_rgb2maps_v3.01\" --iteration=8 "
+    os.system("python \"relighting_test.py\"  --net_config=1 --num_blocks=6 --version_name=\"maps2rgb_rgb2maps_v4.02\" --iteration=5 "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 def main():
     # os.system("python \"processing/dataset_creator.py\"")
