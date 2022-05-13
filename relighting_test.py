@@ -46,8 +46,7 @@ def main(argv):
     img_list = glob.glob(opts.input_path + "*.jpg") + glob.glob(opts.input_path + "*.png")
     print("Images found: ", len(img_list))
 
-    it_table = iteration_table.IterationTable()
-    trainer = relighting_trainer.RelightingTrainer(device, opts, it_table.is_bce_enabled(opts.iteration))
+    trainer = relighting_trainer.RelightingTrainer(device, opts)
 
     constants.ITERATION = str(opts.iteration)
     constants.RELIGHTING_VERSION = opts.version_name

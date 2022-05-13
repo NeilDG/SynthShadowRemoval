@@ -61,6 +61,20 @@ def update_config(opts):
         constants.DATASET_PREFIX_6_PATH = "/home/neil_delgallego/SynthWeather Dataset 6/"
         constants.DATASET_ALBEDO_6_PATH = "/home/neil_delgallego/SynthWeather Dataset 6/albedo/"
 
+    elif (constants.server_config == 4):
+        opts.num_workers = 6
+        constants.DATASET_PLACES_PATH = "D:/Datasets/Places Dataset/*.jpg"
+        constants.DATASET_PREFIX_6_PATH = "D:/Datasets/SynthWeather Dataset 6/"
+        constants.DATASET_ALBEDO_6_PATH = "D:/Datasets/SynthWeather Dataset 6/albedo/"
+
+        print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers, " ", opts.version_name)
+    else:
+        opts.num_workers = 12
+        constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
+        constants.DATASET_PREFIX_6_PATH = "E:/SynthWeather Dataset 7/"
+        constants.DATASET_ALBEDO_6_PATH = "E:/SynthWeather Dataset 7/albedo/"
+        print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers, " ", opts.version_name)
+
 def show_images(img_tensor, caption):
     device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
     plt.figure(figsize=(32, 32))
@@ -96,7 +110,7 @@ def main(argv):
     # Create the dataloader
     train_loader = dataset_loader.load_map_train_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts)
     test_loader = dataset_loader.load_map_test_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts)
-    rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
+    rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
 
     GTA_BASE_PATH = "E:/IID-TestDataset/GTA/"
     RGB_PATH = GTA_BASE_PATH + "/input/"

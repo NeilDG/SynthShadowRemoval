@@ -5,6 +5,7 @@ from model import iteration_table
 from model import ffa_gan as ffa
 from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
+from model.modules import image_pool
 import constants
 import torch
 import torch.cuda.amp as amp
@@ -31,8 +32,11 @@ class RelightingTrainer:
         self.lpips_loss = lpips.LPIPS(net='vgg').to(self.gpu_device)
         self.ssim_loss = ssim_loss.SSIM()
         self.l1_loss = nn.L1Loss()
+        self.mse_loss = nn.MSELoss()
         self.bce_loss = nn.BCEWithLogitsLoss()
         self.default_light_color = "255,255,255"
+
+        self.D_A_pool = image_pool.ImagePool(50)
 
         num_blocks = opts.num_blocks
         self.batch_size = opts.batch_size
@@ -63,7 +67,7 @@ class RelightingTrainer:
         else:
             self.G_A = cycle_gan.GeneratorV2(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
-        self.D_A = cycle_gan.Discriminator(input_nc=3, use_bce=self.use_bce).to(self.gpu_device)  # use CycleGAN's discriminator
+        self.D_A = cycle_gan.Discriminator(input_nc=3).to(self.gpu_device)  # use CycleGAN's discriminator
 
     def initialize_shading_network(self, net_config, num_blocks):
         if (net_config == 1):
@@ -77,7 +81,7 @@ class RelightingTrainer:
         else:
             self.G_S = cycle_gan.GeneratorV2(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
-        self.D_S = cycle_gan.Discriminator(input_nc=1, use_bce=self.use_bce).to(self.gpu_device)  # use CycleGAN's discriminator
+        self.D_S = cycle_gan.Discriminator(input_nc=1).to(self.gpu_device)  # use CycleGAN's discriminator
 
     def initialize_shadow_network(self, net_config, num_blocks):
         if (net_config == 1):
@@ -91,7 +95,7 @@ class RelightingTrainer:
         else:
             self.G_Z = cycle_gan.GeneratorV2(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
-        self.D_Z = cycle_gan.Discriminator(input_nc=1, use_bce=self.use_bce).to(self.gpu_device)  # use CycleGAN's discriminator
+        self.D_Z = cycle_gan.Discriminator(input_nc=1).to(self.gpu_device)  # use CycleGAN's discriminator
 
     def initialize_dict(self):
         # what to store in visdom?
@@ -128,12 +132,9 @@ class RelightingTrainer:
 
     def adversarial_loss(self, pred, target):
         if (self.use_bce == 0):
-            return self.l1_loss(pred, target)
+            return self.mse_loss(pred, target)
         else:
             return self.bce_loss(pred, target)
-
-    def l1_loss(self, pred, target):
-        return self.l1_loss(pred, target)
 
     def bce_loss_term(self, pred, target):
         return self.bce_loss(pred, target)
@@ -209,8 +210,8 @@ class RelightingTrainer:
             prediction = self.D_A(albedo_tensor)
             real_tensor = torch.ones_like(prediction)
             fake_tensor = torch.zeros_like(prediction)
-            D_A_real_loss = self.adversarial_loss(self.D_A(albedo_tensor), real_tensor) * self.adv_weight
-            D_A_fake_loss = self.adversarial_loss(self.D_A(rgb2albedo.detach()), fake_tensor) * self.adv_weight
+            D_A_real_loss = self.adversarial_loss(self.D_A_pool.query(self.D_A(albedo_tensor)), real_tensor) * self.adv_weight
+            D_A_fake_loss = self.adversarial_loss(self.D_A_pool.query(self.D_A(rgb2albedo.detach())), fake_tensor) * self.adv_weight
 
             #shading discriminator
             rgb2shading = self.G_S(input_rgb_tensor)
@@ -233,7 +234,7 @@ class RelightingTrainer:
             errD = D_A_real_loss + D_A_fake_loss + D_S_real_loss + D_S_fake_loss + D_Z_real_loss + D_Z_fake_loss
 
             self.fp16_scaler.scale(errD).backward()
-            if (self.fp16_scaler.scale(errD).item() > 0.2):
+            if (self.fp16_scaler.scale(errD).item() > 0.0):
                 self.fp16_scaler.step(self.optimizerD)
                 self.schedulerD.step(errD)
 
