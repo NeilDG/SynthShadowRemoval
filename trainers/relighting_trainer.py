@@ -104,23 +104,23 @@ class RelightingTrainer:
         self.losses_dict[constants.D_OVERALL_LOSS_KEY] = []
         self.losses_dict[constants.LIKENESS_LOSS_KEY] = []
         self.losses_dict[constants.LPIP_LOSS_KEY] = []
-        # self.losses_dict[constants.SSIM_LOSS_KEY] = []
+        self.losses_dict[constants.SSIM_LOSS_KEY] = []
         self.losses_dict[constants.G_ADV_LOSS_KEY] = []
         self.losses_dict[constants.D_A_FAKE_LOSS_KEY] = []
         self.losses_dict[constants.D_A_REAL_LOSS_KEY] = []
         self.RGB_RECONSTRUCTION_LOSS_KEY = "RGB_RECONSTRUCTION_LOSS_KEY"
-        self.losses_dict[self.RGB_RECONSTRUCTION_LOSS_KEY] = []
+        # self.losses_dict[self.RGB_RECONSTRUCTION_LOSS_KEY] = []
 
         self.caption_dict = {}
         self.caption_dict[constants.G_LOSS_KEY] = "G loss per iteration"
         self.caption_dict[constants.D_OVERALL_LOSS_KEY] = "D loss per iteration"
         self.caption_dict[constants.LIKENESS_LOSS_KEY] = "L1 loss per iteration"
         self.caption_dict[constants.LPIP_LOSS_KEY] = "LPIPS loss per iteration"
-        # self.caption_dict[constants.SSIM_LOSS_KEY] = "SSIM loss per iteration"
+        self.caption_dict[constants.SSIM_LOSS_KEY] = "SSIM loss per iteration"
         self.caption_dict[constants.G_ADV_LOSS_KEY] = "G adv loss per iteration"
         self.caption_dict[constants.D_A_FAKE_LOSS_KEY] = "D fake loss per iteration"
         self.caption_dict[constants.D_A_REAL_LOSS_KEY] = "D real loss per iteration"
-        self.caption_dict[self.RGB_RECONSTRUCTION_LOSS_KEY] = "RGB Reconstruction loss per iteration"
+        # self.caption_dict[self.RGB_RECONSTRUCTION_LOSS_KEY] = "RGB Reconstruction loss per iteration"
 
     def normalize(self, light_angle):
         std = light_angle / 360.0
@@ -249,15 +249,15 @@ class RelightingTrainer:
             real_tensor = torch.ones_like(prediction)
             Z_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            rgb_like, rgb2albedo = tensor_utils.produce_rgb(input_rgb_tensor, rgb2shading, self.default_light_color, rgb2shadow)
-            rgb_l1_loss = self.l1_loss(rgb_like, target_rgb_tensor) * self.rgb_l1_weight
-            A_likeness_loss = self.l1_loss(rgb2albedo, albedo_tensor) * self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
-            A_lpip_loss = self.lpip_loss(rgb2albedo, albedo_tensor) * self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
+            # rgb_like, rgb2albedo = tensor_utils.produce_rgb(input_rgb_tensor, rgb2shading, self.default_light_color, rgb2shadow)
+            # rgb_l1_loss = self.l1_loss(rgb_like, target_rgb_tensor) * self.rgb_l1_weight
+            # A_likeness_loss = self.l1_loss(rgb2albedo, albedo_tensor) * self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
+            # A_lpip_loss = self.lpip_loss(rgb2albedo, albedo_tensor) * self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
             # A_ssim_loss = self.ssim_loss(rgb2albedo, albedo_tensor) * self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
             # A_bce_loss = self.bce_loss_term(rgb2albedo, albedo_tensor) * self.it_table.get_bce_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
 
             errG = S_likeness_loss + S_lpip_loss + S_ssim_loss + S_bce_loss + S_adv_loss + \
-                   Z_likeness_loss + Z_lpip_loss + Z_ssim_loss + Z_bce_loss + Z_adv_loss + rgb_l1_loss
+                   Z_likeness_loss + Z_lpip_loss + Z_ssim_loss + Z_bce_loss + Z_adv_loss
 
             self.fp16_scaler.scale(errG).backward()
             self.fp16_scaler.step(self.optimizerG)
@@ -267,13 +267,13 @@ class RelightingTrainer:
             # what to put to losses dict for visdom reporting?
             self.losses_dict[constants.G_LOSS_KEY].append(errG.item())
             self.losses_dict[constants.D_OVERALL_LOSS_KEY].append(errD.item())
-            self.losses_dict[constants.LIKENESS_LOSS_KEY].append(A_likeness_loss.item() + S_likeness_loss.item() + Z_likeness_loss.item())
-            self.losses_dict[constants.LPIP_LOSS_KEY].append(A_lpip_loss.item() + S_lpip_loss.item() + Z_lpip_loss.item())
-            # self.losses_dict[constants.SSIM_LOSS_KEY].append(A_ssim_loss.item() + S_ssim_loss.item() + Z_ssim_loss.item())
+            self.losses_dict[constants.LIKENESS_LOSS_KEY].append(S_likeness_loss.item() + Z_likeness_loss.item())
+            self.losses_dict[constants.LPIP_LOSS_KEY].append(S_lpip_loss.item() + Z_lpip_loss.item())
+            self.losses_dict[constants.SSIM_LOSS_KEY].append(S_ssim_loss.item() + Z_ssim_loss.item())
             self.losses_dict[constants.G_ADV_LOSS_KEY].append(S_adv_loss.item() + Z_adv_loss.item())
             self.losses_dict[constants.D_A_FAKE_LOSS_KEY].append(D_S_fake_loss.item() + D_Z_fake_loss.item())
             self.losses_dict[constants.D_A_REAL_LOSS_KEY].append(D_S_real_loss.item() + D_Z_real_loss.item())
-            self.losses_dict[self.RGB_RECONSTRUCTION_LOSS_KEY].append(rgb_l1_loss.item())
+            # self.losses_dict[self.RGB_RECONSTRUCTION_LOSS_KEY].append(rgb_l1_loss.item())
 
     def test(self, input_rgb_tensor):
         with torch.no_grad():

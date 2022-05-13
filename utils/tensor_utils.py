@@ -294,7 +294,7 @@ def produce_rgb(rgb_tensor, shading_tensor, light_color, shadowmap_tensor):
     shadowmap_tensor = torch.clip(shadowmap_tensor, 0.00001, 1.0)
 
     #derive albedo manually
-    albedo_tensor = torch.full_like(rgb_tensor, 0, requires_grad=False)
+    albedo_tensor = torch.full_like(rgb_tensor, 0)
     albedo_tensor[0] = rgb_tensor[0] / (shadowmap_tensor * shading_tensor)
     albedo_tensor[1] = rgb_tensor[1] / (shadowmap_tensor * shading_tensor)
     albedo_tensor[2] = rgb_tensor[2] / (shadowmap_tensor * shading_tensor)
