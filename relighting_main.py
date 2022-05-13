@@ -33,6 +33,7 @@ parser.add_option('--version_name', type=str, help="version_name")
 parser.add_option('--mode', type=str, default="elevation")
 parser.add_option('--test_mode', type=int, help="Test mode?", default=0)
 parser.add_option('--min_epochs', type=int, help="Min epochs", default=120)
+parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
 
 #--img_to_load=-1 --load_previous=1
 #Update config if on COARE
@@ -41,7 +42,7 @@ def update_config(opts):
     constants.ITERATION = str(opts.iteration)
     constants.RELIGHTING_VERSION = opts.version_name
     constants.RELIGHTING_CHECKPATH = 'checkpoint/' + constants.RELIGHTING_VERSION + "_" + constants.ITERATION + '.pt'
-
+    constants.plot_enabled = opts.plot_enabled
     # COARE
     if (constants.server_config == 1):
         print("Using COARE configuration ", opts.version_name)

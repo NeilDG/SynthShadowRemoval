@@ -38,7 +38,7 @@ class VisdomReporter:
         self.text_windows = {}
     
     def plot_image(self, img_tensor, caption, normalize = True):
-        if(constants.server_config == 2):
+        if(constants.plot_enabled == 0):
             return
 
         img_group = vutils.make_grid(img_tensor[:16], nrow = 8, padding=2, normalize=normalize).cpu()
@@ -48,7 +48,7 @@ class VisdomReporter:
             self.vis.images(img_group, win = self.image_windows[hash(caption)], opts = dict(caption = caption))
 
     def plot_text(self, text):
-        if (constants.server_config == 2):
+        if(constants.plot_enabled == 0):
             return
 
         if(hash(text) not in self.text_windows):
@@ -90,7 +90,7 @@ class VisdomReporter:
             self.vis.matplot(plt, win = self.loss_windows[hash(caption)], opts = dict(caption = caption))
 
     def plot_finegrain_loss(self, loss_key, iteration, losses_dict, caption_dict, label):
-        if (constants.server_config == 2):
+        if(constants.plot_enabled == 0):
             return
         
         loss_keys = list(losses_dict.keys())
@@ -131,26 +131,6 @@ class VisdomReporter:
 
         plt.plot(x1, train_losses, color=colors[0], label=str(train_caption))
         plt.plot(x2, test_losses, color=colors[1], label=str(test_caption))
-        plt.legend(loc='lower right')
-
-        if loss_key not in self.loss_windows:
-            self.loss_windows[loss_key] = self.vis.matplot(plt, opts=dict(caption="Losses" + " " + str(constants)))
-        else:
-            self.vis.matplot(plt, win=self.loss_windows[loss_key], opts=dict(caption="Losses" + " " + str(constants)))
-
-        plt.show()
-
-    def plot_airlight_comparison(self, loss_key, iteration, airlight_loss, airlight_captions):
-        if (constants.server_config == 2):
-            return
-
-        colors = ['r', 'g', 'black', 'darkorange', 'olive', 'palevioletred', 'rosybrown', 'cyan', 'slategray', 'darkmagenta', 'linen', 'chocolate']
-
-        x1 = [i for i in range(iteration, iteration + len(airlight_loss[0]))]
-        x2 = [i for i in range(iteration, iteration + len(airlight_loss[1]))]
-
-        plt.plot(x1, airlight_loss[0], color=colors[0], label=str(airlight_captions[0]))
-        plt.plot(x2, airlight_loss[1], color=colors[1], label=str(airlight_captions[1]))
         plt.legend(loc='lower right')
 
         if loss_key not in self.loss_windows:

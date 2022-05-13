@@ -77,28 +77,28 @@ def train_shadow_relight():
 
 def train_relighting():
     os.system("python \"relighting_main.py\" --server_config=5 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=320 --net_config=1 --num_blocks=6 "
-        "--rgb_l1_weight=0.0 --mode=azimuth --min_epochs=50 --version_name=\"maps2rgb_rgb2maps_v4.04\" --iteration=5")
+        "--plot_enabled=0 --mode=azimuth --min_epochs=50 --version_name=\"maps2rgb_rgb2maps_v4.04\" --iteration=5")
 
-    # os.system("python \"relighting_main.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=1 --patch_size=64 --batch_size=256 --net_config=1 --num_blocks=6 "
-    #     "--mode=azimuth --min_epochs=50 --version_name=\"maps2rgb_rgb2maps_v4.04\" --iteration=6")
-    #
-    # os.system("python \"relighting_main.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=1 --patch_size=64 --batch_size=256 --net_config=1 --num_blocks=6 "
-    #           "--mode=azimuth --min_epochs=50 --version_name=\"maps2rgb_rgb2maps_v4.04\" --iteration=7")
-    #
-    # os.system("python \"relighting_main.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=1 --patch_size=64 --batch_size=256 --net_config=1 --num_blocks=6 "
-    #           "--mode=azimuth --min_epochs=50 --version_name=\"maps2rgb_rgb2maps_v4.04\" --iteration=8")
+    os.system("python \"relighting_main.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=320 --net_config=1 --num_blocks=6 "
+        "--plot_enabled=0 --mode=azimuth --min_epochs=50 --version_name=\"maps2rgb_rgb2maps_v4.04\" --iteration=6")
 
-    # os.system("python \"relighting_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=128 --net_config=2 --num_blocks=0 "
-    #     "--mode=azimuth --min_epochs=50 --version_name=\"maps2rgb_rgb2maps_v3.03\" --iteration=5")
-    #
-    # os.system("python \"relighting_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=128 --net_config=2 --num_blocks=0 "
-    #     "--mode=azimuth --min_epochs=50 --version_name=\"maps2rgb_rgb2maps_v3.03\" --iteration=6")
-    #
-    # os.system("python \"relighting_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=128 --net_config=2 --num_blocks=0 "
-    #     "--mode=azimuth --min_epochs=50 --version_name=\"maps2rgb_rgb2maps_v3.03\" --iteration=7")
-    #
-    # os.system("python \"relighting_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=128 --net_config=2 --num_blocks=0 "
-    #     "--mode=azimuth --min_epochs=50 --version_name=\"maps2rgb_rgb2maps_v3.03\" --iteration=8")
+    os.system("python \"relighting_main.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=320 --net_config=1 --num_blocks=6 "
+        "--plot_enabled=0 --mode=azimuth --min_epochs=50 --version_name=\"maps2rgb_rgb2maps_v4.04\" --iteration=7")
+
+    os.system("python \"relighting_main.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=320 --net_config=1 --num_blocks=6 "
+        "--plot_enabled=0 --mode=azimuth --min_epochs=50 --version_name=\"maps2rgb_rgb2maps_v4.04\" --iteration=8")
+
+    os.system("python \"relighting_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=768 --net_config=2 --num_blocks=0 "
+        "--mode=azimuth --min_epochs=50 --version_name=\"maps2rgb_rgb2maps_v4.05\" --iteration=5")
+
+    os.system("python \"relighting_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=768 --net_config=2 --num_blocks=0 "
+        "--mode=azimuth --min_epochs=50 --version_name=\"maps2rgb_rgb2maps_v3.03\" --iteration=6")
+
+    os.system("python \"relighting_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=768 --net_config=2 --num_blocks=0 "
+        "--mode=azimuth --min_epochs=50 --version_name=\"maps2rgb_rgb2maps_v3.03\" --iteration=7")
+
+    os.system("python \"relighting_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=768 --net_config=2 --num_blocks=0 "
+        "--mode=azimuth --min_epochs=50 --version_name=\"maps2rgb_rgb2maps_v3.03\" --iteration=8")
 
 def train_domain_adaptation():
     os.system("python \"cyclegan_main.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=2 --num_blocks=0 "
@@ -111,7 +111,7 @@ def main():
     # train_shadow_relight()
     train_relighting()
     # train_domain_adaptation()
-    # os.system("shutdown /s /t 1")
+    os.system("shutdown /s /t 1")
 
 
 if __name__ == "__main__":
