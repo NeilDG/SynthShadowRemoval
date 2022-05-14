@@ -35,7 +35,8 @@ class RelightingTrainer:
         self.mse_loss = nn.MSELoss()
         self.bce_loss = nn.BCEWithLogitsLoss()
         self.default_light_color = "255,255,255"
-
+        # self.default_light_color = "236,193,178"
+        # self.default_light_color = "88,100,109"
         self.D_A_pool = image_pool.ImagePool(50)
 
         num_blocks = opts.num_blocks
@@ -366,9 +367,10 @@ class RelightingTrainer:
             self.visdom_reporter.plot_image(gta_rgb, "GTA RGB - " + constants.RELIGHTING_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(rgb_like, "GTA RGB-Like - " + constants.RELIGHTING_VERSION + constants.ITERATION)
 
-    # def infer_albedo(self, rw_tensor):
-    #     with torch.no_grad():
-    #         return self.G_A(rw_tensor)
+    def infer_albedo(self, rw_tensor, shading_tensor, shadow_tensor):
+        with torch.no_grad():
+            rgb_like, rgb2albedo = tensor_utils.produce_rgb(rw_tensor, shading_tensor, self.default_light_color, shadow_tensor)
+            return rgb2albedo
 
     def infer_shading(self, rw_tensor):
         with torch.no_grad():

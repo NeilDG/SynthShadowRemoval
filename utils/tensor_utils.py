@@ -287,6 +287,7 @@ def produce_rgb(rgb_tensor, shading_tensor, light_color, shadowmap_tensor):
     rgb_tensor = (rgb_tensor * 0.5) + 0.5
     shading_tensor = (shading_tensor * 0.5) + 0.5
     shadowmap_tensor = (shadowmap_tensor * 0.5) + 0.5
+
     light_color = light_color / 255.0
 
     #clip values to avoid overflow

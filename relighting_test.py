@@ -212,12 +212,13 @@ def measure_performance():
     ssim_albedo_d = np.round(1.0 - kornia.losses.ssim_loss(albedo_d_tensor, albedo_tensor, 5).item(), 4)
     psnr_albedo_e = np.round(kornia.metrics.psnr(albedo_e_tensor, albedo_tensor, max_val=1.0).item(), 4)
     ssim_albedo_e = np.round(1.0 - kornia.losses.ssim_loss(albedo_e_tensor, albedo_tensor, 5).item(), 4)
-    display_text = "Mean Albedo PSNR, SSIM: <br>" \
-                                 "li_eccv18 PSNR: " + str(psnr_albedo_a) + "<br> SSIM: " + str(ssim_albedo_a) + "<br>" \
-                                 "yu_cvpr19 PSNR: " + str(psnr_albedo_b) + "<br> SSIM: " + str(ssim_albedo_b) + "<br>" \
-                                 "yu_eccv20 PSNR: " + str(psnr_albedo_c) + "<br> SSIM: " + str(ssim_albedo_c) + "<br>" \
-                                 "zhu_iccp21 PSNR: " + str(psnr_albedo_d) + "<br> SSIM: " + str(ssim_albedo_d) + "<br>" + \
-                                 "Ours PSNR: " + str(psnr_albedo_e) + "<br> SSIM: " + str(ssim_albedo_e) + "<br>"
+    display_text = str(constants.RELIGHTING_VERSION) + str(constants.ITERATION) + "<br>" \
+                   "Mean Albedo PSNR, SSIM: <br>" \
+                    "li_eccv18 PSNR: " + str(psnr_albedo_a) + "<br> SSIM: " + str(ssim_albedo_a) + "<br>" \
+                    "yu_cvpr19 PSNR: " + str(psnr_albedo_b) + "<br> SSIM: " + str(ssim_albedo_b) + "<br>" \
+                    "yu_eccv20 PSNR: " + str(psnr_albedo_c) + "<br> SSIM: " + str(ssim_albedo_c) + "<br>" \
+                    "zhu_iccp21 PSNR: " + str(psnr_albedo_d) + "<br> SSIM: " + str(ssim_albedo_d) + "<br>" + \
+                    "Ours PSNR: " + str(psnr_albedo_e) + "<br> SSIM: " + str(ssim_albedo_e) + "<br>"
 
     visdom_reporter.plot_text(display_text)
 
@@ -302,8 +303,9 @@ def main(argv):
         input_tensor = tensor_utils.load_metric_compatible_img(input_path, cv2.COLOR_BGR2RGB, True, True, opts.img_size).to(device)
         input_tensor = normalize_op(input_tensor)
 
-        albedo_tensor = trainer.infer_albedo(input_tensor)
         shading_tensor = trainer.infer_shading(input_tensor)
+        shadow_tensor = trainer.infer_shadow(input_tensor)
+        albedo_tensor = trainer.infer_albedo(input_tensor, shading_tensor, shadow_tensor)
         print(np.shape(albedo_tensor), np.shape(shading_tensor))
 
         albedo_tensor = albedo_tensor * 0.5 + 0.5
