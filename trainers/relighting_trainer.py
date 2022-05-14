@@ -56,14 +56,13 @@ class RelightingTrainer:
         self.schedulerG_shading = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG_shading, patience=100000 / self.batch_size, threshold=0.00005)
         self.schedulerD_shading = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD_shading, patience=100000 / self.batch_size, threshold=0.00005)
 
-        self.optimizerG_albedo = torch.optim.Adam(self.G_A.parameters(), lr=self.g_lr)
-        self.optimizerD_albedo = torch.optim.Adam(self.D_A.parameters(), lr=self.d_lr)
+        self.optimizerG_albedo = torch.optim.Adam(itertools.chain(self.G_A.parameters()), lr=self.g_lr)
+        self.optimizerD_albedo = torch.optim.Adam(itertools.chain(self.D_A.parameters()), lr=self.d_lr)
         self.schedulerG_albedo = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG_albedo, patience=100000 / self.batch_size, threshold=0.00005)
         self.schedulerD_albedo = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD_albedo, patience=100000 / self.batch_size, threshold=0.00005)
         self.initialize_dict()
 
         self.fp16_scaler_s = amp.GradScaler()  # for automatic mixed precision
-        self.fp16_scaler_a = amp.GradScaler()
 
     def initialize_albedo_network(self, net_config, num_blocks):
         if (net_config == 1):
@@ -216,6 +215,9 @@ class RelightingTrainer:
 
     def train_albedo(self, input_rgb_tensor, albedo_tensor, target_rgb_tensor):
         with amp.autocast():
+            self.G_S.eval()
+            self.G_Z.eval()
+
             #produce initial albedo based on shading and shadow components
             rgb2albedo = tensor_utils.produce_albedo(input_rgb_tensor, self.G_S(input_rgb_tensor), self.G_Z(input_rgb_tensor))
             rgb2albedo = self.G_A(rgb2albedo) #refine
@@ -232,11 +234,13 @@ class RelightingTrainer:
 
             errD = D_A_real_loss + D_A_fake_loss
 
-            self.fp16_scaler_a.scale(errD).backward()
+            self.fp16_scaler_s.scale(errD).backward()
 
-            if (self.fp16_scaler_a.scale(errD).item() > 0.0):
+            if (self.fp16_scaler_s.scale(errD).item() > 0.0):
                 self.schedulerD_albedo.step(errD)
-                self.fp16_scaler_a.step(self.optimizerD_albedo)
+                self.fp16_scaler_s.step(self.optimizerD_albedo)
+
+            self.optimizerG_albedo.zero_grad()
 
             # albedo generator
             self.G_A.train()
@@ -255,10 +259,10 @@ class RelightingTrainer:
             rgb_l1_loss = self.l1_loss(rgb_like, target_rgb_tensor) * self.rgb_l1_weight
 
             errG = A_likeness_loss + A_lpip_loss + A_ssim_loss + A_bce_loss + A_adv_loss + rgb_l1_loss
-            self.fp16_scaler_a.scale(errG).backward()
+            self.fp16_scaler_s.scale(errG).backward()
             self.schedulerG_albedo.step(errG)
-            self.fp16_scaler_a.step(self.optimizerG_albedo)
-            self.fp16_scaler_a.update()
+            self.fp16_scaler_s.step(self.optimizerG_albedo)
+            self.fp16_scaler_s.update()
 
             # what to put to losses dict for visdom reporting?
             self.losses_dict_a[constants.G_LOSS_KEY].append(errG.item())
@@ -380,7 +384,7 @@ class RelightingTrainer:
         with torch.no_grad():
             rgb2shading = self.G_S(input_rgb_tensor)
             rgb2shadow = self.G_Z(input_rgb_tensor)
-            rgb2albedo = tensor_utils.produce_albedo(input_rgb_tensor, rgb2shading, self.default_light_color, rgb2shadow)
+            rgb2albedo = tensor_utils.produce_albedo(input_rgb_tensor, rgb2shading, rgb2shadow)
             rgb2albedo = self.G_A(rgb2albedo)
             rgb_like = tensor_utils.produce_rgb(rgb2albedo, rgb2shading, self.default_light_color, rgb2shadow)
 
