@@ -94,9 +94,12 @@ def main(argv):
     print("Server config? %d Has GPU available? %d Count: %d" % (constants.server_config, torch.cuda.is_available(), torch.cuda.device_count()))
     print("Torch CUDA version: %s" % torch.version.cuda)
 
-    manualSeed = random.randint(1, 10000)  # use if you want new results
+    # manualSeed = random.randint(1, 10000)  # use if you want new results
+    manualSeed = 0
     random.seed(manualSeed)
     torch.manual_seed(manualSeed)
+    np.random.seed(0)
+    random.seed(0)
 
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)

@@ -305,7 +305,7 @@ def main(argv):
 
         shading_tensor = trainer.infer_shading(input_tensor)
         shadow_tensor = trainer.infer_shadow(input_tensor)
-        albedo_tensor = trainer.infer_albedo(input_tensor, shading_tensor, shadow_tensor)
+        albedo_tensor = trainer.infer_albedo(input_tensor)
         print(np.shape(albedo_tensor), np.shape(shading_tensor))
 
         albedo_tensor = albedo_tensor * 0.5 + 0.5

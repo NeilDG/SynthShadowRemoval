@@ -418,7 +418,7 @@ class RelightingTrainer:
         with torch.no_grad():
             rgb2shading = self.G_S(rw_tensor)
             rgb2shadow = self.G_Z(rw_tensor)
-            rgb2albedo = tensor_utils.produce_albedo(rw_tensor, rgb2shading, self.default_light_color, rgb2shadow)
+            rgb2albedo = tensor_utils.produce_albedo(rw_tensor, rgb2shading, rgb2shadow)
             rgb2albedo = self.G_A(rgb2albedo)
             rgb_like = tensor_utils.produce_rgb(rgb2albedo, rgb2shading, self.default_light_color, rgb2shadow)
 
@@ -429,7 +429,7 @@ class RelightingTrainer:
         with torch.no_grad():
             rgb2shading = self.G_S(gta_rgb)
             rgb2shadow = self.G_Z(gta_rgb)
-            rgb2albedo = tensor_utils.produce_albedo(gta_rgb, rgb2shading, self.default_light_color, rgb2shadow)
+            rgb2albedo = tensor_utils.produce_albedo(gta_rgb, rgb2shading, rgb2shadow)
             rgb2albedo = self.G_A(rgb2albedo)
             rgb_like = tensor_utils.produce_rgb(rgb2albedo, rgb2shading, self.default_light_color, rgb2shadow)
 
