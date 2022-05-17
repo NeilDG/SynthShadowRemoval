@@ -30,7 +30,7 @@ parser.add_option('--batch_size', type=int, help="batch_size", default="128")
 parser.add_option('--patch_size', type=int, help="patch_size", default="64")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--version_name', type=str, help="version_name")
-parser.add_option('--mode', type=str, default="elevation")
+parser.add_option('--mode', type=str, default="azimuth")
 parser.add_option('--test_mode', type=int, help="Test mode?", default=0)
 parser.add_option('--min_epochs', type=int, help="Min epochs", default=120)
 parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
@@ -98,8 +98,7 @@ def main(argv):
     manualSeed = 0
     random.seed(manualSeed)
     torch.manual_seed(manualSeed)
-    np.random.seed(0)
-    random.seed(0)
+    np.random.seed(manualSeed)
 
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
@@ -125,26 +124,12 @@ def main(argv):
     start_epoch = 0
     iteration = 0
 
-    # Plot some training images
-    # if (constants.server_config == 0):
-    #     _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = next(iter(train_loader))
-    #     show_images(input_rgb_batch, "Training - A Images")
-    #     show_images(albedo_batch, "Training - B Images")
-    #     show_images(shading_batch, "Training - C Images")
-    #     show_images(input_shadow_batch, "Training - D Images")
-    #     show_images(target_shadow_batch, "Training - E Images")
-    #     show_images(target_rgb_batch, "Training - F Images")
-
-        # print(light_angle_batch)
-
 
     trainer = relighting_trainer.RelightingTrainer(device, opts)
     trainer.update_penalties(opts.adv_weight, opts.rgb_l1_weight)
 
     last_metric = 10000.0
     stopper_method_s = early_stopper.EarlyStopper(opts.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, 2000, last_metric)
-    stopper_method_a = early_stopper.EarlyStopper(opts.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, 2000, last_metric)
-
     if (opts.load_previous):
         checkpoint = torch.load(constants.RELIGHTING_CHECKPATH, map_location=device)
         start_epoch = checkpoint['epoch'] + 1
@@ -157,18 +142,6 @@ def main(argv):
 
     if(opts.test_mode == 1):
         print("Plotting test images...")
-        _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = next(iter(train_loader))
-        input_rgb_tensor = input_rgb_batch.to(device)
-        target_rgb_tensor = target_rgb_batch.to(device)
-        albedo_tensor = albedo_batch.to(device)
-        shading_tensor = shading_batch.to(device)
-        input_shadow_tensor = input_shadow_batch.to(device)
-        target_shadow_tensor = target_shadow_batch.to(device)
-        light_angle_tensor = light_angle_batch.to(device)
-
-        trainer.train(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor)
-        # trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor, "Training")
-
         _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = next(iter(test_loader))
         input_rgb_tensor = input_rgb_batch.to(device)
         target_rgb_tensor = target_rgb_batch.to(device)
@@ -191,44 +164,46 @@ def main(argv):
 
 
     else:
-        print("Starting Training Loop. Training Shading + Shadow...")
-        for epoch in range(start_epoch, constants.num_epochs):
-            # For each batch in the dataloader
-            for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader)):
-                _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = train_data
-                input_rgb_tensor = input_rgb_batch.to(device)
-                target_rgb_tensor = target_rgb_batch.to(device)
-                albedo_tensor = albedo_batch.to(device)
-                shading_tensor = shading_batch.to(device)
-                input_shadow_tensor = input_shadow_batch.to(device)
-                target_shadow_tensor = target_shadow_batch.to(device)
-                light_angle_tensor = light_angle_batch.to(device)
-
-                trainer.train_shading(input_rgb_tensor, shading_tensor, input_shadow_tensor)
-                iteration = iteration + 1
-
-                stopper_method_s.test(trainer, epoch, iteration, trainer.infer_shading(input_rgb_tensor), shading_tensor)
-
-                if (i % 300 == 0):
-                    trainer.save_states_checkpt(epoch, iteration, last_metric)
-                    _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = test_data
-                    input_rgb_tensor = input_rgb_batch.to(device)
-                    target_rgb_tensor = target_rgb_batch.to(device)
-                    albedo_tensor = albedo_batch.to(device)
-                    shading_tensor = shading_batch.to(device)
-                    input_shadow_tensor = input_shadow_batch.to(device)
-                    target_shadow_tensor = target_shadow_batch.to(device)
-                    light_angle_tensor = light_angle_batch.to(device)
-                    trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor, "Test")
-                    trainer.visdom_plot(iteration)
-
-                if (stopper_method_s.did_stop_condition_met()):
-                    break
-
-            if (stopper_method_s.did_stop_condition_met()):
-                break
+        # print("Starting Training Loop. Training Shading + Shadow...")
+        # for epoch in range(start_epoch, constants.num_epochs):
+        #     # For each batch in the dataloader
+        #     for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader)):
+        #         _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = train_data
+        #         input_rgb_tensor = input_rgb_batch.to(device)
+        #         target_rgb_tensor = target_rgb_batch.to(device)
+        #         albedo_tensor = albedo_batch.to(device)
+        #         shading_tensor = shading_batch.to(device)
+        #         input_shadow_tensor = input_shadow_batch.to(device)
+        #         target_shadow_tensor = target_shadow_batch.to(device)
+        #         light_angle_tensor = light_angle_batch.to(device)
+        #
+        #         trainer.train_shading(input_rgb_tensor, shading_tensor, input_shadow_tensor)
+        #         iteration = iteration + 1
+        #
+        #         stopper_method_s.test(trainer, epoch, iteration, trainer.infer_shading(input_rgb_tensor), shading_tensor)
+        #
+        #         if (i % 300 == 0):
+        #             trainer.save_states_checkpt(epoch, iteration, last_metric)
+        #             _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = test_data
+        #             input_rgb_tensor = input_rgb_batch.to(device)
+        #             target_rgb_tensor = target_rgb_batch.to(device)
+        #             albedo_tensor = albedo_batch.to(device)
+        #             shading_tensor = shading_batch.to(device)
+        #             input_shadow_tensor = input_shadow_batch.to(device)
+        #             target_shadow_tensor = target_shadow_batch.to(device)
+        #             light_angle_tensor = light_angle_batch.to(device)
+        #             trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor, "Test")
+        #             trainer.visdom_plot(iteration)
+        #
+        #         if (stopper_method_s.did_stop_condition_met()):
+        #             break
+        #
+        #     if (stopper_method_s.did_stop_condition_met()):
+        #         break
 
         print("Starting Training Loop. Training Albedo...")
+        last_metric = 10000.0
+        stopper_method_a = early_stopper.EarlyStopper(opts.min_epochs + start_epoch, early_stopper.EarlyStopperMethod.L1_TYPE, 2000, last_metric)
         for epoch in range(start_epoch, constants.num_epochs):
             # For each batch in the dataloader
             for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader)):

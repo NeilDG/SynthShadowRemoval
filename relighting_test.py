@@ -1,4 +1,5 @@
 import glob
+import random
 import sys
 from optparse import OptionParser
 import torch
@@ -7,6 +8,8 @@ import torch.utils.data
 import torchvision.utils as vutils
 import torchvision.transforms as transforms
 import numpy as np
+
+from loaders import dataset_loader
 from trainers import relighting_trainer
 from utils import tensor_utils
 from utils import plot_utils
@@ -17,13 +20,16 @@ import kornia
 parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
 parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:0")
+parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
 parser.add_option('--iteration', type=int, help="Style version?", default="1")
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--batch_size', type=int, help="batch_size", default="128")
+parser.add_option('--patch_size', type=int, help="patch_size", default="64")
 parser.add_option('--num_blocks', type=int)
 parser.add_option('--net_config', type=int)
 parser.add_option('--version_name', type=str, help="version_name")
+parser.add_option('--mode', type=str, default="azimuth")
 parser.add_option('--input_path', type=str)
 parser.add_option('--output_path', type=str)
 parser.add_option('--img_size', type=int, default=(256, 256))
@@ -282,6 +288,12 @@ def main(argv):
     print("Server config? %d Has GPU available? %d Count: %d" % (constants.server_config, torch.cuda.is_available(), torch.cuda.device_count()))
     print("Torch CUDA version: %s" % torch.version.cuda)
 
+    # manualSeed = random.randint(1, 10000)  # use if you want new results
+    manualSeed = 0
+    random.seed(manualSeed)
+    torch.manual_seed(manualSeed)
+    np.random.seed(manualSeed)
+
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
@@ -296,8 +308,39 @@ def main(argv):
     checkpoint = torch.load(constants.RELIGHTING_CHECKPATH, map_location=device)
     trainer.load_saved_state(checkpoint)
 
-    normalize_op = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
+    constants.DATASET_PREFIX_6_PATH = "E:/SynthWeather Dataset 7/"
+    constants.DATASET_ALBEDO_6_PATH = "E:/SynthWeather Dataset 7/albedo/"
 
+    albedo_dir = constants.DATASET_ALBEDO_6_PATH
+    shading_dir = constants.DATASET_PREFIX_6_PATH + "shading/"
+    rgb_dir = constants.DATASET_PREFIX_6_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "rgb/"
+    shadow_dir = constants.DATASET_PREFIX_6_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "shadow_map/"
+
+    print(rgb_dir, albedo_dir, shading_dir, shadow_dir)
+
+    # Create the dataloader
+    test_loader = dataset_loader.load_map_test_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts)
+    rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
+
+    print("Plotting test images...")
+    _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = next(iter(test_loader))
+    input_rgb_tensor = input_rgb_batch.to(device)
+    target_rgb_tensor = target_rgb_batch.to(device)
+    albedo_tensor = albedo_batch.to(device)
+    shading_tensor = shading_batch.to(device)
+    input_shadow_tensor = input_shadow_batch.to(device)
+    target_shadow_tensor = target_shadow_batch.to(device)
+    light_angle_tensor = light_angle_batch.to(device)
+
+    trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor, "Test")
+    trainer.visdom_measure(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor, "Test")
+
+    _, input_rgb_batch = next(iter(rw_loader))
+    input_rgb_tensor = input_rgb_batch.to(device)
+    trainer.visdom_infer(input_rgb_tensor)
+
+    normalize_op = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     for i, input_path in enumerate(img_list, 0):
         filename = input_path.split("\\")[-1]
         input_tensor = tensor_utils.load_metric_compatible_img(input_path, cv2.COLOR_BGR2RGB, True, True, opts.img_size).to(device)
