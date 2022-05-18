@@ -271,40 +271,45 @@ def measure_ssim(img1, img2):
 
     return structural_similarity(img1, img2, multichannel=True, gaussian_weights=True, sigma=1.5)
 
-def produce_rgb(rgb_tensor, shading_tensor, light_color, shadowmap_tensor):
-    # albedo_tensor = albedo_tensor.transpose(0, 1)
+def produce_albedo(rgb_tensor, shading_tensor, shadowmap_tensor):
     rgb_tensor = rgb_tensor.transpose(0, 1)
     shading_tensor = shading_tensor.transpose(0, 1)
     shadowmap_tensor = shadowmap_tensor.transpose(0, 1)
-    light_color = torch.from_numpy(np.asarray(light_color.split(","), dtype=np.int32))
 
-    # print("Shading Range: ", torch.min(shading_tensor).item(), torch.max(shading_tensor).item(), " Mean: ", torch.mean(shading_tensor).item())
-    # print("ShadowMap Range: ", torch.min(shadowmap_tensor).item(), torch.max(shadowmap_tensor).item(), " Mean: ", torch.mean(shading_tensor).item())
-    # print("Light Range: ", light_color)
-
-    # normalize/remove normalization
-    # albedo_tensor = (albedo_tensor * 0.5) + 0.5
     rgb_tensor = (rgb_tensor * 0.5) + 0.5
     shading_tensor = (shading_tensor * 0.5) + 0.5
     shadowmap_tensor = (shadowmap_tensor * 0.5) + 0.5
-    light_color = light_color / 255.0
 
     #clip values to avoid overflow
     shading_tensor = torch.clip(shading_tensor, 0.00001, 1.0)
     shadowmap_tensor = torch.clip(shadowmap_tensor, 0.00001, 1.0)
 
     #derive albedo manually
-    albedo_tensor = torch.full_like(rgb_tensor, 0)
+    albedo_tensor = torch.full_like(rgb_tensor, 0, requires_grad=False)
     albedo_tensor[0] = rgb_tensor[0] / (shadowmap_tensor * shading_tensor)
     albedo_tensor[1] = rgb_tensor[1] / (shadowmap_tensor * shading_tensor)
     albedo_tensor[2] = rgb_tensor[2] / (shadowmap_tensor * shading_tensor)
     albedo_tensor = torch.clip(albedo_tensor, 0.00001, 1.0)
 
-    # print("Shading Min: ", torch.min(shading_tensor), " Max: ", torch.max(shading_tensor), " Ave: ", torch.mean(shading_tensor))
-    # print("Albedo Min: ", torch.min(albedo_tensor), " Max: ", torch.max(albedo_tensor), " Ave: ", torch.mean(albedo_tensor))
+    albedo_tensor = albedo_tensor.transpose(0, 1)
+    return albedo_tensor
 
-    # shading_tensor = torch.clip(shading_tensor, 1.0, 1.0)
-    # shadowmap_tensor = torch.clip(shadowmap_tensor, 1.0, 1.0) #remove shadow
+def produce_rgb(albedo_tensor, shading_tensor, light_color, shadowmap_tensor):
+    albedo_tensor = albedo_tensor.transpose(0, 1)
+    shading_tensor = shading_tensor.transpose(0, 1)
+    shadowmap_tensor = shadowmap_tensor.transpose(0, 1)
+    light_color = torch.from_numpy(np.asarray(light_color.split(","), dtype=np.int32))
+
+    # normalize/remove normalization
+    albedo_tensor = (albedo_tensor * 0.5) + 0.5
+    shading_tensor = (shading_tensor * 0.5) + 0.5
+    shadowmap_tensor = (shadowmap_tensor * 0.5) + 0.5
+
+    light_color = light_color / 255.0
+
+    # clip values to avoid overflow
+    shading_tensor = torch.clip(shading_tensor, 0.00001, 1.0)
+    shadowmap_tensor = torch.clip(shadowmap_tensor, 0.00001, 1.0)
 
     rgb_img_like = torch.full_like(albedo_tensor, 0)
     rgb_img_like[0] = torch.clip(albedo_tensor[0] * shading_tensor * light_color[0] * shadowmap_tensor, 0.0, 1.0)
@@ -312,8 +317,7 @@ def produce_rgb(rgb_tensor, shading_tensor, light_color, shadowmap_tensor):
     rgb_img_like[2] = torch.clip(albedo_tensor[2] * shading_tensor * light_color[2] * shadowmap_tensor, 0.0, 1.0)
 
     rgb_img_like = rgb_img_like.transpose(0, 1)
-    albedo_tensor = albedo_tensor.transpose(0, 1)
-    return rgb_img_like, albedo_tensor
+    return rgb_img_like
 
 
 def load_metric_compatible_albedo(img_path, cvt_color: int, normalize: bool, convert_to_tensor: bool, size):

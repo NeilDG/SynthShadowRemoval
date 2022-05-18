@@ -77,7 +77,7 @@ D_B_FAKE_LOSS_KEY = "d_fake_b"
 LAST_METRIC_KEY = "last_metric"
 
 # Number of training epochs
-num_epochs = 600
+num_epochs = 500
 
 #Running on local = 0, Running on COARE = 1, Running on CCS server = 2
 server_config = 0

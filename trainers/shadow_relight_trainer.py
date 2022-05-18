@@ -423,7 +423,7 @@ class ShadowRelightTrainerRGB:
             real_tensor = torch.ones_like(prediction)
             A_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            rgb_like = tensor_utils.produce_rgb(albedo_tensor, shading_tensor, self.default_light_color, shadow_like)
+            rgb_like = tensor_utils.produce_albedo(albedo_tensor, shading_tensor, self.default_light_color, shadow_like)
             rgb_l1_loss = self.l1_loss(rgb_like, target_rgb_tensor) * self.l1_weight
 
             errG = A_adv_loss + likeness_loss + lpip_loss + ssim_loss + bce_loss_val + rgb_l1_loss
@@ -458,7 +458,7 @@ class ShadowRelightTrainerRGB:
         with torch.no_grad():
             self.G_A.set_shadow_input(input_shadow_tensor)
             shadow_like = self.G_A(self.prepare_input(input_shadow_tensor, input_rgb_tensor, light_angle_tensor))
-            rgb_like = tensor_utils.produce_rgb(albedo_tensor, shading_tensor, self.default_light_color, shadow_like)
+            rgb_like = tensor_utils.produce_albedo(albedo_tensor, shading_tensor, self.default_light_color, shadow_like)
 
             self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(rgb_like, str(label) + " RGB Reconstruction - " + constants.RELIGHTING_VERSION + constants.ITERATION)

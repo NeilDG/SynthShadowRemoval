@@ -78,7 +78,7 @@ class RenderSegmentTrainer:
 
     def train(self, a_tensor, b_tensor):
         with amp.autocast():
-            self.G_A.train()
+            self.G_A.train_shading()
             self.optimizerG.zero_grad()
 
             a2b = self.G_A(a_tensor)
