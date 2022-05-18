@@ -389,7 +389,7 @@ class RelightingTrainer:
             rgb_like = tensor_utils.produce_rgb(rgb2albedo, rgb2shading, self.default_light_color, rgb2shadow)
 
             # plot metrics
-            rgb2albedo = (rgb2albedo * 0.5) + 0.5
+            # rgb2albedo = (rgb2albedo * 0.5) + 0.5
             albedo_tensor = (albedo_tensor * 0.5) + 0.5
             rgb2shading = (rgb2shading * 0.5) + 0.5
             shading_tensor = (shading_tensor * 0.5) + 0.5
@@ -465,10 +465,21 @@ class RelightingTrainer:
         self.D_S.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "S"])
         self.G_Z.load_state_dict(checkpoint[constants.GENERATOR_KEY + "Z"])
         self.D_Z.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "Z"])
-        self.optimizerG_shading.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY])
-        self.optimizerD_shading.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY])
-        self.schedulerG_shading.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler"])
-        self.schedulerD_shading.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler"])
+
+        self.optimizerG_albedo.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "A"])
+        self.optimizerD_albedo.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "A"])
+        self.schedulerG_albedo.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler" + "A"])
+        self.schedulerD_albedo.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler" + "A"])
+
+        self.optimizerG_shading.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "S"])
+        self.optimizerD_shading.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "S"])
+        self.schedulerG_shading.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler" + "S"])
+        self.schedulerD_shading.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler" + "S"])
+
+        # self.optimizerG_shading.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY])
+        # self.optimizerD_shading.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY])
+        # self.schedulerG_shading.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler"])
+        # self.schedulerD_shading.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler"])
 
     def save_states_checkpt(self, epoch, iteration, last_metric):
         save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: last_metric}
@@ -481,11 +492,15 @@ class RelightingTrainer:
         netGZ_state_dict = self.G_Z.state_dict()
         netDZ_state_dict = self.D_Z.state_dict()
 
-        optimizerG_state_dict = self.optimizerG_shading.state_dict()
-        optimizerD_state_dict = self.optimizerD_shading.state_dict()
+        optimizerGshading_state_dict = self.optimizerG_shading.state_dict()
+        optimizerDshading_state_dict = self.optimizerD_shading.state_dict()
+        optimizerGalbedo_state_dict = self.optimizerG_albedo.state_dict()
+        optimizerDalbedo_state_dict = self.optimizerD_albedo.state_dict()
 
-        schedulerG_state_dict = self.schedulerG_shading.state_dict()
-        schedulerD_state_dict = self.schedulerD_shading.state_dict()
+        schedulerGshading_state_dict = self.schedulerG_shading.state_dict()
+        schedulerDshading_state_dict = self.schedulerD_shading.state_dict()
+        schedulerGalbedo_state_dict = self.schedulerG_albedo.state_dict()
+        schedulerDalbedo_state_dict = self.schedulerD_albedo.state_dict()
 
         save_dict[constants.GENERATOR_KEY + "A"] = netGA_state_dict
         save_dict[constants.DISCRIMINATOR_KEY + "A"] = netDA_state_dict
@@ -494,11 +509,15 @@ class RelightingTrainer:
         save_dict[constants.GENERATOR_KEY + "Z"] = netGZ_state_dict
         save_dict[constants.DISCRIMINATOR_KEY + "Z"] = netDZ_state_dict
 
-        save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY] = optimizerG_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY] = optimizerD_state_dict
+        save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "A"] = optimizerGalbedo_state_dict
+        save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "A"] = optimizerDalbedo_state_dict
+        save_dict[constants.GENERATOR_KEY + "scheduler" + "A"] = schedulerGalbedo_state_dict
+        save_dict[constants.DISCRIMINATOR_KEY + "scheduler" + "A"] = schedulerDalbedo_state_dict
 
-        save_dict[constants.GENERATOR_KEY + "scheduler"] = schedulerG_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "scheduler"] = schedulerD_state_dict
+        save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "S"] = optimizerGshading_state_dict
+        save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "S"] = optimizerDshading_state_dict
+        save_dict[constants.GENERATOR_KEY + "scheduler" + "S"] = schedulerGshading_state_dict
+        save_dict[constants.DISCRIMINATOR_KEY + "scheduler" + "S"] = schedulerDshading_state_dict
 
         torch.save(save_dict, constants.RELIGHTING_CHECKPATH + ".checkpt")
         print("Saved model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
@@ -514,11 +533,15 @@ class RelightingTrainer:
         netGZ_state_dict = self.G_Z.state_dict()
         netDZ_state_dict = self.D_Z.state_dict()
 
-        optimizerG_state_dict = self.optimizerG_shading.state_dict()
-        optimizerD_state_dict = self.optimizerD_shading.state_dict()
+        optimizerGshading_state_dict = self.optimizerG_shading.state_dict()
+        optimizerDshading_state_dict = self.optimizerD_shading.state_dict()
+        optimizerGalbedo_state_dict = self.optimizerG_albedo.state_dict()
+        optimizerDalbedo_state_dict = self.optimizerD_albedo.state_dict()
 
-        schedulerG_state_dict = self.schedulerG_shading.state_dict()
-        schedulerD_state_dict = self.schedulerD_shading.state_dict()
+        schedulerGshading_state_dict = self.schedulerG_shading.state_dict()
+        schedulerDshading_state_dict = self.schedulerD_shading.state_dict()
+        schedulerGalbedo_state_dict = self.schedulerG_albedo.state_dict()
+        schedulerDalbedo_state_dict = self.schedulerD_albedo.state_dict()
 
         save_dict[constants.GENERATOR_KEY + "A"] = netGA_state_dict
         save_dict[constants.DISCRIMINATOR_KEY + "A"] = netDA_state_dict
@@ -527,11 +550,15 @@ class RelightingTrainer:
         save_dict[constants.GENERATOR_KEY + "Z"] = netGZ_state_dict
         save_dict[constants.DISCRIMINATOR_KEY + "Z"] = netDZ_state_dict
 
-        save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY] = optimizerG_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY] = optimizerD_state_dict
+        save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "A"] = optimizerGalbedo_state_dict
+        save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "A"] = optimizerDalbedo_state_dict
+        save_dict[constants.GENERATOR_KEY + "scheduler" + "A"] = schedulerGalbedo_state_dict
+        save_dict[constants.DISCRIMINATOR_KEY + "scheduler" + "A"] = schedulerDalbedo_state_dict
 
-        save_dict[constants.GENERATOR_KEY + "scheduler"] = schedulerG_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "scheduler"] = schedulerD_state_dict
+        save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "S"] = optimizerGshading_state_dict
+        save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "S"] = optimizerDshading_state_dict
+        save_dict[constants.GENERATOR_KEY + "scheduler" + "S"] = schedulerGshading_state_dict
+        save_dict[constants.DISCRIMINATOR_KEY + "scheduler" + "S"] = schedulerDshading_state_dict
 
         torch.save(save_dict, constants.RELIGHTING_CHECKPATH)
         print("Saved model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))

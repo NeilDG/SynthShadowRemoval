@@ -22,6 +22,8 @@ parser.add_option('--server_config', type=int, help="Is running on COARE?", defa
 parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:0")
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
 parser.add_option('--iteration', type=int, help="Style version?", default="1")
+parser.add_option('--adv_weight', type=float, help="Weight", default="1.0")
+parser.add_option('--rgb_l1_weight', type=float, help="Weight", default="1.0")
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--batch_size', type=int, help="batch_size", default="128")
@@ -301,6 +303,7 @@ def main(argv):
     print("Images found: ", len(img_list))
 
     trainer = relighting_trainer.RelightingTrainer(device, opts)
+    trainer.update_penalties(opts.adv_weight, opts.rgb_l1_weight)
 
     constants.ITERATION = str(opts.iteration)
     constants.RELIGHTING_VERSION = opts.version_name
@@ -333,6 +336,8 @@ def main(argv):
     target_shadow_tensor = target_shadow_batch.to(device)
     light_angle_tensor = light_angle_batch.to(device)
 
+    # trainer.train(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor)
+    # trainer.train_albedo(input_rgb_tensor, albedo_tensor, input_rgb_tensor)
     trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor, "Test")
     trainer.visdom_measure(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor, "Test")
 
