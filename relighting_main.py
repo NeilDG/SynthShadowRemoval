@@ -47,8 +47,8 @@ def update_config(opts):
     if (constants.server_config == 1):
         print("Using COARE configuration ", opts.version_name)
         constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/"
-        constants.DATASET_PREFIX_6_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 6/"
-        constants.DATASET_ALBEDO_6_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 6/albedo/"
+        constants.DATASET_PREFIX_6_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 7/"
+        constants.DATASET_ALBEDO_6_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 7/albedo/"
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
@@ -164,7 +164,7 @@ def main(argv):
     else:
         print("Starting Training Loop. Training Shading + Shadow...")
         last_metric = 10000.0
-        stopper_method_s = early_stopper.EarlyStopper(opts.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, 0, last_metric)
+        stopper_method_s = early_stopper.EarlyStopper(opts.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, 1000, last_metric)
         for epoch in range(start_epoch, constants.num_epochs):
             # For each batch in the dataloader
             for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader)):
@@ -203,7 +203,7 @@ def main(argv):
 
         print("Starting Training Loop. Training Albedo...")
         last_metric = 10000.0
-        stopper_method_a = early_stopper.EarlyStopper(opts.min_epochs + start_epoch, early_stopper.EarlyStopperMethod.L1_TYPE, 0, last_metric)
+        stopper_method_a = early_stopper.EarlyStopper(opts.min_epochs + start_epoch, early_stopper.EarlyStopperMethod.L1_TYPE, 1000, last_metric)
         for epoch in range(start_epoch, constants.num_epochs):
             # For each batch in the dataloader
             for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader)):
@@ -216,7 +216,7 @@ def main(argv):
                 target_shadow_tensor = target_shadow_batch.to(device)
                 light_angle_tensor = light_angle_batch.to(device)
 
-                trainer.train_albedo(input_rgb_tensor, albedo_tensor, input_rgb_tensor)
+                trainer.train_albedo(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor)
                 iteration = iteration + 1
 
                 stopper_method_a.test(trainer, epoch, iteration, trainer.infer_albedo(input_rgb_tensor), albedo_tensor)
