@@ -76,7 +76,9 @@ D_B_FAKE_LOSS_KEY = "d_fake_b"
 
 LAST_METRIC_KEY = "last_metric"
 
-# Number of training epochs
+plot_enabled = 1
+early_stop_threshold = 1000
+min_epochs = 50
 num_epochs = 500
 
 #Running on local = 0, Running on COARE = 1, Running on CCS server = 2
@@ -87,8 +89,6 @@ imgy_dir = "E:/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
 imgx_dir = "E:/GTAV_Processed/images/*.png"
 imgx_dir_test = "E:/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
 imgy_dir_test = "E:/GTAV_Processed/images/*.png"
-
-plot_enabled = 1
 
 # imgx_dir = "E:/Image Transfer - Patches/trainA/*.png"
 # imgy_dir = "E:/Image Transfer - Patches/trainB/*.png"
