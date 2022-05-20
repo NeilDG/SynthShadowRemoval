@@ -62,8 +62,7 @@ def update_config(opts):
         constants.num_workers = 6
         constants.DATASET_PLACES_PATH = "Places Dataset/*.jpg"
         constants.DATASET_PREFIX_6_PATH = "SynthWeather Dataset 7/"
-        constants.DATASET_ALBEDO_6_PATH = "E:/SynthWeather Dataset 7/albedo/"
-        constants.DATASET_PLACES_PATH = "Places Dataset/"
+        constants.DATASET_ALBEDO_6_PATH = "SynthWeather Dataset 7/albedo/"
 
     # GCLOUD
     elif (constants.server_config == 3):
