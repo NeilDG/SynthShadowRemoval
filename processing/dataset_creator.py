@@ -581,8 +581,8 @@ def main(argv):
     # create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/Elevation/default_144deg_001.mp4",
     #                        "E:/SynthWeather Dataset 4/elevation/144deg/rgb/", "synth_%d.png", (256, 256), 0)
 
-    # create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/default_noshadows_003.mp4",
-    #                        "E:/SynthWeather Dataset 5 - RAW/no_shadows/", "synth_%d.png", (256, 256), 0)
+    create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/albedo_withshadows_001.mp4",
+                           "E:/SynthWeather Dataset 5 - RAW/albedo/", "synth_%d.png", (256, 256), 0)
     # create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/Azimuth/default_0deg_002.mp4",
     #                        "E:/SynthWeather Dataset 5 - RAW/azimuth/0deg/rgb/", "synth_%d.png", (256, 256), 0)
     # create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/Azimuth/default_36deg_002.mp4",

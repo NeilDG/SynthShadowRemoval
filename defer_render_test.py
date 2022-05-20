@@ -307,6 +307,109 @@ def compute_and_produce_rgb_v2(type_prefix, degree_prefix, argv):
             cv2.imwrite("E:/SynthWeather Dataset 7/" + type_prefix + "/" + degree_prefix + "/shadow_map/" + file_name, cv2.convertScaleAbs(shadow_map, alpha=255.0))
             # cv2.imwrite("E:/SynthWeather Dataset 7/albedo/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(albedo_img, alpha=255.0), cv2.COLOR_BGR2RGB))
 
+def compute_and_produce_rgb_v3(type_prefix, degree_prefix, argv):
+    (opts, args) = parser.parse_args(argv)
+    print(opts)
+
+    RGB_PATH = "E:/SynthWeather Dataset 6/" + type_prefix + "/" + degree_prefix + "/rgb - styled/"
+    print("RGB path: ", RGB_PATH)
+    RGB_NOSHADOWS_PATH = "E:/SynthWeather Dataset 6/no_shadows_styled/"
+    SHADING_PATH = "E:/SynthWeather Dataset 6/shading/"
+    ALBEDO_PATH = "E:/SynthWeather Dataset 6/albedo - old/"
+
+    rgb_list = dataset_loader.assemble_unpaired_data(RGB_PATH, -1)
+    noshadows_list = dataset_loader.assemble_unpaired_data(RGB_NOSHADOWS_PATH, -1)
+    albedo_list = dataset_loader.assemble_unpaired_data(ALBEDO_PATH, -1)
+    shading_list = dataset_loader.assemble_unpaired_data(SHADING_PATH, -1)
+
+    shadows_diff_mean = 0.0
+    for i, (rgb_path, noshadows_path, albedo_path, shading_path) \
+            in enumerate(zip(rgb_list, noshadows_list, albedo_list, shading_list)):
+        path_segment = rgb_path.split("/")
+        file_name = path_segment[len(path_segment) - 1]
+
+        rgb_img = cv2.imread(rgb_path)
+        noshadows_img = cv2.imread(noshadows_path)
+        albedo_img = cv2.imread(albedo_path)
+
+        rgb_img = cv2.cvtColor(rgb_img, cv2.COLOR_BGR2LAB)
+        noshadows_img = cv2.cvtColor(noshadows_img, cv2.COLOR_BGR2LAB)
+        albedo_img = cv2.cvtColor(albedo_img, cv2.COLOR_BGR2LAB)
+
+        light_color = np.asarray([255, 255, 255]) / 255.0  # values are extracted from Unity Engine
+
+        # extract shadows
+        shadow_map = np.full_like(rgb_img[:, :, 0], 0.0)
+        shadow_map= rgb_img[:, :, 0] / noshadows_img[:, :, 0]
+
+        # compress shadow map since varying information across all channels are very minute
+        # shadow_map = cv2.cvtColor(shadow_map, cv2.COLOR_BGR2GRAY)
+        shadow_map = shadow_map * opts.shadow_multiplier
+
+        # shading_component = np.full_like(albedo_img, 0.0)
+        # shading_component[:, :, 0] = noshadows_img[:, :, 0] / (albedo_img[:, :, 0] * light_color[0])
+        # shading_component[:, :, 1] = noshadows_img[:, :, 1] / (albedo_img[:, :, 1] * light_color[1])
+        # shading_component[:, :, 2] = noshadows_img[:, :, 2] / (albedo_img[:, :, 2] * light_color[2])
+        # shading_component = shading_component * opts.shading_multiplier
+        # shading_component = np.clip(shading_component, 0.00001, 1.0)
+        shading_component = cv2.imread(shading_path)
+        shading_component = cv2.cvtColor(shading_component, cv2.COLOR_RGB2GRAY)
+        shading_component = cv2.normalize(shading_component, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+        shading_component = np.clip(shading_component, 0.00001, 1.0)
+
+        plt.imshow(rgb_img)
+        plt.show()
+        plt.imshow(noshadows_img)
+        plt.show()
+
+        # refine albedo
+        albedo_img[:, :, 0] = noshadows_img[:, :, 0] / shading_component
+        # albedo_img[:, :, 1] = noshadows_img[:, :, 1] / shading_component
+        # albedo_img[:, :, 2] = noshadows_img[:, :, 2] / shading_component
+        # albedo_img[:, :, 0] = np.clip(albedo_img[:, :, 0], -100.0, 100.0)
+        albedo_img = cv2.cvtColor(albedo_img, cv2.COLOR_LAB2RGB)
+
+        plt.imshow(albedo_img)
+        plt.show()
+
+        # light_color = np.asarray([np.random.randn(), np.random.randn(), np.random.randn()])
+        rgb_img_like = np.full_like(albedo_img, 0.0)
+        rgb_img_like[:, :, 0] = np.clip((albedo_img[:, :, 0] * shading_component * light_color[0]) * shadow_map, 0.0, 1.0)
+        rgb_img_like[:, :, 1] = np.clip((albedo_img[:, :, 1] * shading_component * light_color[1]) * shadow_map, 0.0, 1.0)
+        rgb_img_like[:, :, 2] = np.clip((albedo_img[:, :, 2] * shading_component * light_color[2]) * shadow_map, 0.0, 1.0)
+
+        diff = rgb_img - rgb_img_like
+        print("Difference: ", np.mean(diff))
+
+        # plt.imshow(rgb_img)
+        # plt.show()
+        #
+        # plt.imshow(albedo_img)
+        # plt.show()
+        #
+        # plt.imshow(shading_component, cmap='gray')
+        # plt.show()
+        #
+        # plt.imshow(shadow_map, cmap='gray')
+        # plt.show()
+        #
+        # plt.imshow(rgb_img_like)
+        # plt.show()
+        break
+        try:
+            # os.mkdir("E:/SynthWeather Dataset 7/shading/")
+            # os.mkdir("E:/SynthWeather Dataset 7/albedo/")
+            # os.mkdir("E:/SynthWeather Dataset 7/" + type_prefix)
+            os.mkdir("E:/SynthWeather Dataset 7/" + type_prefix + "/" + degree_prefix)
+            os.mkdir("E:/SynthWeather Dataset 7/" + type_prefix + "/" + degree_prefix + "/rgb/")
+            os.mkdir("E:/SynthWeather Dataset 7/" + type_prefix + "/" + degree_prefix + "/shadow_map/")
+        except OSError as error:
+            print("Save path already exists. Skipping.", error)
+        finally:
+            cv2.imwrite("E:/SynthWeather Dataset 7/" + type_prefix + "/" + degree_prefix + "/rgb/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(rgb_img_like, alpha=255.0), cv2.COLOR_BGR2RGB))
+            # cv2.imwrite("E:/SynthWeather Dataset 7/shading/" + file_name, cv2.convertScaleAbs(shading_component, alpha=255.0))
+            cv2.imwrite("E:/SynthWeather Dataset 7/" + type_prefix + "/" + degree_prefix + "/shadow_map/" + file_name, cv2.convertScaleAbs(shadow_map, alpha=255.0))
+            # cv2.imwrite("E:/SynthWeather Dataset 7/albedo/" + file_name, cv2.cvtColor(cv2.convertScaleAbs(albedo_img, alpha=255.0), cv2.COLOR_BGR2RGB))
 def measure_shading_diff(path_a, path_b):
     a_list = dataset_loader.assemble_unpaired_data(path_a, -1)
     b_list = dataset_loader.assemble_unpaired_data(path_b, -1)
@@ -389,7 +492,7 @@ def main(argv):
     (opts, args) = parser.parse_args(argv)
     print(opts)
     # convert_gta_albedo()
-    compute_and_produce_rgb_v2("azimuth", "0deg", sys.argv)
+    compute_and_produce_rgb_v3("azimuth", "0deg", sys.argv)
     # compute_and_produce_rgb_v2("azimuth", "36deg", sys.argv)
     # compute_and_produce_rgb_v2("azimuth", "72deg", sys.argv)
     # compute_and_produce_rgb_v2("azimuth", "108deg", sys.argv)
