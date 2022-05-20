@@ -70,7 +70,7 @@ class RelightingTrainer:
         elif (net_config == 2):
             self.G_A = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
-            self.G_A = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
+            self.G_A = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
         elif (net_config == 4):
             self.G_A = unet_gan.UnetGeneratorV2(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         else:
@@ -84,7 +84,7 @@ class RelightingTrainer:
         elif (net_config == 2):
             self.G_S = unet_gan.UnetGenerator(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
-            self.G_S = cycle_gan.Generator(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
+            self.G_S = cycle_gan.Generator(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
         elif (net_config == 4):
             self.G_S = unet_gan.UnetGeneratorV2(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         else:
@@ -98,7 +98,7 @@ class RelightingTrainer:
         elif (net_config == 2):
             self.G_Z = unet_gan.UnetGenerator(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
-            self.G_Z = cycle_gan.Generator(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
+            self.G_Z = cycle_gan.Generator(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
         elif (net_config == 4):
             self.G_Z = unet_gan.UnetGeneratorV2(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         else:
