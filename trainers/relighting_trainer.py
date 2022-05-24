@@ -32,7 +32,7 @@ class RelightingTrainer:
         self.use_bce = self.it_table.is_bce_enabled(self.iteration, IterationTable.NetworkType.ALBEDO)
 
         self.lpips_loss = lpips.LPIPS(net='vgg').to(self.gpu_device)
-        self.ssim_loss = ssim_loss.SSIM()
+        self.ssim_loss = kornia.losses.SSIMLoss(5)
         self.l1_loss = nn.L1Loss()
         self.mse_loss = nn.MSELoss()
         self.bce_loss = nn.BCEWithLogitsLoss()
@@ -72,7 +72,7 @@ class RelightingTrainer:
         elif (net_config == 2):
             self.G_A = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
-            self.G_A = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
+            self.G_A = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
         elif (net_config == 4):
             self.G_A = unet_gan.UnetGeneratorV2(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         else:
@@ -86,7 +86,7 @@ class RelightingTrainer:
         elif (net_config == 2):
             self.G_S = unet_gan.UnetGenerator(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
-            self.G_S = cycle_gan.Generator(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
+            self.G_S = cycle_gan.Generator(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
         elif (net_config == 4):
             self.G_S = unet_gan.UnetGeneratorV2(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         else:
@@ -100,7 +100,7 @@ class RelightingTrainer:
         elif (net_config == 2):
             self.G_Z = unet_gan.UnetGenerator(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
-            self.G_Z = cycle_gan.Generator(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
+            self.G_Z = cycle_gan.Generator(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
         elif (net_config == 4):
             self.G_Z = unet_gan.UnetGeneratorV2(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         else:
@@ -116,6 +116,8 @@ class RelightingTrainer:
         self.losses_dict_s[constants.LIKENESS_LOSS_KEY] = []
         self.losses_dict_s[constants.LPIP_LOSS_KEY] = []
         self.losses_dict_s[constants.SSIM_LOSS_KEY] = []
+        self.GRADIENT_LOSS_KEY = "GRADIENT_LOSS_KEY"
+        self.losses_dict_s[self.GRADIENT_LOSS_KEY ] = []
         self.losses_dict_s[constants.G_ADV_LOSS_KEY] = []
         self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY] = []
         self.losses_dict_s[constants.D_A_REAL_LOSS_KEY] = []
@@ -128,6 +130,7 @@ class RelightingTrainer:
         self.caption_dict_s[constants.LIKENESS_LOSS_KEY] = "L1 loss per iteration"
         self.caption_dict_s[constants.LPIP_LOSS_KEY] = "LPIPS loss per iteration"
         self.caption_dict_s[constants.SSIM_LOSS_KEY] = "SSIM loss per iteration"
+        self.caption_dict_s[self.GRADIENT_LOSS_KEY] = "Gradient loss per iteration"
         self.caption_dict_s[constants.G_ADV_LOSS_KEY] = "G adv loss per iteration"
         self.caption_dict_s[constants.D_A_FAKE_LOSS_KEY] = "D fake loss per iteration"
         self.caption_dict_s[constants.D_A_REAL_LOSS_KEY] = "D real loss per iteration"
@@ -140,6 +143,7 @@ class RelightingTrainer:
         self.losses_dict_a[constants.LIKENESS_LOSS_KEY] = []
         self.losses_dict_a[constants.LPIP_LOSS_KEY] = []
         self.losses_dict_a[constants.SSIM_LOSS_KEY] = []
+        self.losses_dict_a[self.GRADIENT_LOSS_KEY] = []
         self.losses_dict_a[constants.G_ADV_LOSS_KEY] = []
         self.losses_dict_a[constants.D_A_FAKE_LOSS_KEY] = []
         self.losses_dict_a[constants.D_A_REAL_LOSS_KEY] = []
@@ -152,6 +156,7 @@ class RelightingTrainer:
         self.caption_dict_a[constants.LIKENESS_LOSS_KEY] = "L1 loss per iteration"
         self.caption_dict_a[constants.LPIP_LOSS_KEY] = "LPIPS loss per iteration"
         self.caption_dict_a[constants.SSIM_LOSS_KEY] = "SSIM loss per iteration"
+        self.caption_dict_a[self.GRADIENT_LOSS_KEY] = "Gradient loss per iteration"
         self.caption_dict_a[constants.G_ADV_LOSS_KEY] = "G adv loss per iteration"
         self.caption_dict_a[constants.D_A_FAKE_LOSS_KEY] = "D fake loss per iteration"
         self.caption_dict_a[constants.D_A_REAL_LOSS_KEY] = "D real loss per iteration"
@@ -171,8 +176,11 @@ class RelightingTrainer:
         else:
             return self.bce_loss(pred, target)
 
-    def bce_loss_term(self, pred, target):
-        return self.bce_loss(pred, target)
+    def gradient_loss_term(self, pred, target):
+        pred_gradient = kornia.filters.spatial_gradient(pred)
+        target_gradient = kornia.filters.spatial_gradient(target)
+
+        return self.mse_loss(pred_gradient, target_gradient)
 
     def lpip_loss(self, pred, target):
         result = torch.squeeze(self.lpips_loss(pred, target))
@@ -180,7 +188,10 @@ class RelightingTrainer:
         return result
 
     def ssim_loss(self, pred, target):
-        return kornia.losses.ssim_loss(pred, target)
+        pred_normalized = (pred * 0.5) + 0.5
+        target_normalized = (target * 0.5) + 0.5
+
+        return self.ssim_loss(pred_normalized, target_normalized)
 
     def update_penalties(self, adv_weight, rgb_l1_weight):
         # what penalties to use for losses?
@@ -197,19 +208,19 @@ class RelightingTrainer:
         print("Likeness weight: ", str(self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.ALBEDO)))
         print("LPIP weight: ", str(self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.ALBEDO)))
         print("SSIM weight: ", str(self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.ALBEDO)))
-        print("BCE weight: ", str(self.it_table.get_bce_weight(self.iteration, IterationTable.NetworkType.ALBEDO)))
+        print("Gradient weight: ", str(self.it_table.get_gradient_weight(self.iteration, IterationTable.NetworkType.ALBEDO)))
 
         print("======SHADING======")
         print("Likeness weight: ", str(self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.SHADING)))
         print("LPIP weight: ", str(self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.SHADING)))
         print("SSIM weight: ", str(self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.SHADING)))
-        print("BCE weight: ", str(self.it_table.get_bce_weight(self.iteration, IterationTable.NetworkType.ALBEDO)))
+        print("Gradient weight: ", str(self.it_table.get_gradient_weight(self.iteration, IterationTable.NetworkType.ALBEDO)))
 
         print("======SHADOW======")
         print("Likeness weight: ", str(self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.SHADOW)))
         print("LPIP weight: ", str(self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.SHADOW)))
         print("SSIM weight: ", str(self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.SHADOW)))
-        print("BCE weight: ", str(self.it_table.get_bce_weight(self.iteration, IterationTable.NetworkType.ALBEDO)))
+        print("Gradient weight: ", str(self.it_table.get_gradient_weight(self.iteration, IterationTable.NetworkType.ALBEDO)))
 
     def train(self, input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor, target_rgb_tensor):
         self.train_shading(input_rgb_tensor, shading_tensor, shadow_tensor)
@@ -271,7 +282,7 @@ class RelightingTrainer:
             A_likeness_loss = self.l1_loss(rgb2albedo, albedo_tensor) * self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
             A_lpip_loss = self.lpip_loss(rgb2albedo, albedo_tensor) * self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
             A_ssim_loss = self.ssim_loss(rgb2albedo, albedo_tensor) * self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
-            A_bce_loss = self.bce_loss_term(rgb2albedo, albedo_tensor) * self.it_table.get_bce_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
+            A_gradient_loss = self.gradient_loss_term(rgb2albedo, albedo_tensor) * self.it_table.get_gradient_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
             prediction = self.D_A(rgb2albedo)
             real_tensor = torch.ones_like(prediction)
             A_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
@@ -279,7 +290,7 @@ class RelightingTrainer:
             rgb_like = tensor_utils.produce_rgb(rgb2albedo, self.G_S(input_rgb_tensor), self.default_light_color, self.G_Z(input_rgb_tensor))
             rgb_l1_loss = self.l1_loss(rgb_like, target_rgb_tensor) * self.rgb_l1_weight
 
-            errG = A_likeness_loss + A_lpip_loss + A_ssim_loss + A_bce_loss + A_adv_loss + rgb_l1_loss
+            errG = A_likeness_loss + A_lpip_loss + A_ssim_loss + A_gradient_loss + A_adv_loss + rgb_l1_loss
             self.fp16_scaler_s.scale(errG).backward()
             self.schedulerG_albedo.step(errG)
             self.fp16_scaler_s.step(self.optimizerG_albedo)
@@ -291,6 +302,7 @@ class RelightingTrainer:
             self.losses_dict_a[constants.LIKENESS_LOSS_KEY].append(A_likeness_loss.item())
             self.losses_dict_a[constants.LPIP_LOSS_KEY].append(A_lpip_loss.item())
             self.losses_dict_a[constants.SSIM_LOSS_KEY].append(A_ssim_loss.item())
+            self.losses_dict_a[self.GRADIENT_LOSS_KEY].append(A_gradient_loss.item())
             self.losses_dict_a[constants.G_ADV_LOSS_KEY].append(A_adv_loss.item())
             self.losses_dict_a[constants.D_A_FAKE_LOSS_KEY].append(D_A_fake_loss.item())
             self.losses_dict_a[constants.D_A_REAL_LOSS_KEY].append(D_A_real_loss.item())
@@ -333,7 +345,7 @@ class RelightingTrainer:
             S_likeness_loss = self.l1_loss(rgb2shading, shading_tensor) * self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.SHADING)
             S_lpip_loss = self.lpip_loss(rgb2shading, shading_tensor) * self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.SHADING)
             S_ssim_loss = self.ssim_loss(rgb2shading, shading_tensor) * self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.SHADING)
-            S_bce_loss = self.bce_loss_term(rgb2shading, shading_tensor) * self.it_table.get_bce_weight(self.iteration, IterationTable.NetworkType.SHADING)
+            S_gradient_loss = self.gradient_loss_term(rgb2shading, shading_tensor) * self.it_table.get_gradient_weight(self.iteration, IterationTable.NetworkType.SHADING)
             prediction = self.D_S(rgb2shading)
             real_tensor = torch.ones_like(prediction)
             S_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
@@ -344,13 +356,13 @@ class RelightingTrainer:
             Z_likeness_loss = self.l1_loss(rgb2shadow, shadow_tensor) * self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.SHADOW)
             Z_lpip_loss = self.lpip_loss(rgb2shadow, shadow_tensor) * self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.SHADOW)
             Z_ssim_loss = self.ssim_loss(rgb2shadow, shadow_tensor) * self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.SHADOW)
-            Z_bce_loss = self.bce_loss_term(rgb2shadow, shadow_tensor) * self.it_table.get_bce_weight(self.iteration, IterationTable.NetworkType.SHADOW)
+            Z_gradient_loss = self.gradient_loss_term(rgb2shadow, shadow_tensor) * self.it_table.get_gradient_weight(self.iteration, IterationTable.NetworkType.SHADOW)
             prediction = self.D_Z(rgb2shadow)
             real_tensor = torch.ones_like(prediction)
             Z_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            errG = S_likeness_loss + S_lpip_loss + S_ssim_loss + S_bce_loss + S_adv_loss + \
-                   Z_likeness_loss + Z_lpip_loss + Z_ssim_loss + Z_bce_loss + Z_adv_loss
+            errG = S_likeness_loss + S_lpip_loss + S_ssim_loss + S_gradient_loss + S_adv_loss + \
+                   Z_likeness_loss + Z_lpip_loss + Z_ssim_loss + Z_gradient_loss + Z_adv_loss
 
             self.fp16_scaler_s.scale(errG).backward()
             self.fp16_scaler_s.step(self.optimizerG_shading)
@@ -363,6 +375,7 @@ class RelightingTrainer:
             self.losses_dict_s[constants.LIKENESS_LOSS_KEY].append(S_likeness_loss.item() + Z_likeness_loss.item())
             self.losses_dict_s[constants.LPIP_LOSS_KEY].append(S_lpip_loss.item() + Z_lpip_loss.item())
             self.losses_dict_s[constants.SSIM_LOSS_KEY].append(S_ssim_loss.item() + Z_ssim_loss.item())
+            self.losses_dict_s[self.GRADIENT_LOSS_KEY].append(S_gradient_loss.item() + Z_gradient_loss.item())
             self.losses_dict_s[constants.G_ADV_LOSS_KEY].append(S_adv_loss.item() + Z_adv_loss.item())
             self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY].append(D_S_fake_loss.item() + D_Z_fake_loss.item())
             self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_S_real_loss.item() + D_Z_real_loss.item())

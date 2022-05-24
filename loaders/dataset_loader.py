@@ -75,7 +75,7 @@ def load_map_test_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts):
         image_dataset.ImageRelightDataset(img_length, rgb_dir, albedo_dir, shading_dir, shadow_dir, 2, opts),
         batch_size=2,
         num_workers=1,
-        shuffle=False
+        shuffle=True
     )
 
     return data_loader

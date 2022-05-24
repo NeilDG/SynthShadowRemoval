@@ -34,6 +34,7 @@ parser.add_option('--mode', type=str, default="azimuth")
 parser.add_option('--test_mode', type=int, help="Test mode?", default=0)
 parser.add_option('--min_epochs', type=int, help="Min epochs", default=120)
 parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
+parser.add_option('--debug_mode', type=int, default=0)
 
 #--img_to_load=-1 --load_previous=1
 #Update config if on COARE
@@ -43,6 +44,11 @@ def update_config(opts):
     constants.RELIGHTING_VERSION = opts.version_name
     constants.RELIGHTING_CHECKPATH = 'checkpoint/' + constants.RELIGHTING_VERSION + "_" + constants.ITERATION + '.pt'
     constants.plot_enabled = opts.plot_enabled
+
+    if(opts.debug_mode == 1):
+        constants.early_stop_threshold = 0
+        constants.min_epochs = 1
+
     # COARE
     if (constants.server_config == 1):
         print("Using COARE configuration ", opts.version_name)
@@ -52,8 +58,13 @@ def update_config(opts):
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
+        opts.num_workers = 12
+        constants.DATASET_PREFIX_6_PATH = "/home/jupyter-neil.delgallego/SynthWeather Dataset 7/"
+        constants.DATASET_ALBEDO_6_PATH = "/home/jupyter-neil.delgallego/SynthWeather Dataset 7/albedo/"
+        # constants.DATASET_PLACES_PATH = "/home/jupyter-neil.delgallego/Places Dataset/*.jpg"
+        constants.DATASET_PLACES_PATH = constants.DATASET_PREFIX_6_PATH
+
         print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", constants.RELIGHTING_CHECKPATH)
-        constants.DATASET_PLACES_PATH = "Places Dataset/"
 
     # GCLOUD
     elif (constants.server_config == 3):
@@ -164,7 +175,7 @@ def main(argv):
     else:
         print("Starting Training Loop. Training Shading + Shadow...")
         last_metric = 10000.0
-        stopper_method_s = early_stopper.EarlyStopper(opts.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, 1000, last_metric)
+        stopper_method_s = early_stopper.EarlyStopper(constants.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, constants.early_stop_threshold, last_metric)
         for epoch in range(start_epoch, constants.num_epochs):
             # For each batch in the dataloader
             for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader)):
@@ -203,7 +214,9 @@ def main(argv):
 
         print("Starting Training Loop. Training Albedo...")
         last_metric = 10000.0
+        stopper_method_a = early_stopper.EarlyStopper(constants.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, constants.early_stop_threshold, last_metric)
         stopper_method_a = early_stopper.EarlyStopper(opts.min_epochs + start_epoch, early_stopper.EarlyStopperMethod.L1_TYPE, 1000, last_metric)
+        
         for epoch in range(start_epoch, constants.num_epochs):
             # For each batch in the dataloader
             for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader)):
