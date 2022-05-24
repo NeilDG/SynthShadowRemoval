@@ -9,14 +9,14 @@ def test_relighting():
     os.system("python \"relighting_test.py\"  --net_config=2 --num_blocks=0 --version_name=\"maps2rgb_rgb2maps_v4.11\" --iteration=9 "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
-    # os.system("python \"relighting_test.py\"  --net_config=2 --num_blocks=0 --version_name=\"maps2rgb_rgb2maps_v4.07\" --iteration=6 "
-    #           "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
-    #
-    # os.system("python \"relighting_test.py\"  --net_config=2 --num_blocks=0 --version_name=\"maps2rgb_rgb2maps_v4.07\" --iteration=7 "
-    #           "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
-    #
-    # os.system("python \"relighting_test.py\"  --net_config=2 --num_blocks=0 --version_name=\"maps2rgb_rgb2maps_v4.07\" --iteration=8 "
-    #           "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
+    os.system("python \"relighting_test.py\"  --net_config=2 --num_blocks=0 --version_name=\"maps2rgb_rgb2maps_v4.11\" --iteration=10 "
+              "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
+
+    os.system("python \"relighting_test.py\"  --net_config=2 --num_blocks=0 --version_name=\"maps2rgb_rgb2maps_v4.11\" --iteration=11 "
+              "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
+
+    os.system("python \"relighting_test.py\"  --net_config=2 --num_blocks=0 --version_name=\"maps2rgb_rgb2maps_v4.11\" --iteration=12 "
+              "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
 def main():
     # os.system("python \"processing/dataset_creator.py\"")

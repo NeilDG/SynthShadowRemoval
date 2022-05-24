@@ -47,7 +47,7 @@ def update_config(opts):
 
     if(opts.debug_mode == 1):
         constants.early_stop_threshold = 0
-        constants.min_epochs = 10
+        constants.min_epochs = 1
 
     # COARE
     if (constants.server_config == 1):
@@ -58,7 +58,7 @@ def update_config(opts):
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
-        constants.num_workers = 6
+        opts.num_workers = 12
         constants.DATASET_PREFIX_6_PATH = "/home/jupyter-neil.delgallego/SynthWeather Dataset 7/"
         constants.DATASET_ALBEDO_6_PATH = "/home/jupyter-neil.delgallego/SynthWeather Dataset 7/albedo/"
         # constants.DATASET_PLACES_PATH = "/home/jupyter-neil.delgallego/Places Dataset/*.jpg"

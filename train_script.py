@@ -91,8 +91,8 @@ def train_relighting():
     # os.system("python \"relighting_main.py\" --server_config=5 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=256 --net_config=1 --num_blocks=6 "
     #     "--plot_enabled=0 --debug_mode=0 --version_name=\"maps2rgb_rgb2maps_v4.10\" --iteration=9")
 
-    os.system("python \"relighting_main.py\" --server_config=5 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=320 --net_config=1 --num_blocks=6 "
-              "--plot_enabled=0 --debug_mode=0 --version_name=\"maps2rgb_rgb2maps_v4.10\" --iteration=10")
+    os.system("python \"relighting_main.py\" --server_config=5 --img_to_load=500 --load_previous=0 --test_mode=0 --patch_size=256 --batch_size=16 --net_config=1 --num_blocks=6 "
+              "--plot_enabled=0 --debug_mode=1 --version_name=\"maps2rgb_rgb2maps_v4.12\" --iteration=9")
 
 def train_domain_adaptation():
     os.system("python \"cyclegan_main.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=2 --num_blocks=0 "
@@ -102,10 +102,10 @@ def main():
     # train_albedo()
     # train_shading()
     # train_shadow()
-    # train_shadow_relight()
+    # train_shadow_relight()s
     train_relighting()
     # train_domain_adaptation()
-    os.system("shutdown /s /t 1")
+    # os.system("shutdown /s /t 1")
 
 
 if __name__ == "__main__":
