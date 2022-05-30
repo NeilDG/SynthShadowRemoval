@@ -198,7 +198,6 @@ class RelightingTrainer:
         self.adv_weight = adv_weight
         self.rgb_l1_weight = rgb_l1_weight
 
-        print("Version: ", constants.RELIGHTING_CHECKPATH)
         print("Learning rate for G: ", str(self.g_lr))
         print("Learning rate for D: ", str(self.d_lr))
         print("====================================")

@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=6
 #SBATCH -G 1
 #SBATCH --ntasks=1
-#SBATCH --output=script_1.out
+#SBATCH --output=script_5.out
 #SBATCH --mail-user=neil.delgallego@dlsu.edu.ph
 #SBATCH --mail-type=END
 
@@ -25,7 +25,7 @@ srun python relighting_main.py \
 --batch_size=768 \
 --patch_size=64 \
 --plot_enabled=0 \
---version_name="maps2rgb_rgb2maps_v4.08" --min_epochs=50 --net_config=2 --num_blocks=0 \
+--version_name="maps2rgb_rgb2maps_v4.09" --min_epochs=50 --net_config=2 --num_blocks=0 \
 --img_to_load=-1 --load_previous=0
 
 
