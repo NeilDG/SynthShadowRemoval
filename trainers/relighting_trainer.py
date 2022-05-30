@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 # Cycle consistent relighting trainer
+import random
+
 import kornia
 from model import iteration_table
 from model import ffa_gan as ffa
@@ -196,7 +198,6 @@ class RelightingTrainer:
         self.adv_weight = adv_weight
         self.rgb_l1_weight = rgb_l1_weight
 
-        print("Version: ", constants.RELIGHTING_CHECKPATH)
         print("Learning rate for G: ", str(self.g_lr))
         print("Learning rate for D: ", str(self.d_lr))
         print("====================================")
@@ -224,13 +225,32 @@ class RelightingTrainer:
         self.train_shading(input_rgb_tensor, shading_tensor, shadow_tensor)
         self.train_albedo(input_rgb_tensor, albedo_tensor, target_rgb_tensor)
 
-    def train_albedo(self, input_rgb_tensor, albedo_tensor, target_rgb_tensor):
+    def train_albedo(self, input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor, target_rgb_tensor):
         with amp.autocast():
             self.G_S.eval()
             self.G_Z.eval()
 
             #produce initial albedo based on shading and shadow components
-            rgb2albedo = tensor_utils.produce_albedo(input_rgb_tensor, self.G_S(input_rgb_tensor), self.G_Z(input_rgb_tensor))
+            p = random.uniform(0.0, 1.0)
+            if p > 0.5: #by 50% chance, induce pseudo-albedo
+                shading_like = self.G_S(input_rgb_tensor)
+                shadow_like = self.G_Z(input_rgb_tensor)
+
+                prediction_S = self.D_S(shading_like)
+                real_S = torch.ones_like(prediction_S)
+                S_error = self.mse_loss(prediction_S, real_S).item()
+
+                prediction_Z = self.D_Z(shadow_like)
+                real_Z = torch.ones_like(prediction_Z)
+                Z_error = self.mse_loss(prediction_Z, real_Z).item()
+
+                if S_error < 0.2 and Z_error < 0.2: #if discriminator identifies fake images as real, 80% of the time, use for training
+                    rgb2albedo = tensor_utils.produce_albedo(input_rgb_tensor, shading_like, shadow_like)
+                else:
+                    rgb2albedo = tensor_utils.produce_albedo(input_rgb_tensor, shading_tensor, shadow_tensor)
+            else:
+                rgb2albedo = tensor_utils.produce_albedo(input_rgb_tensor, shading_tensor, shadow_tensor)
+
             rgb2albedo = self.G_A(rgb2albedo) #refine
 
             # albedo discriminator
