@@ -22,11 +22,11 @@ source activate NeilGAN_V2
 srun python relighting_main.py \
 --iteration=$ITERATION \
 --server_config=1 \
---batch_size=320 \
+--batch_size=256 \
 --patch_size=64 \
 --plot_enabled=0 \
 --version_name="maps2rgb_rgb2maps_v4.08" --min_epochs=50 --net_config=1 --num_blocks=6 \
---img_to_load=-1 --load_previous=0
+--img_to_load=-1 --load_previous=1
 
 
 conda deactivate
