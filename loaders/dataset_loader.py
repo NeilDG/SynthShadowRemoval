@@ -54,12 +54,42 @@ def load_map_test_dataset(path_a, path_c, opts):
 
     return data_loader
 
+def load_relighting_train_dataset(rgb_dir, albedo_dir, scene_root, opts):
+    albedo_list = glob.glob(albedo_dir + "/*.png")
+    scene_list = os.listdir(scene_root)
+
+    print("Image length: %d Number of known scenes: %d" % (len(albedo_list), len(scene_list)))
+
+    data_loader = torch.utils.data.DataLoader(
+        image_dataset.RelightDataset(len(albedo_list), rgb_dir, albedo_dir, scene_list, opts),
+        batch_size=opts.batch_size,
+        num_workers=opts.num_workers,
+        shuffle=True
+    )
+
+    return data_loader
+
+def load_relighting_test_dataset(rgb_dir, albedo_dir, scene_root, opts):
+    albedo_list = glob.glob(albedo_dir + "/*.png")
+    scene_list = os.listdir(scene_root)
+
+    print("Image length: %d Number of known scenes: %d" % (len(albedo_list), len(scene_list)))
+
+    data_loader = torch.utils.data.DataLoader(
+        image_dataset.RelightDataset(len(albedo_list), rgb_dir, albedo_dir, scene_list, opts),
+        batch_size=16,
+        num_workers=1,
+        shuffle=True
+    )
+
+    return data_loader
+
 def load_map_train_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts):
     img_length = len(assemble_unpaired_data(albedo_dir, opts.img_to_load))
     print("Length of images: %d" % img_length)
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.ImageRelightDataset(img_length, rgb_dir, albedo_dir, shading_dir, shadow_dir, 1, opts),
+        image_dataset.IIDDataset(img_length, rgb_dir, albedo_dir, shading_dir, shadow_dir, 1, opts),
         batch_size=opts.batch_size,
         num_workers=opts.num_workers,
         shuffle=True
@@ -72,7 +102,7 @@ def load_map_test_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts):
     print("Length of images: %d" % img_length)
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.ImageRelightDataset(img_length, rgb_dir, albedo_dir, shading_dir, shadow_dir, 2, opts),
+        image_dataset.IIDDataset(img_length, rgb_dir, albedo_dir, shading_dir, shadow_dir, 2, opts),
         batch_size=2,
         num_workers=1,
         shuffle=True
@@ -177,7 +207,7 @@ def load_shadowmap_train_recursive(path_a, folder_b, folder_c, return_shading: b
     print("Length of images: %d" % len(a_list))
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.ImageRelightDataset(a_list, folder_b, folder_c, 1, return_shading, opts),
+        image_dataset.IIDDataset(a_list, folder_b, folder_c, 1, return_shading, opts),
         batch_size=opts.batch_size,
         num_workers=opts.num_workers,
         shuffle=True
@@ -190,7 +220,7 @@ def load_shadowmap_test_recursive(path_a, folder_b, folder_c, return_shading: bo
     print("Length of images: %d" % len(a_list))
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.ImageRelightDataset(a_list, folder_b, folder_c, 2, return_shading, opts),
+        image_dataset.IIDDataset(a_list, folder_b, folder_c, 2, return_shading, opts),
         batch_size=2,
         num_workers=1,
         shuffle=False

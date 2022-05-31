@@ -9,7 +9,7 @@ import torchvision.utils as vutils
 import numpy as np
 import matplotlib.pyplot as plt
 from loaders import dataset_loader
-from trainers import relighting_trainer
+from trainers import iid_trainer
 from trainers import early_stopper
 from utils import tensor_utils
 import constants
@@ -41,8 +41,8 @@ parser.add_option('--debug_mode', type=int, default=0)
 def update_config(opts):
     constants.server_config = opts.server_config
     constants.ITERATION = str(opts.iteration)
-    constants.RELIGHTING_VERSION = opts.version_name
-    constants.RELIGHTING_CHECKPATH = 'checkpoint/' + constants.RELIGHTING_VERSION + "_" + constants.ITERATION + '.pt'
+    constants.IID_VERSION = opts.version_name
+    constants.IID_CHECKPATH = 'checkpoint/' + constants.IID_VERSION + "_" + constants.ITERATION + '.pt'
     constants.plot_enabled = opts.plot_enabled
 
     if(opts.debug_mode == 1):
@@ -64,11 +64,11 @@ def update_config(opts):
         # constants.DATASET_PLACES_PATH = "/home/jupyter-neil.delgallego/Places Dataset/*.jpg"
         constants.DATASET_PLACES_PATH = constants.DATASET_PREFIX_6_PATH
 
-        print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", constants.RELIGHTING_CHECKPATH)
+        print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", constants.IID_CHECKPATH)
 
     # GCLOUD
     elif (constants.server_config == 3):
-        print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.RELIGHTING_CHECKPATH)
+        print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.IID_CHECKPATH)
         constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/"
         constants.DATASET_PREFIX_6_PATH = "/home/neil_delgallego/SynthWeather Dataset 6/"
         constants.DATASET_ALBEDO_6_PATH = "/home/neil_delgallego/SynthWeather Dataset 6/albedo/"
@@ -135,18 +135,17 @@ def main(argv):
     start_epoch = 0
     iteration = 0
 
-
-    trainer = relighting_trainer.RelightingTrainer(device, opts)
+    trainer = iid_trainer.IIDTrainer(device, opts)
     trainer.update_penalties(opts.adv_weight, opts.rgb_l1_weight)
 
     if (opts.load_previous):
-        checkpoint = torch.load(constants.RELIGHTING_CHECKPATH, map_location=device)
+        checkpoint = torch.load(constants.IID_CHECKPATH, map_location=device)
         start_epoch = checkpoint['epoch'] + 1
         iteration = checkpoint['iteration'] + 1
         last_metric = checkpoint[constants.LAST_METRIC_KEY]
         trainer.load_saved_state(checkpoint)
 
-        print("Loaded checkpt: %s Current epoch: %d" % (constants.RELIGHTING_CHECKPATH, start_epoch))
+        print("Loaded checkpt: %s Current epoch: %d" % (constants.IID_CHECKPATH, start_epoch))
         print("===================================================")
 
     if(opts.test_mode == 1):

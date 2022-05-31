@@ -10,7 +10,7 @@ import torchvision.transforms as transforms
 import numpy as np
 
 from loaders import dataset_loader
-from trainers import relighting_trainer
+from trainers import iid_trainer
 from utils import tensor_utils
 from utils import plot_utils
 import constants
@@ -220,7 +220,7 @@ def measure_performance():
     ssim_albedo_d = np.round(1.0 - kornia.losses.ssim_loss(albedo_d_tensor, albedo_tensor, 5).item(), 4)
     psnr_albedo_e = np.round(kornia.metrics.psnr(albedo_e_tensor, albedo_tensor, max_val=1.0).item(), 4)
     ssim_albedo_e = np.round(1.0 - kornia.losses.ssim_loss(albedo_e_tensor, albedo_tensor, 5).item(), 4)
-    display_text = str(constants.RELIGHTING_VERSION) + str(constants.ITERATION) + "<br>" \
+    display_text = str(constants.IID_VERSION) + str(constants.ITERATION) + "<br>" \
                    "Mean Albedo PSNR, SSIM: <br>" \
                     "li_eccv18 PSNR: " + str(psnr_albedo_a) + "<br> SSIM: " + str(ssim_albedo_a) + "<br>" \
                     "yu_cvpr19 PSNR: " + str(psnr_albedo_b) + "<br> SSIM: " + str(ssim_albedo_b) + "<br>" \
@@ -302,13 +302,13 @@ def main(argv):
     img_list = glob.glob(opts.input_path + "*.jpg") + glob.glob(opts.input_path + "*.png")
     print("Images found: ", len(img_list))
 
-    trainer = relighting_trainer.RelightingTrainer(device, opts)
+    trainer = iid_trainer.IIDTrainer(device, opts)
     trainer.update_penalties(opts.adv_weight, opts.rgb_l1_weight)
 
     constants.ITERATION = str(opts.iteration)
-    constants.RELIGHTING_VERSION = opts.version_name
-    constants.RELIGHTING_CHECKPATH = 'checkpoint/' + constants.RELIGHTING_VERSION + "_" + constants.ITERATION + '.pt'
-    checkpoint = torch.load(constants.RELIGHTING_CHECKPATH, map_location=device)
+    constants.IID_VERSION = opts.version_name
+    constants.IID_CHECKPATH = 'checkpoint/' + constants.IID_VERSION + "_" + constants.ITERATION + '.pt'
+    checkpoint = torch.load(constants.IID_CHECKPATH, map_location=device)
     trainer.load_saved_state(checkpoint)
 
     constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
