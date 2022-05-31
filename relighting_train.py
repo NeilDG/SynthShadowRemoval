@@ -53,16 +53,16 @@ def update_config(opts):
     if (constants.server_config == 1):
         print("Using COARE configuration ", opts.version_name)
         constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/"
-        constants.DATASET_PREFIX_6_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 7/"
-        constants.DATASET_ALBEDO_6_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 7/albedo/"
+        constants.DATASET_PREFIX_7_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 7/"
+        constants.DATASET_ALBEDO_7_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 7/albedo/"
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
         opts.num_workers = 12
-        constants.DATASET_PREFIX_6_PATH = "/home/jupyter-neil.delgallego/SynthWeather Dataset 7/"
-        constants.DATASET_ALBEDO_6_PATH = "/home/jupyter-neil.delgallego/SynthWeather Dataset 7/albedo/"
+        constants.DATASET_PREFIX_7_PATH = "/home/jupyter-neil.delgallego/SynthWeather Dataset 7/"
+        constants.DATASET_ALBEDO_7_PATH = "/home/jupyter-neil.delgallego/SynthWeather Dataset 7/albedo/"
         # constants.DATASET_PLACES_PATH = "/home/jupyter-neil.delgallego/Places Dataset/*.jpg"
-        constants.DATASET_PLACES_PATH = constants.DATASET_PREFIX_6_PATH
+        constants.DATASET_PLACES_PATH = constants.DATASET_PREFIX_7_PATH
 
         print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", constants.IID_CHECKPATH)
 
@@ -70,21 +70,21 @@ def update_config(opts):
     elif (constants.server_config == 3):
         print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.IID_CHECKPATH)
         constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/"
-        constants.DATASET_PREFIX_6_PATH = "/home/neil_delgallego/SynthWeather Dataset 6/"
-        constants.DATASET_ALBEDO_6_PATH = "/home/neil_delgallego/SynthWeather Dataset 6/albedo/"
+        constants.DATASET_PREFIX_7_PATH = "/home/neil_delgallego/SynthWeather Dataset 6/"
+        constants.DATASET_ALBEDO_7_PATH = "/home/neil_delgallego/SynthWeather Dataset 6/albedo/"
 
     elif (constants.server_config == 4):
         opts.num_workers = 6
         constants.DATASET_PLACES_PATH = "D:/Datasets/Places Dataset/*.jpg"
-        constants.DATASET_PREFIX_6_PATH = "D:/Datasets/SynthWeather Dataset 6/"
-        constants.DATASET_ALBEDO_6_PATH = "D:/Datasets/SynthWeather Dataset 6/albedo/"
+        constants.DATASET_PREFIX_7_PATH = "D:/Datasets/SynthWeather Dataset 6/"
+        constants.DATASET_ALBEDO_7_PATH = "D:/Datasets/SynthWeather Dataset 6/albedo/"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers, " ", opts.version_name)
     else:
         opts.num_workers = 12
         constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
-        constants.DATASET_PREFIX_6_PATH = "E:/SynthWeather Dataset 7/"
-        constants.DATASET_ALBEDO_6_PATH = "E:/SynthWeather Dataset 7/albedo/"
+        constants.DATASET_PREFIX_7_PATH = "E:/SynthWeather Dataset 7/"
+        constants.DATASET_ALBEDO_7_PATH = "E:/SynthWeather Dataset 7/albedo/"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers, " ", opts.version_name)
 
 

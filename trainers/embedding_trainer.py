@@ -61,7 +61,7 @@ class EmbeddingTrainer:
 
     def adversarial_loss(self, pred, target):
         if (self.use_bce == 0):
-            loss = nn.L1Loss()
+            loss = nn.MSELoss()
             return loss(pred, target)
         else:
             loss = nn.BCEWithLogitsLoss()
@@ -81,15 +81,12 @@ class EmbeddingTrainer:
         self.adv_weight = adv_weight
         self.likeness_weight = likeness_weight
 
-        # save hyperparameters for bookeeping
-        HYPERPARAMS_PATH = "checkpoint/" + constants.STYLE_TRANSFER_VERSION + "_" + constants.ITERATION + ".config"
-        with open(HYPERPARAMS_PATH, "w") as f:
-            print("Version: ", constants.STYLE_TRANSFER_CHECKPATH, file=f)
-            print("Learning rate for G: ", str(self.g_lr), file=f)
-            print("Learning rate for D: ", str(self.d_lr), file=f)
-            print("====================================", file=f)
-            print("Adv weight: ", str(self.adv_weight), file=f)
-            print("Likeness weight: ", str(self.likeness_weight), file=f)
+        print("Version: ", constants.EMBEDDING_VERSION)
+        print("Learning rate for G: ", str(self.g_lr))
+        print("Learning rate for D: ", str(self.d_lr))
+        print("====================================")
+        print("Adv weight: ", str(self.adv_weight))
+        print("Likeness weight: ", str(self.likeness_weight))
 
     def train(self, input_tensor):
         with amp.autocast():
@@ -143,26 +140,18 @@ class EmbeddingTrainer:
         return a2b
 
     def visdom_plot(self, iteration):
-        self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict)
+        self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict, constants.EMBEDDING_CHECKPATH)
 
-    def visdom_visualize(self, a_tensor, b_tensor, a_test, b_test):
+    def visdom_visualize(self, a_tensor, b_tensor, label = "Training"):
         with torch.no_grad():
             # report to visdom
             fake_a = self.G_A(a_tensor)
             fake_b = self.G_A(b_tensor)
 
-            fake_test_a = self.G_A(a_test)
-            fake_test_b = self.G_A(b_test)
-
-            self.visdom_reporter.plot_image(a_tensor, "Training A images - " + constants.EMBEDDING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(fake_a, "Training Reconstructed A images - " + constants.EMBEDDING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(b_tensor, "Training B images - " + constants.EMBEDDING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(fake_b, "Training Reconstructed B images - " + constants.EMBEDDING_VERSION + constants.ITERATION)
-
-            self.visdom_reporter.plot_image(a_test, "Test A images - " + constants.EMBEDDING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(fake_test_a, "Test Reconstructed A images - " + constants.EMBEDDING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(b_test, "Test B images - " + constants.EMBEDDING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(fake_test_b, "Test Reconstructed B images - " + constants.EMBEDDING_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(a_tensor, str(label) + " Training A images - " + constants.EMBEDDING_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(fake_a, str(label) + " Training Reconstructed A images - " + constants.EMBEDDING_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(b_tensor, str(label) + " Training B images - " + constants.EMBEDDING_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(fake_b, str(label) + " Training Reconstructed B images - " + constants.EMBEDDING_VERSION + constants.ITERATION)
 
     def visdom_infer(self, rw_tensor):
         with torch.no_grad():
@@ -202,7 +191,7 @@ class EmbeddingTrainer:
         torch.save(save_dict, constants.EMBEDDING_CHECKPATH + ".checkpt")
         print("Saved model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
 
-    def save_states(self, epoch, iteration):
+    def save_states(self, epoch, iteration, last_metric):
         save_dict = {'epoch': epoch, 'iteration': iteration}
         netGA_state_dict = self.G_A.state_dict()
         netDA_state_dict = self.D_A.state_dict()

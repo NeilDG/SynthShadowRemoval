@@ -13,6 +13,7 @@ from trainers import iid_trainer
 from trainers import early_stopper
 from utils import tensor_utils
 import constants
+from trainers import embedding_trainer
 
 parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
@@ -26,8 +27,8 @@ parser.add_option('--num_blocks', type=int)
 parser.add_option('--net_config', type=int)
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
-parser.add_option('--batch_size', type=int, help="batch_size", default="128")
 parser.add_option('--patch_size', type=int, help="patch_size", default="64")
+parser.add_option('--batch_size', type=int, help="batch_size", default="256")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--version_name', type=str, help="version_name")
 parser.add_option('--mode', type=str, default="azimuth")
@@ -43,48 +44,53 @@ def update_config(opts):
     constants.ITERATION = str(opts.iteration)
     constants.IID_VERSION = opts.version_name
     constants.IID_CHECKPATH = 'checkpoint/' + constants.IID_VERSION + "_" + constants.ITERATION + '.pt'
+
     constants.plot_enabled = opts.plot_enabled
 
     if(opts.debug_mode == 1):
         constants.early_stop_threshold = 0
         constants.min_epochs = 1
+        constants.num_epochs = 10
 
-    # COARE
+    ## COARE
     if (constants.server_config == 1):
-        print("Using COARE configuration ", opts.version_name)
-        constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/"
-        constants.DATASET_PREFIX_6_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 7/"
-        constants.DATASET_ALBEDO_6_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 7/albedo/"
+        opts.num_workers = 6
+        print("Using COARE configuration. Workers: ", opts.num_workers, " ", opts.version_name)
+        constants.imgx_dir = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
+        constants.DATASET_PLACES_PATH = constants.imgx_dir
+        constants.imgy_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
+        constants.imgx_dir_test = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
+        constants.imgy_dir_test = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
-        opts.num_workers = 12
-        constants.DATASET_PREFIX_6_PATH = "/home/jupyter-neil.delgallego/SynthWeather Dataset 7/"
-        constants.DATASET_ALBEDO_6_PATH = "/home/jupyter-neil.delgallego/SynthWeather Dataset 7/albedo/"
-        # constants.DATASET_PLACES_PATH = "/home/jupyter-neil.delgallego/Places Dataset/*.jpg"
-        constants.DATASET_PLACES_PATH = constants.DATASET_PREFIX_6_PATH
-
-        print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", constants.IID_CHECKPATH)
+        opts.num_workers = 8
+        print("Using CCS configuration. Workers: ", opts.num_workers, " ", opts.version_name)
 
     # GCLOUD
     elif (constants.server_config == 3):
-        print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.IID_CHECKPATH)
-        constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/"
-        constants.DATASET_PREFIX_6_PATH = "/home/neil_delgallego/SynthWeather Dataset 6/"
-        constants.DATASET_ALBEDO_6_PATH = "/home/neil_delgallego/SynthWeather Dataset 6/albedo/"
+        opts.num_workers = 8
+        print("Using GCloud configuration. Workers: ", opts.num_workers, " ", opts.version_name)
+        constants.imgx_dir = "/home/neil_delgallego/Places Dataset/*.jpg"
+        constants.DATASET_PLACES_PATH = constants.imgx_dir
+        constants.imgy_dir = "/home/neil_delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
 
     elif (constants.server_config == 4):
         opts.num_workers = 6
-        constants.DATASET_PLACES_PATH = "D:/Datasets/Places Dataset/*.jpg"
-        constants.DATASET_PREFIX_6_PATH = "D:/Datasets/SynthWeather Dataset 6/"
-        constants.DATASET_ALBEDO_6_PATH = "D:/Datasets/SynthWeather Dataset 6/albedo/"
+        constants.imgx_dir = "D:/Datasets/Places Dataset/*.jpg"
+        constants.DATASET_PLACES_PATH = constants.imgx_dir
+        constants.imgy_dir = "D:/Datasets/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
+        constants.imgx_dir_test = constants.imgx_dir
+        constants.imgy_dir_test = constants.imgy_dir
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers, " ", opts.version_name)
     else:
         opts.num_workers = 12
-        constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
-        constants.DATASET_PREFIX_6_PATH = "E:/SynthWeather Dataset 7/"
-        constants.DATASET_ALBEDO_6_PATH = "E:/SynthWeather Dataset 7/albedo/"
+        constants.imgx_dir = "E:/Places Dataset/*.jpg"
+        constants.DATASET_PLACES_PATH = constants.imgx_dir
+        constants.imgy_dir = "E:/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
+        constants.imgx_dir_test = constants.imgx_dir
+        constants.imgy_dir_test = constants.imgy_dir
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers, " ", opts.version_name)
 
 def show_images(img_tensor, caption):
@@ -94,7 +100,6 @@ def show_images(img_tensor, caption):
     plt.title(caption)
     plt.imshow(np.transpose(vutils.make_grid(img_tensor.to(device)[:16], nrow = 8, padding=2, normalize=True).cpu(),(1,2,0)))
     plt.show()
-
 
 def main(argv):
     (opts, args) = parser.parse_args(argv)
@@ -114,10 +119,10 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    albedo_dir = constants.DATASET_ALBEDO_6_PATH
-    shading_dir = constants.DATASET_PREFIX_6_PATH + "shading/"
-    rgb_dir = constants.DATASET_PREFIX_6_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "rgb/"
-    shadow_dir = constants.DATASET_PREFIX_6_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "shadow_map/"
+    albedo_dir = constants.DATASET_ALBEDO_7_PATH
+    shading_dir = constants.DATASET_PREFIX_7_PATH + "shading/"
+    rgb_dir = constants.DATASET_PREFIX_7_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "rgb/"
+    shadow_dir = constants.DATASET_PREFIX_7_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "shadow_map/"
 
     print(rgb_dir, albedo_dir, shading_dir, shadow_dir)
 
@@ -131,7 +136,6 @@ def main(argv):
     ALBEDO_PATH = GTA_BASE_PATH + "/albedo_white/"
     gta_loader = dataset_loader.load_gta_dataset(RGB_PATH, ALBEDO_PATH, opts)
 
-    index = 0
     start_epoch = 0
     iteration = 0
 
@@ -148,7 +152,7 @@ def main(argv):
         print("Loaded checkpt: %s Current epoch: %d" % (constants.IID_CHECKPATH, start_epoch))
         print("===================================================")
 
-    if(opts.test_mode == 1):
+    if (opts.test_mode == 1):
         print("Plotting test images...")
         _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = next(iter(test_loader))
         input_rgb_tensor = input_rgb_batch.to(device)
@@ -178,14 +182,10 @@ def main(argv):
         for epoch in range(start_epoch, constants.num_epochs):
             # For each batch in the dataloader
             for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader)):
-                _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = train_data
+                _, input_rgb_batch, _, shading_batch, input_shadow_batch, _, _, _ = train_data
                 input_rgb_tensor = input_rgb_batch.to(device)
-                target_rgb_tensor = target_rgb_batch.to(device)
-                albedo_tensor = albedo_batch.to(device)
                 shading_tensor = shading_batch.to(device)
                 input_shadow_tensor = input_shadow_batch.to(device)
-                target_shadow_tensor = target_shadow_batch.to(device)
-                light_angle_tensor = light_angle_batch.to(device)
 
                 trainer.train_shading(input_rgb_tensor, shading_tensor, input_shadow_tensor)
                 iteration = iteration + 1
@@ -194,14 +194,11 @@ def main(argv):
 
                 if (i % 300 == 0):
                     trainer.save_states_checkpt(epoch, iteration, last_metric)
-                    _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = test_data
+                    _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, _, _, _ = test_data
                     input_rgb_tensor = input_rgb_batch.to(device)
-                    target_rgb_tensor = target_rgb_batch.to(device)
                     albedo_tensor = albedo_batch.to(device)
                     shading_tensor = shading_batch.to(device)
                     input_shadow_tensor = input_shadow_batch.to(device)
-                    target_shadow_tensor = target_shadow_batch.to(device)
-                    light_angle_tensor = light_angle_batch.to(device)
                     trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor, "Test")
                     trainer.visdom_plot(iteration)
 
@@ -209,47 +206,6 @@ def main(argv):
                     break
 
             if (stopper_method_s.did_stop_condition_met()):
-                break
-
-        print("Starting Training Loop. Training Albedo...")
-        last_metric = 10000.0
-        stopper_method_a = early_stopper.EarlyStopper(constants.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, constants.early_stop_threshold, last_metric)
-        stopper_method_a = early_stopper.EarlyStopper(opts.min_epochs + start_epoch, early_stopper.EarlyStopperMethod.L1_TYPE, 1000, last_metric)
-        
-        for epoch in range(start_epoch, constants.num_epochs):
-            # For each batch in the dataloader
-            for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader)):
-                _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = train_data
-                input_rgb_tensor = input_rgb_batch.to(device)
-                target_rgb_tensor = target_rgb_batch.to(device)
-                albedo_tensor = albedo_batch.to(device)
-                shading_tensor = shading_batch.to(device)
-                input_shadow_tensor = input_shadow_batch.to(device)
-                target_shadow_tensor = target_shadow_batch.to(device)
-                light_angle_tensor = light_angle_batch.to(device)
-
-                trainer.train_albedo(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor)
-                iteration = iteration + 1
-
-                stopper_method_a.test(trainer, epoch, iteration, trainer.infer_albedo(input_rgb_tensor), albedo_tensor)
-
-                if (i % 300 == 0):
-                    trainer.save_states_checkpt(epoch, iteration, last_metric)
-                    _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = test_data
-                    input_rgb_tensor = input_rgb_batch.to(device)
-                    target_rgb_tensor = target_rgb_batch.to(device)
-                    albedo_tensor = albedo_batch.to(device)
-                    shading_tensor = shading_batch.to(device)
-                    input_shadow_tensor = input_shadow_batch.to(device)
-                    target_shadow_tensor = target_shadow_batch.to(device)
-                    light_angle_tensor = light_angle_batch.to(device)
-                    trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor, "Test")
-                    trainer.visdom_plot(iteration)
-
-                if (stopper_method_a.did_stop_condition_met()):
-                    break
-
-            if (stopper_method_a.did_stop_condition_met()):
                 break
 
 

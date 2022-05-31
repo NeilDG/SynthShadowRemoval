@@ -312,13 +312,13 @@ def main(argv):
     trainer.load_saved_state(checkpoint)
 
     constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
-    constants.DATASET_PREFIX_6_PATH = "E:/SynthWeather Dataset 7/"
-    constants.DATASET_ALBEDO_6_PATH = "E:/SynthWeather Dataset 7/albedo/"
+    constants.DATASET_PREFIX_7_PATH = "E:/SynthWeather Dataset 7/"
+    constants.DATASET_ALBEDO_7_PATH = "E:/SynthWeather Dataset 7/albedo/"
 
-    albedo_dir = constants.DATASET_ALBEDO_6_PATH
-    shading_dir = constants.DATASET_PREFIX_6_PATH + "shading/"
-    rgb_dir = constants.DATASET_PREFIX_6_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "rgb/"
-    shadow_dir = constants.DATASET_PREFIX_6_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "shadow_map/"
+    albedo_dir = constants.DATASET_ALBEDO_7_PATH
+    shading_dir = constants.DATASET_PREFIX_7_PATH + "shading/"
+    rgb_dir = constants.DATASET_PREFIX_7_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "rgb/"
+    shadow_dir = constants.DATASET_PREFIX_7_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "shadow_map/"
 
     print(rgb_dir, albedo_dir, shading_dir, shadow_dir)
 
