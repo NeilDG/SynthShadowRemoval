@@ -153,8 +153,46 @@ class GenericPairedDataset(data.Dataset):
     def __len__(self):
         return len(self.imgx_dir)
 
+class RelightDataset(data.Dataset):
+    def __init__(self, img_length, rgb_dir, albedo_dir, scene_names, opts):
+        self.img_length = img_length
+        self.rgb_dir = rgb_dir
+        self.albedo_dir = albedo_dir
+        self.scene_names = scene_names
+        self.patch_size = (opts.patch_size, opts.patch_size)
 
-class ImageRelightDataset(data.Dataset):
+        self.initial_op = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize((256, 256)),
+            transforms.ToTensor()
+        ])
+
+    def __getitem__(self, idx):
+        file_name = "/synth_" + str(idx) + ".png"
+
+        scene_index = np.random.randint(0, len(self.scene_names))
+        rgb_path = self.rgb_dir + self.scene_names[scene_index] + file_name
+
+        rgb_img = cv2.imread(rgb_path)
+        rgb_img = cv2.cvtColor(rgb_img, cv2.COLOR_BGR2RGB)
+
+        albedo_img = cv2.imread(self.albedo_dir + file_name)
+        albedo_img = cv2.cvtColor(albedo_img, cv2.COLOR_BGR2RGB)
+
+        rgb_tensor = self.initial_op(rgb_img)
+        albedo_tensor = self.initial_op(albedo_img)
+
+        scene_tensor = (scene_index / len(self.scene_names)) * 1.0 #normalize to 0.0 - 1.0
+        scene_tensor = torch.tensor(scene_tensor)
+
+        return file_name, rgb_tensor, albedo_tensor, scene_tensor
+
+    def __len__(self):
+        return self.img_length
+
+
+
+class IIDDataset(data.Dataset):
     def __init__(self, img_length, rgb_dir, albedo_dir, shading_dir, shadow_dir, transform_config, opts):
         self.img_length = img_length
         self.albedo_dir = albedo_dir

@@ -460,12 +460,12 @@ class ShadowRelightTrainerRGB:
             shadow_like = self.G_A(self.prepare_input(input_shadow_tensor, input_rgb_tensor, light_angle_tensor))
             rgb_like = tensor_utils.produce_albedo(albedo_tensor, shading_tensor, self.default_light_color, shadow_like)
 
-            self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(rgb_like, str(label) + " RGB Reconstruction - " + constants.RELIGHTING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(target_rgb_tensor, str(label) + " Target RGB Images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + constants.IID_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(rgb_like, str(label) + " RGB Reconstruction - " + constants.IID_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(target_rgb_tensor, str(label) + " Target RGB Images - " + constants.IID_VERSION + constants.ITERATION)
 
-            self.visdom_reporter.plot_image(shadow_like, str(label) + " RGB2Shadow images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(target_shadow_tensor, str(label) + " Shadow images - " + constants.RELIGHTING_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(shadow_like, str(label) + " RGB2Shadow images - " + constants.IID_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(target_shadow_tensor, str(label) + " Shadow images - " + constants.IID_VERSION + constants.ITERATION)
 
 
 
