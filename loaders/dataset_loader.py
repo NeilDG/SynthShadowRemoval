@@ -2,6 +2,8 @@ import glob
 import random
 import torch
 from torch.utils import data
+
+import constants
 from loaders import image_dataset
 import os
 
@@ -103,45 +105,6 @@ def load_map_test_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts):
 
     data_loader = torch.utils.data.DataLoader(
         image_dataset.IIDDataset(img_length, rgb_dir, albedo_dir, shading_dir, shadow_dir, 2, opts),
-        batch_size=2,
-        num_workers=1,
-        shuffle=True
-    )
-
-    return data_loader
-
-def load_map_test_recursive_2(path_a, path_c, opts):
-    a_list = glob.glob(path_a + "/rgb/*.png")
-    print("Length of images: %d" % len(a_list))
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.MapDataset(a_list, path_c, 2, opts),
-        batch_size=2,
-        num_workers=1,
-        shuffle=False
-    )
-
-    return data_loader
-
-def load_color_train_dataset(path_a, path_c, path_segment, opts):
-    a_list = assemble_unpaired_data(path_a, opts.img_to_load / 2)
-    print("Length of images: %d" % len(a_list))
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.ColorTransferDataset(a_list, path_c, path_segment, 1),
-        batch_size=opts.batch_size,
-        num_workers=opts.num_workers,
-        shuffle=True
-    )
-
-    return data_loader
-
-def load_color_test_dataset(path_a, path_c, path_segment, opts):
-    a_list = assemble_unpaired_data(path_a, opts.img_to_load / 2)
-    print("Length of images: %d" % len(a_list))
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.ColorTransferDataset(a_list, path_c, path_segment, 2),
         batch_size=4,
         num_workers=1,
         shuffle=True
@@ -298,6 +261,57 @@ def load_da_dataset_train(imgx_dir, imgy_dir, opts):
 
 
 def load_da_dataset_test(imgx_dir, imgy_dir, opts):
+    imgx_list = glob.glob(imgx_dir)
+    imgy_list = glob.glob(imgy_dir)
+
+    random.shuffle(imgx_list)
+    random.shuffle(imgy_list)
+
+    if (opts.img_to_load > 0):
+        imgx_list = imgx_list[0: opts.img_to_load]
+        imgy_list = imgy_list[0: opts.img_to_load]
+
+    print("Length of images: %d %d" % (len(imgx_list), len(imgy_list)))
+
+    data_loader = torch.utils.data.DataLoader(
+        image_dataset.GenericPairedDataset(imgx_list, imgy_list, 2, opts),
+        batch_size=4,
+        num_workers=1,
+        shuffle=False,
+        pin_memory=False
+    )
+
+    return data_loader
+
+def load_ffa_dataset_train(imgx_dir, imgy_dir, opts):
+    imgx_list = glob.glob(imgx_dir)
+    imgy_list = glob.glob(imgy_dir)
+
+    random.shuffle(imgx_list)
+    random.shuffle(imgy_list)
+
+    if(opts.img_to_load > 0):
+        imgx_list = imgx_list[0: opts.img_to_load]
+        imgy_list = imgy_list[0: opts.img_to_load]
+
+    print("Length of images: %d %d" % (len(imgx_list), len(imgy_list)))
+
+    if(len(imgx_list) == 0 or len(imgy_list) == 0):
+        return None
+
+    data_loader = torch.utils.data.DataLoader(
+        image_dataset.GenericPairedDataset(imgx_list, imgy_list, 1, opts),
+        batch_size=opts.batch_size,
+        num_workers = opts.num_workers,
+        shuffle=False,
+        pin_memory=False
+
+    )
+
+    return data_loader
+
+
+def load_ffa_dataset_test(imgx_dir, imgy_dir, opts):
     imgx_list = glob.glob(imgx_dir)
     imgy_list = glob.glob(imgy_dir)
 

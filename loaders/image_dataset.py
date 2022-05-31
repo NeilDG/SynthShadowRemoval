@@ -420,7 +420,7 @@ class RealWorldDataset(data.Dataset):
         path_segment = img_id.split("/")
         file_name = path_segment[len(path_segment) - 1]
 
-        img_a = cv2.imread(img_id);
+        img_a = cv2.imread(img_id)
         img_a = cv2.cvtColor(img_a, cv2.COLOR_BGR2RGB)  # because matplot uses RGB, openCV is BGR
 
         img_a = self.initial_op(img_a)

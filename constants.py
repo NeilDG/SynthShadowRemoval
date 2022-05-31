@@ -23,8 +23,8 @@ DATASET_RGB_DECOMPOSE_PATH = "E:/SynthWeather Dataset 3/rgb/"
 DATASET_SHADING_DECOMPOSE_PATH = "E:/SynthWeather Dataset 3/shading/"
 DATASET_ALBEDO_DECOMPOSE_PATH = "E:/SynthWeather Dataset 3/albedo/"
 
-DATASET_PREFIX_6_PATH = "E:/SynthWeather Dataset 6/"
-DATASET_ALBEDO_6_PATH = "E:/SynthWeather Dataset 6/albedo/"
+DATASET_PREFIX_7_PATH = "E:/SynthWeather Dataset 7/"
+DATASET_ALBEDO_7_PATH = "E:/SynthWeather Dataset 7/albedo/"
 
 # PATCH_IMAGE_SIZE = (64, 64)
 TEST_IMAGE_SIZE = (256, 256)
@@ -35,7 +35,7 @@ GENERATOR_KEY = "generator"
 DISCRIMINATOR_KEY = "discriminator"
 
 STYLE_TRANSFER_VERSION = "synth2rgb_v1.00"
-EMBEDDING_VERSION = "embedding_v1.00"
+EMBEDDING_VERSION = "embedding_v1.01"
 FFA_TRANSFER_VERSION = "synthplaces2sunny_v1.01"
 MAPPER_VERSION = "rgb2albedo_v1.00"
 IID_VERSION = "maps2rgb_rgb2maps_v2.00"
