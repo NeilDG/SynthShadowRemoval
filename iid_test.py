@@ -302,7 +302,7 @@ def main(argv):
     img_list = glob.glob(opts.input_path + "*.jpg") + glob.glob(opts.input_path + "*.png")
     print("Images found: ", len(img_list))
 
-    trainer = relighting_trainer.RelightingTrainer(device, opts)
+    trainer = iid_trainer.IIDTrainer(device, opts)
     trainer.update_penalties(opts.adv_weight, opts.rgb_l1_weight)
 
     constants.ITERATION = str(opts.iteration)
