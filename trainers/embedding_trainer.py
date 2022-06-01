@@ -11,6 +11,8 @@ import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 import torch.nn as nn
+
+from transforms import cyclegan_transforms
 from utils import plot_utils
 
 class EmbeddingTrainer:
@@ -32,6 +34,8 @@ class EmbeddingTrainer:
         self.G_A = embedding_network.EmbeddingNetworkFFA(blocks = num_blocks).to(self.gpu_device)
         self.D_A = cycle_gan.Discriminator().to(self.gpu_device)  # use CycleGAN's discriminator
 
+        self.transform_op = cyclegan_transforms.CycleGANTransform(opts).requires_grad_(False)
+
         self.visdom_reporter = plot_utils.VisdomReporter()
         self.optimizerG = torch.optim.Adam(itertools.chain(self.G_A.parameters()), lr=self.g_lr)
         self.optimizerD = torch.optim.Adam(itertools.chain(self.D_A.parameters()), lr=self.d_lr)
@@ -43,18 +47,22 @@ class EmbeddingTrainer:
 
     def initialize_dict(self):
         # what to store in visdom?
+        self.EMBEDDING_KEY = "EMBEDDING_KEY"
         self.losses_dict = {}
         self.losses_dict[constants.G_LOSS_KEY] = []
         self.losses_dict[constants.D_OVERALL_LOSS_KEY] = []
         self.losses_dict[constants.LIKENESS_LOSS_KEY] = []
+        self.losses_dict[self.EMBEDDING_KEY] = []
         self.losses_dict[constants.G_ADV_LOSS_KEY] = []
         self.losses_dict[constants.D_A_FAKE_LOSS_KEY] = []
         self.losses_dict[constants.D_A_REAL_LOSS_KEY] = []
+
 
         self.caption_dict = {}
         self.caption_dict[constants.G_LOSS_KEY] = "G loss per iteration"
         self.caption_dict[constants.D_OVERALL_LOSS_KEY] = "D loss per iteration"
         self.caption_dict[constants.LIKENESS_LOSS_KEY] = "Likeness loss per iteration"
+        self.caption_dict[self.EMBEDDING_KEY] = "Embedding distance per iteration"
         self.caption_dict[constants.G_ADV_LOSS_KEY] = "G adv loss per iteration"
         self.caption_dict[constants.D_A_FAKE_LOSS_KEY] = "D(A) fake loss per iteration"
         self.caption_dict[constants.D_A_REAL_LOSS_KEY] = "D(A) real loss per iteration"
@@ -76,10 +84,11 @@ class EmbeddingTrainer:
             result = torch.mean(result)
             return result
 
-    def update_penalties(self,  adv_weight, likeness_weight):
+    def update_penalties(self,  adv_weight, likeness_weight, embedding_dist_weight):
         # what penalties to use for losses?
         self.adv_weight = adv_weight
         self.likeness_weight = likeness_weight
+        self.embedding_dist_weight = embedding_dist_weight
 
         print("Version: ", constants.EMBEDDING_VERSION)
         print("Learning rate for G: ", str(self.g_lr))
@@ -87,18 +96,22 @@ class EmbeddingTrainer:
         print("====================================")
         print("Adv weight: ", str(self.adv_weight))
         print("Likeness weight: ", str(self.likeness_weight))
+        print("Embedding dist weight: ", str(self.embedding_dist_weight))
 
-    def train(self, input_tensor):
+    def train(self, tensor_x, tensor_y):
         with amp.autocast():
-            fake_input = self.G_A(input_tensor)
+            tensor_x = self.transform_op(tensor_x).detach()
+            tensor_y = self.transform_op(tensor_y).detach()
+
+            fake_input = self.G_A(tensor_x)
             self.D_A.train()
             self.optimizerD.zero_grad()
 
-            prediction = self.D_A(input_tensor)
+            prediction = self.D_A(tensor_x)
             real_tensor = torch.ones_like(prediction)
             fake_tensor = torch.zeros_like(prediction)
 
-            D_A_real_loss = self.adversarial_loss(self.D_A(input_tensor), real_tensor) * self.adv_weight
+            D_A_real_loss = self.adversarial_loss(self.D_A(tensor_x), real_tensor) * self.adv_weight
             D_A_fake_loss = self.adversarial_loss(self.D_A(fake_input.detach()), fake_tensor) * self.adv_weight
 
             errD = D_A_real_loss + D_A_fake_loss
@@ -111,14 +124,21 @@ class EmbeddingTrainer:
             self.G_A.train()
             self.optimizerG.zero_grad()
 
-            clean_like = self.G_A(input_tensor)
-            likeness_loss = self.likeness_loss(clean_like, input_tensor) * self.likeness_weight
+            clean_like = self.G_A(tensor_x)
+            likeness_loss = self.likeness_loss(clean_like, tensor_x) * self.likeness_weight
+
+            #reduce embedding distance loss
+            tensor_x_embedding, _, _, _ = self.G_A.get_embedding(tensor_x)
+            tensor_y_embedding, _, _, _ = self.G_A.get_embedding(tensor_y)
+            # tensor_x_embedding = torch.mean(tensor_x_embedding)
+            # tensor_y_embedding = torch.mean(tensor_y_embedding)
+            embedding_dist_loss = self.likeness_loss(tensor_x_embedding, tensor_y_embedding) * self.embedding_dist_weight
 
             prediction = self.D_A(fake_input)
             real_tensor = torch.ones_like(prediction)
             A_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            errG = A_adv_loss + likeness_loss
+            errG = A_adv_loss + likeness_loss + embedding_dist_loss
 
             self.fp16_scaler.scale(errG).backward()
             self.fp16_scaler.step(self.optimizerG)
@@ -129,29 +149,32 @@ class EmbeddingTrainer:
             self.losses_dict[constants.G_LOSS_KEY].append(likeness_loss.item())
             self.losses_dict[constants.D_OVERALL_LOSS_KEY].append(errD.item())
             self.losses_dict[constants.LIKENESS_LOSS_KEY].append(likeness_loss.item())
+            self.losses_dict[self.EMBEDDING_KEY].append(embedding_dist_loss.item())
             self.losses_dict[constants.G_ADV_LOSS_KEY].append(A_adv_loss.item())
             self.losses_dict[constants.D_A_FAKE_LOSS_KEY].append(D_A_fake_loss.item())
             self.losses_dict[constants.D_A_REAL_LOSS_KEY].append(D_A_real_loss.item())
 
-    def test(self, a_tensor):
+    def test(self, tensor_x):
         with torch.no_grad():
-            a2b = self.G_A(a_tensor)
-
-        return a2b
+            return self.G_A(tensor_x)
 
     def visdom_plot(self, iteration):
         self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict, constants.EMBEDDING_CHECKPATH)
 
-    def visdom_visualize(self, a_tensor, b_tensor, label = "Training"):
+    def visdom_visualize(self, tensor_x, tensor_y, label ="Train"):
         with torch.no_grad():
             # report to visdom
-            fake_a = self.G_A(a_tensor)
-            fake_b = self.G_A(b_tensor)
+            if(label == "Train"):
+                tensor_x = self.transform_op(tensor_x).detach()
+                tensor_y = self.transform_op(tensor_y).detach()
 
-            self.visdom_reporter.plot_image(a_tensor, str(label) + " Training A images - " + constants.EMBEDDING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(fake_a, str(label) + " Training Reconstructed A images - " + constants.EMBEDDING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(b_tensor, str(label) + " Training B images - " + constants.EMBEDDING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(fake_b, str(label) + " Training Reconstructed B images - " + constants.EMBEDDING_VERSION + constants.ITERATION)
+            fake_a = self.G_A(tensor_x)
+            fake_b = self.G_A(tensor_y)
+
+            self.visdom_reporter.plot_image(tensor_x, str(label) + " A images - " + constants.EMBEDDING_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(fake_a, str(label) + "  Reconstructed A images - " + constants.EMBEDDING_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(tensor_y, str(label) + "  B images - " + constants.EMBEDDING_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(fake_b, str(label) + "  Reconstructed B images - " + constants.EMBEDDING_VERSION + constants.ITERATION)
 
     def visdom_infer(self, rw_tensor):
         with torch.no_grad():

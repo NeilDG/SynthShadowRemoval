@@ -76,9 +76,9 @@ def train_shadow_relight():
               "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.09\" --iteration=8")
 
 def train_relighting():
-    os.system("python \"embedding_main.py\" --server_config=5 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=12 "
-              "--min_epochs=5 --num_blocks=6 --use_lpips=0 --use_bce=0 "
-              "--plot_enabled=0 --debug_mode=0 --version_name=\"embedding_v5.00\" --iteration=1")
+    os.system("python \"embedding_main.py\" --server_config=5 --img_to_load=500 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=6 "
+              "--min_epochs=1 --num_blocks=6 --use_lpips=0 --use_bce=0 --embedding_dist_weight=10.0 "
+              "--plot_enabled=1 --debug_mode=0 --version_name=\"embedding_v5.00\" --iteration=5")
 
     # os.system("python \"embedding_main.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=12 "
     #           "--min_epochs=5 --num_blocks=6 --use_lpips=0 --use_bce=1 "
@@ -132,7 +132,7 @@ def main():
     # train_albedo()
     # train_shading()
     # train_shadow()
-    # train_shadow_relight()s
+    # train_shadow_relight()
     train_relighting()
     # train_domain_adaptation()
     # os.system("shutdown /s /t 1")

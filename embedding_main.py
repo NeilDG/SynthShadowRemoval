@@ -24,6 +24,7 @@ parser.add_option('--likeness_weight', type=float, help="Weight", default="10.0"
 parser.add_option('--num_blocks', type=int)
 parser.add_option('--use_bce', type=int, default = "0")
 parser.add_option('--use_lpips', type=int, default = "0")
+parser.add_option('--embedding_dist_weight', type=float, default="0.0")
 parser.add_option('--g_lr', type=float, help="LR", default="0.00002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.00002")
 parser.add_option('--patch_size', type=int, help="patch_size", default="64")
@@ -95,7 +96,7 @@ def main(argv):
     test_loader = dataset_loader.load_ffa_dataset_test(constants.imgx_dir_test, constants.imgy_dir_test, opts)
 
     trainer = embedding_trainer.EmbeddingTrainer(device, opts)
-    trainer.update_penalties(opts.adv_weight, opts.likeness_weight)
+    trainer.update_penalties(opts.adv_weight, opts.likeness_weight, opts.embedding_dist_weight)
     start_epoch = 0
     iteration = 0
     last_metric = 10000.0
@@ -132,8 +133,8 @@ def main(argv):
                 imgx_tensor = imgx_batch.to(device)
                 imgy_tensor = imgy_batch.to(device)
 
-                trainer.train(imgx_tensor)
-                trainer.train(imgy_tensor)
+                trainer.train(imgx_tensor, imgy_tensor) #train on imgx, with imgy as reference
+                trainer.train(imgy_tensor, imgx_tensor) #train on imgy, with imgx as reference
 
                 iteration = iteration + 1
 
