@@ -3,7 +3,7 @@
 import random
 
 import kornia
-from model import iteration_table
+from model import iteration_table, embedding_network
 from model import ffa_gan as ffa
 from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
@@ -30,6 +30,7 @@ class IIDTrainer:
         self.iteration = opts.iteration
         self.it_table = iteration_table.IterationTable()
         self.use_bce = self.it_table.is_bce_enabled(self.iteration, IterationTable.NetworkType.ALBEDO)
+        self.da_enabled = opts.da_enabled
 
         self.lpips_loss = lpips.LPIPS(net='vgg').to(self.gpu_device)
         self.ssim_loss = kornia.losses.SSIMLoss(5)
@@ -48,9 +49,14 @@ class IIDTrainer:
         self.batch_size = opts.batch_size
         net_config = opts.net_config
 
-        # self.initialize_albedo_network(net_config, num_blocks)
-        self.initialize_shading_network(net_config, num_blocks)
-        self.initialize_shadow_network(net_config, num_blocks)
+
+        if(self.da_enabled == 1):
+            self.initialize_da_network(opts.da_version_name)
+            self.initialize_shading_network(net_config, num_blocks, 6)
+            self.initialize_shadow_network(net_config, num_blocks, 6)
+        else:
+            self.initialize_shading_network(net_config, num_blocks, 3)
+            self.initialize_shadow_network(net_config, num_blocks, 3)
 
         self.visdom_reporter = plot_utils.VisdomReporter()
         self.optimizerG_shading = torch.optim.Adam(itertools.chain(self.G_S.parameters(), self.G_Z.parameters()), lr=self.g_lr)
@@ -80,31 +86,37 @@ class IIDTrainer:
     #
     #     self.D_A = cycle_gan.Discriminator(input_nc=3).to(self.gpu_device)  # use CycleGAN's discriminator
 
-    def initialize_shading_network(self, net_config, num_blocks):
+    def initialize_da_network(self, da_version_name):
+        self.embedder = embedding_network.EmbeddingNetworkFFA(blocks=6).to(self.gpu_device)
+        checkpoint = torch.load("checkpoint/" + da_version_name + ".pt", map_location=self.gpu_device)
+        self.embedder.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
+        print("Loaded embedding network: ", da_version_name)
+
+    def initialize_shading_network(self, net_config, num_blocks, input_nc):
         if (net_config == 1):
-            self.G_S = cycle_gan.Generator(input_nc=3, output_nc=1, n_residual_blocks=num_blocks).to(self.gpu_device)
+            self.G_S = cycle_gan.Generator(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks).to(self.gpu_device)
         elif (net_config == 2):
-            self.G_S = unet_gan.UnetGenerator(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
+            self.G_S = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
-            self.G_S = cycle_gan.Generator(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
+            self.G_S = cycle_gan.Generator(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
         elif (net_config == 4):
-            self.G_S = unet_gan.UnetGeneratorV2(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
+            self.G_S = unet_gan.UnetGeneratorV2(input_nc=input_nc, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         else:
-            self.G_S = cycle_gan.GeneratorV2(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
+            self.G_S = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
         self.D_S = cycle_gan.Discriminator(input_nc=1).to(self.gpu_device)  # use CycleGAN's discriminator
 
-    def initialize_shadow_network(self, net_config, num_blocks):
+    def initialize_shadow_network(self, net_config, num_blocks, input_nc):
         if (net_config == 1):
-            self.G_Z = cycle_gan.Generator(input_nc=3, output_nc=1, n_residual_blocks=num_blocks).to(self.gpu_device)
+            self.G_Z = cycle_gan.Generator(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks).to(self.gpu_device)
         elif (net_config == 2):
-            self.G_Z = unet_gan.UnetGenerator(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
+            self.G_Z = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
-            self.G_Z = cycle_gan.Generator(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
+            self.G_Z = cycle_gan.Generator(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
         elif (net_config == 4):
-            self.G_Z = unet_gan.UnetGeneratorV2(input_nc=3, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
+            self.G_Z = unet_gan.UnetGeneratorV2(input_nc=input_nc, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         else:
-            self.G_Z = cycle_gan.GeneratorV2(input_nc=3, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
+            self.G_Z = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
         self.D_Z = cycle_gan.Discriminator(input_nc=1).to(self.gpu_device)  # use CycleGAN's discriminator
 
@@ -287,8 +299,22 @@ class IIDTrainer:
     #         self.losses_dict_a[constants.D_A_REAL_LOSS_KEY].append(D_A_real_loss.item())
     #         self.losses_dict_a[self.RGB_RECONSTRUCTION_LOSS_KEY].append(rgb_l1_loss.item())
 
+    def reshape_input(self, input_tensor):
+        rgb_embedding, _, _, _ = self.embedder.get_embedding(input_tensor)
+        rgb_embedding = torch.flatten(rgb_embedding, 3, 4)
+
+        compatible_size = np.shape(input_tensor)[3]
+        orig_size = np.shape(rgb_embedding)
+        rgb_embedding = rgb_embedding.expand(orig_size[0], orig_size[1], orig_size[2], compatible_size)
+
+        print(np.shape(rgb_embedding), np.shape(input_tensor))
+        return torch.cat([input_tensor, rgb_embedding], 1)
+
     def train_shading(self, input_rgb_tensor, shading_tensor, shadow_tensor):
         with amp.autocast():
+            if (self.da_enabled == 1):
+                input_rgb_tensor = self.reshape_input(input_rgb_tensor)
+
             self.optimizerD_shading.zero_grad()
 
             #shading discriminator
@@ -374,6 +400,9 @@ class IIDTrainer:
 
     def visdom_visualize(self, input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor, target_rgb_tensor, label = "Training"):
         with torch.no_grad():
+            if (self.da_enabled == 1):
+                input_rgb_tensor = self.reshape_input(input_rgb_tensor)
+
             rgb2shading = self.G_S(input_rgb_tensor)
             rgb2shadow = self.G_Z(input_rgb_tensor)
             rgb2albedo = tensor_utils.produce_albedo(input_rgb_tensor, rgb2shading, rgb2shadow)
@@ -465,10 +494,15 @@ class IIDTrainer:
 
     def infer_shading(self, rw_tensor):
         with torch.no_grad():
+            if (self.da_enabled == 1):
+                rw_tensor = self.reshape_input(rw_tensor)
+
             return self.G_S(rw_tensor)
 
     def infer_shadow(self, rw_tensor):
         with torch.no_grad():
+            if (self.da_enabled == 1):
+                rw_tensor = self.reshape_input(rw_tensor)
             return self.G_Z(rw_tensor)
 
     def load_saved_state(self, checkpoint):
