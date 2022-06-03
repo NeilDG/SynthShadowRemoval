@@ -20,6 +20,15 @@ def weights_init(m):
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         nn.init.constant_(m.bias.data, 0)
 
+def normal_weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        nn.init.normal_(m.weight.data, 0.0, 0.02)
+        nn.init.constant_(m.bias.data, 0.0)
+
+    elif classname.find('BatchNorm') != -1:
+        nn.init.normal_(m.weight.data, 1.0, 0.02)
+        nn.init.constant_(m.bias.data, 0)
 
 def clamp(value, max):
     if (value > max):
@@ -157,6 +166,27 @@ class EmbeddingNetworkFFA(nn.Module):
     def forward(self, x1):
         w, res1, res2, res3 = self.get_embedding(x1)
         return self.get_decoding(x1, w, res1, res2, res3)
+
+class DecodingNetworkFFA(nn.Module):
+    def __init__(self):
+        super(DecodingNetworkFFA, self).__init__()
+        self.dim = 64
+        self.palayer = PALayer(self.dim)
+        conv = default_conv
+        kernel_size = 3
+        post_precess = [
+            conv(self.dim, self.dim, kernel_size),
+            conv(self.dim, 3, kernel_size)]
+
+        self.post = nn.Sequential(*post_precess)
+        self.post.apply(normal_weights_init)
+
+    def get_decoding(self, x1, w, res1, res2, res3):
+        out = w[:, 0, ::] * res1 + w[:, 1, ::] * res2 + w[:, 2, ::] * res3
+        out = self.palayer(out)
+        x = self.post(out)
+
+        return x + x1
 
 class PALayer(nn.Module):
     def __init__(self, channel):

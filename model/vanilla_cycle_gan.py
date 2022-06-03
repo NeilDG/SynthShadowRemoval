@@ -92,6 +92,9 @@ class Generator(nn.Module):
             else:
                 model += [ResidualBlock(in_features)]
 
+        self.encoding = nn.Sequential(*model)
+
+        model = []
         # Upsampling
         out_features = in_features//2
         for _ in range(downsampling_blocks):
@@ -109,11 +112,17 @@ class Generator(nn.Module):
                     nn.Conv2d(64, output_nc, 8),
                     nn.Tanh() ]
 
-        self.model = nn.Sequential(*model)
+        self.decoding = nn.Sequential(*model)
+
+        self.model = nn.Sequential(*[self.encoding, self.decoding])
         self.model.apply(xavier_weights_init)
 
     def forward(self, x):
         return self.model(x)
+
+    def get_embedding(self, x):
+        return self.encoding(x)
+
 
 class GeneratorV2(Generator):
     def __init__(self, input_nc=3, output_nc=3, downsampling_blocks = 2, n_residual_blocks=6, has_dropout = True, multiply = True):

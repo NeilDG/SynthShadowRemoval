@@ -35,7 +35,7 @@ parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--version_name', type=str, help="version_name")
 parser.add_option('--mode', type=str, default="azimuth")
 parser.add_option('--test_mode', type=int, help="Test mode?", default=0)
-parser.add_option('--min_epochs', type=int, help="Min epochs", default=120)
+parser.add_option('--min_epochs', type=int, help="Min epochs", default=50)
 parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
 parser.add_option('--debug_mode', type=int, default=0)
 
