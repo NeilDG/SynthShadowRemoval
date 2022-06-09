@@ -9,7 +9,7 @@
 #SBATCH --mail-user=neil.delgallego@dlsu.edu.ph
 #SBATCH --mail-type=END
 
-ITERATION=7
+ITERATION=11
 echo "CUDA_DEVICE=/dev/nvidia/$CUDA_VISIBLE_DEVICES"
 nvidia-smi
 
@@ -19,13 +19,14 @@ module load cuda/10.1_cudnn-7.6.5
 
 source activate NeilGAN_V2
 
-srun python relighting_main.py \
+srun python iid_train.py \
 --iteration=$ITERATION \
 --server_config=1 \
---batch_size=768 \
+--batch_size=512 \
 --patch_size=64 \
 --plot_enabled=0 \
---version_name="maps2rgb_rgb2maps_v4.09" --min_epochs=50 --net_config=2 --num_blocks=0 \
+--version_name="iid_networkv5.03" --min_epochs=50 --net_config=2 --num_blocks=0 \
+--da_enabled=1 --da_version_name="embedding_v5.00_5" \
 --img_to_load=-1 --load_previous=0
 
 

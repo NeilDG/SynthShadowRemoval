@@ -431,6 +431,8 @@ class IIDTrainer:
         with torch.no_grad():
             if (self.da_enabled == 1):
                 input = self.reshape_input(input_rgb_tensor)
+            else:
+                input = input_rgb_tensor
 
             rgb2shading = self.G_S(input)
             rgb2shadow = self.G_Z(input)
@@ -489,6 +491,8 @@ class IIDTrainer:
         with torch.no_grad():
             if (self.da_enabled == 1):
                 input = self.reshape_input(gta_rgb)
+            else:
+                input = gta_rgb
 
             rgb2shading = self.G_S(input)
             rgb2shadow = self.G_Z(input)
@@ -505,13 +509,17 @@ class IIDTrainer:
             self.visdom_reporter.plot_image(gta_rgb, "GTA RGB - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(rgb_like, "GTA RGB-Like - " + constants.IID_VERSION + constants.ITERATION)
 
-    # def infer_albedo(self, rw_tensor):
-    #     with torch.no_grad():
-    #         rgb2shading = self.G_S(rw_tensor)
-    #         rgb2shadow = self.G_Z(rw_tensor)
-    #         rgb2albedo = tensor_utils.produce_albedo(rw_tensor, rgb2shading, rgb2shadow)
-    #         # rgb2albedo = self.G_A(rgb2albedo)
-    #         return rgb2albedo
+    def infer_albedo(self, rw_tensor):
+        with torch.no_grad():
+            if (self.da_enabled == 1):
+                input = self.reshape_input(rw_tensor)
+            else:
+                input = rw_tensor
+            rgb2shading = self.G_S(input)
+            rgb2shadow = self.G_Z(input)
+            rgb2albedo = tensor_utils.produce_albedo(rw_tensor, rgb2shading, rgb2shadow)
+            # rgb2albedo = self.G_A(rgb2albedo)
+            return rgb2albedo
 
     def infer_shading(self, rw_tensor):
         with torch.no_grad():

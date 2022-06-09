@@ -53,6 +53,8 @@ def update_config(opts):
         constants.early_stop_threshold = 0
         constants.min_epochs = 1
         constants.num_epochs = 10
+    else:
+        constants.min_epochs = opts.min_epochs
 
     ## COARE
     if (constants.server_config == 1):
@@ -63,6 +65,9 @@ def update_config(opts):
         constants.imgy_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
         constants.imgx_dir_test = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
         constants.imgy_dir_test = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
+
+        constants.DATASET_PREFIX_7_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 7/"
+        constants.DATASET_ALBEDO_7_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 7/albedo/"
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
