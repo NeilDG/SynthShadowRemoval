@@ -191,7 +191,6 @@ class RelightDataset(data.Dataset):
         return self.img_length
 
 
-
 class IIDDataset(data.Dataset):
     def __init__(self, img_length, rgb_dir, albedo_dir, shading_dir, shadow_dir, transform_config, opts):
         self.img_length = img_length
@@ -308,12 +307,11 @@ class IIDDataset(data.Dataset):
     def __len__(self):
         return self.img_length
 
-class ShadowRelightDatset(data.Dataset):
-    def __init__(self, img_length, input_rgb_path, input_shadow_path, desired_shadow_path, transform_config, opts):
+class IIDDatasetV2(data.Dataset):
+    def __init__(self, img_length, rgb_dir, albedo_dir, transform_config, opts):
         self.img_length = img_length
-        self.path_a = input_shadow_path
-        self.path_b = desired_shadow_path
-        self.path_rgb = input_rgb_path
+        self.albedo_dir = albedo_dir
+        self.rgb_dir = rgb_dir
         self.transform_config = transform_config
         self.patch_size = (opts.patch_size, opts.patch_size)
         self.light_angles = [0, 36, 72, 108, 144]
@@ -322,15 +320,12 @@ class ShadowRelightDatset(data.Dataset):
             transforms.ToPILImage(),
             transforms.Resize((256, 256))])
 
-        if (transform_config == 1):
-            self.final_transform_op_grey = transforms.Compose([
-                transforms.ToTensor(),
-                transforms.Normalize((0.5,), (0.5,))
-            ])
+        self.normalize_op = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        self.normalize_op_grey = transforms.Normalize((0.5), (0.5))
 
+        if (transform_config == 1):
             self.final_transform_op = transforms.Compose([
-                transforms.ToTensor(),
-                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                transforms.ToTensor()
             ])
 
             self.mask_op = transforms.Compose([
@@ -338,16 +333,9 @@ class ShadowRelightDatset(data.Dataset):
             ])
 
         else:
-            self.final_transform_op_grey = transforms.Compose([
-                transforms.Resize(constants.TEST_IMAGE_SIZE),
-                transforms.ToTensor(),
-                transforms.Normalize((0.5,), (0.5,))
-            ])
-
             self.final_transform_op = transforms.Compose([
                 transforms.Resize(constants.TEST_IMAGE_SIZE),
-                transforms.ToTensor(),
-                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                transforms.ToTensor()
             ])
 
             self.mask_op = transforms.Compose([
@@ -356,50 +344,37 @@ class ShadowRelightDatset(data.Dataset):
             ])
 
     def __getitem__(self, idx):
-        # img_id = self.image_list_a[idx]
-        file_name = "synth_"+ str(idx) + ".png"
+        file_name = "synth_" + str(idx) + ".png"
 
-        light_angle_a = np.random.choice(self.light_angles)
-        img_a_path = self.path_a.format(input_light_angle=light_angle_a) + file_name
-        img_a = cv2.imread(img_a_path)
-        img_a = cv2.cvtColor(img_a, cv2.COLOR_BGR2GRAY)
+        img_a_path = self.albedo_dir + file_name
+        albedo = cv2.imread(img_a_path) #albedo
+        albedo = cv2.cvtColor(albedo, cv2.COLOR_BGR2RGB)
 
-        path = self.path_rgb.format(input_light_angle=light_angle_a) + file_name
-        img_rgb = cv2.imread(path)
-        img_rgb = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2RGB)
+        img_rgb_path = self.rgb_dir + file_name
+        input_rgb = cv2.imread(img_rgb_path)  # input rgb
+        input_rgb = cv2.cvtColor(input_rgb, cv2.COLOR_BGR2RGB)
 
-        #randomize desired light angle
-        light_angle_b = np.random.choice(self.light_angles)
-        while light_angle_a == light_angle_b:
-            light_angle_b = np.random.choice(self.light_angles)
-        img_b_path = self.path_b.format(input_light_angle = light_angle_b) + file_name
-        # print("Img path pairing: ", img_a_path, img_b_path)
-
-        img_b = cv2.imread(img_b_path)
-        img_b = cv2.cvtColor(img_b, cv2.COLOR_BGR2GRAY)
-
-        img_rgb = self.initial_op(img_rgb)
-        img_a = self.initial_op(img_a)
-        img_b = self.initial_op(img_b)
+        input_rgb = self.initial_op(input_rgb)
+        albedo = self.initial_op(albedo)
 
         if (self.transform_config == 1):
-            crop_indices = transforms.RandomCrop.get_params(img_a, output_size=self.patch_size)
+            crop_indices = transforms.RandomCrop.get_params(input_rgb, output_size=self.patch_size)
             i, j, h, w = crop_indices
 
-            img_rgb = transforms.functional.crop(img_rgb, i, j, h, w)
-            img_a = transforms.functional.crop(img_a, i, j, h, w)
-            img_b = transforms.functional.crop(img_b, i, j, h, w)
+            input_rgb = transforms.functional.crop(input_rgb, i, j, h, w)
+            albedo = transforms.functional.crop(albedo, i, j, h, w)
 
-        img_rgb = self.final_transform_op(img_rgb)
-        img_a = self.final_transform_op_grey(img_a)
-        img_b = self.final_transform_op_grey(img_b)
-        light_angle_b = normalize(light_angle_b)
-        light_angle_tensor = torch.full_like(img_a[:, :, :], light_angle_b)
+        input_rgb = self.final_transform_op(input_rgb)
+        albedo = self.final_transform_op(albedo)
 
-        return file_name, img_rgb, img_a, img_b, light_angle_tensor
+        input_rgb = self.normalize_op(input_rgb)
+        albedo = self.normalize_op(albedo)
+
+        return file_name, input_rgb, albedo
 
     def __len__(self):
         return self.img_length
+
 
 class RealWorldDataset(data.Dataset):
     def __init__(self, image_list_a):
