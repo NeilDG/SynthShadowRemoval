@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from loaders import dataset_loader
 from trainers import iid_trainer
 from trainers import early_stopper
+from transforms import iid_transforms
 from utils import tensor_utils
 import constants
 from trainers import embedding_trainer
@@ -131,16 +132,13 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    albedo_dir = constants.DATASET_ALBEDO_7_PATH
-    shading_dir = constants.DATASET_PREFIX_7_PATH + "shading/"
-    rgb_dir = constants.DATASET_PREFIX_7_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "rgb/"
-    shadow_dir = constants.DATASET_PREFIX_7_PATH + opts.mode + "/" + "{input_light_angle}deg/" + "shadow_map/"
-
-    print(rgb_dir, albedo_dir, shading_dir, shadow_dir)
+    albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
+    rgb_dir = "E:/SynthWeather Dataset 8/train_rgb_styled/"
+    print(rgb_dir, albedo_dir)
 
     # Create the dataloader
-    train_loader = dataset_loader.load_map_train_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts)
-    test_loader = dataset_loader.load_map_test_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts)
+    train_loader = dataset_loader.load_iid_datasetv2_train(rgb_dir, albedo_dir, opts)
+    test_loader = dataset_loader.load_iid_datasetv2_test(rgb_dir, albedo_dir, opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
 
     GTA_BASE_PATH = "E:/IID-TestDataset/GTA/"
@@ -166,17 +164,14 @@ def main(argv):
 
     if (opts.test_mode == 1):
         print("Plotting test images...")
-        _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, target_shadow_batch, target_rgb_batch, light_angle_batch = next(iter(test_loader))
+        _, input_rgb_batch, albedo_batch = next(iter(test_loader))
         input_rgb_tensor = input_rgb_batch.to(device)
-        target_rgb_tensor = target_rgb_batch.to(device)
         albedo_tensor = albedo_batch.to(device)
-        shading_tensor = shading_batch.to(device)
-        input_shadow_tensor = input_shadow_batch.to(device)
-        target_shadow_tensor = target_shadow_batch.to(device)
-        light_angle_tensor = light_angle_batch.to(device)
+        iid_op = iid_transforms.IIDTransform()
+        input_rgb_tensor, albedo_tensor, shading_tensor = iid_op(input_rgb_tensor, albedo_tensor)
 
-        trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor, "Test")
-        trainer.visdom_measure(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor, "Test")
+        trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, "Test")
+        trainer.visdom_measure(input_rgb_tensor, albedo_tensor, shading_tensor, "Test")
 
         _, input_rgb_batch = next(iter(rw_loader))
         input_rgb_tensor = input_rgb_batch.to(device)
@@ -189,33 +184,35 @@ def main(argv):
 
     else:
         print("Starting Training Loop. Training Shading + Shadow...")
+        iid_op = iid_transforms.IIDTransform()
         last_metric = 10000.0
         stopper_method_s = early_stopper.EarlyStopper(constants.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, constants.early_stop_threshold, last_metric)
+        epoch_multiplier = 48 #calculated by expected image dataset size (24000) / actual size of albedo dataset (500)
+        constants.num_epochs = constants.num_epochs * epoch_multiplier
         for epoch in range(start_epoch, constants.num_epochs):
             # For each batch in the dataloader
             for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader)):
-                _, input_rgb_batch, _, shading_batch, input_shadow_batch, _, _, _ = train_data
+                _, input_rgb_batch, albedo_batch = train_data
                 input_rgb_tensor = input_rgb_batch.to(device)
-                shading_tensor = shading_batch.to(device)
-                input_shadow_tensor = input_shadow_batch.to(device)
+                albedo_tensor = albedo_batch.to(device)
 
-                trainer.train_shading(input_rgb_tensor, shading_tensor, input_shadow_tensor)
+                input_rgb_tensor, albedo_tensor, shading_tensor = iid_op(input_rgb_tensor, albedo_tensor)
+                trainer.train(input_rgb_tensor, albedo_tensor, shading_tensor)
                 iteration = iteration + 1
 
                 stopper_method_s.test(trainer, epoch, iteration, trainer.infer_shading(input_rgb_tensor), shading_tensor)
+                trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, "Train")
 
-                if (i % 300 == 0):
-                    trainer.save_states_checkpt(epoch, iteration, last_metric)
-                    _, input_rgb_batch, albedo_batch, shading_batch, input_shadow_batch, _, _, _ = test_data
-                    input_rgb_tensor = input_rgb_batch.to(device)
-                    albedo_tensor = albedo_batch.to(device)
-                    shading_tensor = shading_batch.to(device)
-                    input_shadow_tensor = input_shadow_batch.to(device)
-                    trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, input_shadow_tensor, input_rgb_tensor, "Test")
-                    trainer.visdom_plot(iteration)
+                _, input_rgb_batch, albedo_batch = test_data
+                input_rgb_tensor = input_rgb_batch.to(device)
+                albedo_tensor = albedo_batch.to(device)
+                input_rgb_tensor, albedo_tensor, shading_tensor = iid_op(input_rgb_tensor, albedo_tensor)
 
-                if (stopper_method_s.did_stop_condition_met()):
-                    break
+                trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, "Test")
+                trainer.visdom_plot(iteration)
+
+            if(epoch % epoch_multiplier == 0):
+                trainer.save_states_checkpt(epoch, iteration, last_metric)
 
             if (stopper_method_s.did_stop_condition_met()):
                 break

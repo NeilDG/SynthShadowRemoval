@@ -320,9 +320,6 @@ class IIDDatasetV2(data.Dataset):
             transforms.ToPILImage(),
             transforms.Resize((256, 256))])
 
-        self.normalize_op = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        self.normalize_op_grey = transforms.Normalize((0.5), (0.5))
-
         if (transform_config == 1):
             self.final_transform_op = transforms.Compose([
                 transforms.ToTensor()
@@ -346,11 +343,15 @@ class IIDDatasetV2(data.Dataset):
     def __getitem__(self, idx):
         file_name = "synth_" + str(idx) + ".png"
 
+        list_scenes = os.listdir(self.rgb_dir)
+        scene_index = np.random.randint(0, len(list_scenes))
+
         img_a_path = self.albedo_dir + file_name
         albedo = cv2.imread(img_a_path) #albedo
         albedo = cv2.cvtColor(albedo, cv2.COLOR_BGR2RGB)
 
-        img_rgb_path = self.rgb_dir + file_name
+        img_rgb_path = self.rgb_dir + list_scenes[scene_index] + "/" + file_name
+        # print(img_rgb_path)
         input_rgb = cv2.imread(img_rgb_path)  # input rgb
         input_rgb = cv2.cvtColor(input_rgb, cv2.COLOR_BGR2RGB)
 
@@ -366,9 +367,6 @@ class IIDDatasetV2(data.Dataset):
 
         input_rgb = self.final_transform_op(input_rgb)
         albedo = self.final_transform_op(albedo)
-
-        input_rgb = self.normalize_op(input_rgb)
-        albedo = self.normalize_op(albedo)
 
         return file_name, input_rgb, albedo
 
