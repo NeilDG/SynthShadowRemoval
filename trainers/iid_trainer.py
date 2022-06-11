@@ -95,7 +95,7 @@ class IIDTrainer:
         else:
             self.G_S = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
-        self.D_S = cycle_gan.Discriminator(input_nc=1).to(self.gpu_device)  # use CycleGAN's discriminator
+        self.D_S = cycle_gan.Discriminator(input_nc=3).to(self.gpu_device)  # use CycleGAN's discriminator
 
     def initialize_albedo_network(self, net_config, num_blocks, input_nc):
         if (net_config == 1):
@@ -398,11 +398,10 @@ class IIDTrainer:
 
             rgb2shading = self.G_S(input)
             rgb2albedo = self.G_A(input)
-            # rgb2albedo = self.iid_op.extract_albedo(input_rgb_tensor, shading_tensor)
-            # rgb_like = self.iid_op.produce_rgb(rgb2albedo, shading_tensor)
-            rgb_like = self.iid_op.produce_rgb(albedo_tensor, shading_tensor)
+            rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading)
+            # rgb_like = self.iid_op.produce_rgb(albedo_tensor, shading_tensor)
 
-            print("Difference between Albedo vs Recon: ", self.l1_loss(rgb2albedo, albedo_tensor).item())  #
+            # print("Difference between Albedo vs Recon: ", self.l1_loss(rgb2albedo, albedo_tensor).item())  #
 
             self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(embedding_rep, str(label) + " Embedding Maps - " + constants.IID_VERSION + constants.ITERATION)

@@ -45,8 +45,8 @@ class IIDTransform(nn.Module):
 
         rgb_recon = self.produce_rgb(albedo_refined, shading_refined, False)
 
-        loss_op = nn.L1Loss()
-        print("Difference between RGB vs Recon: ", loss_op(rgb_recon, rgb_tensor).item()) #0.011102916672825813
+        # loss_op = nn.L1Loss()
+        # print("Difference between RGB vs Recon: ", loss_op(rgb_recon, rgb_tensor).item()) #0.011102916672825813
 
         rgb_recon = self.transform_op(rgb_recon)
         albedo_refined = self.transform_op(albedo_refined)
