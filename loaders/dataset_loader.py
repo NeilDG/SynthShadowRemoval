@@ -113,11 +113,19 @@ def load_map_test_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts):
     return data_loader
 
 def load_iid_datasetv2_train(rgb_dir, albedo_dir, opts):
-    img_length = len(assemble_unpaired_data(albedo_dir, opts.img_to_load))
+    rgb_list = glob.glob(rgb_dir)
+    random.shuffle(rgb_list)
+    if (opts.img_to_load > 0):
+        rgb_list = rgb_list[0: opts.img_to_load]
+
+    img_length = len(rgb_list)
     print("Length of images: %d" % img_length)
+    print(rgb_list[0])
+    print(rgb_list[4])
+    print(rgb_list[8])
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.IIDDatasetV2(img_length, rgb_dir, albedo_dir, 1, opts),
+        image_dataset.IIDDatasetV2(img_length, rgb_list, albedo_dir, 1, opts),
         batch_size=opts.batch_size,
         num_workers=opts.num_workers,
         shuffle=True
@@ -126,11 +134,16 @@ def load_iid_datasetv2_train(rgb_dir, albedo_dir, opts):
     return data_loader
 
 def load_iid_datasetv2_test(rgb_dir, albedo_dir, opts):
-    img_length = len(assemble_unpaired_data(albedo_dir, opts.img_to_load))
+    rgb_list = glob.glob(rgb_dir)
+    random.shuffle(rgb_list)
+    if (opts.img_to_load > 0):
+        rgb_list = rgb_list[0: opts.img_to_load]
+
+    img_length = len(rgb_list)
     print("Length of images: %d" % img_length)
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.IIDDatasetV2(img_length, rgb_dir, albedo_dir, 2, opts),
+        image_dataset.IIDDatasetV2(img_length, rgb_list, albedo_dir, 2, opts),
         batch_size=4,
         num_workers=1,
         shuffle=False

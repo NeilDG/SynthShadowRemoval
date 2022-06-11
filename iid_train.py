@@ -133,7 +133,7 @@ def main(argv):
     print("Device: %s" % device)
 
     albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
-    rgb_dir = "E:/SynthWeather Dataset 8/train_rgb_styled/"
+    rgb_dir = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
     print(rgb_dir, albedo_dir)
 
     # Create the dataloader
@@ -183,12 +183,10 @@ def main(argv):
 
 
     else:
-        print("Starting Training Loop. Training Shading + Shadow...")
-        iid_op = iid_transforms.IIDTransform()
+        print("Starting Training Loop...")
+        iid_op = iid_transforms.IIDTransform().to(device)
         last_metric = 10000.0
         stopper_method_s = early_stopper.EarlyStopper(constants.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, constants.early_stop_threshold, last_metric)
-        epoch_multiplier = 48 #calculated by expected image dataset size (24000) / actual size of albedo dataset (500)
-        constants.num_epochs = constants.num_epochs * epoch_multiplier
         for epoch in range(start_epoch, constants.num_epochs):
             # For each batch in the dataloader
             for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader)):
@@ -200,19 +198,20 @@ def main(argv):
                 trainer.train(input_rgb_tensor, albedo_tensor, shading_tensor)
                 iteration = iteration + 1
 
-                stopper_method_s.test(trainer, epoch, iteration, trainer.infer_shading(input_rgb_tensor), shading_tensor)
-                trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, "Train")
+                if(i % 300 == 0):
+                    stopper_method_s.test(trainer, epoch, iteration, trainer.infer_shading(input_rgb_tensor), shading_tensor)
+                    trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, "Train")
 
-                _, input_rgb_batch, albedo_batch = test_data
-                input_rgb_tensor = input_rgb_batch.to(device)
-                albedo_tensor = albedo_batch.to(device)
-                input_rgb_tensor, albedo_tensor, shading_tensor = iid_op(input_rgb_tensor, albedo_tensor)
+                    _, input_rgb_batch, albedo_batch = test_data
+                    input_rgb_tensor = input_rgb_batch.to(device)
+                    albedo_tensor = albedo_batch.to(device)
+                    input_rgb_tensor, albedo_tensor, shading_tensor = iid_op(input_rgb_tensor, albedo_tensor)
 
-                trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, "Test")
-                trainer.visdom_plot(iteration)
-
-            if(epoch % epoch_multiplier == 0):
-                trainer.save_states_checkpt(epoch, iteration, last_metric)
+                    trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, "Test")
+                    trainer.visdom_plot(iteration)
+                    trainer.save_states_checkpt(epoch, iteration, last_metric)
+                    if (stopper_method_s.did_stop_condition_met()):
+                        break
 
             if (stopper_method_s.did_stop_condition_met()):
                 break

@@ -308,10 +308,10 @@ class IIDDataset(data.Dataset):
         return self.img_length
 
 class IIDDatasetV2(data.Dataset):
-    def __init__(self, img_length, rgb_dir, albedo_dir, transform_config, opts):
+    def __init__(self, img_length, rgb_list, albedo_dir, transform_config, opts):
         self.img_length = img_length
         self.albedo_dir = albedo_dir
-        self.rgb_dir = rgb_dir
+        self.rgb_list = rgb_list
         self.transform_config = transform_config
         self.patch_size = (opts.patch_size, opts.patch_size)
         self.light_angles = [0, 36, 72, 108, 144]
@@ -341,17 +341,13 @@ class IIDDatasetV2(data.Dataset):
             ])
 
     def __getitem__(self, idx):
-        file_name = "synth_" + str(idx) + ".png"
-
-        list_scenes = os.listdir(self.rgb_dir)
-        scene_index = np.random.randint(0, len(list_scenes))
-
+        file_name = self.rgb_list[idx].split("\\")[-1].split(".png")[0] + ".png"
         img_a_path = self.albedo_dir + file_name
+
         albedo = cv2.imread(img_a_path) #albedo
         albedo = cv2.cvtColor(albedo, cv2.COLOR_BGR2RGB)
 
-        img_rgb_path = self.rgb_dir + list_scenes[scene_index] + "/" + file_name
-        # print(img_rgb_path)
+        img_rgb_path = self.rgb_list[idx]
         input_rgb = cv2.imread(img_rgb_path)  # input rgb
         input_rgb = cv2.cvtColor(input_rgb, cv2.COLOR_BGR2RGB)
 

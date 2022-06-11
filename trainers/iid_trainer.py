@@ -45,7 +45,7 @@ class IIDTrainer:
         self.D_A_pool = image_pool.ImagePool(50)
         self.D_S_pool = image_pool.ImagePool(50)
 
-        self.iid_op = iid_transforms.IIDTransform()
+        self.iid_op = iid_transforms.IIDTransform().to(self.gpu_device)
 
         num_blocks = opts.num_blocks
         self.batch_size = opts.batch_size
@@ -316,9 +316,11 @@ class IIDTrainer:
     def train_albedo(self, input_rgb_tensor, albedo_tensor):
         with amp.autocast():
             self.G_S.eval()
+            if(self.da_enabled == 1):
+                input = self.reshape_input(input_rgb_tensor)
 
             # produce initial albedo
-            rgb2albedo = self.G_A(input_rgb_tensor)
+            rgb2albedo = self.G_A(input)
 
             # albedo discriminator
             self.D_A.train()
@@ -342,7 +344,7 @@ class IIDTrainer:
 
             # albedo generator
             self.G_A.train()
-            rgb2albedo = self.G_A(input_rgb_tensor)
+            rgb2albedo = self.G_A(input)
             A_likeness_loss = self.l1_loss(rgb2albedo, albedo_tensor) * self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
             A_lpip_loss = self.lpip_loss(rgb2albedo, albedo_tensor) * self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
             A_ssim_loss = self.ssim_loss(rgb2albedo, albedo_tensor) * self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
@@ -351,7 +353,7 @@ class IIDTrainer:
             real_tensor = torch.ones_like(prediction)
             A_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            rgb_like = self.iid_op.produce_rgb(rgb2albedo, self.G_S(input_rgb_tensor))
+            rgb_like = self.iid_op.produce_rgb(rgb2albedo, self.G_S(input))
             rgb_l1_loss = self.l1_loss(rgb_like, input_rgb_tensor) * self.rgb_l1_weight
 
             errG = A_likeness_loss + A_lpip_loss + A_ssim_loss + A_gradient_loss + A_adv_loss + rgb_l1_loss
@@ -381,7 +383,7 @@ class IIDTrainer:
 
     def visdom_plot(self, iteration):
         self.visdom_reporter.plot_finegrain_loss("a2b_loss_s", iteration, self.losses_dict_s, self.caption_dict_s, constants.IID_CHECKPATH)
-        # self.visdom_reporter.plot_finegrain_loss("a2b_loss_a", iteration, self.losses_dict_a, self.caption_dict_a, constants.IID_CHECKPATH)
+        self.visdom_reporter.plot_finegrain_loss("a2b_loss_a", iteration, self.losses_dict_a, self.caption_dict_a, constants.IID_CHECKPATH)
 
     def visdom_visualize(self, input_rgb_tensor, albedo_tensor, shading_tensor, label = "Train"):
         with torch.no_grad():
@@ -395,14 +397,18 @@ class IIDTrainer:
                 embedding_rep = input_rgb_tensor
 
             rgb2shading = self.G_S(input)
-            rgb2albedo = self.G_A(input)
-            rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading)
+            # rgb2albedo = self.G_A(input)
+            rgb2albedo = self.iid_op.extract_albedo(input_rgb_tensor, shading_tensor)
+            # rgb_like = self.iid_op.produce_rgb(rgb2albedo, shading_tensor)
+            rgb_like = self.iid_op.produce_rgb(rgb2albedo, shading_tensor)
+
+            print("Difference between Albedo vs Recon: ", self.l1_loss(rgb2albedo, albedo_tensor).item())  #
 
             self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(embedding_rep, str(label) + " Embedding Maps - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(rgb_like, str(label) + " RGB Reconstruction - " + constants.IID_VERSION + constants.ITERATION)
 
-            self.visdom_reporter.plot_image(rgb2albedo, str(label) + " RGB2Albedo images - " + constants.IID_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(rgb2albedo - albedo_tensor, str(label) + " RGB2Albedo images - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(albedo_tensor, str(label) + " Albedo images - " + constants.IID_VERSION + constants.ITERATION)
 
             self.visdom_reporter.plot_image(rgb2shading, str(label) + " RGB2Shading images - " + constants.IID_VERSION + constants.ITERATION)
