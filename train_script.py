@@ -76,25 +76,25 @@ def train_shadow_relight():
               "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.09\" --iteration=8")
 
 def train_relighting():
-    os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=1 --patch_size=64 --batch_size=256 --min_epochs=20 "
+    os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=128 --min_epochs=20 "
               "--net_config=1 --num_blocks=6 "
               "--plot_enabled=1 --debug_mode=0 --version_name=\"iid_networkv6.00\" --iteration=5 "
               "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\"")
 
-    # os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=256 --min_epochs=20 "
-    #           "--net_config=1 --num_blocks=6 "
-    #           "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv6.00\" --iteration=6 "
-    #           "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\"")
-    #
-    # os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=256 --min_epochs=20 "
-    #           "--net_config=1 --num_blocks=6 "
-    #           "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv6.00\" --iteration=7 "
-    #           "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\"")
-    #
-    # os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=256 --min_epochs=20 "
-    #           "--net_config=1 --num_blocks=6 "
-    #           "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv6.00\" --iteration=8 "
-    #           "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\"")
+    os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=256 --min_epochs=20 "
+              "--net_config=1 --num_blocks=6 "
+              "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv6.00\" --iteration=6 "
+              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\"")
+
+    os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=256 --min_epochs=20 "
+              "--net_config=1 --num_blocks=6 "
+              "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv6.00\" --iteration=7 "
+              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\"")
+
+    os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=256 --min_epochs=20 "
+              "--net_config=1 --num_blocks=6 "
+              "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv6.00\" --iteration=8 "
+              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\"")
 
 def train_domain_adaptation():
     os.system("python \"cyclegan_main.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=2 --num_blocks=0 "

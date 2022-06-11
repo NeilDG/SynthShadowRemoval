@@ -85,15 +85,15 @@ class IIDTrainer:
 
     def initialize_shading_network(self, net_config, num_blocks, input_nc):
         if (net_config == 1):
-            self.G_S = cycle_gan.Generator(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks).to(self.gpu_device)
+            self.G_S = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
         elif (net_config == 2):
-            self.G_S = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
+            self.G_S = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
-            self.G_S = cycle_gan.Generator(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
+            self.G_S = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
         elif (net_config == 4):
-            self.G_S = unet_gan.UnetGeneratorV2(input_nc=input_nc, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
+            self.G_S = unet_gan.UnetGeneratorV2(input_nc=input_nc, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         else:
-            self.G_S = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
+            self.G_S = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
         self.D_S = cycle_gan.Discriminator(input_nc=1).to(self.gpu_device)  # use CycleGAN's discriminator
 
@@ -397,10 +397,10 @@ class IIDTrainer:
                 embedding_rep = input_rgb_tensor
 
             rgb2shading = self.G_S(input)
-            # rgb2albedo = self.G_A(input)
-            rgb2albedo = self.iid_op.extract_albedo(input_rgb_tensor, shading_tensor)
+            rgb2albedo = self.G_A(input)
+            # rgb2albedo = self.iid_op.extract_albedo(input_rgb_tensor, shading_tensor)
             # rgb_like = self.iid_op.produce_rgb(rgb2albedo, shading_tensor)
-            rgb_like = self.iid_op.produce_rgb(rgb2albedo, shading_tensor)
+            rgb_like = self.iid_op.produce_rgb(albedo_tensor, shading_tensor)
 
             print("Difference between Albedo vs Recon: ", self.l1_loss(rgb2albedo, albedo_tensor).item())  #
 
