@@ -85,12 +85,5 @@ num_epochs = 500
 server_config = 0
 num_workers = 12
 
-imgy_dir = "E:/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
-imgx_dir = "E:/GTAV_Processed/images/*.png"
-imgx_dir_test = "E:/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
-imgy_dir_test = "E:/GTAV_Processed/images/*.png"
-
-# imgx_dir = "E:/Image Transfer - Patches/trainA/*.png"
-# imgy_dir = "E:/Image Transfer - Patches/trainB/*.png"
-# imgx_dir_test = "E:/Image Transfer - Patches/testA/*.png"
-# imgy_dir_test = "E:/Image Transfer - Patches/testB/*.png"
+albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
+rgb_dir = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"

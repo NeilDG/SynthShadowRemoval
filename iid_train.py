@@ -61,22 +61,16 @@ def update_config(opts):
     if (constants.server_config == 1):
         opts.num_workers = 6
         print("Using COARE configuration. Workers: ", opts.num_workers, " ", opts.version_name)
-        constants.imgx_dir = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
-        constants.DATASET_PLACES_PATH = constants.imgx_dir
-        constants.imgy_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
-        constants.imgx_dir_test = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
-        constants.imgy_dir_test = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
-
-        constants.DATASET_PREFIX_7_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 7/"
-        constants.DATASET_ALBEDO_7_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 7/albedo/"
+        constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
+        constants.rgb_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.albedo_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/albedo/"
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
         constants.num_workers = 6
-        constants.DATASET_PREFIX_7_PATH = "/home/jupyter-neil.delgallego/SynthWeather Dataset 7/"
-        constants.DATASET_ALBEDO_7_PATH = "/home/jupyter-neil.delgallego/SynthWeather Dataset 7/albedo/"
-        # constants.DATASET_PLACES_PATH = "/home/jupyter-neil.delgallego/Places Dataset/*.jpg"
-        constants.DATASET_PLACES_PATH = constants.DATASET_PREFIX_7_PATH
+        constants.DATASET_PLACES_PATH = "/home/jupyter-neil.delgallego/Places Dataset/*.jpg"
+        constants.rgb_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.albedo_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/albedo/"
 
         print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", opts.version_name)
 
@@ -84,26 +78,22 @@ def update_config(opts):
     elif (constants.server_config == 3):
         opts.num_workers = 8
         print("Using GCloud configuration. Workers: ", opts.num_workers, " ", opts.version_name)
-        constants.imgx_dir = "/home/neil_delgallego/Places Dataset/*.jpg"
-        constants.DATASET_PLACES_PATH = constants.imgx_dir
-        constants.imgy_dir = "/home/neil_delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
+        constants.DATASET_PLACES_PATH = "/home/neil_delgallego//Places Dataset/*.jpg"
+        constants.rgb_dir = "/home/neil_delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.albedo_dir = "/home/neil_delgallego/SynthWeather Dataset 8/albedo/"
 
     elif (constants.server_config == 4):
         opts.num_workers = 6
-        constants.imgx_dir = "D:/Datasets/Places Dataset/*.jpg"
-        constants.DATASET_PLACES_PATH = constants.imgx_dir
-        constants.imgy_dir = "D:/Datasets/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
-        constants.imgx_dir_test = constants.imgx_dir
-        constants.imgy_dir_test = constants.imgy_dir
+        constants.DATASET_PLACES_PATH = "D:/Datasets/Places Dataset/*.jpg"
+        constants.rgb_dir = "D:/Datasets/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.albedo_dir = "D:/Datasets/SynthWeather Dataset 8/albedo/"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers, " ", opts.version_name)
     else:
         opts.num_workers = 12
-        constants.imgx_dir = "E:/Places Dataset/*.jpg"
-        constants.DATASET_PLACES_PATH = constants.imgx_dir
-        constants.imgy_dir = "E:/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
-        constants.imgx_dir_test = constants.imgx_dir
-        constants.imgy_dir_test = constants.imgy_dir
+        constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
+        constants.rgb_dir = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers, " ", opts.version_name)
 
 def show_images(img_tensor, caption):
@@ -132,19 +122,12 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
-    rgb_dir = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-    print(rgb_dir, albedo_dir)
+    print(constants.rgb_dir, constants.albedo_dir)
 
     # Create the dataloader
-    train_loader = dataset_loader.load_iid_datasetv2_train(rgb_dir, albedo_dir, opts)
-    test_loader = dataset_loader.load_iid_datasetv2_test(rgb_dir, albedo_dir, opts)
+    train_loader = dataset_loader.load_iid_datasetv2_train(constants.rgb_dir, constants.albedo_dir, opts)
+    test_loader = dataset_loader.load_iid_datasetv2_test(constants.rgb_dir, constants.albedo_dir, opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
-
-    GTA_BASE_PATH = "E:/IID-TestDataset/GTA/"
-    RGB_PATH = GTA_BASE_PATH + "/input/"
-    ALBEDO_PATH = GTA_BASE_PATH + "/albedo_white/"
-    gta_loader = dataset_loader.load_gta_dataset(RGB_PATH, ALBEDO_PATH, opts)
 
     start_epoch = 0
     iteration = 0
@@ -176,6 +159,11 @@ def main(argv):
         _, input_rgb_batch = next(iter(rw_loader))
         input_rgb_tensor = input_rgb_batch.to(device)
         trainer.visdom_infer(input_rgb_tensor)
+
+        GTA_BASE_PATH = "E:/IID-TestDataset/GTA/"
+        RGB_PATH = GTA_BASE_PATH + "/input/"
+        ALBEDO_PATH = GTA_BASE_PATH + "/albedo_white/"
+        gta_loader = dataset_loader.load_gta_dataset(RGB_PATH, ALBEDO_PATH, opts)
 
         gta_rgb, gta_albedo = next(iter(gta_loader))
         gta_rgb_tensor = gta_rgb.to(device)
