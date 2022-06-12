@@ -68,9 +68,9 @@ def update_config(opts):
     # CCS JUPYTER
     elif (constants.server_config == 2):
         constants.num_workers = 6
-        constants.DATASET_PLACES_PATH = "/home/jupyter-neil.delgallego/Places Dataset/*.jpg"
         constants.rgb_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
         constants.albedo_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/albedo/"
+        constants.DATASET_PLACES_PATH = constants.rgb_dir
 
         print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", opts.version_name)
 
@@ -78,7 +78,7 @@ def update_config(opts):
     elif (constants.server_config == 3):
         opts.num_workers = 8
         print("Using GCloud configuration. Workers: ", opts.num_workers, " ", opts.version_name)
-        constants.DATASET_PLACES_PATH = "/home/neil_delgallego//Places Dataset/*.jpg"
+        constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/*.jpg"
         constants.rgb_dir = "/home/neil_delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
         constants.albedo_dir = "/home/neil_delgallego/SynthWeather Dataset 8/albedo/"
 
