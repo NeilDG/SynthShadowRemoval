@@ -109,10 +109,11 @@ class VisdomReporter:
                 if(index < len(loss_keys)):
                     if(index == 1):
                         ax[i, j].plot(x, losses_dict[loss_keys[index]], color=colors[index], label= loss_key + " " +str(caption_dict[caption_keys[index]]))
-                    else:
+                    elif (np.mean(losses_dict[loss_keys[index]]) > 0.0): #only display those > 0.0
                         ax[i, j].plot(x, losses_dict[loss_keys[index]], color = colors[index], label = str(caption_dict[caption_keys[index]]))
                     index = index + 1
                 else:
+                    index = index + 1
                     break
     
         fig.legend(loc = 'lower right')
