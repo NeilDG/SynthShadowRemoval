@@ -23,8 +23,8 @@ DATASET_RGB_DECOMPOSE_PATH = "E:/SynthWeather Dataset 3/rgb/"
 DATASET_SHADING_DECOMPOSE_PATH = "E:/SynthWeather Dataset 3/shading/"
 DATASET_ALBEDO_DECOMPOSE_PATH = "E:/SynthWeather Dataset 3/albedo/"
 
-DATASET_PREFIX_6_PATH = "E:/SynthWeather Dataset 6/"
-DATASET_ALBEDO_6_PATH = "E:/SynthWeather Dataset 6/albedo/"
+DATASET_PREFIX_7_PATH = "E:/SynthWeather Dataset 7/"
+DATASET_ALBEDO_7_PATH = "E:/SynthWeather Dataset 7/albedo/"
 
 # PATCH_IMAGE_SIZE = (64, 64)
 TEST_IMAGE_SIZE = (256, 256)
@@ -35,11 +35,11 @@ GENERATOR_KEY = "generator"
 DISCRIMINATOR_KEY = "discriminator"
 
 STYLE_TRANSFER_VERSION = "synth2rgb_v1.00"
-EMBEDDING_VERSION = "embedding_v1.00"
+EMBEDDING_VERSION = "embedding_v1.01"
 FFA_TRANSFER_VERSION = "synthplaces2sunny_v1.01"
 MAPPER_VERSION = "rgb2albedo_v1.00"
-IID_VERSION = "iid_v1.00"
-RELIGHTING_VERSION = "maps2rgb_rgb2maps_v2.00"
+IID_VERSION = "maps2rgb_rgb2maps_v2.00"
+RELIGHTING_VERSION = "relighter_v1.00"
 SHADING_VERSION = "rgb2shading_v7.00"
 SHADOWMAP_VERSION = "rgb2shadowmap_v1.00"
 SHADOWMAP_RELIGHT_VERSION = "shadow2relight_v1.00"
@@ -85,12 +85,5 @@ num_epochs = 500
 server_config = 0
 num_workers = 12
 
-imgy_dir = "E:/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
-imgx_dir = "E:/GTAV_Processed/images/*.png"
-imgx_dir_test = "E:/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
-imgy_dir_test = "E:/GTAV_Processed/images/*.png"
-
-# imgx_dir = "E:/Image Transfer - Patches/trainA/*.png"
-# imgy_dir = "E:/Image Transfer - Patches/trainB/*.png"
-# imgx_dir_test = "E:/Image Transfer - Patches/testA/*.png"
-# imgy_dir_test = "E:/Image Transfer - Patches/testB/*.png"
+albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
+rgb_dir = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"

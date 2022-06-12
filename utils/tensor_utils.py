@@ -271,53 +271,47 @@ def measure_ssim(img1, img2):
 
     return structural_similarity(img1, img2, multichannel=True, gaussian_weights=True, sigma=1.5)
 
-def produce_albedo(rgb_tensor, shading_tensor, shadowmap_tensor):
-    rgb_tensor = rgb_tensor.transpose(0, 1)
-    shading_tensor = shading_tensor.transpose(0, 1)
-    shadowmap_tensor = shadowmap_tensor.transpose(0, 1)
-
-    rgb_tensor = (rgb_tensor * 0.5) + 0.5
-    shading_tensor = (shading_tensor * 0.5) + 0.5
-    shadowmap_tensor = (shadowmap_tensor * 0.5) + 0.5
-
-    #clip values to avoid overflow
-    shading_tensor = torch.clip(shading_tensor, 0.00001, 1.0)
-    shadowmap_tensor = torch.clip(shadowmap_tensor, 0.00001, 1.0)
-
-    #derive albedo manually
-    albedo_tensor = torch.full_like(rgb_tensor, 0, requires_grad=False)
-    albedo_tensor[0] = rgb_tensor[0] / (shadowmap_tensor * shading_tensor)
-    albedo_tensor[1] = rgb_tensor[1] / (shadowmap_tensor * shading_tensor)
-    albedo_tensor[2] = rgb_tensor[2] / (shadowmap_tensor * shading_tensor)
-    albedo_tensor = torch.clip(albedo_tensor, 0.00001, 1.0)
-
-    albedo_tensor = albedo_tensor.transpose(0, 1)
-    return albedo_tensor
-
-def produce_rgb(albedo_tensor, shading_tensor, light_color, shadowmap_tensor):
-    albedo_tensor = albedo_tensor.transpose(0, 1)
-    shading_tensor = shading_tensor.transpose(0, 1)
-    shadowmap_tensor = shadowmap_tensor.transpose(0, 1)
-    light_color = torch.from_numpy(np.asarray(light_color.split(","), dtype=np.int32))
-
-    # normalize/remove normalization
-    albedo_tensor = (albedo_tensor * 0.5) + 0.5
-    shading_tensor = (shading_tensor * 0.5) + 0.5
-    shadowmap_tensor = (shadowmap_tensor * 0.5) + 0.5
-
-    light_color = light_color / 255.0
-
-    # clip values to avoid overflow
-    shading_tensor = torch.clip(shading_tensor, 0.00001, 1.0)
-    shadowmap_tensor = torch.clip(shadowmap_tensor, 0.00001, 1.0)
-
-    rgb_img_like = torch.full_like(albedo_tensor, 0)
-    rgb_img_like[0] = torch.clip(albedo_tensor[0] * shading_tensor * light_color[0] * shadowmap_tensor, 0.0, 1.0)
-    rgb_img_like[1] = torch.clip(albedo_tensor[1] * shading_tensor * light_color[1] * shadowmap_tensor, 0.0, 1.0)
-    rgb_img_like[2] = torch.clip(albedo_tensor[2] * shading_tensor * light_color[2] * shadowmap_tensor, 0.0, 1.0)
-
-    rgb_img_like = rgb_img_like.transpose(0, 1)
-    return rgb_img_like
+# def produce_albedo(rgb_tensor, shading_tensor):
+#     rgb_tensor = rgb_tensor.transpose(0, 1)
+#     shading_tensor = shading_tensor.transpose(0, 1)
+#
+#     rgb_tensor = (rgb_tensor * 0.5) + 0.5
+#     shading_tensor = (shading_tensor * 0.5) + 0.5
+#
+#     #clip values to avoid overflow
+#     shading_tensor = torch.clip(shading_tensor, 0.00001, 1.0)
+#
+#     #derive albedo manually
+#     albedo_tensor = torch.full_like(rgb_tensor, 0, requires_grad=False)
+#     albedo_tensor[0] = rgb_tensor[0] / shading_tensor
+#     albedo_tensor[1] = rgb_tensor[1] / shading_tensor
+#     albedo_tensor[2] = rgb_tensor[2] / shading_tensor
+#     albedo_tensor = torch.clip(albedo_tensor, 0.00001, 1.0)
+#
+#     albedo_tensor = albedo_tensor.transpose(0, 1)
+#     return albedo_tensor
+#
+# def produce_rgb(albedo_tensor, shading_tensor, light_color):
+#     albedo_tensor = albedo_tensor.transpose(0, 1)
+#     shading_tensor = shading_tensor.transpose(0, 1)
+#     light_color = torch.from_numpy(np.asarray(light_color.split(","), dtype=np.int32))
+#
+#     # normalize/remove normalization
+#     albedo_tensor = (albedo_tensor * 0.5) + 0.5
+#     shading_tensor = (shading_tensor * 0.5) + 0.5
+#
+#     light_color = light_color / 255.0
+#
+#     # clip values to avoid overflow
+#     shading_tensor = torch.clip(shading_tensor, 0.00001, 1.0)
+#
+#     rgb_img_like = torch.full_like(albedo_tensor, 0)
+#     rgb_img_like[0] = torch.clip(albedo_tensor[0] * shading_tensor * light_color[0], 0.0, 1.0)
+#     rgb_img_like[1] = torch.clip(albedo_tensor[1] * shading_tensor * light_color[1], 0.0, 1.0)
+#     rgb_img_like[2] = torch.clip(albedo_tensor[2] * shading_tensor * light_color[2], 0.0, 1.0)
+#
+#     rgb_img_like = rgb_img_like.transpose(0, 1)
+#     return rgb_img_like
 
 
 def load_metric_compatible_albedo(img_path, cvt_color: int, normalize: bool, convert_to_tensor: bool, size):

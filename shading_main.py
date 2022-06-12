@@ -48,8 +48,8 @@ def update_config(opts):
     if (constants.server_config == 1):
         print("Using COARE configuration ", opts.version_name)
         constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/"
-        constants.DATASET_PREFIX_6_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 5/"
-        constants.DATASET_ALBEDO_6_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 5/albedo/"
+        constants.DATASET_PREFIX_7_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 5/"
+        constants.DATASET_ALBEDO_7_PATH = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 5/albedo/"
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
@@ -60,8 +60,8 @@ def update_config(opts):
     elif (constants.server_config == 3):
         print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.SHADOWMAP_CHECKPATH)
         constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/"
-        constants.DATASET_PREFIX_6_PATH = "/home/neil_delgallego/SynthWeather Dataset 5/"
-        constants.DATASET_ALBEDO_6_PATH = "/home/neil_delgallego/SynthWeather Dataset 5/albedo/"
+        constants.DATASET_PREFIX_7_PATH = "/home/neil_delgallego/SynthWeather Dataset 5/"
+        constants.DATASET_ALBEDO_7_PATH = "/home/neil_delgallego/SynthWeather Dataset 5/albedo/"
 
 def show_images(img_tensor, caption):
     device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
@@ -88,8 +88,8 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    rgb_path = constants.DATASET_PREFIX_6_PATH + opts.mode
-    map_path = constants.DATASET_PREFIX_6_PATH + "/shading/"
+    rgb_path = constants.DATASET_PREFIX_7_PATH + opts.mode
+    map_path = constants.DATASET_PREFIX_7_PATH + "/shading/"
 
     # Create the dataloader
     print(rgb_path, map_path)

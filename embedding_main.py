@@ -24,12 +24,17 @@ parser.add_option('--likeness_weight', type=float, help="Weight", default="10.0"
 parser.add_option('--num_blocks', type=int)
 parser.add_option('--use_bce', type=int, default = "0")
 parser.add_option('--use_lpips', type=int, default = "0")
+parser.add_option('--embedding_dist_weight', type=float, default="0.0")
 parser.add_option('--g_lr', type=float, help="LR", default="0.00002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.00002")
+parser.add_option('--patch_size', type=int, help="patch_size", default="64")
 parser.add_option('--batch_size', type=int, help="batch_size", default="128")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--version_name', type=str, help="version_name")
 parser.add_option('--test_mode', type=int, help= "Test mode?", default=0)
+parser.add_option('--min_epochs', type=int, help="Min epochs", default=120)
+parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
+parser.add_option('--debug_mode', type=int, default=0)
 
 #--img_to_load=-1 --load_previous=1
 #Update config if on COARE
@@ -38,6 +43,12 @@ def update_config(opts):
     constants.ITERATION = str(opts.iteration)
     constants.EMBEDDING_VERSION = opts.version_name
     constants.EMBEDDING_CHECKPATH = 'checkpoint/' + constants.EMBEDDING_VERSION + "_" + constants.ITERATION + '.pt'
+    constants.plot_enabled = opts.plot_enabled
+
+    if (opts.debug_mode == 1):
+        constants.early_stop_threshold = 0
+        constants.min_epochs = 1
+        constants.num_epochs = 1
 
     if(constants.server_config == 1):
         print("Using COARE configuration ", opts.version_name)
@@ -61,7 +72,6 @@ def show_images(img_tensor, caption):
     plt.imshow(np.transpose(vutils.make_grid(img_tensor.to(device)[:16], nrow = 8, padding=2, normalize=True).cpu(),(1,2,0)))
     plt.show()
 
-
 def main(argv):
     (opts, args) = parser.parse_args(argv)
     update_config(opts)
@@ -77,27 +87,20 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    # Create the dataloader
-    train_loader_synth = dataset_loader.load_single_train_dataset(constants.DATASET_WEATHER_STYLED_PATH, opts)
-    train_loader_real = dataset_loader.load_single_train_dataset(constants.DATASET_PLACES_PATH, opts)
-    test_loader = dataset_loader.load_single_test_dataset(constants.DATASET_WEATHER_STYLED_PATH, opts)
-    rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH, opts)
+    constants.imgx_dir = "E:/Places Dataset/*.jpg"
+    constants.imgy_dir = "E:/SynthWeather Dataset 7/azimuth/*/rgb/*.png"
+    constants.imgx_dir_test = "E:/Places Dataset/*.jpg"
+    constants.imgy_dir_test = "E:/SynthWeather Dataset 7/azimuth/*/rgb/*.png"
 
-    start_epoch = 0
-    iteration = 0
-
-    # Plot some training images
-    if (constants.server_config == 0):
-        _, a_batch = next(iter(train_loader_synth))
-        _, b_batch = next(iter(train_loader_real))
-
-        show_images(a_batch, "Training - A Images")
-        show_images(b_batch, "Training - B Images")
+    train_loader = dataset_loader.load_ffa_dataset_train(constants.imgx_dir, constants.imgy_dir, opts)
+    test_loader = dataset_loader.load_ffa_dataset_test(constants.imgx_dir_test, constants.imgy_dir_test, opts)
 
     trainer = embedding_trainer.EmbeddingTrainer(device, opts)
-    trainer.update_penalties(opts.adv_weight, opts.l1_weight)
-
-    stopper_method = early_stopper.EarlyStopper(1, early_stopper.EarlyStopperMethod.L1_TYPE, 1000)
+    trainer.update_penalties(opts.adv_weight, opts.likeness_weight, opts.embedding_dist_weight)
+    start_epoch = 0
+    iteration = 0
+    last_metric = 10000.0
+    stopper_method = early_stopper.EarlyStopper(opts.min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, 2000, last_metric)
 
     if (opts.load_previous):
         checkpoint = torch.load(constants.EMBEDDING_CHECKPATH, map_location=device)
@@ -108,56 +111,55 @@ def main(argv):
         print("Loaded checkpt: %s Current epoch: %d" % (constants.EMBEDDING_CHECKPATH, start_epoch))
         print("===================================================")
 
-    if(opts.test_mode == 1):
+    if (opts.test_mode == 1):
         print("Plotting test images...")
-        _, a_batch = next(iter(train_loader_synth))
-        _, b_batch = next(iter(train_loader_real))
-        a_tensor = a_batch.to(device)
-        b_tensor = b_batch.to(device)
+        imgx_batch, imgy_batch = next(iter(train_loader))
+        imgx_tensor = imgx_batch.to(device)
+        imgy_tensor = imgy_batch.to(device)
 
-        trainer.train(a_tensor)
-        trainer.train(b_tensor)
+        trainer.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
 
-        _, test_a_batch = next(iter(test_loader))
-        _, test_b_batch = next(iter(rw_loader))
-        test_a_tensor = test_a_batch.to(device)
-        test_b_tensor = test_b_batch.to(device)
+        imgx_batch, imgy_batch = next(iter(test_loader))
+        imgx_tensor = imgx_batch.to(device)
+        imgy_tensor = imgy_batch.to(device)
 
-        trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
+        trainer.visdom_visualize(imgx_tensor, imgy_tensor, "Test")
 
     else:
-        print("Starting Training Loop...")
+        print("Starting domain adaptation training loop...")
         for epoch in range(start_epoch, constants.num_epochs):
-            # For each batch in the dataloader
-            for i, (train_data_synth, train_data_real, test_data_synth, test_data_real) in enumerate(zip(itertools.cycle(train_loader_synth), train_loader_real,
-                                                                     itertools.cycle(test_loader), rw_loader)):
-                _, a_batch = train_data_synth
-                _, b_batch = train_data_real
-                a_tensor = a_batch.to(device)
-                b_tensor = b_batch.to(device)
+            for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader)):
+                imgx_batch, imgy_batch = train_data
+                imgx_tensor = imgx_batch.to(device)
+                imgy_tensor = imgy_batch.to(device)
 
-                trainer.train(a_tensor)
-                trainer.train(b_tensor)
+                trainer.train(imgx_tensor, imgy_tensor) #train on imgx, with imgy as reference
+                trainer.train(imgy_tensor, imgx_tensor) #train on imgy, with imgx as reference
+
                 iteration = iteration + 1
 
-                stopper_method.test(trainer, epoch, iteration, trainer.test(a_tensor), a_tensor)
-                stopper_method.test(trainer, epoch, iteration, trainer.test(b_tensor), b_tensor)
+                imgx_batch, imgy_batch = test_data
+                imgx_tensor = imgx_batch.to(device)
+                imgy_tensor = imgy_batch.to(device)
 
-                if (i % 300 == 0):
+                imgx_recon = trainer.test(imgx_tensor)
+                stopper_method.test(trainer, epoch, iteration, imgx_recon, imgx_tensor)  # stop training if reconstruction no longer becomes close to X
+
+                if (i % 256 == 0):
+                    trainer.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
+
                     trainer.save_states_checkpt(epoch, iteration)
+                    imgx_batch, imgy_batch = test_data
+                    imgx_tensor = imgx_batch.to(device)
+                    imgy_tensor = imgy_batch.to(device)
+
+                    trainer.visdom_visualize(imgx_tensor, imgy_tensor, "Test")
                     trainer.visdom_plot(iteration)
 
-                    _, test_a_batch = test_data_synth
-                    _, test_b_batch = test_data_real
-                    test_a_tensor = test_a_batch.to(device)
-                    test_b_tensor = test_b_batch.to(device)
-
-                    trainer.visdom_visualize(a_tensor, b_tensor, test_a_tensor, test_b_tensor)
-
-                if(stopper_method.did_stop_condition_met()):
+                if (stopper_method.did_stop_condition_met()):
                     break
 
-            if(stopper_method.did_stop_condition_met()):
+            if (stopper_method.did_stop_condition_met()):
                 break
 
 

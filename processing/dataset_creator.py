@@ -581,8 +581,8 @@ def main(argv):
     # create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/Elevation/default_144deg_001.mp4",
     #                        "E:/SynthWeather Dataset 4/elevation/144deg/rgb/", "synth_%d.png", (256, 256), 0)
 
-    create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/albedo_withshadows_001.mp4",
-                           "E:/SynthWeather Dataset 5 - RAW/albedo/", "synth_%d.png", (256, 256), 0)
+    # create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/albedo_withshadows_001.mp4",
+    #                        "E:/SynthWeather Dataset 5 - RAW/albedo/", "synth_%d.png", (256, 256), 0)
     # create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/Azimuth/default_0deg_002.mp4",
     #                        "E:/SynthWeather Dataset 5 - RAW/azimuth/0deg/rgb/", "synth_%d.png", (256, 256), 0)
     # create_data_from_video("D:/Documents/GithubProjects/NeuralNets-SynthWorkplace/Recordings/Azimuth/default_36deg_002.mp4",
@@ -601,7 +601,17 @@ def main(argv):
     # produce_color_images("E:/SynthWeather Dataset 6/azimuth/72deg/rgb/", "E:/SynthWeather Dataset 6/azimuth/72deg/rgb - styled/", "synth2rgb_v4.07_3.pt", 2, argv)
     # produce_color_images("E:/SynthWeather Dataset 6/azimuth/108deg/rgb/", "E:/SynthWeather Dataset 6/azimuth/108deg/rgb - styled/", "synth2rgb_v4.07_3.pt", 2, argv)
     # produce_color_images("E:/SynthWeather Dataset 6/azimuth/144deg/rgb/", "E:/SynthWeather Dataset 6/azimuth/144deg/rgb - styled/", "synth2rgb_v4.07_3.pt", 2, argv)
-    produce_color_images("E:/SynthWeather Dataset 6/no_shadows/*.png", "E:/SynthWeather Dataset 6/no_shadows_styled/", "synth2rgb_v4.07_3.pt", 2, argv)
+    # produce_color_images("E:/SynthWeather Dataset 6/no_shadows/*.png", "E:/SynthWeather Dataset 6/no_shadows_styled/", "synth2rgb_v4.07_3.pt", 2, argv)
+
+    base_path = "E:/SynthWeather Dataset 8/train_rgb/"
+    output_base_path = "E:/SynthWeather Dataset 8/train_rgb_styled/"
+    dirlist = os.listdir(base_path)
+
+    for dir in dirlist:
+        input_path = base_path + dir + "/*.png"
+        output_path = output_base_path + dir + "/"
+        produce_color_images(input_path, output_path, "synth2rgb_v4.07_3.pt", 2, argv)
+
     # create_patches(argv)
 
 if __name__=="__main__": 

@@ -9,7 +9,7 @@ import torchvision.utils as vutils
 import numpy as np
 import matplotlib.pyplot as plt
 from loaders import dataset_loader
-from trainers import relighting_trainer
+from trainers import iid_trainer
 from trainers import early_stopper
 from utils import tensor_utils
 import constants
@@ -47,11 +47,11 @@ def update_config(opts):
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
-        print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", constants.RELIGHTING_CHECKPATH)
+        print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", constants.IID_CHECKPATH)
 
     # GCLOUD
     elif (constants.server_config == 3):
-        print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.RELIGHTING_CHECKPATH)
+        print("Using GCloud configuration. Workers: ", opts.num_workers, "Path: ", constants.IID_CHECKPATH)
         constants.imgx_dir = "/home/neil_delgallego/Places Dataset/*.jpg"
         constants.imgy_dir = "/home/neil_delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
 
