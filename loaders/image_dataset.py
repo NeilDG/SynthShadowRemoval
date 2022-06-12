@@ -341,7 +341,7 @@ class IIDDatasetV2(data.Dataset):
             ])
 
     def __getitem__(self, idx):
-        file_name = self.rgb_list[idx].split("\\")[-1].split(".png")[0] + ".png"
+        file_name = self.rgb_list[idx].split("/")[-1].split(".png")[0] + ".png"
         img_a_path = self.albedo_dir + file_name
 
         albedo = cv2.imread(img_a_path) #albedo
