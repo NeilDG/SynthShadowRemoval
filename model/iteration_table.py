@@ -10,93 +10,116 @@ class IterationTable():
         self.iteration_table = {}
 
         iteration = 5
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=1.0, ssim_weight=0.0, is_bce=0)
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=1.0, ssim_weight=0.0, is_bce=0)
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=1.0, ssim_weight=0.0, is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, [0.0, 1.0, 0.0, 0.0], is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, [0.0, 1.0, 0.0, 0.0], is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, [0.0, 1.0, 0.0, 0.0], is_bce=0)
 
         iteration = 6
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=1.0, ssim_weight=0.0, is_bce=1)
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=1.0, ssim_weight=0.0, is_bce=1)
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=1.0, ssim_weight=0.0, is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, [0.0, 1.0, 0.0, 0.0], is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, [0.0, 1.0, 0.0, 0.0], is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, [0.0, 1.0, 0.0, 0.0], is_bce=1)
 
         iteration = 7
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, l1_weight=1.0, lpip_weight=10.0, ssim_weight=0.0, is_bce=0)
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, l1_weight=1.0, lpip_weight=10.0, ssim_weight=0.0, is_bce=0)
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, l1_weight=1.0, lpip_weight=10.0, ssim_weight=0.0, is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, [1.0, 10.0, 0.0, 0.0], is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, [1.0, 10.0, 0.0, 0.0], is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, [1.0, 10.0, 0.0, 0.0], is_bce=0)
 
         iteration = 8
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, l1_weight=1.0, lpip_weight=10.0, ssim_weight=0.0, is_bce=1)
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, l1_weight=1.0, lpip_weight=10.0, ssim_weight=0.0, is_bce=1)
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, l1_weight=1.0, lpip_weight=10.0, ssim_weight=0.0, is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, [1.0, 10.0, 0.0, 0.0], is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, [1.0, 10.0, 0.0, 0.0], is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, [1.0, 10.0, 0.0, 0.0], is_bce=1)
 
         iteration = 9
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=0.0, ssim_weight=1.0, is_bce=0)
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=0.0, ssim_weight=1.0, is_bce=0)
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=0.0, ssim_weight=1.0, is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, [10.0, 0.0, 1.0, 0.0], is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, [10.0, 0.0, 1.0, 0.0], is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, [10.0, 0.0, 1.0, 0.0], is_bce=0)
 
         iteration = 10
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=0.0, ssim_weight=1.0, is_bce=1)
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=0.0, ssim_weight=1.0, is_bce=1)
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=0.0, ssim_weight=1.0, is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, [10.0, 0.0, 1.0, 0.0], is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, [10.0, 0.0, 1.0, 0.0], is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, [10.0, 0.0, 1.0, 0.0], is_bce=1)
 
         iteration = 11
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=0.0, ssim_weight=1.0,
-                                                                                                            gradient_weight=1.0, is_bce=0)
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=0.0, ssim_weight=1.0,
-                                                                                                             gradient_weight=1.0, is_bce=0)
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=0.0, ssim_weight=1.0,
-                                                                                                            gradient_weight=1.0, is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, [10.0, 0.0, 1.0, 1.0], is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, [10.0, 0.0, 1.0, 1.0], is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, [10.0, 0.0, 1.0, 1.0], is_bce=0)
 
         iteration = 12
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=0.0, ssim_weight=1.0,
-                                                                                                            gradient_weight=1.0, is_bce=1)
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=0.0, ssim_weight=1.0,
-                                                                                                             gradient_weight=1.0, is_bce=1)
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, l1_weight=10.0, lpip_weight=0.0, ssim_weight=1.0,
-                                                                                                            gradient_weight=1.0, is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, [10.0, 0.0, 1.0, 1.0], is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, [10.0, 0.0, 1.0, 1.0], is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, [10.0, 0.0, 1.0, 1.0], is_bce=1)
+
+        iteration = 13
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, [1.0, 0.0, 0.0, 0.0, 10.0, 10.0], is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, [1.0, 0.0, 0.0, 0.0, 10.0, 10.0], is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, [1.0, 0.0, 0.0, 0.0, 10.0, 10.0], is_bce=0)
+
+        iteration = 14
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, [1.0, 0.0, 0.0, 0.0, 10.0, 10.0], is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, [1.0, 0.0, 0.0, 0.0, 10.0, 10.0], is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, [1.0, 0.0, 0.0, 0.0, 10.0, 10.0], is_bce=1)
+
+        iteration = 15
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, [1.0, 0.0, 0.0, 0.0, 10.0, 0.0], is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, [1.0, 0.0, 0.0, 0.0, 10.0, 0.0], is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, [1.0, 0.0, 0.0, 0.0, 10.0, 0.0], is_bce=0)
+
+        iteration = 16
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, [1.0, 0.0, 0.0, 0.0, 10.0, 0.0], is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, [1.0, 0.0, 0.0, 0.0, 10.0, 0.0], is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, [1.0, 0.0, 0.0, 0.0, 10.0, 0.0], is_bce=1)
+
+        iteration = 17
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, [1.0, 0.0, 0.0, 0.0, 0.0, 10.0], is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, [1.0, 0.0, 0.0, 0.0, 0.0, 10.0], is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, [1.0, 0.0, 0.0, 0.0, 0.0, 10.0], is_bce=0)
+
+        iteration = 18
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, [1.0, 0.0, 0.0, 0.0, 0.0, 10.0], is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, [1.0, 0.0, 0.0, 0.0, 0.0, 10.0], is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, [1.0, 0.0, 0.0, 0.0, 0.0, 10.0], is_bce=1)
 
 
     def get_version(self, iteration, network_type: NetworkType):
         return self.iteration_table[str(iteration) + str(network_type)].get_version()
 
     def get_l1_weight(self, iteration, network_type: NetworkType):
-        return self.iteration_table[str(iteration) + str(network_type)].get_l1_weight()
+        return self.iteration_table[str(iteration) + str(network_type)].get_weight(0)
 
     def get_lpip_weight(self, iteration, network_type: NetworkType):
-        return self.iteration_table[str(iteration) + str(network_type)].get_lpip_weight()
+        return self.iteration_table[str(iteration) + str(network_type)].get_weight(1)
 
     def get_ssim_weight(self, iteration, network_type: NetworkType):
-        return self.iteration_table[str(iteration) + str(network_type)].get_ssim_weight()
+        return self.iteration_table[str(iteration) + str(network_type)].get_weight(2)
 
     def get_gradient_weight(self, iteration, network_type: NetworkType):
-        return self.iteration_table[str(iteration) + str(network_type)].get_gradient_weight()
+        return self.iteration_table[str(iteration) + str(network_type)].get_weight(3)
+
+    def get_multiscale_weight(self, iteration, network_type: NetworkType):
+        return self.iteration_table[str(iteration) + str(network_type)].get_weight(4)
+
+    def get_reflect_cons_weight(self, iteration, network_type: NetworkType):
+        return self.iteration_table[str(iteration) + str(network_type)].get_weight(5)
 
     def is_bce_enabled(self, iteration, network_type: NetworkType):
         return self.iteration_table[str(iteration) + str(network_type)].is_bce_enabled()
 
 class IterationParameters():
-    def __init__(self, iteration, l1_weight, lpip_weight, ssim_weight, gradient_weight = 0.0, is_bce = 0.0):
+    #6 weights total
+    def __init__(self, iteration, weight_list, is_bce):
         self.iteration = iteration
-        self.l1_weight = l1_weight
-        self.lpip_weight = lpip_weight
-        self.ssim_weight = ssim_weight
-        self.gradient_weight = gradient_weight
+        self.weight_list = weight_list
         self.is_bce = is_bce
 
     def get_version(self):
         return self.iteration
 
-    def get_l1_weight(self):
-        return self.l1_weight
-
-    def get_lpip_weight(self):
-        return self.lpip_weight
-
-    def get_ssim_weight(self):
-        return self.ssim_weight
-
-    def get_gradient_weight(self):
-        return self.gradient_weight
+    def get_weight(self, index):
+        if (index < len(self.weight_list)):
+            return self.weight_list[index]
+        else:
+            print("Weight index "+str(index)+ " not found. Returning 0.0")
+            return 0.0
 
     def is_bce_enabled(self):
         return self.is_bce
