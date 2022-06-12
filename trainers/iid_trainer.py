@@ -398,6 +398,8 @@ class IIDTrainer:
 
             rgb2shading = self.G_S(input)
             rgb2albedo = self.G_A(input)
+            rgb2albedo = self.iid_op.view_albedo(rgb2albedo)
+            albedo_tensor = self.iid_op.view_albedo(albedo_tensor)
             rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading)
             # rgb_like = self.iid_op.produce_rgb(albedo_tensor, shading_tensor)
 
@@ -422,6 +424,8 @@ class IIDTrainer:
 
             rgb2shading = self.G_S(input)
             rgb2albedo = self.G_A(input)
+            rgb2albedo = self.iid_op.view_albedo(rgb2albedo)
+            albedo_tensor = self.iid_op.view_albedo(albedo_tensor)
             rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading)
 
             # plot metrics
@@ -457,6 +461,7 @@ class IIDTrainer:
 
             rgb2shading = self.G_S(input)
             rgb2albedo = self.G_A(input)
+            rgb2albedo = self.iid_op.view_albedo(rgb2albedo)
             rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading)
 
             self.visdom_reporter.plot_image(rw_tensor, "Real World images - " + constants.IID_VERSION + constants.ITERATION)
@@ -472,6 +477,7 @@ class IIDTrainer:
 
             rgb2shading = self.G_S(input)
             rgb2albedo = self.G_A(input)
+            rgb2albedo = self.iid_op.view_albedo(rgb2albedo)
             rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading)
 
             self.visdom_reporter.plot_image(gta_albedo, "GTA Albedo - " + constants.IID_VERSION + constants.ITERATION)

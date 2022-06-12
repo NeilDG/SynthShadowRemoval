@@ -118,6 +118,9 @@ def load_iid_datasetv2_train(rgb_dir, albedo_dir, opts):
     if (opts.img_to_load > 0):
         rgb_list = rgb_list[0: opts.img_to_load]
 
+    for i in range(0, len(rgb_list)):
+        rgb_list[i] = rgb_list[i].replace("\\", "/")
+
     img_length = len(rgb_list)
     print("Length of images: %d" % img_length)
     print(rgb_list[0])
@@ -138,6 +141,9 @@ def load_iid_datasetv2_test(rgb_dir, albedo_dir, opts):
     random.shuffle(rgb_list)
     if (opts.img_to_load > 0):
         rgb_list = rgb_list[0: opts.img_to_load]
+
+    for i in range(0, len(rgb_list)):
+        rgb_list[i] = rgb_list[i].replace("\\", "/")
 
     img_length = len(rgb_list)
     print("Length of images: %d" % img_length)
