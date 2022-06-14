@@ -91,8 +91,6 @@ class IIDTrainer:
             self.G_S = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
             self.G_S = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
-        elif (net_config == 4):
-            self.G_S = unet_gan.UnetGeneratorV2(input_nc=input_nc, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         else:
             self.G_S = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
@@ -105,8 +103,6 @@ class IIDTrainer:
             self.G_A = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
             self.G_A = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
-        elif (net_config == 4):
-            self.G_A = unet_gan.UnetGeneratorV2(input_nc=input_nc, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         else:
             self.G_A = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 

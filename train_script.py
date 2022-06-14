@@ -77,8 +77,8 @@ def train_shadow_relight():
 
 def train_relighting():
     os.system("python \"iid_train.py\" --server_config=5 --img_to_load=1000 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=256 --min_epochs=20 "
-              "--net_config=1 --num_blocks=6 "
-              "--plot_enabled=1 --debug_mode=0 --version_name=\"iid_networkv6.04\" --iteration=13 "
+              "--net_config=3 --num_blocks=6 "
+              "--plot_enabled=1 --debug_mode=0 --version_name=\"iid_networkv6.06\" --iteration=13 "
               "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\"")
 
     # os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=256 --min_epochs=20 "
