@@ -77,9 +77,9 @@ D_B_FAKE_LOSS_KEY = "d_fake_b"
 LAST_METRIC_KEY = "last_metric"
 
 plot_enabled = 1
-early_stop_threshold = 1000
+early_stop_threshold = 100
 min_epochs = 50
-num_epochs = 500
+num_epochs = 200
 
 #Running on local = 0, Running on COARE = 1, Running on CCS server = 2
 server_config = 0

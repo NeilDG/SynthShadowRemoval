@@ -6,9 +6,13 @@ def test_relighting():
     # os.system("python \"iid_train.py\" --server_config=5 --img_to_load=1000 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=128 --net_config=1 --num_blocks=6 "
     #           "--plot_enabled=1 --min_epochs=10 --version_name=\"maps2rgb_rgb2maps_v4.06\" --iteration=5")
 
-    os.system("python \"iid_test.py\"  --net_config=1 --num_blocks=6 --version_name=\"iid_networkv6.00\" --iteration=5 "
+    os.system("python \"iid_test.py\"  --net_config=1 --num_blocks=6 --version_name=\"iid_networkv6.04\" --iteration=13 "
               "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
+
+    # os.system("python \"iid_test.py\"  --net_config=2 --num_blocks=0 --version_name=\"iid_networkv6.01\" --iteration=6 "
+    #           "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
+    #           "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
     # os.system("python \"iid_test.py\"  --net_config=2 --num_blocks=0 --version_name=\"iid_networkv5.01\" --iteration=10 "
     #           "--da_enabled=0 --da_version_name=\"embedding_v5.00_5\" "
