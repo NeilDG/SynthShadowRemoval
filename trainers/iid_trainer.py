@@ -7,6 +7,7 @@ from model import iteration_table, embedding_network
 from model import ffa_gan as ffa
 from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
+from model import usi3d_gan
 from model.modules import image_pool
 import constants
 import torch
@@ -51,6 +52,7 @@ class IIDTrainer:
         num_blocks = opts.num_blocks
         self.batch_size = opts.batch_size
         net_config = opts.net_config
+        self.net_config = opts.net_config
 
         if(self.da_enabled == 1):
             self.initialize_da_network(opts.da_version_name)
@@ -91,6 +93,16 @@ class IIDTrainer:
             self.G_S = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
             self.G_S = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
+        elif (net_config == 4):
+            params = {'dim': 64,  # number of filters in the bottommost layer
+                      'mlp_dim': 256,  # number of filters in MLP
+                      'style_dim': 8,  # length of style code
+                      'n_layer': 3,  # number of layers in feature merger/splitor
+                      'activ': 'relu',  # activation function [relu/lrelu/prelu/selu/tanh]
+                      'n_downsample': 2,  # number of downsampling layers in content encoder
+                      'n_res': num_blocks,  # number of residual blocks in content encoder/decoder
+                      'pad_type': 'reflect'}
+            self.G_S = usi3d_gan.AdaINGen(input_dim=input_nc, output_dim=3, params=params).to(self.gpu_device)
         else:
             self.G_S = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
@@ -103,6 +115,16 @@ class IIDTrainer:
             self.G_A = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
             self.G_A = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
+        elif(net_config == 4):
+            params = {'dim': 64,                     # number of filters in the bottommost layer
+                      'mlp_dim': 256,                # number of filters in MLP
+                      'style_dim': 8,                # length of style code
+                      'n_layer': 3,                  # number of layers in feature merger/splitor
+                      'activ': 'relu',               # activation function [relu/lrelu/prelu/selu/tanh]
+                      'n_downsample': 2,             # number of downsampling layers in content encoder
+                      'n_res': num_blocks,                    # number of residual blocks in content encoder/decoder
+                      'pad_type': 'reflect'}
+            self.G_A = usi3d_gan.AdaINGen(input_dim=input_nc, output_dim=3, params=params).to(self.gpu_device)
         else:
             self.G_A = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
@@ -415,8 +437,8 @@ class IIDTrainer:
             self.visdom_reporter.plot_image(embedding_rep, str(label) + " Embedding Maps - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(rgb_like, str(label) + " RGB Reconstruction - " + constants.IID_VERSION + constants.ITERATION)
 
-            self.visdom_reporter.plot_image(self.iid_op.view_albedo(rgb2albedo), str(label) + " RGB2Albedo images - " + constants.IID_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(self.iid_op.view_albedo(albedo_tensor), str(label) + " Albedo images - " + constants.IID_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(rgb2albedo, str(label) + " RGB2Albedo images - " + constants.IID_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(albedo_tensor, str(label) + " Albedo images - " + constants.IID_VERSION + constants.ITERATION)
 
             self.visdom_reporter.plot_image(rgb2shading, str(label) + " RGB2Shading images - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(shading_tensor, str(label) + " Shading images - " + constants.IID_VERSION + constants.ITERATION)
@@ -494,6 +516,7 @@ class IIDTrainer:
             self.visdom_reporter.plot_image(rgb_like, "GTA RGB-Like - " + constants.IID_VERSION + constants.ITERATION)
 
     def infer_albedo(self, rw_tensor):
+        self.G_A.eval()
         with torch.no_grad():
             if (self.da_enabled == 1):
                 input = self.reshape_input(rw_tensor)
@@ -502,6 +525,7 @@ class IIDTrainer:
             return self.G_A(input)
 
     def infer_shading(self, rw_tensor):
+        self.G_S.eval()
         with torch.no_grad():
             if (self.da_enabled == 1):
                 rw_tensor = self.reshape_input(rw_tensor)

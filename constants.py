@@ -87,3 +87,6 @@ num_workers = 12
 
 albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
 rgb_dir = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+
+imgx_dir = "E:/Places Dataset/*.jpg"
+imgy_dir = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"

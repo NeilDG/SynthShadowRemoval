@@ -17,7 +17,7 @@ sbatch slurm_install.slurm
 sbatch slurm_visdom_test.slurm
 sbatch visdom_run.slurm
 sbatch -w saliksik-cpu-23 visdom_run.slurm
-sbatch -w saliksik-cpu-23 --dependency=afterany:301825 visdom_run.slurm
+sbatch -w saliksik-cpu-23 --dependency=afterany:301949 visdom_run.slurm
 
 sbatch script_debug.slurm
 sbatch script_1.slurm
@@ -28,6 +28,12 @@ sbatch script_5.slurm
 sbatch script_6.slurm
 sbatch script_7.slurm
 sbatch script_8.slurm
+sbatch script_9.slurm
+sbatch script_10.slurm
+sbatch script_11.slurm
+sbatch script_12.slurm
+sbatch script_13.slurm
+sbatch script_14.slurm
 
 sbatch --dependency=afterany:275293 script_debug.slurm
 sbatch -w saliksik-gpu-06 slurm_install_gpu.slurm

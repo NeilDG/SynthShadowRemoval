@@ -1,15 +1,15 @@
 #!/bin/bash
-#SBATCH -J R_1
+#SBATCH -J R_14
 #SBATCH --partition=gpu
 #SBATCH --qos=12c-1h_2gpu
 #SBATCH --cpus-per-task=6
 #SBATCH -G 1
 #SBATCH --ntasks=1
-#SBATCH --output=script_1.out
+#SBATCH --output=script_12.out
 #SBATCH --mail-user=neil.delgallego@dlsu.edu.ph
 #SBATCH --mail-type=END
 
-ITERATION=5
+ITERATION=18
 echo "CUDA_DEVICE=/dev/nvidia/$CUDA_VISIBLE_DEVICES"
 nvidia-smi
 

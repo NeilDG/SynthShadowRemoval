@@ -71,17 +71,13 @@ def update_config(opts):
     elif (constants.server_config == 4):
         opts.num_workers = 6
         constants.imgx_dir = "D:/Datasets/Places Dataset/*.jpg"
-        constants.imgy_dir = "D:/Datasets/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
-        constants.imgx_dir_test = constants.imgx_dir
-        constants.imgy_dir_test = constants.imgy_dir
+        constants.imgy_dir = "D:/Datasets/SynthWeather Dataset 8/train_rgb/*/*.png"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers, " ", opts.version_name)
     else:
         opts.num_workers = 12
         constants.imgx_dir = "E:/Places Dataset/*.jpg"
-        constants.imgy_dir = "E:/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
-        constants.imgx_dir_test = constants.imgx_dir
-        constants.imgy_dir_test = constants.imgy_dir
+        constants.imgy_dir = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers, " ", opts.version_name)
 
 def main(argv):
@@ -117,7 +113,7 @@ def main(argv):
     
     # Create the dataloader
     train_loader = dataset_loader.load_da_dataset_train(constants.imgx_dir, constants.imgy_dir, opts)
-    test_loader = dataset_loader.load_da_dataset_test(constants.imgx_dir_test, constants.imgy_dir_test, opts)
+    test_loader = dataset_loader.load_da_dataset_test(constants.imgx_dir, constants.imgy_dir, opts)
 
     if (opts.test_mode == 1):
         print("Plotting test images...")

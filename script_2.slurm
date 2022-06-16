@@ -22,10 +22,10 @@ source activate NeilGAN_V2
 srun python iid_train.py \
 --iteration=$ITERATION \
 --server_config=1 \
---batch_size=512 \
+--batch_size=128 \
 --patch_size=64 \
 --plot_enabled=0 \
---version_name="iid_networkv5.03" --min_epochs=50 --net_config=2 --num_blocks=0 \
+--version_name="iid_networkv6.07" --min_epochs=20 --net_config=4 --num_blocks=4 \
 --da_enabled=1 --da_version_name="embedding_v5.00_5" \
 --img_to_load=-1 --load_previous=0
 
