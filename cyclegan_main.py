@@ -38,6 +38,7 @@ parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--version_name', type=str, help="version_name")
 parser.add_option('--test_mode', type=int, help="Test mode?", default=0)
 parser.add_option('--min_epochs', type=int, help="Min epochs", default=120)
+parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
 
 #--img_to_load=-1 --load_previous=1
 #Update config if on COARE
@@ -46,7 +47,8 @@ def update_config(opts):
     constants.ITERATION = str(opts.iteration)
     constants.STYLE_TRANSFER_VERSION = opts.version_name
     constants.STYLE_TRANSFER_CHECKPATH = 'checkpoint/' + constants.STYLE_TRANSFER_VERSION + "_" + constants.ITERATION + '.pt'
-
+    constants.plot_enabled = opts.plot_enabled
+    
     # COARE
     if (constants.server_config == 1):
         opts.num_workers = 6

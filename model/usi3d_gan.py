@@ -118,17 +118,17 @@ class AdaINGen(nn.Module):
 
     def forward(self, images):
         # reconstruct an image
-        content, style_fake = self.encode(images)
-        images_recon = self.decode(content, style_fake)
+        content, style_fake = self.get_embedding(images)
+        images_recon = self.get_decoding(content, style_fake)
         return images_recon
 
-    def encode(self, images):
+    def get_embedding(self, images):
         # encode an image to its content and style codes
         style_fake = self.enc_style(images)
         content = self.enc_content(images)
         return content, style_fake
 
-    def decode(self, content, style):
+    def get_decoding(self, content, style):
         # decode content and style codes to an image
         adain_params = self.mlp(style)
         self.assign_adain_params(adain_params, self.dec)
