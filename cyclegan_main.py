@@ -48,7 +48,7 @@ def update_config(opts):
     constants.STYLE_TRANSFER_VERSION = opts.version_name
     constants.STYLE_TRANSFER_CHECKPATH = 'checkpoint/' + constants.STYLE_TRANSFER_VERSION + "_" + constants.ITERATION + '.pt'
     constants.plot_enabled = opts.plot_enabled
-    
+
     # COARE
     if (constants.server_config == 1):
         opts.num_workers = 6
