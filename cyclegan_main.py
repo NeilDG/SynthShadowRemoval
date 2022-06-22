@@ -60,8 +60,10 @@ def update_config(opts):
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
-        opts.num_workers = 8
+        opts.num_workers = 12
         print("Using CCS configuration. Workers: ", opts.num_workers, " ", opts.version_name)
+        constants.imgx_dir = "/home/jupyter-neil.delgallego/Places Dataset/*.jpg"
+        constants.imgy_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb/*/*.png"
 
     # GCLOUD
     elif (constants.server_config == 3):
