@@ -26,6 +26,7 @@ parser.add_option('--adv_weight', type=float, help="Weight", default="1.0")
 parser.add_option('--rgb_l1_weight', type=float, help="Weight", default="1.0")
 parser.add_option('--da_enabled', type=int, default=0)
 parser.add_option('--da_version_name', type=str, default="")
+parser.add_option('--albedo_train', type=int, default="0")
 parser.add_option('--num_blocks', type=int)
 parser.add_option('--net_config', type=int)
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
@@ -62,15 +63,15 @@ def update_config(opts):
         opts.num_workers = 6
         print("Using COARE configuration. Workers: ", opts.num_workers, " ", opts.version_name)
         constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
-        constants.rgb_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.rgb_dir_ws = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
         constants.albedo_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/albedo/"
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
         constants.num_workers = 6
-        constants.rgb_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.rgb_dir_ws = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
         constants.albedo_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/albedo/"
-        constants.DATASET_PLACES_PATH = constants.rgb_dir
+        constants.DATASET_PLACES_PATH = constants.rgb_dir_ws
 
         print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", opts.version_name)
 
@@ -79,20 +80,21 @@ def update_config(opts):
         opts.num_workers = 8
         print("Using GCloud configuration. Workers: ", opts.num_workers, " ", opts.version_name)
         constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/*.jpg"
-        constants.rgb_dir = "/home/neil_delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.rgb_dir_ws = "/home/neil_delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
         constants.albedo_dir = "/home/neil_delgallego/SynthWeather Dataset 8/albedo/"
 
     elif (constants.server_config == 4):
         opts.num_workers = 6
         constants.DATASET_PLACES_PATH = "D:/Datasets/Places Dataset/*.jpg"
-        constants.rgb_dir = "D:/Datasets/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.rgb_dir_ws = "D:/Datasets/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
         constants.albedo_dir = "D:/Datasets/SynthWeather Dataset 8/albedo/"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers, " ", opts.version_name)
     else:
-        opts.num_workers = 12
+        opts.num_workers = 6
         constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
-        constants.rgb_dir = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.rgb_dir_ws = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.rgb_dir_ns = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
         constants.albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers, " ", opts.version_name)
 
@@ -122,11 +124,11 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    print(constants.rgb_dir, constants.albedo_dir)
+    print(constants.rgb_dir_ws, constants.albedo_dir)
 
     # Create the dataloader
-    train_loader = dataset_loader.load_iid_datasetv2_train(constants.rgb_dir, constants.albedo_dir, opts)
-    test_loader = dataset_loader.load_iid_datasetv2_test(constants.rgb_dir, constants.albedo_dir, opts)
+    train_loader = dataset_loader.load_iid_datasetv2_train(constants.rgb_dir_ws, constants.rgb_dir_ns, constants.albedo_dir, opts)
+    test_loader = dataset_loader.load_iid_datasetv2_test(constants.rgb_dir_ws, constants.rgb_dir_ns, constants.albedo_dir, opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
 
     start_epoch = 0
@@ -147,18 +149,19 @@ def main(argv):
 
     if (opts.test_mode == 1):
         print("Plotting test images...")
-        _, input_rgb_batch, albedo_batch = next(iter(test_loader))
-        input_rgb_tensor = input_rgb_batch.to(device)
+        _, rgb_ws_batch, rgb_ns_batch, albedo_batch = next(iter(test_loader))
+        rgb_ws_tensor = rgb_ws_batch.to(device)
+        rgb_ns_tensor = rgb_ns_batch.to(device)
         albedo_tensor = albedo_batch.to(device)
         iid_op = iid_transforms.IIDTransform()
-        input_rgb_tensor, albedo_tensor, shading_tensor = iid_op(input_rgb_tensor, albedo_tensor)
+        rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor = iid_op(rgb_ws_tensor, rgb_ns_tensor, albedo_tensor)
 
-        trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, "Test")
-        trainer.visdom_measure(input_rgb_tensor, albedo_tensor, shading_tensor, "Test")
+        trainer.visdom_visualize(rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor, "Test")
+        trainer.visdom_measure(rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor, "Test")
 
-        _, input_rgb_batch = next(iter(rw_loader))
-        input_rgb_tensor = input_rgb_batch.to(device)
-        trainer.visdom_infer(input_rgb_tensor)
+        _, rgb_ws_batch = next(iter(rw_loader))
+        rgb_ws_tensor = rgb_ws_batch.to(device)
+        trainer.visdom_infer(rgb_ws_tensor)
 
         GTA_BASE_PATH = "E:/IID-TestDataset/GTA/"
         RGB_PATH = GTA_BASE_PATH + "/input/"
@@ -178,24 +181,27 @@ def main(argv):
         for epoch in range(start_epoch, constants.num_epochs):
             # For each batch in the dataloader
             for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader)):
-                _, input_rgb_batch, albedo_batch = train_data
-                input_rgb_tensor = input_rgb_batch.to(device)
+                _, rgb_ws_batch, rgb_ns_batch, albedo_batch = train_data
+                rgb_ws_tensor = rgb_ws_batch.to(device)
+                rgb_ns_tensor = rgb_ns_batch.to(device)
                 albedo_tensor = albedo_batch.to(device)
+                iid_op = iid_transforms.IIDTransform()
+                rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor = iid_op(rgb_ws_tensor, rgb_ns_tensor, albedo_tensor)
 
-                input_rgb_tensor, albedo_tensor, shading_tensor = iid_op(input_rgb_tensor, albedo_tensor)
-                trainer.train(input_rgb_tensor, albedo_tensor, shading_tensor)
+                trainer.train(rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor)
                 iteration = iteration + 1
 
                 if(i % 300 == 0):
-                    stopper_method_s.test(trainer, epoch, iteration, trainer.infer_shading(input_rgb_tensor), shading_tensor)
-                    trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, "Train")
+                    stopper_method_s.test(trainer, epoch, iteration, trainer.infer_shading(rgb_ws_tensor), shading_tensor)
+                    trainer.visdom_visualize(rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor, "Train")
 
-                    _, input_rgb_batch, albedo_batch = test_data
-                    input_rgb_tensor = input_rgb_batch.to(device)
+                    _, rgb_ws_batch, rgb_ns_batch, albedo_batch = test_data
+                    rgb_ws_tensor = rgb_ws_batch.to(device)
+                    rgb_ns_tensor = rgb_ns_batch.to(device)
                     albedo_tensor = albedo_batch.to(device)
-                    input_rgb_tensor, albedo_tensor, shading_tensor = iid_op(input_rgb_tensor, albedo_tensor)
+                    rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor = iid_op(rgb_ws_tensor, rgb_ns_tensor, albedo_tensor)
 
-                    trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, "Test")
+                    trainer.visdom_visualize(rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor, "Test")
                     trainer.visdom_plot(iteration)
                     trainer.save_states_checkpt(epoch, iteration, last_metric)
                     if (stopper_method_s.did_stop_condition_met()):
