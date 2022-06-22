@@ -72,8 +72,8 @@ def update_config(opts):
 
     elif (constants.server_config == 4):
         opts.num_workers = 6
-        constants.imgx_dir = "D:/Datasets/Places Dataset/*.jpg"
-        constants.imgy_dir = "D:/Datasets/SynthWeather Dataset 8/train_rgb/*/*.png"
+        constants.imgx_dir = "C:/Datasets/Places Dataset/*.jpg"
+        constants.imgy_dir = "C:/Datasets/SynthWeather Dataset 8/train_rgb/*/*.png"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers, " ", opts.version_name)
     else:

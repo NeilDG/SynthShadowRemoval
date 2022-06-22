@@ -97,9 +97,13 @@ def train_relighting():
     #           "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\"")
 
 def train_domain_adaptation():
-    os.system("python \"cyclegan_main.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=2 --num_blocks=0 "
-              "--patch_size=32 --img_per_iter=32 --batch_size=1 " 
+    os.system("python \"cyclegan_main.py\" --server_config=4 --img_to_load=-1 --load_previous=1 --test_mode=0 --net_config=2 --num_blocks=0 "
+              "--patch_size=32 --img_per_iter=16 --batch_size=1 --plot_enabled=1 " 
               "--min_epochs=30 --g_lr=0.0002 --d_lr=0.0002 --version_name=\"synth2rgb_v5.00\" --iteration=3")
+
+    # os.system("python \"cyclegan_main.py\" --server_config=4 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=2 --num_blocks=0 "
+    #           "--patch_size=32 --img_per_iter=16 --batch_size=1 --plot_enabled=0 "
+    #           "--min_epochs=30 --g_lr=0.0002 --d_lr=0.0002 --version_name=\"synth2rgb_v5.00\" --iteration=4")
 
 def train_embedding():
     os.system("python \"embedding_main.py\" --server_config=5 --img_to_load=-1 --load_previous=1 --test_mode=0 --net_config=4 --num_blocks=4 "
@@ -115,8 +119,7 @@ def main():
     # train_shading()
     # train_shadow()
     # train_shadow_relight()
-    train_relighting()
-    # train_domain_adaptation()
+    train_domain_adaptation()
     # train_embedding()
     # os.system("shutdown /s /t 1")
 
