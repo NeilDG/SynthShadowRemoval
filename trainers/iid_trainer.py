@@ -532,8 +532,11 @@ class IIDTrainer:
                 embedding_rep = rw_tensor
 
             rgb2shading = self.G_S(input)
-            rgb2albedo = self.G_A(input)
             rgb2shadow = self.G_Z(input)
+            if (self.albedo_train == 1):
+                rgb2albedo = self.G_A(input)
+            else:
+                rgb2albedo = self.iid_op.extract_albedo(rw_tensor, rgb2shading, rgb2shadow)
             rgb2albedo = self.iid_op.view_albedo(rgb2albedo)
             rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
 
@@ -562,13 +565,22 @@ class IIDTrainer:
             self.visdom_reporter.plot_image(rgb_like, "GTA RGB-Like - " + constants.IID_VERSION + constants.ITERATION)
 
     def infer_albedo(self, rw_tensor):
-        self.G_A.eval()
+        self.G_S.eval()
+        self.G_Z.eval()
+
         with torch.no_grad():
             if (self.da_enabled == 1):
                 input = self.reshape_input(rw_tensor)
             else:
                 input = rw_tensor
-            return self.G_A(input)
+
+            if (self.albedo_train == 1):
+                self.G_A.eval()
+                rgb2albedo = self.G_A(input)
+            else:
+                rgb2albedo = self.iid_op.extract_albedo(rw_tensor, self.G_S(input), self.G_Z(input))
+
+            return rgb2albedo
 
     def infer_shading(self, rw_tensor):
         self.G_S.eval()

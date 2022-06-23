@@ -3,23 +3,7 @@
 import os
 
 def test_relighting():
-    os.system("python \"iid_test.py\"  --net_config=4 --num_blocks=4 --version_name=\"iid_networkv6.07\" --iteration=9 "
-              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
-              "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
-
-    os.system("python \"iid_test.py\"  --net_config=4 --num_blocks=4 --version_name=\"iid_networkv6.07\" --iteration=10 "
-              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
-              "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
-
-    os.system("python \"iid_test.py\"  --net_config=4 --num_blocks=4 --version_name=\"iid_networkv6.07\" --iteration=11 "
-              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
-              "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
-
-    os.system("python \"iid_test.py\"  --net_config=4 --num_blocks=4 --version_name=\"iid_networkv6.07\" --iteration=12 "
-              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
-              "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
-
-    os.system("python \"iid_test.py\"  --net_config=4 --num_blocks=4 --version_name=\"iid_networkv6.07\" --iteration=13 "
+    os.system("python \"iid_test.py\"  --net_config=4 --num_blocks=4 --version_name=\"iid_networkv7.04\" --iteration=13 "
               "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 

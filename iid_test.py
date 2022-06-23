@@ -29,6 +29,7 @@ parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--da_enabled', type=int, default=0)
 parser.add_option('--da_version_name', type=str, default="")
+parser.add_option('--albedo_train', type=int, default="0")
 parser.add_option('--batch_size', type=int, help="batch_size", default="128")
 parser.add_option('--patch_size', type=int, help="patch_size", default="64")
 parser.add_option('--num_blocks', type=int)
@@ -315,23 +316,25 @@ def main(argv):
     trainer.load_saved_state(checkpoint)
 
     albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
-    rgb_dir = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+    rgb_dir_ws = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+    rgb_dir_ns = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
     constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
-    print(rgb_dir, albedo_dir)
+    print(rgb_dir_ws, albedo_dir)
 
     # Create the dataloader
-    test_loader = dataset_loader.load_iid_datasetv2_test(rgb_dir, albedo_dir, opts)
+    test_loader = dataset_loader.load_iid_datasetv2_test(rgb_dir_ws, rgb_dir_ns, albedo_dir, opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
 
     print("Plotting test images...")
-    _, input_rgb_batch, albedo_batch = next(iter(test_loader))
-    input_rgb_tensor = input_rgb_batch.to(device)
+    _, rgb_ws_batch, rgb_ns_batch, albedo_batch = next(iter(test_loader))
+    rgb_ws_tensor = rgb_ws_batch.to(device)
+    rgb_ns_tensor = rgb_ns_batch.to(device)
     albedo_tensor = albedo_batch.to(device)
     iid_op = iid_transforms.IIDTransform()
-    input_rgb_tensor, albedo_tensor, shading_tensor = iid_op(input_rgb_tensor, albedo_tensor)
+    input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor = iid_op(rgb_ws_tensor, rgb_ns_tensor, albedo_tensor)
 
-    trainer.visdom_visualize(input_rgb_tensor, albedo_tensor, shading_tensor, "Test")
-    trainer.visdom_measure(input_rgb_tensor, albedo_tensor, shading_tensor, "Test")
+    trainer.visdom_visualize(rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor, "Test")
+    trainer.visdom_measure(rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor, "Test")
 
     _, input_rgb_batch = next(iter(rw_loader))
     input_rgb_tensor = input_rgb_batch.to(device)
