@@ -1,7 +1,7 @@
 import os
 
 import lpips
-from model import embedding_network
+from model import embedding_network, unet_gan, usi3d_gan
 from model import vanilla_cycle_gan as cycle_gan
 import constants
 import torch
@@ -30,9 +30,8 @@ class EmbeddingTrainer:
         self.use_lpips = opts.use_lpips
         self.lpips_loss = lpips.LPIPS(net='vgg').to(self.gpu_device)
 
-        #self.G_A = embedding_network.EmbeddingNetwork(input_nc=3, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
-        self.G_A = embedding_network.EmbeddingNetworkFFA(blocks = num_blocks).to(self.gpu_device)
-        self.D_A = cycle_gan.Discriminator().to(self.gpu_device)  # use CycleGAN's discriminator
+        self.net_config = opts.net_config
+        self.initialize_network(self.net_config, num_blocks, 3)
 
         self.transform_op = cyclegan_transforms.CycleGANTransform(opts).requires_grad_(False)
 
@@ -44,6 +43,28 @@ class EmbeddingTrainer:
         self.initialize_dict()
 
         self.fp16_scaler = amp.GradScaler()  # for automatic mixed precision
+
+    def initialize_network(self, net_config, num_blocks, input_nc):
+        if (net_config == 1):
+            self.G_A = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
+        elif (net_config == 2):
+            self.G_A = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
+        elif (net_config == 3):
+            self.G_A = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
+        elif (net_config == 4):
+            params = {'dim': 64,  # number of filters in the bottommost layer
+                      'mlp_dim': 256,  # number of filters in MLP
+                      'style_dim': 8,  # length of style code
+                      'n_layer': 3,  # number of layers in feature merger/splitor
+                      'activ': 'relu',  # activation function [relu/lrelu/prelu/selu/tanh]
+                      'n_downsample': 2,  # number of downsampling layers in content encoder
+                      'n_res': num_blocks,  # number of residual blocks in content encoder/decoder
+                      'pad_type': 'reflect'}
+            self.G_A = usi3d_gan.AdaINGen(input_dim=input_nc, output_dim=3, params=params).to(self.gpu_device)
+        else:
+            self.G_A = embedding_network.EmbeddingNetworkFFA(blocks = num_blocks).to(self.gpu_device)
+
+        self.D_A = cycle_gan.Discriminator(input_nc=3).to(self.gpu_device)  # use CycleGAN's discriminator
 
     def initialize_dict(self):
         # what to store in visdom?
@@ -128,10 +149,14 @@ class EmbeddingTrainer:
             likeness_loss = self.likeness_loss(clean_like, tensor_x) * self.likeness_weight
 
             #reduce embedding distance loss
-            tensor_x_embedding, _, _, _ = self.G_A.get_embedding(tensor_x)
-            tensor_y_embedding, _, _, _ = self.G_A.get_embedding(tensor_y)
-            # tensor_x_embedding = torch.mean(tensor_x_embedding)
-            # tensor_y_embedding = torch.mean(tensor_y_embedding)
+            if(self.net_config == 4):
+                tensor_x_embedding, _ = self.G_A.get_embedding(tensor_x)
+                tensor_y_embedding, _ = self.G_A.get_embedding(tensor_y)
+            else:
+                tensor_x_embedding, _, _, _ = self.G_A.get_embedding(tensor_x)
+                tensor_y_embedding, _, _, _ = self.G_A.get_embedding(tensor_y)
+                # tensor_x_embedding = torch.mean(tensor_x_embedding)
+                # tensor_y_embedding = torch.mean(tensor_y_embedding)
             embedding_dist_loss = self.likeness_loss(tensor_x_embedding, tensor_y_embedding) * self.embedding_dist_weight
 
             prediction = self.D_A(fake_input)

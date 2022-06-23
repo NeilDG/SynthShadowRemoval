@@ -603,8 +603,8 @@ def main(argv):
     # produce_color_images("E:/SynthWeather Dataset 6/azimuth/144deg/rgb/", "E:/SynthWeather Dataset 6/azimuth/144deg/rgb - styled/", "synth2rgb_v4.07_3.pt", 2, argv)
     # produce_color_images("E:/SynthWeather Dataset 6/no_shadows/*.png", "E:/SynthWeather Dataset 6/no_shadows_styled/", "synth2rgb_v4.07_3.pt", 2, argv)
 
-    base_path = "E:/SynthWeather Dataset 8/train_rgb/"
-    output_base_path = "E:/SynthWeather Dataset 8/train_rgb_styled/"
+    base_path = "E:/SynthWeather Dataset 8/train_rgb_noshadows/"
+    output_base_path = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
     dirlist = os.listdir(base_path)
 
     for dir in dirlist:

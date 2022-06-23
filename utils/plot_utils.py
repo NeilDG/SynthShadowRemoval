@@ -103,17 +103,31 @@ class VisdomReporter:
         fig, ax = plt.subplots(ROWS, COLS, sharex=True)
         fig.set_size_inches(9, 9)
         fig.tight_layout()
-        
-        for i in range(ROWS):
-            for j in range(COLS):
-                if(index < len(loss_keys)):
-                    if(index == 1):
-                        ax[i, j].plot(x, losses_dict[loss_keys[index]], color=colors[index], label= loss_key + " " +str(caption_dict[caption_keys[index]]))
-                    else:
-                        ax[i, j].plot(x, losses_dict[loss_keys[index]], color = colors[index], label = str(caption_dict[caption_keys[index]]))
-                    index = index + 1
-                else:
-                    break
+
+        row = 0
+        col = 0
+        for i in range(0, len(loss_keys)):
+            if(i == 1):
+                ax[row, col].plot(x, losses_dict[loss_keys[i]], color=colors[i], label=loss_key + " " + str(caption_dict[caption_keys[i]]))
+                col = col + 1
+            elif(np.mean(losses_dict[loss_keys[i]]) > 0.0): #only display those > 0.0
+                ax[row, col].plot(x, losses_dict[loss_keys[i]], color=colors[i], label=str(caption_dict[caption_keys[i]]))
+                col = col + 1
+
+            if(col == COLS):
+                row = row + 1
+                col = 0
+
+        # for i in range(ROWS):
+        #     for j in range(COLS):
+        #         if(index < len(loss_keys)):
+        #             if(index == 1):
+        #                 ax[i, j].plot(x, losses_dict[loss_keys[index]], color=colors[index], label= loss_key + " " +str(caption_dict[caption_keys[index]]))
+        #             elif (np.mean(losses_dict[loss_keys[index]]) > 0.0): #only display those > 0.0
+        #                 ax[i, j].plot(x, losses_dict[loss_keys[index]], color = colors[index], label = str(caption_dict[caption_keys[index]]))
+        #             index = index + 1
+        #         else:
+        #             break
     
         fig.legend(loc = 'lower right')
         if loss_key not in self.loss_windows:

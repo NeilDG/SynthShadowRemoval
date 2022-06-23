@@ -77,13 +77,17 @@ D_B_FAKE_LOSS_KEY = "d_fake_b"
 LAST_METRIC_KEY = "last_metric"
 
 plot_enabled = 1
-early_stop_threshold = 1000
+early_stop_threshold = 100
 min_epochs = 50
-num_epochs = 500
+num_epochs = 100
 
 #Running on local = 0, Running on COARE = 1, Running on CCS server = 2
 server_config = 0
 num_workers = 12
 
 albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
-rgb_dir = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+rgb_dir_ws = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+rgb_dir_ns = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+
+imgx_dir = "E:/Places Dataset/*.jpg"
+imgy_dir = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"

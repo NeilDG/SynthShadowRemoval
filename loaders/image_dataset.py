@@ -308,10 +308,11 @@ class IIDDataset(data.Dataset):
         return self.img_length
 
 class IIDDatasetV2(data.Dataset):
-    def __init__(self, img_length, rgb_list, albedo_dir, transform_config, opts):
+    def __init__(self, img_length, rgb_list_ws, rgb_dir_ns, albedo_dir, transform_config, opts):
         self.img_length = img_length
         self.albedo_dir = albedo_dir
-        self.rgb_list = rgb_list
+        self.rgb_list_ws = rgb_list_ws
+        self.rgb_dir_ns = rgb_dir_ns
         self.transform_config = transform_config
         self.patch_size = (opts.patch_size, opts.patch_size)
         self.light_angles = [0, 36, 72, 108, 144]
@@ -341,30 +342,35 @@ class IIDDatasetV2(data.Dataset):
             ])
 
     def __getitem__(self, idx):
-        file_name = self.rgb_list[idx].split("\\")[-1].split(".png")[0] + ".png"
+        file_name = self.rgb_list_ws[idx].split("/")[-1].split(".png")[0] + ".png"
+        scene_name = self.rgb_list_ws[idx].split("/")[-2]
         img_a_path = self.albedo_dir + file_name
 
         albedo = cv2.imread(img_a_path) #albedo
         albedo = cv2.cvtColor(albedo, cv2.COLOR_BGR2RGB)
 
-        img_rgb_path = self.rgb_list[idx]
-        input_rgb = cv2.imread(img_rgb_path)  # input rgb
-        input_rgb = cv2.cvtColor(input_rgb, cv2.COLOR_BGR2RGB)
+        input_rgb_ws = cv2.imread(self.rgb_list_ws[idx])  # input rgb
+        input_rgb_ws = cv2.cvtColor(input_rgb_ws, cv2.COLOR_BGR2RGB)
+        input_rgb_ns = cv2.imread(self.rgb_dir_ns + scene_name + "/" + file_name)
+        input_rgb_ns = cv2.cvtColor(input_rgb_ns, cv2.COLOR_BGR2RGB)
 
-        input_rgb = self.initial_op(input_rgb)
+        input_rgb_ws = self.initial_op(input_rgb_ws)
+        input_rgb_ns = self.initial_op(input_rgb_ns)
         albedo = self.initial_op(albedo)
 
         if (self.transform_config == 1):
-            crop_indices = transforms.RandomCrop.get_params(input_rgb, output_size=self.patch_size)
+            crop_indices = transforms.RandomCrop.get_params(input_rgb_ws, output_size=self.patch_size)
             i, j, h, w = crop_indices
 
-            input_rgb = transforms.functional.crop(input_rgb, i, j, h, w)
+            input_rgb_ws = transforms.functional.crop(input_rgb_ws, i, j, h, w)
+            input_rgb_ns = transforms.functional.crop(input_rgb_ns, i, j, h, w)
             albedo = transforms.functional.crop(albedo, i, j, h, w)
 
-        input_rgb = self.final_transform_op(input_rgb)
+        input_rgb_ws = self.final_transform_op(input_rgb_ws)
+        input_rgb_ns = self.final_transform_op(input_rgb_ns)
         albedo = self.final_transform_op(albedo)
 
-        return file_name, input_rgb, albedo
+        return file_name, input_rgb_ws, input_rgb_ns, albedo
 
     def __len__(self):
         return self.img_length

@@ -21,6 +21,7 @@ parser.add_option('--load_previous', type=int, help="Load previous?", default=0)
 parser.add_option('--iteration', type=int, help="Style version?", default="1")
 parser.add_option('--adv_weight', type=float, help="Weight", default="1.0")
 parser.add_option('--likeness_weight', type=float, help="Weight", default="10.0")
+parser.add_option('--net_config', type=int)
 parser.add_option('--num_blocks', type=int)
 parser.add_option('--use_bce', type=int, default = "0")
 parser.add_option('--use_lpips', type=int, default = "0")
@@ -88,12 +89,10 @@ def main(argv):
     print("Device: %s" % device)
 
     constants.imgx_dir = "E:/Places Dataset/*.jpg"
-    constants.imgy_dir = "E:/SynthWeather Dataset 7/azimuth/*/rgb/*.png"
-    constants.imgx_dir_test = "E:/Places Dataset/*.jpg"
-    constants.imgy_dir_test = "E:/SynthWeather Dataset 7/azimuth/*/rgb/*.png"
+    constants.imgy_dir = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"
 
     train_loader = dataset_loader.load_ffa_dataset_train(constants.imgx_dir, constants.imgy_dir, opts)
-    test_loader = dataset_loader.load_ffa_dataset_test(constants.imgx_dir_test, constants.imgy_dir_test, opts)
+    test_loader = dataset_loader.load_ffa_dataset_test(constants.imgx_dir, constants.imgy_dir, opts)
 
     trainer = embedding_trainer.EmbeddingTrainer(device, opts)
     trainer.update_penalties(opts.adv_weight, opts.likeness_weight, opts.embedding_dist_weight)

@@ -112,20 +112,20 @@ def load_map_test_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts):
 
     return data_loader
 
-def load_iid_datasetv2_train(rgb_dir, albedo_dir, opts):
-    rgb_list = glob.glob(rgb_dir)
-    random.shuffle(rgb_list)
+def load_iid_datasetv2_train(rgb_dir_ws, rgb_dir_ns, albedo_dir, opts):
+    rgb_list_ws = glob.glob(rgb_dir_ws)
+    random.shuffle(rgb_list_ws)
     if (opts.img_to_load > 0):
-        rgb_list = rgb_list[0: opts.img_to_load]
+        rgb_list_ws = rgb_list_ws[0: opts.img_to_load]
 
-    img_length = len(rgb_list)
+    for i in range(0, len(rgb_list_ws)):
+        rgb_list_ws[i] = rgb_list_ws[i].replace("\\", "/")
+
+    img_length = len(rgb_list_ws)
     print("Length of images: %d" % img_length)
-    print(rgb_list[0])
-    print(rgb_list[4])
-    print(rgb_list[8])
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.IIDDatasetV2(img_length, rgb_list, albedo_dir, 1, opts),
+        image_dataset.IIDDatasetV2(img_length, rgb_list_ws, rgb_dir_ns, albedo_dir, 1, opts),
         batch_size=opts.batch_size,
         num_workers=opts.num_workers,
         shuffle=True
@@ -133,17 +133,20 @@ def load_iid_datasetv2_train(rgb_dir, albedo_dir, opts):
 
     return data_loader
 
-def load_iid_datasetv2_test(rgb_dir, albedo_dir, opts):
-    rgb_list = glob.glob(rgb_dir)
-    random.shuffle(rgb_list)
+def load_iid_datasetv2_test(rgb_dir_ws, rgb_dir_ns, albedo_dir, opts):
+    rgb_list_ws = glob.glob(rgb_dir_ws)
+    random.shuffle(rgb_list_ws)
     if (opts.img_to_load > 0):
-        rgb_list = rgb_list[0: opts.img_to_load]
+        rgb_list_ws = rgb_list_ws[0: opts.img_to_load]
 
-    img_length = len(rgb_list)
+    for i in range(0, len(rgb_list_ws)):
+        rgb_list_ws[i] = rgb_list_ws[i].replace("\\", "/")
+
+    img_length = len(rgb_list_ws)
     print("Length of images: %d" % img_length)
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.IIDDatasetV2(img_length, rgb_list, albedo_dir, 2, opts),
+        image_dataset.IIDDatasetV2(img_length, rgb_list_ws, rgb_dir_ns, albedo_dir, 2, opts),
         batch_size=4,
         num_workers=1,
         shuffle=False

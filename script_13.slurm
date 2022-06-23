@@ -1,15 +1,15 @@
 #!/bin/bash
-#SBATCH -J R_8
+#SBATCH -J R_13
 #SBATCH --partition=gpu
 #SBATCH --qos=12c-1h_2gpu
 #SBATCH --cpus-per-task=6
 #SBATCH -G 1
 #SBATCH --ntasks=1
-#SBATCH --output=script_8.out
+#SBATCH --output=script_12.out
 #SBATCH --mail-user=neil.delgallego@dlsu.edu.ph
 #SBATCH --mail-type=END
 
-ITERATION=12
+ITERATION=17
 echo "CUDA_DEVICE=/dev/nvidia/$CUDA_VISIBLE_DEVICES"
 nvidia-smi
 
@@ -27,7 +27,7 @@ srun python iid_train.py \
 --plot_enabled=0 \
 --version_name="iid_networkv6.07" --min_epochs=20 --net_config=4 --num_blocks=4 \
 --da_enabled=1 --da_version_name="embedding_v5.00_5" \
---img_to_load=-1 --load_previous=1
+--img_to_load=-1 --load_previous=0
 
 
 conda deactivate
