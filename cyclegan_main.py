@@ -63,7 +63,7 @@ def update_config(opts):
         opts.num_workers = 12
         print("Using CCS configuration. Workers: ", opts.num_workers, " ", opts.version_name)
         constants.imgx_dir = "/home/jupyter-neil.delgallego/Places Dataset/*.jpg"
-        constants.imgy_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb/*/*.png"
+        constants.imgy_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
 
     # GCLOUD
     elif (constants.server_config == 3):
@@ -75,13 +75,13 @@ def update_config(opts):
     elif (constants.server_config == 4):
         opts.num_workers = 6
         constants.imgx_dir = "C:/Datasets/Places Dataset/*.jpg"
-        constants.imgy_dir = "C:/Datasets/SynthWeather Dataset 8/train_rgb/*/*.png"
+        constants.imgy_dir = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers, " ", opts.version_name)
     else:
         opts.num_workers = 12
         constants.imgx_dir = "E:/Places Dataset/*.jpg"
-        constants.imgy_dir = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"
+        constants.imgy_dir = "E:/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers, " ", opts.version_name)
 
 def main(argv):
