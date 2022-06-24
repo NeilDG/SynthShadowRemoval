@@ -191,11 +191,12 @@ def main(argv):
 
                 trainer.train(rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor)
                 iteration = iteration + 1
+                stopper_method_s.test(trainer, epoch, iteration, trainer.infer_shading(rgb_ws_tensor), shading_tensor)
+                if (stopper_method_s.did_stop_condition_met()):
+                    break
 
                 if(i % 300 == 0):
-                    stopper_method_s.test(trainer, epoch, iteration, trainer.infer_shading(rgb_ws_tensor), shading_tensor)
                     trainer.visdom_visualize(rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor, "Train")
-
                     _, rgb_ws_batch, rgb_ns_batch, albedo_batch = test_data
                     rgb_ws_tensor = rgb_ws_batch.to(device)
                     rgb_ns_tensor = rgb_ns_batch.to(device)
@@ -205,8 +206,6 @@ def main(argv):
                     trainer.visdom_visualize(rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor, "Test")
                     trainer.visdom_plot(iteration)
                     trainer.save_states_checkpt(epoch, iteration, last_metric)
-                    if (stopper_method_s.did_stop_condition_met()):
-                        break
 
             if (stopper_method_s.did_stop_condition_met()):
                 break
