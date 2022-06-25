@@ -542,8 +542,10 @@ class IIDTrainer:
             rgb2shadow = self.G_Z(input)
 
             if (self.albedo_mode == 1):
+                self.G_A.eval()
                 rgb2albedo = self.G_A(input)
             elif (self.albedo_mode == 2):
+                self.G_A.eval()
                 rgb_noshadow = self.iid_op.remove_rgb_shadow(rgb_tensor, rgb2shadow)
                 input = self.reshape_input(rgb_noshadow)
                 rgb2albedo = self.G_A(input)

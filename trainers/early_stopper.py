@@ -46,6 +46,7 @@ class EarlyStopper():
 
     def test(self, trainer, epoch, iteration):
         if(epoch < self.min_epochs):
+            self.test_metric_list.clear()
             return
 
         if(len(self.test_metric_list) == 0):
