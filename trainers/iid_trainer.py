@@ -16,6 +16,7 @@ import itertools
 import numpy as np
 import torch.nn as nn
 from model.iteration_table import IterationTable
+from trainers import paired_trainer
 from transforms import iid_transforms
 from utils import plot_utils
 from utils import tensor_utils
@@ -60,12 +61,12 @@ class IIDTrainer:
             self.initialize_da_network(opts.da_version_name)
             self.initialize_shading_network(net_config, num_blocks, 6)
             if(self.albedo_mode >= 1):
-                self.initialize_albedo_network(net_config, num_blocks, 6)
+                self.initialize_albedo_network(net_config, num_blocks, 6, opts)
             self.initialize_shadow_network(net_config, num_blocks, 6)
         else:
             self.initialize_shading_network(net_config, num_blocks, 3)
             if (self.albedo_mode >= 1):
-                self.initialize_albedo_network(net_config, num_blocks, 3)
+                self.initialize_albedo_network(net_config, num_blocks, 3, opts)
             self.initialize_shadow_network(net_config, num_blocks, 3)
 
         self.visdom_reporter = plot_utils.VisdomReporter()
@@ -109,7 +110,7 @@ class IIDTrainer:
 
         self.D_S = cycle_gan.Discriminator(input_nc=3).to(self.gpu_device)  # use CycleGAN's discriminator
 
-    def initialize_albedo_network(self, net_config, num_blocks, input_nc):
+    def initialize_albedo_network(self, net_config, num_blocks, input_nc, opts):
         if (net_config == 1):
             self.G_A = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
         elif (net_config == 2):
@@ -282,6 +283,8 @@ class IIDTrainer:
 
         if(self.albedo_mode == 1):
             self.train_albedo(input_rgb_tensor, albedo_tensor)
+
+
 
     def reshape_input(self, input_tensor):
         rgb_embedding, w1, w2, w3 = self.embedder.get_embedding(input_tensor)

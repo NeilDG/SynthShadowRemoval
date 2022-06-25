@@ -9,7 +9,7 @@ import torchvision.utils as vutils
 import numpy as np
 import matplotlib.pyplot as plt
 from loaders import dataset_loader
-from trainers import iid_trainer
+from trainers import iid_trainer, paired_trainer
 from trainers import early_stopper
 from transforms import iid_transforms
 from utils import tensor_utils
@@ -135,6 +135,9 @@ def main(argv):
     start_epoch = 0
     iteration = 0
 
+    unlit_trainer = paired_trainer.PairedTrainer(device, "synth2unlit_v1.00", opts)
+    unlit_trainer.update_penalties(opts.adv_weight, opts.rgb_l1_weight)
+
     trainer = iid_trainer.IIDTrainer(device, opts)
     trainer.update_penalties(opts.adv_weight, opts.rgb_l1_weight)
 
@@ -172,6 +175,9 @@ def main(argv):
         gta_rgb, gta_albedo = next(iter(gta_loader))
         gta_rgb_tensor = gta_rgb.to(device)
         trainer.visdom_measure_gta(gta_rgb_tensor, gta_albedo)
+
+        if(opts.albedo_mode == 2):
+            unlit_trainer.visdom_visualize()
 
 
     else:
