@@ -84,6 +84,18 @@ class IIDTransform(nn.Module):
         shadow_tensor = torch.clip(shadow_tensor, min, max)
         return shadow_tensor
 
+    def remove_rgb_shadow(self, rgb_tensor_ws, shadow_map):
+        min = 0.0
+        max = 1.0
+
+        ws_refined = self.mask_fill_nonzeros(rgb_tensor_ws)
+        shadow_map = self.mask_fill_nonzeros(shadow_map)
+
+        rgb_tensor_ns = ws_refined / (shadow_map * 1.0)
+
+        shadow_tensor = torch.clip(rgb_tensor_ns, min, max)
+        return shadow_tensor
+
     #used for viewing an albedo tensor and for metric measurement
     def view_albedo(self, albedo_tensor, tozeroone = True):
         if (tozeroone):
@@ -98,8 +110,8 @@ class IIDTransform(nn.Module):
             shading_tensor = (shading_tensor * 0.5) + 0.5
             shadow_tensor = (shadow_tensor * 0.5) + 0.5
 
-        shading_tensor = self.mask_fill_nonzeros(shading_tensor)
-        shadow_tensor = self.mask_fill_nonzeros(shadow_tensor)
+        # shading_tensor = self.mask_fill_nonzeros(shading_tensor)
+        # shadow_tensor = self.mask_fill_nonzeros(shadow_tensor)
 
         albedo_refined = rgb_tensor / (shading_tensor * shadow_tensor)
         # albedo_tensor = torch.clip(albedo_refined, min, max)

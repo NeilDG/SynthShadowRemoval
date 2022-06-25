@@ -29,7 +29,7 @@ parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--da_enabled', type=int, default=0)
 parser.add_option('--da_version_name', type=str, default="")
-parser.add_option('--albedo_train', type=int, default="0")
+parser.add_option('--albedo_mode', type=int, default="0")
 parser.add_option('--batch_size', type=int, help="batch_size", default="128")
 parser.add_option('--patch_size', type=int, help="patch_size", default="64")
 parser.add_option('--num_blocks', type=int)
@@ -347,8 +347,7 @@ def main(argv):
         input_tensor = tensor_utils.load_metric_compatible_img(input_path, cv2.COLOR_BGR2RGB, True, True, opts.img_size).to(device)
         input_tensor = normalize_op(input_tensor)
 
-        shading_tensor = trainer.infer_shading(input_tensor)
-        albedo_tensor = trainer.infer_albedo(input_tensor)
+        albedo_tensor, shading_tensor, shadow_tensor = trainer.decompose(input_tensor)
         print(np.shape(albedo_tensor), np.shape(shading_tensor))
 
         albedo_tensor = albedo_tensor * 0.5 + 0.5

@@ -54,17 +54,17 @@ class IIDTrainer:
         self.batch_size = opts.batch_size
         net_config = opts.net_config
         self.net_config = opts.net_config
-        self.albedo_train = opts.albedo_train
+        self.albedo_mode = opts.albedo_mode
 
         if(self.da_enabled == 1):
             self.initialize_da_network(opts.da_version_name)
             self.initialize_shading_network(net_config, num_blocks, 6)
-            if(self.albedo_train == 1):
+            if(self.albedo_mode >= 1):
                 self.initialize_albedo_network(net_config, num_blocks, 6)
             self.initialize_shadow_network(net_config, num_blocks, 6)
         else:
             self.initialize_shading_network(net_config, num_blocks, 3)
-            if (self.albedo_train == 1):
+            if (self.albedo_mode >= 1):
                 self.initialize_albedo_network(net_config, num_blocks, 3)
             self.initialize_shadow_network(net_config, num_blocks, 3)
 
@@ -280,7 +280,7 @@ class IIDTrainer:
     def train(self, input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor):
         self.train_shading(input_rgb_tensor, shading_tensor, shadow_tensor)
 
-        if(self.albedo_train == 1):
+        if(self.albedo_mode == 1):
             self.train_albedo(input_rgb_tensor, albedo_tensor)
 
     def reshape_input(self, input_tensor):
@@ -288,6 +288,12 @@ class IIDTrainer:
         rgb_feature_rep = self.decoder_fixed.get_decoding(input_tensor, rgb_embedding, w1, w2, w3)
 
         return torch.cat([input_tensor, rgb_feature_rep], 1)
+
+    def get_feature_rep(self, input_tensor):
+        rgb_embedding, w1, w2, w3 = self.embedder.get_embedding(input_tensor)
+        rgb_feature_rep = self.decoder_fixed.get_decoding(input_tensor, rgb_embedding, w1, w2, w3)
+
+        return rgb_feature_rep
 
     def train_shading(self, input_rgb_tensor, shading_tensor, shadow_tensor):
         with amp.autocast():
@@ -447,25 +453,14 @@ class IIDTrainer:
 
     def visdom_visualize(self, input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor, label = "Train"):
         with torch.no_grad():
-            if (self.da_enabled == 1):
-                input = self.reshape_input(input_rgb_tensor)
-
-                a, b, c, d = self.embedder.get_embedding(input_rgb_tensor)
-                embedding_rep = self.decoder_fixed.get_decoding(input_rgb_tensor, a,b,c,d)
-            else:
-                input = input_rgb_tensor
-                embedding_rep = input_rgb_tensor
-
-            rgb2shading = self.G_S(input)
-            rgb2shadow = self.G_Z(input)
-            if(self.albedo_train == 1):
-                rgb2albedo = self.G_A(input)
-            else:
-                rgb2albedo = self.iid_op.extract_albedo(input_rgb_tensor, rgb2shading, rgb2shadow)
+            rgb2albedo, rgb2shading, rgb2shadow = self.decompose(input_rgb_tensor)
+            embedding_rep = self.get_feature_rep(input_rgb_tensor)
             rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
+            # rgb_noshadow = self.iid_op.remove_rgb_shadow(input_rgb_tensor, shadow_tensor)
 
             # print("Difference between Albedo vs Recon: ", self.l1_loss(rgb2albedo, albedo_tensor).item())  #0.42321497201919556
 
+            # self.visdom_reporter.plot_image(rgb_noshadow, str(label) + " Input RGB Images - Shadow " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(embedding_rep, str(label) + " Embedding Maps - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(rgb_like, str(label) + " RGB Reconstruction - " + constants.IID_VERSION + constants.ITERATION)
@@ -481,20 +476,7 @@ class IIDTrainer:
 
     def visdom_measure(self, input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor, label="Training"):
         with torch.no_grad():
-            if (self.da_enabled == 1):
-                input = self.reshape_input(input_rgb_tensor)
-            else:
-                input = input_rgb_tensor
-
-            rgb2shading = self.G_S(input)
-            rgb2shadow = self.G_Z(input)
-            if (self.albedo_train == 1):
-                rgb2albedo = self.G_A(input)
-            else:
-                rgb2albedo = self.iid_op.extract_albedo(input_rgb_tensor, rgb2shading, rgb2shadow)
-
-            rgb2albedo = self.iid_op.view_albedo(rgb2albedo)
-            albedo_tensor = self.iid_op.view_albedo(albedo_tensor)
+            rgb2albedo, rgb2shading, rgb2shadow = self.decompose(input_rgb_tensor)
             rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
 
             # plot metrics
@@ -522,22 +504,8 @@ class IIDTrainer:
     # must have a shading generator network first
     def visdom_infer(self, rw_tensor):
         with torch.no_grad():
-            if (self.da_enabled == 1):
-                input = self.reshape_input(rw_tensor)
-
-                a, b, c, d = self.embedder.get_embedding(rw_tensor)
-                embedding_rep = self.decoder_fixed.get_decoding(rw_tensor, a, b, c, d)
-            else:
-                input = rw_tensor
-                embedding_rep = rw_tensor
-
-            rgb2shading = self.G_S(input)
-            rgb2shadow = self.G_Z(input)
-            if (self.albedo_train == 1):
-                rgb2albedo = self.G_A(input)
-            else:
-                rgb2albedo = self.iid_op.extract_albedo(rw_tensor, rgb2shading, rgb2shadow)
-            rgb2albedo = self.iid_op.view_albedo(rgb2albedo)
+            rgb2albedo, rgb2shading, rgb2shadow = self.decompose(rw_tensor)
+            embedding_rep = self.get_feature_rep(rw_tensor)
             rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
 
             self.visdom_reporter.plot_image(rw_tensor, "Real World images - " + constants.IID_VERSION + constants.ITERATION)
@@ -546,14 +514,7 @@ class IIDTrainer:
 
     def visdom_measure_gta(self, gta_rgb, gta_albedo):
         with torch.no_grad():
-            if (self.da_enabled == 1):
-                input = self.reshape_input(gta_rgb)
-            else:
-                input = gta_rgb
-
-            rgb2shading = self.G_S(input)
-            rgb2albedo = self.G_A(input)
-            rgb2shadow = self.G_Z(input)
+            rgb2albedo, rgb2shading, rgb2shadow = self.decompose(gta_rgb)
             rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
 
             self.visdom_reporter.plot_image(gta_albedo, "GTA Albedo - " + constants.IID_VERSION + constants.ITERATION)
@@ -564,23 +525,29 @@ class IIDTrainer:
             self.visdom_reporter.plot_image(gta_rgb, "GTA RGB - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(rgb_like, "GTA RGB-Like - " + constants.IID_VERSION + constants.ITERATION)
 
-    def infer_albedo(self, rw_tensor):
+    def decompose(self, rgb_tensor):
         self.G_S.eval()
         self.G_Z.eval()
 
         with torch.no_grad():
             if (self.da_enabled == 1):
-                input = self.reshape_input(rw_tensor)
+                input = self.reshape_input(rgb_tensor)
             else:
-                input = rw_tensor
+                input = rgb_tensor
 
-            if (self.albedo_train == 1):
-                self.G_A.eval()
+            rgb2shading = self.G_S(input)
+            rgb2shadow = self.G_Z(input)
+
+            if (self.albedo_mode == 1):
+                rgb2albedo = self.G_A(input)
+            elif (self.albedo_mode == 2):
+                rgb_noshadow = self.iid_op.remove_rgb_shadow(rgb_tensor, rgb2shadow)
+                input = self.reshape_input(rgb_noshadow)
                 rgb2albedo = self.G_A(input)
             else:
-                rgb2albedo = self.iid_op.extract_albedo(rw_tensor, self.G_S(input), self.G_Z(input))
+                rgb2albedo = self.iid_op.extract_albedo(rgb_tensor, rgb2shading, rgb2shadow)
 
-            return rgb2albedo
+        return rgb2albedo, rgb2shading, rgb2shadow
 
     def infer_shading(self, rw_tensor):
         self.G_S.eval()
@@ -591,7 +558,7 @@ class IIDTrainer:
             return self.G_S(rw_tensor)
 
     def load_saved_state(self, checkpoint):
-        if(self.albedo_train == 1):
+        if(self.albedo_mode >= 1):
             self.G_A.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
             self.D_A.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "A"])
         self.G_S.load_state_dict(checkpoint[constants.GENERATOR_KEY + "S"])
@@ -599,7 +566,7 @@ class IIDTrainer:
         self.G_Z.load_state_dict(checkpoint[constants.GENERATOR_KEY + "Z"])
         self.D_Z.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "Z"])
 
-        if (self.albedo_train == 1):
+        if (self.albedo_mode >= 1):
             self.optimizerG_albedo.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "A"])
             self.optimizerD_albedo.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "A"])
             self.schedulerG_albedo.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler" + "A"])
@@ -613,7 +580,7 @@ class IIDTrainer:
     def save_states_checkpt(self, epoch, iteration, last_metric):
         save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: last_metric}
 
-        if(self.albedo_train == 1):
+        if(self.albedo_mode >= 1):
             netGA_state_dict = self.G_A.state_dict()
             netDA_state_dict = self.D_A.state_dict()
             optimizerGalbedo_state_dict = self.optimizerG_albedo.state_dict()
@@ -653,7 +620,7 @@ class IIDTrainer:
     def save_states(self, epoch, iteration, last_metric):
         save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: last_metric}
 
-        if (self.albedo_train == 1):
+        if (self.albedo_mode >= 1):
             netGA_state_dict = self.G_A.state_dict()
             netDA_state_dict = self.D_A.state_dict()
             optimizerGalbedo_state_dict = self.optimizerG_albedo.state_dict()
