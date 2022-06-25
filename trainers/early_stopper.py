@@ -41,8 +41,9 @@ class EarlyStopper():
 
         self.test_metric_list = []
 
-    def register_metric(self, input, target):
-        self.test_metric_list.append(EarlyStopper.TestMetric(input, target))
+    def register_metric(self, input, target, epoch):
+        if(epoch >= self.min_epochs):
+            self.test_metric_list.append(EarlyStopper.TestMetric(input, target))
 
     def test(self, trainer, epoch, iteration):
         if(epoch < self.min_epochs):
