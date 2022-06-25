@@ -190,8 +190,13 @@ def main(argv):
                 rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor = iid_op(rgb_ws_tensor, rgb_ns_tensor, albedo_tensor)
 
                 trainer.train(rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor)
+                rgb2albedo, rgb2shading, rgb2shadow = trainer.decompose(rgb_ws_tensor)
+
                 iteration = iteration + 1
-                stopper_method_s.test(trainer, epoch, iteration, trainer.infer_shading(rgb_ws_tensor), shading_tensor)
+                stopper_method_s.register_metric(rgb2albedo, albedo_tensor)
+                stopper_method_s.register_metric(rgb2shading, shading_tensor)
+                stopper_method_s.register_metric(rgb2shadow, shadow_tensor)
+                stopper_method_s.test(trainer, epoch, iteration)
                 if (stopper_method_s.did_stop_condition_met()):
                     break
 
