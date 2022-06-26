@@ -34,6 +34,7 @@ OPTIMIZER_KEY = "optimizer"
 GENERATOR_KEY = "generator"
 DISCRIMINATOR_KEY = "discriminator"
 
+UNLIT_VERSION = "synth2unlit_v1.00"
 STYLE_TRANSFER_VERSION = "synth2rgb_v1.00"
 EMBEDDING_VERSION = "embedding_v1.01"
 FFA_TRANSFER_VERSION = "synthplaces2sunny_v1.01"
@@ -46,6 +47,7 @@ SHADOWMAP_RELIGHT_VERSION = "shadow2relight_v1.00"
 
 ITERATION = "1"
 
+UNLIT_TRANSFER_CHECKPATH ='checkpoint/' + UNLIT_VERSION + "_" + ITERATION + '.pt'
 STYLE_TRANSFER_CHECKPATH = 'checkpoint/' + STYLE_TRANSFER_VERSION + "_" + ITERATION + '.pt'
 EMBEDDING_CHECKPATH = 'checkpoint/' + EMBEDDING_VERSION + "_" + ITERATION + '.pt'
 MAPPER_CHECKPATH = 'checkpoint/' + MAPPER_VERSION + "_" + ITERATION + '.pt'
@@ -77,7 +79,7 @@ D_B_FAKE_LOSS_KEY = "d_fake_b"
 LAST_METRIC_KEY = "last_metric"
 
 plot_enabled = 1
-early_stop_threshold = 100
+early_stop_threshold = 1000
 min_epochs = 50
 num_epochs = 100
 

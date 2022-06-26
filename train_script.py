@@ -1,105 +1,36 @@
 #Script to use for running heavy training.
 
 import os
-def train_albedo():
-    #train albedo
-    # os.system("python \"albedo_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=256 --net_config=1 --num_blocks=6 "
-    #           "--l1_weight=1.0 --lpip_weight=10.0 --ssim_weight=0.0 --adv_weight=1.0 --use_bce=0 --use_mask=0 --mode=azimuth --min_epochs=50 "
-    #           "--version_name=\"rgb2albedo_v7.15\" --iteration=7")
-    #
-    # os.system("python \"albedo_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=256 --net_config=1 --num_blocks=6 "
-    #          "--l1_weight=1.0 --lpip_weight=10.0 --ssim_weight=0.0 --adv_weight=1.0 --use_bce=1 --use_mask=0 --mode=azimuth --min_epochs=50 "
-    #          "--version_name=\"rgb2albedo_v7.15\" --iteration=8")
-
-    # os.system("python \"albedo_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=512 --net_config=2 --num_blocks=0 "
-    #           "--l1_weight=1.0 --lpip_weight=10.0 --ssim_weight=0.0 --adv_weight=1.0 --use_bce=0 --use_mask=0 --mode=azimuth --min_epochs=50 "
-    #           "--version_name=\"rgb2albedo_v7.16\" --iteration=7")
-    #
-    # os.system("python \"albedo_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=512 --net_config=2 --num_blocks=0 "
-    #           "--l1_weight=1.0 --lpip_weight=10.0 --ssim_weight=0.0 --adv_weight=1.0 --use_bce=1 --use_mask=0 --mode=azimuth --min_epochs=50 "
-    #           "--version_name=\"rgb2albedo_v7.16\" --iteration=8")
-    #
-
-    # os.system("python \"albedo_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=128 --net_config=5 --num_blocks=0 "
-    #           "--l1_weight=1.0 --lpip_weight=10.0 --ssim_weight=0.0 --adv_weight=1.0 --use_bce=0 --use_mask=0 --mode=azimuth --min_epochs=50 "
-    #           "--version_name=\"rgb2albedo_v7.22\" --iteration=7")
-    #
-    # os.system("python \"albedo_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=128 --net_config=5 --num_blocks=0 "
-    #           "--l1_weight=1.0 --lpip_weight=10.0 --ssim_weight=0.0 --adv_weight=1.0 --use_bce=1 --use_mask=0 --mode=azimuth --min_epochs=50 "
-    #           "--version_name=\"rgb2albedo_v7.22\" --iteration=8")
-
-    os.system("python \"albedo_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=128 --net_config=5 --num_blocks=0 "
-              "--l1_weight=10.0 --lpip_weight=1.0 --ssim_weight=1.0 --adv_weight=1.0 --use_bce=0 --use_mask=0 --mode=azimuth --min_epochs=50 "
-              "--version_name=\"rgb2albedo_v7.22\" --iteration=5")
-
-    os.system("python \"albedo_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=128 --net_config=5 --num_blocks=0 "
-              "--l1_weight=10.0 --lpip_weight=1.0 --ssim_weight=1.0 --adv_weight=1.0 --use_bce=1 --use_mask=0 --mode=azimuth --min_epochs=50 "
-              "--version_name=\"rgb2albedo_v7.22\" --iteration=6")
-
-
-
-def train_shading():
-    #train shading
-    os.system("python \"shading_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=256 --net_config=1 --num_blocks=6 "
-              "--l1_weight=10.0 --lpip_weight=1.0 --ssim_weight=0.0 --adv_weight=1.0 --use_bce=0 --mode=azimuth --min_epochs=50 "
-              "--version_name=\"rgb2shading_v8.05\" --iteration=5")
-
-    os.system("python \"shading_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=256 --net_config=1 --num_blocks=6 "
-              "--l1_weight=10.0 --lpip_weight=1.0 --ssim_weight=0.0 --adv_weight=1.0 --use_bce=1 --mode=azimuth --min_epochs=50 "
-              "--version_name=\"rgb2shading_v8.05\" --iteration=6")
-
-def train_shadow():
-    # train shadow
-    # os.system("python \"shadowmap_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=64 --net_config=1 --num_blocks=6 "
-    #           "--mode=azimuth --min_epochs=50 --version_name=\"rgb2shadow_v8.07\" --iteration=5")
-
-    os.system("python \"shadowmap_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=128 --batch_size=64 --net_config=1 --num_blocks=6 "
-              "--mode=azimuth --min_epochs=50 --version_name=\"rgb2shadow_v8.07\" --iteration=6")
-
-    os.system("python \"shadowmap_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=128 --batch_size=64 --net_config=1 --num_blocks=6 "
-              "--mode=azimuth --min_epochs=50 --version_name=\"rgb2shadow_v8.07\" --iteration=7")
-
-    os.system("python \"shadowmap_main.py\" --num_workers=12 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=128 --batch_size=64 --net_config=1 --num_blocks=6 "
-              "--mode=azimuth --min_epochs=50 --version_name=\"rgb2shadow_v8.07\" --iteration=8")
-
-def train_shadow_relight():
-    # os.system("python \"shadow_relight_main.py\" --num_workers=6 --img_to_load=-1 --load_previous=1 --test_mode=1 --patch_size=256 --batch_size=16 --net_config=1 --num_blocks=6 "
-    #           "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.07\" --iteration=5")
-    #
-    # os.system("python \"shadow_relight_main.py\" --num_workers=6 --img_to_load=-1 --load_previous=1 --test_mode=1 --patch_size=256 --batch_size=16 --net_config=1 --num_blocks=6 "
-    #           "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.07\" --iteration=6")
-
-    os.system("python \"shadow_relight_main.py\" --num_workers=6 --img_to_load=-1 --load_previous=0 --test_mode=1 --patch_size=256 --batch_size=16 --net_config=4 --num_blocks=6 "
-              "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.09\" --iteration=7")
-
-    os.system("python \"shadow_relight_main.py\" --num_workers=6 --img_to_load=-1 --load_previous=0 --test_mode=1 --patch_size=256 --batch_size=16 --net_config=4 --num_blocks=6 "
-              "--mode=azimuth --min_epochs=50 --version_name=\"shadow2relight_v1.09\" --iteration=8")
-
 def train_relighting():
-    os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=128 --min_epochs=20 "
-              "--net_config=4 --num_blocks=4 "
-              "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.04\" --iteration=13 "
-              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_train=0")
+    # os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=192 --min_epochs=20 "
+    #           "--net_config=2 --num_blocks=0 "
+    #           "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.06\" --iteration=13 "
+    #           "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_mode=1")
+    #
+    # os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=192 --min_epochs=20 "
+    #           "--net_config=2 --num_blocks=0 "
+    #           "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.06\" --iteration=14 "
+    #           "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_mode=1")
+    #
+    # os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=192 --min_epochs=20 "
+    #           "--net_config=2 --num_blocks=0 "
+    #           "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.06\" --iteration=10 "
+    #           "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_mode=1")
 
-    os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=128 --min_epochs=20 "
-              "--net_config=4 --num_blocks=4 "
-              "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.04\" --iteration=14 "
-              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_train=0")
+    # os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=192 --min_epochs=20 "
+    #           "--net_config=2 --num_blocks=0 "
+    #           "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.06\" --iteration=11 "
+    #           "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_mode=1")
+    #
+    # os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=192 --min_epochs=20 "
+    #           "--net_config=2 --num_blocks=0 "
+    #           "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.06\" --iteration=12 "
+    #           "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_mode=1")
 
-    os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=128 --min_epochs=20 "
-              "--net_config=4 --num_blocks=4 "
-              "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.04\" --iteration=10 "
-              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_train=0")
-
-    os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=128 --min_epochs=20 "
-              "--net_config=4 --num_blocks=4 "
-              "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.04\" --iteration=11 "
-              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_train=0")
-
-    os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=128 --min_epochs=20 "
-              "--net_config=4 --num_blocks=4 "
-              "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.04\" --iteration=12 "
-              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_train=0")
+    os.system("python \"iid_train.py\" --server_config=5 --img_to_load=500 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=128 --min_epochs=20 "
+              "--net_config=3 --num_blocks=6 "
+              "--plot_enabled=1 --debug_mode=0 --version_name=\"iid_networkv8.00\" --iteration=9 "
+              "--unlit_checkpt_file=\"synth2unlit_v1.00_1.pt\" --da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_mode=2")
 
 
 def train_domain_adaptation():
@@ -116,15 +47,16 @@ def train_embedding():
               "--plot_enabled=0 --patch_size=64 --batch_size=16 --likeness_weight=1.0 --embedding_dist_weight=1.0 "
               "--min_epochs=5 --g_lr=0.0002 --d_lr=0.0002 --version_name=\"embedding_v6.00\" --iteration=2")
 
+def train_unlit():
+    os.system("python \"unlit_train.py\" --server_config=5 --img_to_load=500 --load_previous=1 --test_mode=0 --net_config=1 --num_blocks=6 "
+              "--plot_enabled=1 --patch_size=64 --batch_size=512 "
+              "--min_epochs=30 --g_lr=0.0002 --d_lr=0.0002 --version_name=\"synth2unlit_v1.00\" --iteration=1")
 def main():
-    # train_albedo()
-    # train_shading()
-    # train_shadow()
-    # train_shadow_relight()
+    # train_unlit()
     train_relighting()
     # train_domain_adaptation()
     # train_embedding()
-    os.system("shutdown /s /t 1")
+    # os.system("shutdown /s /t 1")
 
 
 if __name__ == "__main__":

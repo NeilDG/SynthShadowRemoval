@@ -375,6 +375,66 @@ class IIDDatasetV2(data.Dataset):
     def __len__(self):
         return self.img_length
 
+class UnlitDataset(data.Dataset):
+    def __init__(self, img_length, rgb_list, unlit_dir, transform_config, opts):
+        self.img_length = img_length
+        self.unlit_dir = unlit_dir
+        self.rgb_list = rgb_list
+        self.transform_config = transform_config
+        self.patch_size = (opts.patch_size, opts.patch_size)
+
+        self.initial_op = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize((256, 256))])
+
+        if (transform_config == 1):
+            self.final_transform_op = transforms.Compose([
+                transforms.ToTensor()
+            ])
+
+            self.mask_op = transforms.Compose([
+                transforms.ToTensor()
+            ])
+
+        else:
+            self.final_transform_op = transforms.Compose([
+                transforms.Resize(constants.TEST_IMAGE_SIZE),
+                transforms.ToTensor()
+            ])
+
+            self.mask_op = transforms.Compose([
+                transforms.Resize(constants.TEST_IMAGE_SIZE),
+                transforms.ToTensor()
+            ])
+
+    def __getitem__(self, idx):
+        file_name = self.rgb_list[idx].split("\\")[-1].split(".png")[0] + ".png"
+        img_a_path = self.unlit_dir + file_name
+
+        unlit = cv2.imread(img_a_path)  # albedo
+        unlit = cv2.cvtColor(unlit, cv2.COLOR_BGR2RGB)
+
+        rgb_img = cv2.imread(self.rgb_list[idx])  # input rgb
+        rgb_img = cv2.cvtColor(rgb_img, cv2.COLOR_BGR2RGB)
+
+        rgb_img = self.initial_op(rgb_img)
+        unlit = self.initial_op(unlit)
+
+        if (self.transform_config == 1):
+            crop_indices = transforms.RandomCrop.get_params(rgb_img, output_size=self.patch_size)
+            i, j, h, w = crop_indices
+
+            rgb_img = transforms.functional.crop(rgb_img, i, j, h, w)
+            unlit = transforms.functional.crop(unlit, i, j, h, w)
+
+        rgb_img = self.final_transform_op(rgb_img)
+        unlit = self.final_transform_op(unlit)
+
+        return file_name, rgb_img, unlit
+
+    def __len__(self):
+        return self.img_length
+
 
 class RealWorldDataset(data.Dataset):
     def __init__(self, image_list_a):
@@ -396,39 +456,6 @@ class RealWorldDataset(data.Dataset):
         file_name = path_segment[len(path_segment) - 1]
 
         img_a = cv2.imread(img_id)
-        img_a = cv2.cvtColor(img_a, cv2.COLOR_BGR2RGB)  # because matplot uses RGB, openCV is BGR
-
-        img_a = self.initial_op(img_a)
-        img_a = self.final_transform_op(img_a)
-
-        return file_name, img_a
-
-    def __len__(self):
-        return len(self.image_list_a)
-
-class RealWorldTrainDataset(data.Dataset):
-    def __init__(self, image_list_a):
-        self.image_list_a = image_list_a
-
-        self.initial_op = transforms.Compose([
-            transforms.ToPILImage()])
-
-
-        self.final_transform_op = transforms.Compose([
-            transforms.Resize(constants.TEST_IMAGE_SIZE),
-            transforms.RandomCrop(constants.PATCH_IMAGE_SIZE),
-            transforms.RandomVerticalFlip(),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        ])
-
-    def __getitem__(self, idx):
-        img_id = self.image_list_a[idx]
-        path_segment = img_id.split("/")
-        file_name = path_segment[len(path_segment) - 1]
-
-        img_a = cv2.imread(img_id);
         img_a = cv2.cvtColor(img_a, cv2.COLOR_BGR2RGB)  # because matplot uses RGB, openCV is BGR
 
         img_a = self.initial_op(img_a)

@@ -154,20 +154,6 @@ def load_iid_datasetv2_test(rgb_dir_ws, rgb_dir_ns, albedo_dir, opts):
 
     return data_loader
 
-def load_single_train_dataset(path_a, opts):
-    a_list = assemble_unpaired_data(path_a, opts.img_to_load)
-
-    print("Length of images: %d" % len(a_list))
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.RealWorldTrainDataset(a_list),
-        batch_size=opts.batch_size,
-        num_workers=opts.num_workers,
-        shuffle=True
-    )
-
-    return data_loader
-
 def load_single_test_dataset(path_a):
     a_list = glob.glob(path_a)
     print("Length of images: %d" % len(a_list))
@@ -274,6 +260,43 @@ def load_da_dataset_train(imgx_dir, imgy_dir, opts):
     )
 
     return data_loader
+
+def load_unlit_dataset_train(styled_dir, unlit_dir, opts):
+    styled_img_list = glob.glob(styled_dir)
+    random.shuffle(styled_img_list)
+
+    if (opts.img_to_load > 0):
+        styled_img_list = styled_img_list[0: opts.img_to_load]
+
+    print("Length of images: %d " % len(styled_img_list))
+
+    data_loader = torch.utils.data.DataLoader(
+        image_dataset.UnlitDataset(len(styled_img_list), styled_img_list, unlit_dir, 1, opts),
+        batch_size=opts.batch_size,
+        num_workers=opts.num_workers,
+        shuffle=False
+    )
+
+    return data_loader
+
+def load_unlit_dataset_test(styled_dir, unlit_dir, opts):
+    styled_img_list = glob.glob(styled_dir)
+    random.shuffle(styled_img_list)
+
+    if (opts.img_to_load > 0):
+        styled_img_list = styled_img_list[0: opts.img_to_load]
+
+    print("Length of images: %d " % len(styled_img_list))
+
+    data_loader = torch.utils.data.DataLoader(
+        image_dataset.UnlitDataset(len(styled_img_list), styled_img_list, unlit_dir, 2, opts),
+        batch_size=4,
+        num_workers=1,
+        shuffle=False
+    )
+
+    return data_loader
+
 
 
 def load_da_dataset_test(imgx_dir, imgy_dir, opts):

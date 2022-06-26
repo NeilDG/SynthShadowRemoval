@@ -26,7 +26,7 @@ parser.add_option('--adv_weight', type=float, help="Weight", default="1.0")
 parser.add_option('--rgb_l1_weight', type=float, help="Weight", default="1.0")
 parser.add_option('--da_enabled', type=int, default=0)
 parser.add_option('--da_version_name', type=str, default="")
-parser.add_option('--albedo_train', type=int, default="0")
+parser.add_option('--albedo_mode', type=int, default="0")
 parser.add_option('--num_blocks', type=int)
 parser.add_option('--net_config', type=int)
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
@@ -40,6 +40,7 @@ parser.add_option('--test_mode', type=int, help="Test mode?", default=0)
 parser.add_option('--min_epochs', type=int, help="Min epochs", default=50)
 parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
 parser.add_option('--debug_mode', type=int, default=0)
+parser.add_option('--unlit_checkpt_file', type=str, default="")
 
 #--img_to_load=-1 --load_previous=1
 #Update config if on COARE
@@ -70,6 +71,7 @@ def update_config(opts):
     elif (constants.server_config == 2):
         constants.num_workers = 6
         constants.rgb_dir_ws = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.rgb_dir_ns = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
         constants.albedo_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/albedo/"
         constants.DATASET_PLACES_PATH = constants.rgb_dir_ws
 
@@ -185,16 +187,21 @@ def main(argv):
                 rgb_ws_tensor = rgb_ws_batch.to(device)
                 rgb_ns_tensor = rgb_ns_batch.to(device)
                 albedo_tensor = albedo_batch.to(device)
-                iid_op = iid_transforms.IIDTransform()
                 rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor = iid_op(rgb_ws_tensor, rgb_ns_tensor, albedo_tensor)
 
                 trainer.train(rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor)
+                rgb2albedo, rgb2shading, rgb2shadow = trainer.decompose(rgb_ws_tensor)
+
                 iteration = iteration + 1
+                stopper_method_s.register_metric(rgb2albedo, albedo_tensor, epoch)
+                stopper_method_s.register_metric(rgb2shading, shading_tensor, epoch)
+                stopper_method_s.register_metric(rgb2shadow, shadow_tensor, epoch)
+                stopper_method_s.test(trainer, epoch, iteration)
+                if (stopper_method_s.did_stop_condition_met()):
+                    break
 
                 if(i % 300 == 0):
-                    stopper_method_s.test(trainer, epoch, iteration, trainer.infer_shading(rgb_ws_tensor), shading_tensor)
                     trainer.visdom_visualize(rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor, "Train")
-
                     _, rgb_ws_batch, rgb_ns_batch, albedo_batch = test_data
                     rgb_ws_tensor = rgb_ws_batch.to(device)
                     rgb_ns_tensor = rgb_ns_batch.to(device)
@@ -204,8 +211,6 @@ def main(argv):
                     trainer.visdom_visualize(rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor, "Test")
                     trainer.visdom_plot(iteration)
                     trainer.save_states_checkpt(epoch, iteration, last_metric)
-                    if (stopper_method_s.did_stop_condition_met()):
-                        break
 
             if (stopper_method_s.did_stop_condition_met()):
                 break
