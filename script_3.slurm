@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J R_3
+#SBATCH -J V7_3
 #SBATCH --partition=gpu
 #SBATCH --qos=12c-1h_2gpu
 #SBATCH --cpus-per-task=6
@@ -25,8 +25,8 @@ srun python iid_train.py \
 --batch_size=128 \
 --patch_size=64 \
 --plot_enabled=0 \
---version_name="iid_networkv6.07" --min_epochs=20 --net_config=4 --num_blocks=4 \
+--version_name="iid_networkv7.07" --min_epochs=20 --net_config=3 --num_blocks=6 \
 --da_enabled=1 --da_version_name="embedding_v5.00_5" \
---img_to_load=-1 --load_previous=1
+--img_to_load=-1 --load_previous=0
 
 conda deactivate
