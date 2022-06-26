@@ -17,20 +17,20 @@ def train_relighting():
     #           "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.06\" --iteration=10 "
     #           "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_mode=1")
 
-    os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=192 --min_epochs=20 "
-              "--net_config=2 --num_blocks=0 "
-              "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.06\" --iteration=11 "
-              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_mode=1")
-
-    os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=192 --min_epochs=20 "
-              "--net_config=2 --num_blocks=0 "
-              "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.06\" --iteration=12 "
-              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_mode=1")
-
-    # os.system("python \"iid_train.py\" --server_config=5 --img_to_load=500 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=128 --min_epochs=20 "
-    #           "--net_config=3 --num_blocks=6 "
-    #           "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.07\" --iteration=9 "
+    # os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=192 --min_epochs=20 "
+    #           "--net_config=2 --num_blocks=0 "
+    #           "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.06\" --iteration=11 "
     #           "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_mode=1")
+    #
+    # os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=192 --min_epochs=20 "
+    #           "--net_config=2 --num_blocks=0 "
+    #           "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.06\" --iteration=12 "
+    #           "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_mode=1")
+
+    os.system("python \"iid_train.py\" --server_config=5 --img_to_load=500 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=128 --min_epochs=20 "
+              "--net_config=3 --num_blocks=6 "
+              "--plot_enabled=1 --debug_mode=0 --version_name=\"iid_networkv8.00\" --iteration=9 "
+              "--unlit_checkpt_file=\"synth2unlit_v1.00_1.pt\" --da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_mode=2")
 
 
 def train_domain_adaptation():
@@ -48,7 +48,7 @@ def train_embedding():
               "--min_epochs=5 --g_lr=0.0002 --d_lr=0.0002 --version_name=\"embedding_v6.00\" --iteration=2")
 
 def train_unlit():
-    os.system("python \"unlit_train.py\" --server_config=5 --img_to_load=500 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 "
+    os.system("python \"unlit_train.py\" --server_config=5 --img_to_load=500 --load_previous=1 --test_mode=0 --net_config=1 --num_blocks=6 "
               "--plot_enabled=1 --patch_size=64 --batch_size=512 "
               "--min_epochs=30 --g_lr=0.0002 --d_lr=0.0002 --version_name=\"synth2unlit_v1.00\" --iteration=1")
 def main():

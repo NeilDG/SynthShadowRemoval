@@ -40,6 +40,7 @@ parser.add_option('--test_mode', type=int, help="Test mode?", default=0)
 parser.add_option('--min_epochs', type=int, help="Min epochs", default=50)
 parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
 parser.add_option('--debug_mode', type=int, default=0)
+parser.add_option('--unlit_checkpt_file', type=str, default="")
 
 #--img_to_load=-1 --load_previous=1
 #Update config if on COARE

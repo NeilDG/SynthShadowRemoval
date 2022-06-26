@@ -69,6 +69,9 @@ class IIDTrainer:
                 self.initialize_albedo_network(net_config, num_blocks, 3, opts)
             self.initialize_shadow_network(net_config, num_blocks, 3)
 
+        if(self.albedo_mode == 2):
+            self.initialize_unlit_network(3, opts)
+
         self.visdom_reporter = plot_utils.VisdomReporter()
         self.optimizerG_shading = torch.optim.Adam(itertools.chain(self.G_S.parameters(), self.G_Z.parameters()), lr=self.g_lr)
         self.optimizerD_shading = torch.optim.Adam(itertools.chain(self.D_S.parameters(), self.D_Z.parameters()), lr=self.d_lr)
@@ -136,6 +139,20 @@ class IIDTrainer:
         self.optimizerD_albedo = torch.optim.Adam(itertools.chain(self.D_A.parameters()), lr=self.d_lr)
         self.schedulerG_albedo = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG_albedo, patience=100000 / self.batch_size, threshold=0.00005)
         self.schedulerD_albedo = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD_albedo, patience=100000 / self.batch_size, threshold=0.00005)
+
+    def initialize_unlit_network(self, input_nc, opts):
+        checkpoint = torch.load("./checkpoint/" + opts.unlit_checkpt_file, map_location=self.gpu_device)
+        net_config = checkpoint['net_config']
+        num_blocks = checkpoint['num_blocks']
+
+        if (net_config == 1):
+            self.G_unlit = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
+        elif (net_config == 2):
+            self.G_unlit = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
+        else:
+            self.G_unlit = ffa.FFA(gps=input_nc, blocks=num_blocks).to(self.gpu_device)
+
+        print("Loaded unlit network: " + opts.unlit_checkpt_file)
 
     def initialize_shadow_network(self, net_config, num_blocks, input_nc):
         if (net_config == 1):
@@ -281,7 +298,7 @@ class IIDTrainer:
     def train(self, input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor):
         self.train_shading(input_rgb_tensor, shading_tensor, shadow_tensor)
 
-        if(self.albedo_mode == 1):
+        if(self.albedo_mode >= 1):
             self.train_albedo(input_rgb_tensor, albedo_tensor)
 
 
@@ -378,6 +395,10 @@ class IIDTrainer:
             self.G_S.eval()
             self.G_Z.eval()
 
+            if(self.albedo_mode == 2):
+                self.G_unlit.eval()
+                input_rgb_tensor = self.G_unlit(input_rgb_tensor).detach()
+
             if(self.da_enabled == 1):
                 input = self.reshape_input(input_rgb_tensor)
 
@@ -456,6 +477,10 @@ class IIDTrainer:
 
     def visdom_visualize(self, input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor, label = "Train"):
         with torch.no_grad():
+            if (self.albedo_mode == 2):
+                self.G_unlit.eval()
+                input_rgb_tensor = self.G_unlit(input_rgb_tensor).detach()
+
             rgb2albedo, rgb2shading, rgb2shadow = self.decompose(input_rgb_tensor)
             embedding_rep = self.get_feature_rep(input_rgb_tensor)
             rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)

@@ -82,16 +82,16 @@ class PairedTrainer:
         self.lpips_loss = lpips.LPIPS(net = 'vgg').to(self.gpu_device)
         self.l1_loss = nn.L1Loss()
 
-        num_blocks = opts.num_blocks
+        self.num_blocks = opts.num_blocks
         self.batch_size = opts.batch_size
-        net_config = opts.net_config
+        self.net_config = opts.net_config
 
-        if(net_config == 1):
-            self.G_A = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
-        elif(net_config == 2):
-            self.G_A = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
+        if(self.net_config == 1):
+            self.G_A = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=self.num_blocks).to(self.gpu_device)
+        elif(self.net_config == 2):
+            self.G_A = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=self.num_blocks).to(self.gpu_device)
         else:
-            self.G_A = ffa.FFA(gps=3, blocks=num_blocks).to(self.gpu_device)
+            self.G_A = ffa.FFA(gps=3, blocks=self.num_blocks).to(self.gpu_device)
 
         self.D_A = cycle_gan.Discriminator().to(self.gpu_device)  # use CycleGAN's discriminator
 
@@ -245,7 +245,7 @@ class PairedTrainer:
         self.schedulerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler"])
 
     def save_states(self, epoch, iteration):
-        save_dict = {'epoch': epoch, 'iteration': iteration}
+        save_dict = {'epoch': epoch, 'iteration': iteration, 'net_config': self.net_config, 'num_blocks' : self.num_blocks}
         netGA_state_dict = self.G_A.state_dict()
         netDA_state_dict = self.D_A.state_dict()
 
@@ -269,7 +269,7 @@ class PairedTrainer:
         print("Saved model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
 
     def save_states_checkpt(self, epoch, iteration):
-        save_dict = {'epoch': epoch, 'iteration': iteration}
+        save_dict = {'epoch': epoch, 'iteration': iteration, 'net_config': self.net_config, 'num_blocks' : self.num_blocks}
         netGA_state_dict = self.G_A.state_dict()
         netDA_state_dict = self.D_A.state_dict()
 

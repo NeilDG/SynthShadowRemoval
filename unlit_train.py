@@ -122,7 +122,7 @@ def main(argv):
         iteration = checkpoint['iteration'] + 1
         trainer.load_saved_state(checkpoint)
 
-        print("Loaded checkpt: %s Current epoch: %d" % (constants.IID_CHECKPATH, start_epoch))
+        print("Loaded checkpt: %s Current epoch: %d" % (constants.UNLIT_TRANSFER_CHECKPATH, start_epoch))
         print("===================================================")
 
     if (opts.test_mode == 1):
@@ -152,7 +152,7 @@ def main(argv):
                 trainer.train(rgb_tensor, unlit_tensor, torch.ones_like(rgb_tensor))
 
                 iteration = iteration + 1
-                stopper_method.register_metric(trainer.infer(rgb_tensor), unlit_tensor)
+                stopper_method.register_metric(trainer.infer(rgb_tensor), unlit_tensor, epoch)
                 stopper_method.test(trainer, epoch, iteration)
                 if (stopper_method.did_stop_condition_met()):
                     break
