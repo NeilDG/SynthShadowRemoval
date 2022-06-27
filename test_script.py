@@ -3,19 +3,23 @@
 import os
 
 def test_relighting():
-    os.system("python \"iid_test.py\"  --net_config=2 --num_blocks=0 --version_name=\"iid_networkv7.06\" --albedo_mode=2 --iteration=10 "
+    os.system("python \"iid_test.py\"  --net_config=1 --num_blocks=6 --version_name=\"iid_networkv7.05\" --albedo_mode=2 --iteration=10 "
               "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
-    os.system("python \"iid_test.py\"  --net_config=2 --num_blocks=0 --version_name=\"iid_networkv7.06\" --albedo_mode=2 --iteration=11 "
+    os.system("python \"iid_test.py\"  --net_config=1 --num_blocks=6 --version_name=\"iid_networkv7.05\" --albedo_mode=2 --iteration=11 "
               "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
-    os.system("python \"iid_test.py\"  --net_config=2 --num_blocks=0 --version_name=\"iid_networkv7.06\" --albedo_mode=2 --iteration=12 "
+    os.system("python \"iid_test.py\"  --net_config=1 --num_blocks=6 --version_name=\"iid_networkv7.05\" --albedo_mode=2 --iteration=12 "
               "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
-    os.system("python \"iid_test.py\"  --net_config=2 --num_blocks=0 --version_name=\"iid_networkv7.06\" --albedo_mode=2 --iteration=13 "
+    os.system("python \"iid_test.py\"  --net_config=1 --num_blocks=6 --version_name=\"iid_networkv7.05\" --albedo_mode=2 --iteration=13 "
+              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
+              "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
+
+    os.system("python \"iid_test.py\"  --net_config=1 --num_blocks=6 --version_name=\"iid_networkv7.05\" --albedo_mode=2 --iteration=14 "
               "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
