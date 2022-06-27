@@ -11,7 +11,7 @@ def test_relighting():
     #           "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
     #           "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
-    os.system("python \"iid_test.py\"  --net_config=4 --num_blocks=4 --version_name=\"iid_networkv7.08\" --albedo_mode=2 --iteration=12 "
+    os.system("python \"iid_test.py\"  --net_config=2 --num_blocks=0 --version_name=\"iid_networkv7.06\" --albedo_mode=2 --iteration=8 "
               "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
