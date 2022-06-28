@@ -27,6 +27,10 @@ class IIDTransform(nn.Module):
         masked_tensor = (input_tensor >= 1.0)
         return output_tensor.masked_fill_(masked_tensor, 0.0)
 
+    def define_albedo_mask(self, albedo_tensor):
+        masked_tensor = (albedo_tensor < 1.0)
+        return masked_tensor
+
     def forward(self, rgb_ws, rgb_ns, albedo_tensor):
         min = 0.0
         max = 1.0

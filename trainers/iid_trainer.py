@@ -167,11 +167,13 @@ class IIDTrainer:
         self.losses_dict_s[constants.LIKENESS_LOSS_KEY] = []
         self.losses_dict_s[constants.LPIP_LOSS_KEY] = []
         self.losses_dict_s[constants.SSIM_LOSS_KEY] = []
+        self.RGB_RECONSTRUCTION_LOSS_KEY = "RGB_RECONSTRUCTION_LOSS_KEY"
         self.GRADIENT_LOSS_KEY = "GRADIENT_LOSS_KEY"
         self.losses_dict_s[self.GRADIENT_LOSS_KEY ] = []
         self.losses_dict_s[constants.G_ADV_LOSS_KEY] = []
         self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY] = []
         self.losses_dict_s[constants.D_A_REAL_LOSS_KEY] = []
+        self.losses_dict_s[self.RGB_RECONSTRUCTION_LOSS_KEY] = []
 
         self.caption_dict_s = {}
         self.caption_dict_s[constants.G_LOSS_KEY] = "Shading + Shadow G loss per iteration"
@@ -183,6 +185,7 @@ class IIDTrainer:
         self.caption_dict_s[constants.G_ADV_LOSS_KEY] = "G adv loss per iteration"
         self.caption_dict_s[constants.D_A_FAKE_LOSS_KEY] = "D fake loss per iteration"
         self.caption_dict_s[constants.D_A_REAL_LOSS_KEY] = "D real loss per iteration"
+        self.caption_dict_s[self.RGB_RECONSTRUCTION_LOSS_KEY] = "RGB Reconstruction loss per iteration"
 
         # what to store in visdom?
         self.losses_dict_a = {}
@@ -279,10 +282,10 @@ class IIDTrainer:
         print("Gradient weight: ", str(self.it_table.get_gradient_weight(self.iteration, IterationTable.NetworkType.ALBEDO)))
 
     def train(self, input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor):
-        self.train_shading(input_rgb_tensor, shading_tensor, shadow_tensor)
+        self.train_shading(input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor)
 
         if(self.albedo_mode == 1):
-            self.train_albedo(input_rgb_tensor, albedo_tensor)
+            self.train_albedo(input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor)
 
 
 
@@ -298,15 +301,15 @@ class IIDTrainer:
 
         return rgb_feature_rep
 
-    def train_shading(self, input_rgb_tensor, shading_tensor, shadow_tensor):
+    def train_shading(self, input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor):
         with amp.autocast():
             if (self.da_enabled == 1):
-                input_rgb_tensor = self.reshape_input(input_rgb_tensor)
+                input = self.reshape_input(input_rgb_tensor)
 
             self.optimizerD_shading.zero_grad()
 
             #shading discriminator
-            rgb2shading = self.G_S(input_rgb_tensor)
+            rgb2shading = self.G_S(input)
             self.D_S.train()
             prediction = self.D_S(shading_tensor)
             real_tensor = torch.ones_like(prediction)
@@ -315,7 +318,7 @@ class IIDTrainer:
             D_S_fake_loss = self.adversarial_loss(self.D_S_pool.query(self.D_S(rgb2shading.detach())), fake_tensor) * self.adv_weight
 
             #shadow discriminator
-            rgb2shadow = self.G_Z(input_rgb_tensor)
+            rgb2shadow = self.G_Z(input)
             self.D_Z.train()
             prediction = self.D_Z(shadow_tensor)
             real_tensor = torch.ones_like(prediction)
@@ -334,7 +337,7 @@ class IIDTrainer:
 
             #shading generator
             self.G_S.train()
-            rgb2shading = self.G_S(input_rgb_tensor)
+            rgb2shading = self.G_S(input)
             S_likeness_loss = self.l1_loss(rgb2shading, shading_tensor) * self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.SHADING)
             S_lpip_loss = self.lpip_loss(rgb2shading, shading_tensor) * self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.SHADING)
             S_ssim_loss = self.ssim_loss(rgb2shading, shading_tensor) * self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.SHADING)
@@ -345,7 +348,7 @@ class IIDTrainer:
 
             # shadow generator
             self.G_Z.train()
-            rgb2shadow = self.G_Z(input_rgb_tensor)
+            rgb2shadow = self.G_Z(input)
             Z_likeness_loss = self.l1_loss(rgb2shadow, shadow_tensor) * self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.SHADOW)
             Z_lpip_loss = self.lpip_loss(rgb2shadow, shadow_tensor) * self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.SHADOW)
             Z_ssim_loss = self.ssim_loss(rgb2shadow, shadow_tensor) * self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.SHADOW)
@@ -354,8 +357,11 @@ class IIDTrainer:
             real_tensor = torch.ones_like(prediction)
             Z_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
+            rgb_like = self.iid_op.produce_rgb(albedo_tensor, self.G_S(input), self.G_Z(input))
+            rgb_l1_loss = self.l1_loss(rgb_like, input_rgb_tensor) * self.rgb_l1_weight
+
             errG = S_likeness_loss + S_lpip_loss + S_ssim_loss + S_gradient_loss + S_adv_loss + \
-                   Z_likeness_loss + Z_lpip_loss + Z_ssim_loss + Z_gradient_loss + Z_adv_loss
+                   Z_likeness_loss + Z_lpip_loss + Z_ssim_loss + Z_gradient_loss + Z_adv_loss + rgb_l1_loss
 
             self.fp16_scaler_s.scale(errG).backward()
             self.fp16_scaler_s.step(self.optimizerG_shading)
@@ -372,12 +378,10 @@ class IIDTrainer:
             self.losses_dict_s[constants.G_ADV_LOSS_KEY].append(S_adv_loss.item() + Z_adv_loss.item())
             self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY].append(D_S_fake_loss.item() + D_Z_fake_loss.item())
             self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_S_real_loss.item())
+            self.losses_dict_s[self.RGB_RECONSTRUCTION_LOSS_KEY].append(rgb_l1_loss.item())
 
-    def train_albedo(self, input_rgb_tensor, albedo_tensor):
+    def train_albedo(self, input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor):
         with amp.autocast():
-            self.G_S.eval()
-            self.G_Z.eval()
-
             if(self.da_enabled == 1):
                 input = self.reshape_input(input_rgb_tensor)
 
@@ -418,7 +422,7 @@ class IIDTrainer:
             real_tensor = torch.ones_like(prediction)
             A_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            rgb_like = self.iid_op.produce_rgb(rgb2albedo, self.G_S(input), self.G_Z(input))
+            rgb_like = self.iid_op.produce_rgb(rgb2albedo, shading_tensor, shadow_tensor)
             rgb_l1_loss = self.l1_loss(rgb_like, input_rgb_tensor) * self.rgb_l1_weight
 
             errG = A_likeness_loss + A_lpip_loss + A_ssim_loss + A_gradient_loss + A_adv_loss + A_ms_grad_loss + A_reflective_loss + rgb_l1_loss
@@ -459,6 +463,7 @@ class IIDTrainer:
             rgb2albedo, rgb2shading, rgb2shadow = self.decompose(input_rgb_tensor)
             embedding_rep = self.get_feature_rep(input_rgb_tensor)
             rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
+
             # rgb_noshadow = self.iid_op.remove_rgb_shadow(input_rgb_tensor, shadow_tensor)
 
             # print("Difference between Albedo vs Recon: ", self.l1_loss(rgb2albedo, albedo_tensor).item())  #0.42321497201919556
@@ -470,6 +475,7 @@ class IIDTrainer:
 
             self.visdom_reporter.plot_image(rgb2albedo, str(label) + " RGB2Albedo images - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(albedo_tensor, str(label) + " Albedo images - " + constants.IID_VERSION + constants.ITERATION)
+            # self.visdom_reporter.plot_image(albedo_tensor * albedo_mask, str(label) + " Albedo Mask - " + constants.IID_VERSION + constants.ITERATION)
 
             self.visdom_reporter.plot_image(rgb2shading, str(label) + " RGB2Shading images - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(shading_tensor, str(label) + " Shading images - " + constants.IID_VERSION + constants.ITERATION)
@@ -543,11 +549,6 @@ class IIDTrainer:
 
             if (self.albedo_mode == 1):
                 self.G_A.eval()
-                rgb2albedo = self.G_A(input)
-            elif (self.albedo_mode == 2):
-                self.G_A.eval()
-                rgb_noshadow = self.iid_op.remove_rgb_shadow(rgb_tensor, rgb2shadow)
-                input = self.reshape_input(rgb_noshadow)
                 rgb2albedo = self.G_A(input)
             else:
                 rgb2albedo = self.iid_op.extract_albedo(rgb_tensor, rgb2shading, rgb2shadow)
