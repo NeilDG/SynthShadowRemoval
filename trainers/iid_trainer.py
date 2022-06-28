@@ -72,7 +72,7 @@ class IIDTrainer:
         if(self.albedo_mode == 2):
             self.initialize_unlit_network(3, opts)
 
-        self.visdom_reporter = plot_utils.VisdomReporter()
+        self.visdom_reporter = plot_utils.VisdomReporter.getInstance()
         self.optimizerG_shading = torch.optim.Adam(itertools.chain(self.G_S.parameters(), self.G_Z.parameters()), lr=self.g_lr)
         self.optimizerD_shading = torch.optim.Adam(itertools.chain(self.D_S.parameters(), self.D_Z.parameters()), lr=self.d_lr)
         self.schedulerG_shading = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG_shading, patience=100000 / self.batch_size, threshold=0.00005)
@@ -501,6 +501,13 @@ class IIDTrainer:
 
             self.visdom_reporter.plot_image(rgb2shadow, str(label) + " RGB2Shadow images - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(shadow_tensor, str(label) + " Shadow images - " + constants.IID_VERSION + constants.ITERATION)
+
+    def visdom_visualize_iid(self, rgb_tensor, albedo_tensor, albedo_mask, shading_tensor, shadow_tensor, label = "Train"):
+        self.visdom_reporter.plot_image(rgb_tensor, str(label) + " Input RGB Images - " + constants.IID_VERSION + constants.ITERATION)
+        self.visdom_reporter.plot_image(albedo_tensor, str(label) + " Albedo images - " + constants.IID_VERSION + constants.ITERATION)
+        self.visdom_reporter.plot_image(albedo_mask, str(label) + " Albedo Masks - " + constants.IID_VERSION + constants.ITERATION)
+        self.visdom_reporter.plot_image(shading_tensor, str(label) + " Shading images - " + constants.IID_VERSION + constants.ITERATION)
+        self.visdom_reporter.plot_image(shadow_tensor, str(label) + " Shadow images - " + constants.IID_VERSION + constants.ITERATION)
 
     def visdom_measure(self, input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor, label="Training"):
         with torch.no_grad():

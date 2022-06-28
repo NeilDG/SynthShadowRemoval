@@ -3,19 +3,7 @@
 import os
 
 def test_relighting():
-    os.system("python \"iid_test.py\"  --net_config=4 --num_blocks=4 --version_name=\"iid_networkv7.08\" --albedo_mode=1 --iteration=15 "
-              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
-              "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
-
-    os.system("python \"iid_test.py\"  --net_config=4 --num_blocks=4 --version_name=\"iid_networkv7.08\" --albedo_mode=1 --iteration=16 "
-              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
-              "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
-
-    os.system("python \"iid_test.py\"  --net_config=4 --num_blocks=4 --version_name=\"iid_networkv7.08\" --albedo_mode=1 --iteration=17 "
-              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
-              "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
-
-    os.system("python \"iid_test.py\"  --net_config=4 --num_blocks=4 --version_name=\"iid_networkv7.08\" --albedo_mode=1 --iteration=18 "
+    os.system("python \"iid_test.py\"  --net_config=4 --num_blocks=4 --version_name=\"iid_networkv8.00\" --albedo_mode=1 --iteration=5 "
               "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
