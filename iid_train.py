@@ -160,8 +160,8 @@ def main(argv):
         rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor = iid_op(rgb_ws_tensor, rgb_ns_tensor, albedo_tensor)
         albedo_infer = iid_op.create_albedo_from_inference(rgb_ws_tensor, iid_op.create_sky_reflection_masks(albedo_tensor), True)
 
-        trainer.visdom_visualize_iid(rgb_ws_tensor, iid_op.view_albedo(albedo_tensor), albedo_infer, shading_tensor, shadow_tensor, "Test")
-        # trainer.visdom_visualize(rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor, "Test")
+        # trainer.visdom_visualize_iid(rgb_ws_tensor, iid_op.view_albedo(albedo_tensor), iid_op.create_sky_reflection_masks(albedo_tensor), shading_tensor, shadow_tensor, "Test")
+        trainer.visdom_visualize(rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor, "Test")
         # trainer.visdom_measure(rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor, "Test")
 
         _, rgb_ws_batch = next(iter(rw_loader))
@@ -193,7 +193,7 @@ def main(argv):
                 rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor = iid_op(rgb_ws_tensor, rgb_ns_tensor, albedo_tensor)
 
                 trainer.train(rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor)
-                rgb2albedo, rgb2shading, rgb2shadow = trainer.decompose(rgb_ws_tensor)
+                rgb2albedo, rgb2shading, rgb2shadow, _ = trainer.decompose(rgb_ws_tensor)
 
                 iteration = iteration + 1
                 stopper_method_s.register_metric(rgb2albedo, albedo_tensor, epoch)

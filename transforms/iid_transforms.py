@@ -34,15 +34,17 @@ class IIDTransform(nn.Module):
         if (tozeroone):
             albedo_tensor = (albedo_tensor * 0.5) + 0.5
 
-        output_tensor = torch.ones_like(albedo_tensor)
-        masked_tensor = (albedo_tensor >= 1.0)
-        return output_tensor.masked_fill_(masked_tensor, 0.0)
+        albedo_gray = kornia.color.rgb_to_grayscale(albedo_tensor)
+        output_tensor = torch.ones_like(albedo_gray)
+        masked_tensor = (albedo_gray >= 1.0)
+        return output_tensor.masked_fill_(masked_tensor, 0)
 
-    def create_albedo_from_inference(self, infer_tensor, sky_reflection_mask, tozeroone = True):
+    def infer_albedo(self, input, G_A, sky_reflection_mask, tozeroone = True):
         if (tozeroone):
-            infer_tensor = (infer_tensor * 0.5) + 0.5
+            input = (input * 0.5) + 0.5
 
-        output_tensor = torch.clone(infer_tensor)
+        albedo_like = G_A(input)
+        output_tensor = torch.clone(input)
         output_tensor = output_tensor * sky_reflection_mask
 
         return output_tensor
