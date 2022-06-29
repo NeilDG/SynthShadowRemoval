@@ -23,11 +23,11 @@ def train_embedding():
               "--min_epochs=5 --g_lr=0.0002 --d_lr=0.0002 --version_name=\"embedding_v6.00\" --iteration=2")
 
 def train_unlit():
-    os.system("python \"unlit_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --net_config=1 --num_blocks=6 "
+    os.system("python \"unlit_train.py\" --server_config=5 --img_to_load=-1 --load_previous=1 --test_mode=0 --net_config=1 --num_blocks=6 "
               "--plot_enabled=1 --patch_size=64 --batch_size=512 "
               "--min_epochs=30 --g_lr=0.0002 --d_lr=0.0002 --version_name=\"synth2unlit_v1.00\" --iteration=1")
 def main():
-    train_unlit()
+    # train_unlit()
     train_relighting()
     # train_domain_adaptation()
     # train_embedding()

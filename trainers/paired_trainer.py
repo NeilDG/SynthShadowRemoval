@@ -10,6 +10,8 @@ import torch.cuda.amp as amp
 import itertools
 import numpy as np
 import torch.nn as nn
+
+from model.modules import image_pool
 from utils import plot_utils
 import lpips
 
@@ -94,6 +96,7 @@ class PairedTrainer:
             self.G_A = ffa.FFA(gps=3, blocks=self.num_blocks).to(self.gpu_device)
 
         self.D_A = cycle_gan.Discriminator().to(self.gpu_device)  # use CycleGAN's discriminator
+        self.D_A_pool = image_pool.ImagePool(50)
 
         self.visdom_reporter = plot_utils.VisdomReporter()
         self.optimizerG = torch.optim.Adam(itertools.chain(self.G_A.parameters()), lr=self.g_lr)
@@ -170,7 +173,7 @@ class PairedTrainer:
             fake_tensor = torch.zeros_like(prediction)
 
             D_A_real_loss = self.adversarial_loss(self.D_A(b_tensor), real_tensor) * self.adv_weight
-            D_A_fake_loss = self.adversarial_loss(self.D_A(a2b.detach()), fake_tensor) * self.adv_weight
+            D_A_fake_loss = self.adversarial_loss(self.D_A_pool.query(self.D_A(a2b.detach())), fake_tensor) * self.adv_weight
 
             errD = D_A_real_loss + D_A_fake_loss
 
@@ -244,7 +247,7 @@ class PairedTrainer:
         self.schedulerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler"])
         self.schedulerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler"])
 
-    def save_states(self, epoch, iteration):
+    def save_states(self, epoch, iteration, last_metric):
         save_dict = {'epoch': epoch, 'iteration': iteration, 'net_config': self.net_config, 'num_blocks' : self.num_blocks}
         netGA_state_dict = self.G_A.state_dict()
         netDA_state_dict = self.D_A.state_dict()

@@ -406,14 +406,15 @@ class IIDTrainer:
         with amp.autocast():
             self.G_S.eval()
             self.G_Z.eval()
+
+            if (self.albedo_mode == 2):
+                self.G_unlit.eval()
+                # input_rgb_tensor = self.G_unlit(input_rgb_tensor).detach()
+
             albedo_masks = self.iid_op.create_sky_reflection_masks(albedo_tensor)
             input_rgb_tensor = input_rgb_tensor * albedo_masks
             albedo_tensor = albedo_tensor * albedo_masks
             albedo_masks = torch.cat([albedo_masks, albedo_masks, albedo_masks], 1)
-
-            if(self.albedo_mode == 2):
-                self.G_unlit.eval()
-                input_rgb_tensor = self.G_unlit(input_rgb_tensor).detach()
 
             if(self.da_enabled == 1):
                 input = self.reshape_input(input_rgb_tensor)
@@ -517,7 +518,7 @@ class IIDTrainer:
         with torch.no_grad():
             if (self.albedo_mode == 2):
                 self.G_unlit.eval()
-                input_rgb_tensor = self.G_unlit(input_rgb_tensor).detach()
+                # input_rgb_tensor = self.G_unlit(input_rgb_tensor).detach()
 
             mask_tensor = self.iid_op.create_sky_reflection_masks(albedo_tensor)
             rgb2albedo, rgb2shading, rgb2shadow, rgb2mask = self.decompose(input_rgb_tensor)
