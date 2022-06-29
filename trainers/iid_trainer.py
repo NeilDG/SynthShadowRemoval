@@ -412,7 +412,7 @@ class IIDTrainer:
                 # input_rgb_tensor = self.G_unlit(input_rgb_tensor).detach()
 
             albedo_masks = self.iid_op.create_sky_reflection_masks(albedo_tensor)
-            input_rgb_tensor = input_rgb_tensor * albedo_masks
+            # input_rgb_tensor = input_rgb_tensor * albedo_masks
             albedo_tensor = albedo_tensor * albedo_masks
             albedo_masks = torch.cat([albedo_masks, albedo_masks, albedo_masks], 1)
 
@@ -532,7 +532,7 @@ class IIDTrainer:
             self.visdom_reporter.plot_image(embedding_rep, str(label) + " Embedding Maps - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(rgb_like, str(label) + " RGB Reconstruction - " + constants.IID_VERSION + constants.ITERATION)
 
-            self.visdom_reporter.plot_image(rgb2albedo, str(label) + " RGB2Albedo images - " + constants.IID_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(rgb2albedo, str(label) + " RGB2Albedo images - " + constants.IID_VERSION + constants.ITERATION, True)
             self.visdom_reporter.plot_image(albedo_tensor, str(label) + " Albedo images - " + constants.IID_VERSION + constants.ITERATION)
 
             # print("Sample output: ", rgb2mask[0,0,0,0].item())
@@ -625,7 +625,7 @@ class IIDTrainer:
                 rgb2mask = torch.round(rgb2mask)[:,0,:,:]
                 rgb2mask = torch.unsqueeze(rgb2mask, 1)
 
-                input = self.reshape_input(rgb_tensor * rgb2mask)
+                input = self.reshape_input(rgb_tensor)
                 rgb2albedo = self.G_A(input)
                 rgb2albedo = rgb2albedo * rgb2mask
                 rgb2albedo = self.iid_op.mask_fill_nonzeros(rgb2albedo)
