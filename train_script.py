@@ -17,17 +17,17 @@ def train_relighting():
     #           "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.12\" --iteration=15 "
     #           "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_mode=1")
 
+    # os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=128 --min_epochs=20 "
+    #           "--net_config=4 --num_blocks=4 "
+    #           "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.12\" --iteration=16 "
+    #           "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_mode=1")
+
+    # os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=128 --min_epochs=20 "
+    #           "--net_config=4 --num_blocks=4 "
+    #           "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.12\" --iteration=17 "
+    #           "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_mode=1")
+
     os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=1 --test_mode=0 --patch_size=64 --batch_size=128 --min_epochs=20 "
-              "--net_config=4 --num_blocks=4 " 
-              "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.12\" --iteration=16 "
-              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_mode=1")
-
-    os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=128 --min_epochs=20 "
-              "--net_config=4 --num_blocks=4 "
-              "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.12\" --iteration=17 "
-              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_mode=1")
-
-    os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=128 --min_epochs=20 "
               "--net_config=4 --num_blocks=4 "
               "--plot_enabled=0 --debug_mode=0 --version_name=\"iid_networkv7.12\" --iteration=18 "
               "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_mode=1")
@@ -56,7 +56,7 @@ def main():
     train_relighting()
     # train_domain_adaptation()
     # train_embedding()
-    os.system("shutdown /s /t 1")
+    # os.system("shutdown /s /t 1")
 
 
 if __name__ == "__main__":
