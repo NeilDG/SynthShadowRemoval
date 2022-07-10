@@ -669,6 +669,11 @@ class IIDTrainer:
             self.schedulerG_albedo.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler" + "A"])
             self.schedulerD_albedo.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler" + "A"])
 
+        if (self.albedo_mode == 2):
+            self.G_P.load_state_dict(checkpoint[constants.GENERATOR_KEY + "P"])
+            self.optimizerP.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "P"])
+            self.schedulerP.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler" + "P"])
+
         self.optimizerG_shading.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "S"])
         self.optimizerD_shading.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "S"])
         self.schedulerG_shading.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler" + "S"])
@@ -690,6 +695,14 @@ class IIDTrainer:
             save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "A"] = optimizerDalbedo_state_dict
             save_dict[constants.GENERATOR_KEY + "scheduler" + "A"] = schedulerGalbedo_state_dict
             save_dict[constants.DISCRIMINATOR_KEY + "scheduler" + "A"] = schedulerDalbedo_state_dict
+
+        if (self.albedo_mode == 2):
+            netGP_state_dict = self.G_P.state_dict()
+            optimizerP_state_dict = self.optimizerP.state_dict()
+            schedulerP_state_dict = self.schedulerP.state_dict()
+            save_dict[constants.GENERATOR_KEY + "P"] = netGP_state_dict
+            save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "P"] = optimizerP_state_dict
+            save_dict[constants.GENERATOR_KEY + "scheduler" + "P"] = schedulerP_state_dict
 
         netGS_state_dict = self.G_S.state_dict()
         netDS_state_dict = self.D_S.state_dict()
@@ -730,6 +743,14 @@ class IIDTrainer:
             save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "A"] = optimizerDalbedo_state_dict
             save_dict[constants.GENERATOR_KEY + "scheduler" + "A"] = schedulerGalbedo_state_dict
             save_dict[constants.DISCRIMINATOR_KEY + "scheduler" + "A"] = schedulerDalbedo_state_dict
+
+        if(self.albedo_mode == 2):
+            netGP_state_dict = self.G_P.state_dict()
+            optimizerP_state_dict = self.optimizerP.state_dict()
+            schedulerP_state_dict = self.schedulerP.state_dict()
+            save_dict[constants.GENERATOR_KEY + "P"] = netGP_state_dict
+            save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY +  "P"] = optimizerP_state_dict
+            save_dict[constants.GENERATOR_KEY + "scheduler" + "P"] = schedulerP_state_dict
 
         netGS_state_dict = self.G_S.state_dict()
         netDS_state_dict = self.D_S.state_dict()
