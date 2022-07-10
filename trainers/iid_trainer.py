@@ -61,18 +61,20 @@ class IIDTrainer:
             self.initialize_da_network(opts.da_version_name)
             self.initialize_shading_network(net_config, num_blocks, 6)
             if(self.albedo_mode >= 1):
-                self.initialize_albedo_network(net_config, num_blocks, 6, opts)
+                self.initialize_albedo_network(net_config, num_blocks, 6)
+                self.initialize_parsing_network(6)
             self.initialize_shadow_network(net_config, num_blocks, 6)
         else:
             self.initialize_shading_network(net_config, num_blocks, 3)
             if (self.albedo_mode >= 1):
-                self.initialize_albedo_network(net_config, num_blocks, 3, opts)
+                self.initialize_albedo_network(net_config, num_blocks, 3)
+                self.initialize_parsing_network(6)
             self.initialize_shadow_network(net_config, num_blocks, 3)
 
         if(self.albedo_mode == 2):
             self.initialize_unlit_network(3, opts)
 
-        self.visdom_reporter = plot_utils.VisdomReporter()
+        self.visdom_reporter = plot_utils.VisdomReporter.getInstance()
         self.optimizerG_shading = torch.optim.Adam(itertools.chain(self.G_S.parameters(), self.G_Z.parameters()), lr=self.g_lr)
         self.optimizerD_shading = torch.optim.Adam(itertools.chain(self.D_S.parameters(), self.D_Z.parameters()), lr=self.d_lr)
         self.schedulerG_shading = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG_shading, patience=100000 / self.batch_size, threshold=0.00005)
@@ -80,7 +82,7 @@ class IIDTrainer:
 
         self.initialize_dict()
 
-        self.fp16_scaler_s = amp.GradScaler()  # for automatic mixed precision
+        self.fp16_scaler = amp.GradScaler()  # for automatic mixed precision
 
     def initialize_da_network(self, da_version_name):
         self.embedder = embedding_network.EmbeddingNetworkFFA(blocks=6).to(self.gpu_device)
@@ -113,7 +115,12 @@ class IIDTrainer:
 
         self.D_S = cycle_gan.Discriminator(input_nc=3).to(self.gpu_device)  # use CycleGAN's discriminator
 
-    def initialize_albedo_network(self, net_config, num_blocks, input_nc, opts):
+    def initialize_parsing_network(self, input_nc):
+        self.G_P = unet_gan.UNetClassifier(num_channels=input_nc, num_classes=2).to(self.gpu_device)
+        self.optimizerP = torch.optim.Adam(itertools.chain(self.G_P.parameters()), lr=self.g_lr)
+        self.schedulerP = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerP, patience=100000 / self.batch_size, threshold=0.00005)
+
+    def initialize_albedo_network(self, net_config, num_blocks, input_nc):
         if (net_config == 1):
             self.G_A = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
         elif (net_config == 2):
@@ -152,6 +159,7 @@ class IIDTrainer:
         else:
             self.G_unlit = ffa.FFA(gps=input_nc, blocks=num_blocks).to(self.gpu_device)
 
+        self.G_unlit.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
         print("Loaded unlit network: " + opts.unlit_checkpt_file)
 
     def initialize_shadow_network(self, net_config, num_blocks, input_nc):
@@ -185,10 +193,12 @@ class IIDTrainer:
         self.losses_dict_s[constants.LPIP_LOSS_KEY] = []
         self.losses_dict_s[constants.SSIM_LOSS_KEY] = []
         self.GRADIENT_LOSS_KEY = "GRADIENT_LOSS_KEY"
+        self.RGB_RECONSTRUCTION_LOSS_KEY = "RGB_RECONSTRUCTION_LOSS_KEY"
         self.losses_dict_s[self.GRADIENT_LOSS_KEY ] = []
         self.losses_dict_s[constants.G_ADV_LOSS_KEY] = []
         self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY] = []
         self.losses_dict_s[constants.D_A_REAL_LOSS_KEY] = []
+        self.losses_dict_s[self.RGB_RECONSTRUCTION_LOSS_KEY] = []
 
         self.caption_dict_s = {}
         self.caption_dict_s[constants.G_LOSS_KEY] = "Shading + Shadow G loss per iteration"
@@ -200,6 +210,7 @@ class IIDTrainer:
         self.caption_dict_s[constants.G_ADV_LOSS_KEY] = "G adv loss per iteration"
         self.caption_dict_s[constants.D_A_FAKE_LOSS_KEY] = "D fake loss per iteration"
         self.caption_dict_s[constants.D_A_REAL_LOSS_KEY] = "D real loss per iteration"
+        self.caption_dict_s[self.RGB_RECONSTRUCTION_LOSS_KEY] = "RGB Reconstruction loss per iteration"
 
         # what to store in visdom?
         self.losses_dict_a = {}
@@ -212,7 +223,6 @@ class IIDTrainer:
         self.losses_dict_a[constants.G_ADV_LOSS_KEY] = []
         self.losses_dict_a[constants.D_A_FAKE_LOSS_KEY] = []
         self.losses_dict_a[constants.D_A_REAL_LOSS_KEY] = []
-        self.RGB_RECONSTRUCTION_LOSS_KEY = "RGB_RECONSTRUCTION_LOSS_KEY"
         self.MS_GRAD_LOSS_KEY = "MS_GRAD_LOSS_KEY"
         self.REFLECTIVE_LOSS_KEY = "REFLECTIVE_LOSS_KEY"
         self.losses_dict_a[self.RGB_RECONSTRUCTION_LOSS_KEY] = []
@@ -232,6 +242,12 @@ class IIDTrainer:
         self.caption_dict_a[self.RGB_RECONSTRUCTION_LOSS_KEY] = "RGB Reconstruction loss per iteration"
         self.caption_dict_a[self.MS_GRAD_LOSS_KEY] = "Multiscale gradient loss per iteration"
         self.caption_dict_a[self.REFLECTIVE_LOSS_KEY] = "Reflective loss per iteration"
+
+        self.losses_dict_p = {}
+        self.losses_dict_p[constants.LIKENESS_LOSS_KEY] = []
+
+        self.caption_dict_p = {}
+        self.caption_dict_p[constants.LIKENESS_LOSS_KEY] = "Classifier loss per iteration"
 
     def normalize(self, light_angle):
         std = light_angle / 360.0
@@ -295,13 +311,12 @@ class IIDTrainer:
         print("SSIM weight: ", str(self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.SHADOW)))
         print("Gradient weight: ", str(self.it_table.get_gradient_weight(self.iteration, IterationTable.NetworkType.ALBEDO)))
 
-    def train(self, input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor):
-        self.train_shading(input_rgb_tensor, shading_tensor, shadow_tensor)
+    def train(self, input_rgb_tensor, unlit_tensor, albedo_tensor, shading_tensor, shadow_tensor):
+        self.train_shading(input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor)
 
         if(self.albedo_mode >= 1):
-            self.train_albedo(input_rgb_tensor, albedo_tensor)
-
-
+            self.train_parser(input_rgb_tensor, self.iid_op.create_sky_reflection_masks(albedo_tensor))
+            self.train_albedo(input_rgb_tensor, albedo_tensor, unlit_tensor, shading_tensor, shadow_tensor)
 
     def reshape_input(self, input_tensor):
         rgb_embedding, w1, w2, w3 = self.embedder.get_embedding(input_tensor)
@@ -315,15 +330,15 @@ class IIDTrainer:
 
         return rgb_feature_rep
 
-    def train_shading(self, input_rgb_tensor, shading_tensor, shadow_tensor):
+    def train_shading(self, input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor):
         with amp.autocast():
             if (self.da_enabled == 1):
-                input_rgb_tensor = self.reshape_input(input_rgb_tensor)
+                input = self.reshape_input(input_rgb_tensor)
 
             self.optimizerD_shading.zero_grad()
 
             #shading discriminator
-            rgb2shading = self.G_S(input_rgb_tensor)
+            rgb2shading = self.G_S(input)
             self.D_S.train()
             prediction = self.D_S(shading_tensor)
             real_tensor = torch.ones_like(prediction)
@@ -332,7 +347,7 @@ class IIDTrainer:
             D_S_fake_loss = self.adversarial_loss(self.D_S_pool.query(self.D_S(rgb2shading.detach())), fake_tensor) * self.adv_weight
 
             #shadow discriminator
-            rgb2shadow = self.G_Z(input_rgb_tensor)
+            rgb2shadow = self.G_Z(input)
             self.D_Z.train()
             prediction = self.D_Z(shadow_tensor)
             real_tensor = torch.ones_like(prediction)
@@ -342,16 +357,16 @@ class IIDTrainer:
 
             errD = D_S_real_loss + D_S_fake_loss + D_Z_real_loss + D_Z_fake_loss
 
-            self.fp16_scaler_s.scale(errD).backward()
-            if (self.fp16_scaler_s.scale(errD).item() > 0.0):
-                self.fp16_scaler_s.step(self.optimizerD_shading)
+            self.fp16_scaler.scale(errD).backward()
+            if (self.fp16_scaler.scale(errD).item() > 0.0):
+                self.fp16_scaler.step(self.optimizerD_shading)
                 self.schedulerD_shading.step(errD)
 
             self.optimizerG_shading.zero_grad()
 
             #shading generator
             self.G_S.train()
-            rgb2shading = self.G_S(input_rgb_tensor)
+            rgb2shading = self.G_S(input)
             S_likeness_loss = self.l1_loss(rgb2shading, shading_tensor) * self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.SHADING)
             S_lpip_loss = self.lpip_loss(rgb2shading, shading_tensor) * self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.SHADING)
             S_ssim_loss = self.ssim_loss(rgb2shading, shading_tensor) * self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.SHADING)
@@ -362,7 +377,7 @@ class IIDTrainer:
 
             # shadow generator
             self.G_Z.train()
-            rgb2shadow = self.G_Z(input_rgb_tensor)
+            rgb2shadow = self.G_Z(input)
             Z_likeness_loss = self.l1_loss(rgb2shadow, shadow_tensor) * self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.SHADOW)
             Z_lpip_loss = self.lpip_loss(rgb2shadow, shadow_tensor) * self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.SHADOW)
             Z_ssim_loss = self.ssim_loss(rgb2shadow, shadow_tensor) * self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.SHADOW)
@@ -371,13 +386,16 @@ class IIDTrainer:
             real_tensor = torch.ones_like(prediction)
             Z_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            errG = S_likeness_loss + S_lpip_loss + S_ssim_loss + S_gradient_loss + S_adv_loss + \
-                   Z_likeness_loss + Z_lpip_loss + Z_ssim_loss + Z_gradient_loss + Z_adv_loss
+            rgb_like = self.iid_op.produce_rgb(albedo_tensor, self.G_S(input), self.G_Z(input))
+            rgb_l1_loss = self.l1_loss(rgb_like, input_rgb_tensor) * self.rgb_l1_weight
 
-            self.fp16_scaler_s.scale(errG).backward()
-            self.fp16_scaler_s.step(self.optimizerG_shading)
+            errG = S_likeness_loss + S_lpip_loss + S_ssim_loss + S_gradient_loss + S_adv_loss + \
+                   Z_likeness_loss + Z_lpip_loss + Z_ssim_loss + Z_gradient_loss + Z_adv_loss + rgb_l1_loss
+
+            self.fp16_scaler.scale(errG).backward()
+            self.fp16_scaler.step(self.optimizerG_shading)
             self.schedulerG_shading.step(errG)
-            self.fp16_scaler_s.update()
+            self.fp16_scaler.update()
 
             # what to put to losses dict for visdom reporting?
             self.losses_dict_s[constants.G_LOSS_KEY].append(errG.item())
@@ -389,18 +407,23 @@ class IIDTrainer:
             self.losses_dict_s[constants.G_ADV_LOSS_KEY].append(S_adv_loss.item() + Z_adv_loss.item())
             self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY].append(D_S_fake_loss.item() + D_Z_fake_loss.item())
             self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_S_real_loss.item())
+            self.losses_dict_s[self.RGB_RECONSTRUCTION_LOSS_KEY].append(rgb_l1_loss.item())
 
-    def train_albedo(self, input_rgb_tensor, albedo_tensor):
+    def train_albedo(self, input_rgb_tensor, albedo_tensor, unlit_tensor, shading_tensor, shadow_tensor):
         with amp.autocast():
-            self.G_S.eval()
-            self.G_Z.eval()
+            if (self.albedo_mode == 2):
+                input = unlit_tensor
+                # print("Using unlit tensor")
+            else:
+                input = input_rgb_tensor
 
-            if(self.albedo_mode == 2):
-                self.G_unlit.eval()
-                input_rgb_tensor = self.G_unlit(input_rgb_tensor).detach()
+            albedo_masks = self.iid_op.create_sky_reflection_masks(albedo_tensor)
+            # input_rgb_tensor = input_rgb_tensor * albedo_masks
+            albedo_tensor = albedo_tensor * albedo_masks
+            albedo_masks = torch.cat([albedo_masks, albedo_masks, albedo_masks], 1)
 
             if(self.da_enabled == 1):
-                input = self.reshape_input(input_rgb_tensor)
+                input = self.reshape_input(input)
 
             # produce initial albedo
             rgb2albedo = self.G_A(input)
@@ -417,11 +440,11 @@ class IIDTrainer:
 
             errD = D_A_real_loss + D_A_fake_loss
 
-            self.fp16_scaler_s.scale(errD).backward()
+            self.fp16_scaler.scale(errD).backward()
 
-            if (self.fp16_scaler_s.scale(errD).item() > 0.0):
+            if (self.fp16_scaler.scale(errD).item() > 0.0):
                 self.schedulerD_albedo.step(errD)
-                self.fp16_scaler_s.step(self.optimizerD_albedo)
+                self.fp16_scaler.step(self.optimizerD_albedo)
 
             self.optimizerG_albedo.zero_grad()
 
@@ -432,21 +455,21 @@ class IIDTrainer:
             A_lpip_loss = self.lpip_loss(rgb2albedo, albedo_tensor) * self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
             A_ssim_loss = self.ssim_loss(rgb2albedo, albedo_tensor) * self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
             A_gradient_loss = self.gradient_loss_term(rgb2albedo, albedo_tensor) * self.it_table.get_gradient_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
-            A_ms_grad_loss = self.multiscale_grad_loss(rgb2albedo, albedo_tensor, torch.ones_like(albedo_tensor).float()) * self.it_table.get_multiscale_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
-            A_reflective_loss = self.reflect_cons_loss(rgb2albedo, albedo_tensor, input_rgb_tensor, torch.ones_like(albedo_tensor).float()) * self.it_table.get_reflect_cons_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
+            A_ms_grad_loss = self.multiscale_grad_loss(rgb2albedo, albedo_tensor, albedo_masks.float()) * self.it_table.get_multiscale_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
+            A_reflective_loss = self.reflect_cons_loss(rgb2albedo, albedo_tensor, input_rgb_tensor, albedo_masks.float()) * self.it_table.get_reflect_cons_weight(self.iteration, IterationTable.NetworkType.ALBEDO)
 
             prediction = self.D_A(rgb2albedo)
             real_tensor = torch.ones_like(prediction)
             A_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            rgb_like = self.iid_op.produce_rgb(rgb2albedo, self.G_S(input), self.G_Z(input))
+            rgb_like = self.iid_op.produce_rgb(rgb2albedo, shading_tensor, shadow_tensor)
             rgb_l1_loss = self.l1_loss(rgb_like, input_rgb_tensor) * self.rgb_l1_weight
 
             errG = A_likeness_loss + A_lpip_loss + A_ssim_loss + A_gradient_loss + A_adv_loss + A_ms_grad_loss + A_reflective_loss + rgb_l1_loss
-            self.fp16_scaler_s.scale(errG).backward()
+            self.fp16_scaler.scale(errG).backward()
             self.schedulerG_albedo.step(errG)
-            self.fp16_scaler_s.step(self.optimizerG_albedo)
-            self.fp16_scaler_s.update()
+            self.fp16_scaler.step(self.optimizerG_albedo)
+            self.fp16_scaler.update()
 
             # what to put to losses dict for visdom reporting?
             self.losses_dict_a[constants.G_LOSS_KEY].append(errG.item())
@@ -462,6 +485,27 @@ class IIDTrainer:
             self.losses_dict_a[self.MS_GRAD_LOSS_KEY].append(A_ms_grad_loss.item())
             self.losses_dict_a[self.REFLECTIVE_LOSS_KEY].append(A_reflective_loss.item())
 
+    def train_parser(self, input_rgb_tensor, mask_tensor):
+        with amp.autocast():
+            if (self.da_enabled == 1):
+                input = self.reshape_input(input_rgb_tensor)
+
+            mask_tensor_inv = 1 - mask_tensor
+            output = torch.cat([mask_tensor, mask_tensor_inv], 1)
+            self.G_P.train()
+            self.optimizerP.zero_grad()
+
+            # print("Shapes: ", np.shape(self.G_P(input)), np.shape(output))
+            mask_loss = self.bce_loss(self.G_P(input), output)
+            self.fp16_scaler.scale(mask_loss).backward()
+            self.fp16_scaler.step(self.optimizerP)
+            self.schedulerG_shading.step(mask_loss)
+            self.fp16_scaler.update()
+
+            # what to put to losses dict for visdom reporting?
+            self.losses_dict_p[constants.LIKENESS_LOSS_KEY].append(mask_loss.item())
+
+
     def test(self, input_rgb_tensor):
         with torch.no_grad():
             rgb2shading = self.G_S(input_rgb_tensor)
@@ -474,27 +518,33 @@ class IIDTrainer:
     def visdom_plot(self, iteration):
         self.visdom_reporter.plot_finegrain_loss("a2b_loss_s", iteration, self.losses_dict_s, self.caption_dict_s, constants.IID_CHECKPATH)
         self.visdom_reporter.plot_finegrain_loss("a2b_loss_a", iteration, self.losses_dict_a, self.caption_dict_a, constants.IID_CHECKPATH)
+        self.visdom_reporter.plot_finegrain_loss("a2b_loss_p", iteration, self.losses_dict_p, self.caption_dict_p, constants.IID_CHECKPATH)
 
-    def visdom_visualize(self, input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor, label = "Train"):
+    def visdom_visualize(self, input_rgb_tensor, unlit_tensor, albedo_tensor, shading_tensor, shadow_tensor, label = "Train"):
         with torch.no_grad():
             if (self.albedo_mode == 2):
                 self.G_unlit.eval()
-                input_rgb_tensor = self.G_unlit(input_rgb_tensor).detach()
+                # input_rgb_tensor = self.G_unlit(input_rgb_tensor).detach()
 
-            rgb2albedo, rgb2shading, rgb2shadow = self.decompose(input_rgb_tensor)
+            mask_tensor = self.iid_op.create_sky_reflection_masks(albedo_tensor)
+            rgb2albedo, rgb2shading, rgb2shadow, rgb2mask = self.decompose(input_rgb_tensor)
             embedding_rep = self.get_feature_rep(input_rgb_tensor)
             rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
-            # rgb_noshadow = self.iid_op.remove_rgb_shadow(input_rgb_tensor, shadow_tensor)
 
             # print("Difference between Albedo vs Recon: ", self.l1_loss(rgb2albedo, albedo_tensor).item())  #0.42321497201919556
 
             # self.visdom_reporter.plot_image(rgb_noshadow, str(label) + " Input RGB Images - Shadow " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(embedding_rep, str(label) + " Embedding Maps - " + constants.IID_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(unlit_tensor, str(label) + " Unlit Images - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(rgb_like, str(label) + " RGB Reconstruction - " + constants.IID_VERSION + constants.ITERATION)
 
-            self.visdom_reporter.plot_image(rgb2albedo, str(label) + " RGB2Albedo images - " + constants.IID_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(rgb2albedo, str(label) + " RGB2Albedo images - " + constants.IID_VERSION + constants.ITERATION, True)
             self.visdom_reporter.plot_image(albedo_tensor, str(label) + " Albedo images - " + constants.IID_VERSION + constants.ITERATION)
+
+            # print("Sample output: ", rgb2mask[0,0,0,0].item())
+            self.visdom_reporter.plot_image(rgb2mask, str(label) + " Albedo-Mask-Like - " + constants.IID_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(mask_tensor, str(label) + " Albedo Masks - " + constants.IID_VERSION + constants.ITERATION)
 
             self.visdom_reporter.plot_image(rgb2shading, str(label) + " RGB2Shading images - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(shading_tensor, str(label) + " Shading images - " + constants.IID_VERSION + constants.ITERATION)
@@ -502,9 +552,16 @@ class IIDTrainer:
             self.visdom_reporter.plot_image(rgb2shadow, str(label) + " RGB2Shadow images - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(shadow_tensor, str(label) + " Shadow images - " + constants.IID_VERSION + constants.ITERATION)
 
+    def visdom_visualize_iid(self, rgb_tensor, albedo_tensor, albedo_mask, shading_tensor, shadow_tensor, label = "Train"):
+        self.visdom_reporter.plot_image(rgb_tensor, str(label) + " Input RGB Images - " + constants.IID_VERSION + constants.ITERATION)
+        self.visdom_reporter.plot_image(albedo_tensor, str(label) + " Albedo images - " + constants.IID_VERSION + constants.ITERATION)
+        self.visdom_reporter.plot_image(albedo_mask, str(label) + " Albedo Masks - " + constants.IID_VERSION + constants.ITERATION)
+        self.visdom_reporter.plot_image(shading_tensor, str(label) + " Shading images - " + constants.IID_VERSION + constants.ITERATION)
+        self.visdom_reporter.plot_image(shadow_tensor, str(label) + " Shadow images - " + constants.IID_VERSION + constants.ITERATION)
+
     def visdom_measure(self, input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor, label="Training"):
         with torch.no_grad():
-            rgb2albedo, rgb2shading, rgb2shadow = self.decompose(input_rgb_tensor)
+            rgb2albedo, rgb2shading, rgb2shadow, rgb2mask = self.decompose(input_rgb_tensor)
             rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
 
             # plot metrics
@@ -532,7 +589,7 @@ class IIDTrainer:
     # must have a shading generator network first
     def visdom_infer(self, rw_tensor):
         with torch.no_grad():
-            rgb2albedo, rgb2shading, rgb2shadow = self.decompose(rw_tensor)
+            rgb2albedo, rgb2shading, rgb2shadow, rgb2mask = self.decompose(rw_tensor)
             embedding_rep = self.get_feature_rep(rw_tensor)
             rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
 
@@ -542,7 +599,7 @@ class IIDTrainer:
 
     def visdom_measure_gta(self, gta_rgb, gta_albedo):
         with torch.no_grad():
-            rgb2albedo, rgb2shading, rgb2shadow = self.decompose(gta_rgb)
+            rgb2albedo, rgb2shading, rgb2shadow, rgb2mask = self.decompose(gta_rgb)
             rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
 
             self.visdom_reporter.plot_image(gta_albedo, "GTA Albedo - " + constants.IID_VERSION + constants.ITERATION)
@@ -571,13 +628,24 @@ class IIDTrainer:
                 rgb2albedo = self.G_A(input)
             elif (self.albedo_mode == 2):
                 self.G_A.eval()
-                rgb_noshadow = self.iid_op.remove_rgb_shadow(rgb_tensor, rgb2shadow)
-                input = self.reshape_input(rgb_noshadow)
+                rgb2mask = self.G_P(input)
+                rgb2mask = torch.round(rgb2mask)[:,0,:,:]
+                rgb2mask = torch.unsqueeze(rgb2mask, 1)
+
+                input = self.reshape_input(rgb_tensor)
                 rgb2albedo = self.G_A(input)
+
+                #normalize to 0-1
+                rgb_tensor = tensor_utils.normalize_to_01(rgb_tensor)
+                rgb2albedo = tensor_utils.normalize_to_01(rgb2albedo)
+
+                rgb2albedo = rgb2albedo * rgb2mask
+                rgb2albedo = self.iid_op.mask_fill_nonzeros(rgb2albedo)
+
             else:
                 rgb2albedo = self.iid_op.extract_albedo(rgb_tensor, rgb2shading, rgb2shadow)
 
-        return rgb2albedo, rgb2shading, rgb2shadow
+        return rgb2albedo, rgb2shading, rgb2shadow, rgb2mask
 
     def infer_shading(self, rw_tensor):
         self.G_S.eval()
@@ -602,6 +670,11 @@ class IIDTrainer:
             self.schedulerG_albedo.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler" + "A"])
             self.schedulerD_albedo.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler" + "A"])
 
+        if (self.albedo_mode == 2):
+            self.G_P.load_state_dict(checkpoint[constants.GENERATOR_KEY + "P"])
+            self.optimizerP.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "P"])
+            self.schedulerP.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler" + "P"])
+
         self.optimizerG_shading.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "S"])
         self.optimizerD_shading.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "S"])
         self.schedulerG_shading.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler" + "S"])
@@ -623,6 +696,14 @@ class IIDTrainer:
             save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "A"] = optimizerDalbedo_state_dict
             save_dict[constants.GENERATOR_KEY + "scheduler" + "A"] = schedulerGalbedo_state_dict
             save_dict[constants.DISCRIMINATOR_KEY + "scheduler" + "A"] = schedulerDalbedo_state_dict
+
+        if (self.albedo_mode == 2):
+            netGP_state_dict = self.G_P.state_dict()
+            optimizerP_state_dict = self.optimizerP.state_dict()
+            schedulerP_state_dict = self.schedulerP.state_dict()
+            save_dict[constants.GENERATOR_KEY + "P"] = netGP_state_dict
+            save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "P"] = optimizerP_state_dict
+            save_dict[constants.GENERATOR_KEY + "scheduler" + "P"] = schedulerP_state_dict
 
         netGS_state_dict = self.G_S.state_dict()
         netDS_state_dict = self.D_S.state_dict()
@@ -663,6 +744,14 @@ class IIDTrainer:
             save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "A"] = optimizerDalbedo_state_dict
             save_dict[constants.GENERATOR_KEY + "scheduler" + "A"] = schedulerGalbedo_state_dict
             save_dict[constants.DISCRIMINATOR_KEY + "scheduler" + "A"] = schedulerDalbedo_state_dict
+
+        if(self.albedo_mode == 2):
+            netGP_state_dict = self.G_P.state_dict()
+            optimizerP_state_dict = self.optimizerP.state_dict()
+            schedulerP_state_dict = self.schedulerP.state_dict()
+            save_dict[constants.GENERATOR_KEY + "P"] = netGP_state_dict
+            save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY +  "P"] = optimizerP_state_dict
+            save_dict[constants.GENERATOR_KEY + "scheduler" + "P"] = schedulerP_state_dict
 
         netGS_state_dict = self.G_S.state_dict()
         netDS_state_dict = self.D_S.state_dict()

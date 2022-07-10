@@ -10,14 +10,14 @@ class IterationTable():
         self.iteration_table = {}
 
         iteration = 5
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, [0.0, 1.0, 0.0, 0.0], is_bce=0)
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, [0.0, 1.0, 0.0, 0.0], is_bce=0)
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, [0.0, 1.0, 0.0, 0.0], is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, [10.0, 1.0, 0.0, 0.0], is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, [10.0, 1.0, 0.0, 0.0], is_bce=0)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, [10.0, 1.0, 0.0, 0.0], is_bce=0)
 
         iteration = 6
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, [0.0, 1.0, 0.0, 0.0], is_bce=1)
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, [0.0, 1.0, 0.0, 0.0], is_bce=1)
-        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, [0.0, 1.0, 0.0, 0.0], is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, [10.0, 1.0, 0.0, 0.0], is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, [10.0, 1.0, 0.0, 0.0], is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADOW)] = IterationParameters(iteration, [10.0, 1.0, 0.0, 0.0], is_bce=1)
 
         iteration = 7
         self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, [1.0, 10.0, 0.0, 0.0], is_bce=0)

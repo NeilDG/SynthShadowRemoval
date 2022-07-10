@@ -84,6 +84,9 @@ def normalize(v):
        return v
     return v / norm
 
+def normalize_to_01(input_tensor):
+    return (input_tensor * 0.5) + 0.5
+
 # loads an image compatible with opencv
 def load_image(file_path):
     img = cv2.imread(file_path)

@@ -318,22 +318,25 @@ def main(argv):
     albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
     rgb_dir_ws = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
     rgb_dir_ns = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+    unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
     constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
     print(rgb_dir_ws, albedo_dir)
 
     # Create the dataloader
-    test_loader = dataset_loader.load_iid_datasetv2_test(rgb_dir_ws, rgb_dir_ns, albedo_dir, opts)
+    test_loader = dataset_loader.load_iid_datasetv2_test(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
 
     print("Plotting test images...")
-    _, rgb_ws_batch, rgb_ns_batch, albedo_batch = next(iter(test_loader))
+    _, rgb_ws_batch, rgb_ns_batch, albedo_batch, unlit_batch = next(iter(test_loader))
     rgb_ws_tensor = rgb_ws_batch.to(device)
     rgb_ns_tensor = rgb_ns_batch.to(device)
     albedo_tensor = albedo_batch.to(device)
+    unlit_tensor = unlit_batch.to(device)
+
     iid_op = iid_transforms.IIDTransform()
     input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor = iid_op(rgb_ws_tensor, rgb_ns_tensor, albedo_tensor)
 
-    trainer.visdom_visualize(rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor, "Test")
+    trainer.visdom_visualize(rgb_ws_tensor, unlit_tensor, albedo_tensor, shading_tensor, shadow_tensor, "Test")
     trainer.visdom_measure(rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor, "Test")
 
     _, input_rgb_batch = next(iter(rw_loader))
