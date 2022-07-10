@@ -159,6 +159,7 @@ class IIDTrainer:
         else:
             self.G_unlit = ffa.FFA(gps=input_nc, blocks=num_blocks).to(self.gpu_device)
 
+        self.G_unlit.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
         print("Loaded unlit network: " + opts.unlit_checkpt_file)
 
     def initialize_shadow_network(self, net_config, num_blocks, input_nc):
