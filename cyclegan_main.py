@@ -148,7 +148,8 @@ def main(argv):
                 iteration = iteration + 1
 
                 x2y, _ = gt.test(imgx_tensor, imgy_tensor)
-                stopper_method.test(gt, epoch, iteration, x2y, imgy_tensor)  # stop training if reconstruction no longer becomes close to Y
+                stopper_method.register_metric(x2y, imgy_tensor)
+                stopper_method.test(gt, epoch, iteration)  # stop training if reconstruction no longer becomes close to Y
 
                 if (i % 256 == 0):
                     gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
@@ -162,7 +163,7 @@ def main(argv):
                     gt.visdom_plot(iteration)
 
                 if (stopper_method.did_stop_condition_met()):
-                        break
+                    break
 
             if (stopper_method.did_stop_condition_met()):
                 break

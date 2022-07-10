@@ -67,6 +67,7 @@ saliksik.asti.dost.gov.ph:8097
 
 //CCS SERVER-JUPYTERHUB
 git clone -b "workspace/V7.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "NeuralNets-Experiment6"
+git switch "workspace/V8.XX.XX"
 cd NeuralNets-Experiment6
 cd NeuralNets-Experiment5
 python "ccs1_main.py"

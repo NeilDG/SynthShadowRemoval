@@ -364,7 +364,7 @@ class CycleGANTrainer:
         # self.schedulerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler"])
         # self.schedulerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler"])
 
-    def save_states(self, epoch, iteration):
+    def save_states(self, epoch, iteration, last_metric):
         save_dict = {'epoch': epoch, 'iteration': iteration}
         netGA_state_dict = self.G_A.state_dict()
         netGB_state_dict = self.G_B.state_dict()
