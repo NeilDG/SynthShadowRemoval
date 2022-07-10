@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Paired trainer used for training.
 
-from model import ffa_gan as ffa
+from model import ffa_gan as ffa, usi3d_gan
 from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
 import constants
@@ -83,6 +83,7 @@ class PairedTrainer:
         self.use_mask = opts.use_mask
         self.lpips_loss = lpips.LPIPS(net = 'vgg').to(self.gpu_device)
         self.l1_loss = nn.L1Loss()
+        self.bce_loss = nn.BCEWithLogitsLoss()
 
         self.num_blocks = opts.num_blocks
         self.batch_size = opts.batch_size
@@ -92,6 +93,18 @@ class PairedTrainer:
             self.G_A = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=self.num_blocks).to(self.gpu_device)
         elif(self.net_config == 2):
             self.G_A = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=self.num_blocks).to(self.gpu_device)
+        elif (self.net_config == 3):
+            self.G_A = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=self.num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
+        elif (self.net_config == 4):
+            params = {'dim': 64,  # number of filters in the bottommost layer
+                      'mlp_dim': 256,  # number of filters in MLP
+                      'style_dim': 8,  # length of style code
+                      'n_layer': 3,  # number of layers in feature merger/splitor
+                      'activ': 'relu',  # activation function [relu/lrelu/prelu/selu/tanh]
+                      'n_downsample': 2,  # number of downsampling layers in content encoder
+                      'n_res': self.num_blocks,  # number of residual blocks in content encoder/decoder
+                      'pad_type': 'reflect'}
+            self.G_A = usi3d_gan.AdaINGen(input_dim=3, output_dim=3, params=params).to(self.gpu_device)
         else:
             self.G_A = ffa.FFA(gps=3, blocks=self.num_blocks).to(self.gpu_device)
 
@@ -129,11 +142,9 @@ class PairedTrainer:
 
     def adversarial_loss(self, pred, target):
         if (self.use_bce == 0):
-            loss = nn.L1Loss()
-            return loss(pred, target)
+            return self.l1_loss(pred, target)
         else:
-            loss = nn.BCEWithLogitsLoss()
-            return loss(pred, target)
+            return self.bce_loss(pred, target)
 
     def calculate_lpips_loss(self, pred, target):
         result = torch.squeeze(self.lpips_loss(pred, target))

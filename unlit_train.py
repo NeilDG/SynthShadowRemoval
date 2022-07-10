@@ -44,6 +44,7 @@ def update_config(opts):
     constants.server_config = opts.server_config
     constants.ITERATION = str(opts.iteration)
     constants.plot_enabled = opts.plot_enabled
+    constants.min_epochs = opts.min_epochs
     constants.UNLIT_VERSION = opts.version_name
     constants.UNLIT_TRANSFER_CHECKPATH = 'checkpoint/' + constants.UNLIT_VERSION + "_" + constants.ITERATION + '.pt'
 

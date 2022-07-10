@@ -308,12 +308,12 @@ class IIDTrainer:
         print("SSIM weight: ", str(self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.SHADOW)))
         print("Gradient weight: ", str(self.it_table.get_gradient_weight(self.iteration, IterationTable.NetworkType.ALBEDO)))
 
-    def train(self, input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor):
+    def train(self, input_rgb_tensor, unlit_tensor, albedo_tensor, shading_tensor, shadow_tensor):
         self.train_shading(input_rgb_tensor, shading_tensor, shadow_tensor)
 
         if(self.albedo_mode >= 1):
             self.train_parser(input_rgb_tensor, self.iid_op.create_sky_reflection_masks(albedo_tensor))
-            self.train_albedo(input_rgb_tensor, albedo_tensor)
+            self.train_albedo(input_rgb_tensor, albedo_tensor, unlit_tensor)
 
     def reshape_input(self, input_tensor):
         rgb_embedding, w1, w2, w3 = self.embedder.get_embedding(input_tensor)
@@ -402,14 +402,17 @@ class IIDTrainer:
             self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY].append(D_S_fake_loss.item() + D_Z_fake_loss.item())
             self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_S_real_loss.item())
 
-    def train_albedo(self, input_rgb_tensor, albedo_tensor):
+    def train_albedo(self, input_rgb_tensor, albedo_tensor, unlit_tensor):
         with amp.autocast():
             self.G_S.eval()
             self.G_Z.eval()
 
             if (self.albedo_mode == 2):
                 self.G_unlit.eval()
-                # input_rgb_tensor = self.G_unlit(input_rgb_tensor).detach()
+                input = unlit_tensor
+                # print("Using unlit tensor")
+            else:
+                input = input_rgb_tensor
 
             albedo_masks = self.iid_op.create_sky_reflection_masks(albedo_tensor)
             # input_rgb_tensor = input_rgb_tensor * albedo_masks
@@ -417,7 +420,7 @@ class IIDTrainer:
             albedo_masks = torch.cat([albedo_masks, albedo_masks, albedo_masks], 1)
 
             if(self.da_enabled == 1):
-                input = self.reshape_input(input_rgb_tensor)
+                input = self.reshape_input(input)
 
             # produce initial albedo
             rgb2albedo = self.G_A(input)
@@ -514,7 +517,7 @@ class IIDTrainer:
         self.visdom_reporter.plot_finegrain_loss("a2b_loss_a", iteration, self.losses_dict_a, self.caption_dict_a, constants.IID_CHECKPATH)
         self.visdom_reporter.plot_finegrain_loss("a2b_loss_p", iteration, self.losses_dict_p, self.caption_dict_p, constants.IID_CHECKPATH)
 
-    def visdom_visualize(self, input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor, label = "Train"):
+    def visdom_visualize(self, input_rgb_tensor, unlit_tensor, albedo_tensor, shading_tensor, shadow_tensor, label = "Train"):
         with torch.no_grad():
             if (self.albedo_mode == 2):
                 self.G_unlit.eval()
@@ -530,6 +533,7 @@ class IIDTrainer:
             # self.visdom_reporter.plot_image(rgb_noshadow, str(label) + " Input RGB Images - Shadow " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(embedding_rep, str(label) + " Embedding Maps - " + constants.IID_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(unlit_tensor, str(label) + " Unlit Images - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(rgb_like, str(label) + " RGB Reconstruction - " + constants.IID_VERSION + constants.ITERATION)
 
             self.visdom_reporter.plot_image(rgb2albedo, str(label) + " RGB2Albedo images - " + constants.IID_VERSION + constants.ITERATION, True)
