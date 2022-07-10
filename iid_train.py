@@ -74,6 +74,7 @@ def update_config(opts):
         constants.rgb_dir_ws = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
         constants.rgb_dir_ns = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
         constants.albedo_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/albedo/"
+        constants.unlit_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/unlit/"
         constants.DATASET_PLACES_PATH = constants.rgb_dir_ws
 
         print("Using CCS configuration. Workers: ", opts.num_workers, "Path: ", opts.version_name)
