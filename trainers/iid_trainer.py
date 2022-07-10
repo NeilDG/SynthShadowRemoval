@@ -402,11 +402,8 @@ class IIDTrainer:
             self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY].append(D_S_fake_loss.item() + D_Z_fake_loss.item())
             self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_S_real_loss.item())
 
-    def train_albedo(self, input_rgb_tensor, albedo_tensor, unlit_tensor):
+    def train_albedo(self, input_rgb_tensor, albedo_tensor, unlit_tensor, shading_tensor, shadow_tensor):
         with amp.autocast():
-            self.G_S.eval()
-            self.G_Z.eval()
-
             if (self.albedo_mode == 2):
                 self.G_unlit.eval()
                 input = unlit_tensor
@@ -418,6 +415,7 @@ class IIDTrainer:
             # input_rgb_tensor = input_rgb_tensor * albedo_masks
             albedo_tensor = albedo_tensor * albedo_masks
             albedo_masks = torch.cat([albedo_masks, albedo_masks, albedo_masks], 1)
+            input = input * albedo_masks
 
             if(self.da_enabled == 1):
                 input = self.reshape_input(input)
@@ -459,7 +457,7 @@ class IIDTrainer:
             real_tensor = torch.ones_like(prediction)
             A_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            rgb_like = self.iid_op.produce_rgb(rgb2albedo, self.G_S(input), self.G_Z(input))
+            rgb_like = self.iid_op.produce_rgb(rgb2albedo, shading_tensor, shadow_tensor)
             rgb_l1_loss = self.l1_loss(rgb_like, input_rgb_tensor) * self.rgb_l1_weight
 
             errG = A_likeness_loss + A_lpip_loss + A_ssim_loss + A_gradient_loss + A_adv_loss + A_ms_grad_loss + A_reflective_loss + rgb_l1_loss
@@ -531,7 +529,7 @@ class IIDTrainer:
             # print("Difference between Albedo vs Recon: ", self.l1_loss(rgb2albedo, albedo_tensor).item())  #0.42321497201919556
 
             # self.visdom_reporter.plot_image(rgb_noshadow, str(label) + " Input RGB Images - Shadow " + constants.IID_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + constants.IID_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(input_rgb_tensor * mask_tensor, str(label) + " Input RGB Images - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(embedding_rep, str(label) + " Embedding Maps - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(unlit_tensor, str(label) + " Unlit Images - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(rgb_like, str(label) + " RGB Reconstruction - " + constants.IID_VERSION + constants.ITERATION)
@@ -628,6 +626,7 @@ class IIDTrainer:
                 rgb2mask = self.G_P(input)
                 rgb2mask = torch.round(rgb2mask)[:,0,:,:]
                 rgb2mask = torch.unsqueeze(rgb2mask, 1)
+                rgb_tensor = rgb_tensor * rgb2mask
 
                 input = self.reshape_input(rgb_tensor)
                 rgb2albedo = self.G_A(input)
