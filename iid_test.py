@@ -39,6 +39,7 @@ parser.add_option('--mode', type=str, default="azimuth")
 parser.add_option('--input_path', type=str)
 parser.add_option('--output_path', type=str)
 parser.add_option('--img_size', type=int, default=(256, 256))
+parser.add_option('--unlit_checkpt_file', type=str, default="")
 
 def measure_performance():
     visdom_reporter = plot_utils.VisdomReporter()
@@ -306,6 +307,7 @@ def main(argv):
     img_list = glob.glob(opts.input_path + "*.jpg") + glob.glob(opts.input_path + "*.png")
     print("Images found: ", len(img_list))
 
+    plot_utils.VisdomReporter.initialize()
     trainer = iid_trainer.IIDTrainer(device, opts)
     trainer.update_penalties(opts.adv_weight, opts.rgb_l1_weight)
 
@@ -350,7 +352,7 @@ def main(argv):
         input_tensor = tensor_utils.load_metric_compatible_img(input_path, cv2.COLOR_BGR2RGB, True, True, opts.img_size).to(device)
         input_tensor = normalize_op(input_tensor)
 
-        albedo_tensor, shading_tensor, shadow_tensor = trainer.decompose(input_tensor)
+        albedo_tensor, shading_tensor, shadow_tensor, _ = trainer.decompose(input_tensor)
         print(np.shape(albedo_tensor), np.shape(shading_tensor))
 
         albedo_tensor = albedo_tensor * 0.5 + 0.5
