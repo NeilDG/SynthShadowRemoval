@@ -3,9 +3,13 @@
 import os
 
 def test_relighting():
-    os.system("python \"iid_test.py\"  --net_config=4 --num_blocks=6 --version_name=\"iid_networkv8.04\" --albedo_mode=2 --iteration=13 "
+    os.system("python \"iid_test.py\"  --net_config=4 --num_blocks=6 --version_name=\"iid_networkv9.04\" --albedo_mode=2 --iteration=13 "
               "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
               "--unlit_checkpt_file=\"synth2unlit_v1.00_1.pt\" --input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
+
+    os.system("python \"iid_test.py\"  --net_config=4 --num_blocks=6 --version_name=\"iid_networkv9.04\" --albedo_mode=2 --iteration=14 "
+                  "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
+                  "--unlit_checkpt_file=\"synth2unlit_v1.00_1.pt\" --input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
 
 def main():
