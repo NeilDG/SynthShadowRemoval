@@ -115,7 +115,6 @@ def main(argv):
     (opts, args) = parser.parse_args(argv)
     update_config(opts)
     print(opts)
-    # torch.multiprocessing.set_sharing_strategy('file_system')
     print("=====================BEGIN============================")
     print("Server config? %d Has GPU available? %d Count: %d" % (constants.server_config, torch.cuda.is_available(), torch.cuda.device_count()))
     print("Torch CUDA version: %s" % torch.version.cuda)

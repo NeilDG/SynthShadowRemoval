@@ -191,131 +191,16 @@ class RelightDataset(data.Dataset):
         return self.img_length
 
 
-class IIDDataset(data.Dataset):
-    def __init__(self, img_length, rgb_dir, albedo_dir, shading_dir, shadow_dir, transform_config, opts):
-        self.img_length = img_length
-        self.albedo_dir = albedo_dir
-        self.shading_dir = shading_dir
-        self.shadow_dir = shadow_dir
-        self.rgb_dir = rgb_dir
-        self.transform_config = transform_config
-        self.patch_size = (opts.patch_size, opts.patch_size)
-        self.light_angles = [0, 36, 72, 108, 144]
-
-        self.initial_op = transforms.Compose([
-            transforms.ToPILImage(),
-            transforms.Resize((256, 256))])
-
-        self.normalize_op = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        self.normalize_op_grey = transforms.Normalize((0.5), (0.5))
-
-        if (transform_config == 1):
-            self.final_transform_op = transforms.Compose([
-                transforms.ToTensor()
-            ])
-
-            self.mask_op = transforms.Compose([
-                transforms.ToTensor()
-            ])
-
-        else:
-            self.final_transform_op = transforms.Compose([
-                transforms.Resize(constants.TEST_IMAGE_SIZE),
-                transforms.ToTensor()
-            ])
-
-            self.mask_op = transforms.Compose([
-                transforms.Resize(constants.TEST_IMAGE_SIZE),
-                transforms.ToTensor()
-            ])
-
-    def __getitem__(self, idx):
-        if(idx == 9586):
-            idx = np.random.randint(0, 9585) #TEMP FIX for missing PNG file
-
-        file_name = "synth_" + str(idx) + ".png"
-
-        img_a_path = self.albedo_dir + file_name
-        albedo = cv2.imread(img_a_path) #albedo
-        albedo = cv2.cvtColor(albedo, cv2.COLOR_BGR2RGB)
-
-        img_b_path = self.shading_dir + file_name
-        shading = cv2.imread(img_b_path) #shading
-        shading = cv2.cvtColor(shading, cv2.COLOR_BGR2GRAY)
-
-        #randomize light angle
-        light_angle_a = np.random.choice(self.light_angles)
-        # light_angle_a = 36
-        img_rgb_path = self.rgb_dir.format(input_light_angle=light_angle_a) + file_name
-        input_rgb = cv2.imread(img_rgb_path)  # input rgb
-        input_rgb = cv2.cvtColor(input_rgb, cv2.COLOR_BGR2RGB)
-
-        img_c_path = self.shadow_dir.format(input_light_angle=light_angle_a) + file_name
-        input_shadow_map = cv2.imread(img_c_path)  # target shadow map
-        input_shadow_map = cv2.cvtColor(input_shadow_map, cv2.COLOR_BGR2GRAY)
-
-        #randomize light_angle
-        light_angle_b = np.random.choice(self.light_angles)
-        while(light_angle_b == light_angle_a):
-            light_angle_b = np.random.choice(self.light_angles)
-        # light_angle_b = 144
-        img_c_path = self.shadow_dir.format(input_light_angle=light_angle_b) + file_name
-        target_shadow_map = cv2.imread(img_c_path) #target shadow map
-        target_shadow_map = cv2.cvtColor(target_shadow_map, cv2.COLOR_BGR2GRAY)
-
-        img_d_path = self.rgb_dir.format(input_light_angle=light_angle_b) + file_name
-        target_rgb = cv2.imread(img_d_path) #target rgb
-        target_rgb = cv2.cvtColor(target_rgb, cv2.COLOR_BGR2RGB)
-
-        input_rgb = self.initial_op(input_rgb)
-        albedo = self.initial_op(albedo)
-        shading = self.initial_op(shading)
-        input_shadow_map = self.initial_op(input_shadow_map)
-        target_shadow_map = self.initial_op(target_shadow_map)
-        target_rgb = self.initial_op(target_rgb)
-
-        if (self.transform_config == 1):
-            crop_indices = transforms.RandomCrop.get_params(shading, output_size=self.patch_size)
-            i, j, h, w = crop_indices
-
-            input_rgb = transforms.functional.crop(input_rgb, i, j, h, w)
-            albedo = transforms.functional.crop(albedo, i, j, h, w)
-            shading = transforms.functional.crop(shading, i, j, h, w)
-            input_shadow_map = transforms.functional.crop(input_shadow_map, i, j, h, w)
-            target_shadow_map = transforms.functional.crop(target_shadow_map, i, j, h, w)
-            target_rgb = transforms.functional.crop(target_rgb, i, j, h, w)
-
-        input_rgb = self.final_transform_op(input_rgb)
-        albedo = self.final_transform_op(albedo)
-        shading = self.final_transform_op(shading)
-        input_shadow_map = self.final_transform_op(input_shadow_map)
-        target_shadow_map = self.final_transform_op(target_shadow_map)
-        target_rgb = self.final_transform_op(target_rgb)
-
-        input_rgb = self.normalize_op(input_rgb)
-        albedo = self.normalize_op(albedo)
-        shading = self.normalize_op_grey(shading)
-        input_shadow_map = self.normalize_op_grey(input_shadow_map)
-        target_shadow_map = self.normalize_op_grey(target_shadow_map)
-        target_rgb = self.normalize_op(target_rgb)
-
-        light_angle_b = normalize(light_angle_b)
-        light_angle_tensor = torch.full_like(target_shadow_map[:, :, :], light_angle_b)
-
-        return file_name, input_rgb, albedo, shading, input_shadow_map, target_shadow_map, target_rgb, light_angle_tensor
-
-    def __len__(self):
-        return self.img_length
 
 class IIDDatasetV2(data.Dataset):
-    def __init__(self, img_length, rgb_list_ws, rgb_dir_ns, unlit_dir, albedo_dir, transform_config, opts):
+    def __init__(self, img_length, rgb_list_ws, rgb_dir_ns, unlit_dir, albedo_dir, transform_config, patch_size):
         self.img_length = img_length
         self.albedo_dir = albedo_dir
         self.unlit_dir = unlit_dir
         self.rgb_list_ws = rgb_list_ws
         self.rgb_dir_ns = rgb_dir_ns
         self.transform_config = transform_config
-        self.patch_size = (opts.patch_size, opts.patch_size)
+        self.patch_size = (patch_size, patch_size)
         self.light_angles = [0, 36, 72, 108, 144]
 
         self.initial_op = transforms.Compose([

@@ -45,9 +45,10 @@ class EarlyStopper():
         if(epoch >= self.min_epochs):
             self.test_metric_list.append(EarlyStopper.TestMetric(input, target))
 
-    def test(self, trainer, epoch, iteration):
+    def test(self, epoch):
         if(epoch < self.min_epochs):
             self.test_metric_list.clear()
+            self.stop_counter = -1
             return
 
         if(len(self.test_metric_list) == 0):
@@ -71,7 +72,7 @@ class EarlyStopper():
             self.last_metric = ave_D_loss
             self.stop_counter = 0
             print("Early stopping mechanism reset. Best metric is now ", self.last_metric.item())
-            trainer.save_states(epoch, iteration, self.last_metric)
+            # trainer.save_states(epoch, iteration, self.last_metric)
 
         if (self.stop_counter == self.early_stop_tolerance):
             self.stop_condition_met = True
@@ -79,6 +80,8 @@ class EarlyStopper():
 
         return self.stop_condition_met
 
+    def has_reset(self):
+        return (self.stop_counter == 0)
     def did_stop_condition_met(self):
         return self.stop_condition_met
 

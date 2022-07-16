@@ -96,8 +96,6 @@ class IIDTransform(nn.Module):
 
         return final_albedo, final_shading
 
-
-
     def extract_shadow(self, rgb_tensor_ws, rgb_tensor_ns, one_channel = False):
         min = 0.0
         max = 1.0
@@ -148,4 +146,5 @@ class IIDTransform(nn.Module):
         rgb_recon = albedo_tensor * shading_tensor * shadow_tensor
         rgb_recon = torch.clip(rgb_recon, 0.0, 1.0)
         return rgb_recon
+
 

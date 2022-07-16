@@ -86,33 +86,7 @@ def load_relighting_test_dataset(rgb_dir, albedo_dir, scene_root, opts):
 
     return data_loader
 
-def load_map_train_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts):
-    img_length = len(assemble_unpaired_data(rgb_dir, opts.img_to_load))
-    print("Length of images: %d" % img_length)
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.IIDDataset(img_length, rgb_dir, albedo_dir, shading_dir, shadow_dir, 1, opts),
-        batch_size=opts.batch_size,
-        num_workers=opts.num_workers,
-        shuffle=True
-    )
-
-    return data_loader
-
-def load_map_test_recursive(rgb_dir, albedo_dir, shading_dir, shadow_dir, opts):
-    img_length = len(assemble_unpaired_data(rgb_dir, opts.img_to_load))
-    print("Length of images: %d" % img_length)
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.IIDDataset(img_length, rgb_dir, albedo_dir, shading_dir, shadow_dir, 2, opts),
-        batch_size=4,
-        num_workers=1,
-        shuffle=True
-    )
-
-    return data_loader
-
-def load_iid_datasetv2_train(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, opts):
+def load_iid_datasetv2_train(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, patch_size, batch_size, opts):
     rgb_list_ws = glob.glob(rgb_dir_ws)
     random.shuffle(rgb_list_ws)
     if (opts.img_to_load > 0):
@@ -125,15 +99,15 @@ def load_iid_datasetv2_train(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, opts
     print("Length of images: %d" % img_length)
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.IIDDatasetV2(img_length, rgb_list_ws, rgb_dir_ns, unlit_dir, albedo_dir, 1, opts),
-        batch_size=opts.batch_size,
+        image_dataset.IIDDatasetV2(img_length, rgb_list_ws, rgb_dir_ns, unlit_dir, albedo_dir, 1, patch_size),
+        batch_size=batch_size,
         num_workers=opts.num_workers,
         shuffle=True
     )
 
     return data_loader
 
-def load_iid_datasetv2_test(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, opts):
+def load_iid_datasetv2_test(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, patch_size, opts):
     rgb_list_ws = glob.glob(rgb_dir_ws)
     random.shuffle(rgb_list_ws)
     if (opts.img_to_load > 0):
@@ -146,7 +120,7 @@ def load_iid_datasetv2_test(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, opts)
     print("Length of images: %d" % img_length)
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.IIDDatasetV2(img_length, rgb_list_ws, rgb_dir_ns, unlit_dir, albedo_dir, 2, opts),
+        image_dataset.IIDDatasetV2(img_length, rgb_list_ws, rgb_dir_ns, unlit_dir, albedo_dir, 2, patch_size),
         batch_size=4,
         num_workers=1,
         shuffle=False

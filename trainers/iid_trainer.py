@@ -82,7 +82,6 @@ class IIDTrainer:
         self.schedulerD_shading = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD_shading, patience=100000 / self.batch_size, threshold=0.00005)
 
         self.initialize_dict()
-
         self.fp16_scaler = amp.GradScaler()  # for automatic mixed precision
 
     def initialize_da_network(self, da_version_name):
@@ -249,14 +248,6 @@ class IIDTrainer:
 
         self.caption_dict_p = {}
         self.caption_dict_p[constants.LIKENESS_LOSS_KEY] = "Classifier loss per iteration"
-
-    def normalize(self, light_angle):
-        std = light_angle / 360.0
-        min = -1.0
-        max = 1.0
-        scaled = std * (max - min) + min
-
-        return scaled
 
     def adversarial_loss(self, pred, target):
         if (self.use_bce == 0):
@@ -500,7 +491,7 @@ class IIDTrainer:
             mask_loss = self.bce_loss(self.G_P(input), output)
             self.fp16_scaler.scale(mask_loss).backward()
             self.fp16_scaler.step(self.optimizerP)
-            self.schedulerG_shading.step(mask_loss)
+            self.schedulerP.step(mask_loss)
             self.fp16_scaler.update()
 
             # what to put to losses dict for visdom reporting?

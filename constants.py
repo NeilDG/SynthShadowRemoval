@@ -57,6 +57,9 @@ SHADING_CHECKPATH = 'checkpoint/' + SHADING_VERSION + "_" + ITERATION + '.pt'
 SHADOWMAP_CHECKPATH = 'checkpoint/' + SHADOWMAP_VERSION + "_" + ITERATION + '.pt'
 SHADOWMAP_RELIGHT_CHECKPATH = 'checkpoint/' + SHADOWMAP_RELIGHT_VERSION + "_" + ITERATION + '.pt'
 
+ALBEDO_MASK_VERSION = "rgb2mask_v1.00"
+ALBEDO_MASK_CHECKPATH = 'checkpoint/' + ALBEDO_MASK_VERSION + "_" + ITERATION + '.pt'
+
 # dictionary keys
 G_LOSS_KEY = "g_loss"
 IDENTITY_LOSS_KEY = "id"
