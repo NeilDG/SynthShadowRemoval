@@ -30,13 +30,6 @@ class AlbedoMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def initialize_train_config(self, opts):
         self.iteration = opts.iteration
-        self.da_enabled = opts.da_enabled
-
-        if(self.da_enabled):
-            self.input_nc = 6
-        else:
-            self.input_nc = 3
-
 
         self.bce_loss = nn.BCEWithLogitsLoss()
 
@@ -46,6 +39,7 @@ class AlbedoMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         general_config = sc_instance.get_general_configs()
         network_config = sc_instance.interpret_network_config_from_version(opts.version)
         self.batch_size = network_config["batch_size_p"]
+        self.da_enabled = network_config["da_enabled"]
 
         self.iid_op = iid_transforms.IIDTransform().to(self.gpu_device)
         self.fp16_scaler = amp.GradScaler()  # for automatic mixed precision
@@ -54,16 +48,15 @@ class AlbedoMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.stopper_method = early_stopper.EarlyStopper(min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, constants.early_stop_threshold, 99999.9)
         self.stop_result = False
 
-        self.initialize_parsing_network()
-        self.initialize_da_network(opts.da_version_name)
+        self.initialize_parsing_network(network_config["nc"])
         self.initialize_dict()
 
         self.NETWORK_VERSION = sc_instance.get_version_config("network_p_name", self.iteration)
         self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
         self.load_saved_state()
 
-    def initialize_parsing_network(self):
-        self.G_P = unet_gan.UNetClassifier(num_channels=self.input_nc, num_classes=2).to(self.gpu_device)
+    def initialize_parsing_network(self, input_nc):
+        self.G_P = unet_gan.UNetClassifier(num_channels=input_nc, num_classes=2).to(self.gpu_device)
         self.optimizerP = torch.optim.Adam(itertools.chain(self.G_P.parameters()), lr=self.g_lr)
         self.schedulerP = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerP, patience=100000 / self.batch_size, threshold=0.00005)
 
@@ -73,18 +66,6 @@ class AlbedoMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         self.caption_dict_p = {}
         self.caption_dict_p[constants.LIKENESS_LOSS_KEY] = "Classifier loss per iteration"
-
-    def reshape_input(self, input_tensor):
-        rgb_embedding, w1, w2, w3 = self.embedder.get_embedding(input_tensor)
-        rgb_feature_rep = self.decoder_fixed.get_decoding(input_tensor, rgb_embedding, w1, w2, w3)
-
-        return torch.cat([input_tensor, rgb_feature_rep], 1)
-
-    def get_feature_rep(self, input_tensor):
-        rgb_embedding, w1, w2, w3 = self.embedder.get_embedding(input_tensor)
-        rgb_feature_rep = self.decoder_fixed.get_decoding(input_tensor, rgb_embedding, w1, w2, w3)
-
-        return rgb_feature_rep
 
     def train(self, epoch, iteration, input_map, target_map):
         input_rgb_tensor = input_map["rgb"]

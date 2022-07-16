@@ -2,10 +2,8 @@
 
 import os
 def train_relighting():
-    os.system("python \"iid_train_v2.py\" --server_config=6 --img_to_load=100 --test_mode=0 "
-              "--net_config=4 --num_blocks=6 "
-              "--plot_enabled=1 --version=\"v9.00\" --iteration=15 "
-              "--unlit_checkpt_file=\"synth2unlit_v1.00_1.pt\" --da_enabled=1 --da_version_name=\"embedding_v5.00_5\"")
+    os.system("python \"iid_train_v2.py\" --server_config=6 --img_to_load=500 --test_mode=0 "
+              "--net_config=4 --num_blocks=6 --plot_enabled=1 --version=\"v9.00\" --iteration=15")
 
 
 def train_domain_adaptation():

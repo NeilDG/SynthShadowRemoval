@@ -24,8 +24,6 @@ parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
 parser.add_option('--version', type=str, default="")
 parser.add_option('--iteration', type=int, help="Style version?", default="1")
-parser.add_option('--da_enabled', type=int, default=0)
-parser.add_option('--da_version_name', type=str, default="")
 parser.add_option('--num_blocks', type=int)
 parser.add_option('--net_config', type=int)
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
@@ -33,7 +31,6 @@ parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--test_mode', type=int, help="Test mode?", default=0)
 parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
-parser.add_option('--unlit_checkpt_file', type=str, default="")
 
 def update_config(opts):
     constants.server_config = opts.server_config
@@ -118,8 +115,8 @@ def main(argv):
     tf = trainer_factory.TrainerFactory(device, opts)
     iid_op = iid_transforms.IIDTransform()
 
-    # for mode in (["train_albedo_mask", "train_albedo", "train_shading"]):
-    for mode in (["train_albedo", "train_shading"]):
+    for mode in (["train_albedo_mask", "train_albedo", "train_shading"]):
+    # for mode in (["train_albedo", "train_shading"]):
         patch_size = general_config[mode]["patch_size"]
         batch_size = sc_instance.get_batch_size_from_mode(mode, network_config)
         train_loader = dataset_loader.load_iid_datasetv2_train(constants.rgb_dir_ws, constants.rgb_dir_ns, constants.unlit_dir, constants.albedo_dir, patch_size, batch_size, opts)
@@ -127,6 +124,8 @@ def main(argv):
         rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
 
         print("Started Training loop for mode: ", mode)
+        iteration = 0
+
         for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
             for i, (train_data, test_data, rw_data) in enumerate(zip(train_loader, test_loader, itertools.cycle(rw_loader))):
                 _, rgb_ws_batch, rgb_ns_batch, albedo_batch, unlit_batch = train_data
@@ -140,10 +139,13 @@ def main(argv):
                 target_map = input_map
 
                 tf.train(mode, epoch, iteration, input_map, target_map)
+                iteration = iteration + 1
+
                 if(tf.is_stop_condition_met(mode)):
                     break
 
                 if (i % 300 == 0):
+                    tf.visdom_plot(mode, iteration)
                     tf.visdom_visualize(mode, input_map, "Train")
 
                     _, rgb_ws_batch, rgb_ns_batch, albedo_batch, unlit_batch = test_data

@@ -31,14 +31,8 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.iteration = opts.iteration
         self.it_table = iteration_table.IterationTable()
         self.use_bce = self.it_table.is_bce_enabled(self.iteration, IterationTable.NetworkType.ALBEDO)
-        self.da_enabled = opts.da_enabled
         self.adv_weight = self.it_table.get_adv_weight()
         self.rgb_l1_weight = self.it_table.get_rgb_recon_weight()
-
-        if (self.da_enabled):
-            self.input_nc = 6
-        else:
-            self.input_nc = 3
 
         self.lpips_loss = lpips.LPIPS(net='vgg').to(self.gpu_device)
         self.ssim_loss = kornia.losses.SSIMLoss(5)
@@ -58,6 +52,7 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         general_config = sc_instance.get_general_configs()
         network_config = sc_instance.interpret_network_config_from_version(opts.version)
+        self.da_enabled = network_config["da_enabled"]
         self.batch_size = network_config["batch_size_a"]
         self.albedo_mode = network_config["albedo_mode"]
 
@@ -65,7 +60,6 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.stop_result = False
 
         self.initialize_dict()
-        self.initialize_da_network(opts.da_version_name)
         self.initialize_albedo_network(network_config["net_config"], network_config["num_blocks"], network_config["nc"])
 
         self.NETWORK_VERSION = sc_instance.get_version_config("network_a_name", self.iteration)
@@ -150,19 +144,6 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         result = torch.squeeze(self.lpips_loss(pred, target))
         result = torch.mean(result)
         return result
-
-    def reshape_input(self, input_tensor):
-        rgb_embedding, w1, w2, w3 = self.embedder.get_embedding(input_tensor)
-        rgb_feature_rep = self.decoder_fixed.get_decoding(input_tensor, rgb_embedding, w1, w2, w3)
-
-        return torch.cat([input_tensor, rgb_feature_rep], 1)
-
-    def get_feature_rep(self, input_tensor):
-        rgb_embedding, w1, w2, w3 = self.embedder.get_embedding(input_tensor)
-        rgb_feature_rep = self.decoder_fixed.get_decoding(input_tensor, rgb_embedding, w1, w2, w3)
-
-        return rgb_feature_rep
-
     def train(self, epoch, iteration, input_map, target_map):
         input_rgb_tensor = input_map["rgb"]
         unlit_tensor = input_map["unlit"]

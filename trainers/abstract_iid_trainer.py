@@ -12,14 +12,21 @@ class AbstractIIDTrainer():
         self.g_lr = opts.g_lr
         self.d_lr = opts.d_lr
 
-    def initialize_da_network(self, da_version_name):
-        self.embedder = embedding_network.EmbeddingNetworkFFA(blocks=6).to(self.gpu_device)
-        checkpoint = torch.load("checkpoint/" + da_version_name + ".pt", map_location=self.gpu_device)
-        self.embedder.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
-        print("Loaded embedding network: ", da_version_name)
+    def assign_embedder_decoder(self, embedder, decoder):
+        self.embedder = embedder
+        self.decoder = decoder
 
-        self.decoder_fixed = embedding_network.DecodingNetworkFFA().to(self.gpu_device)
-        print("Loaded fixed decoder network")
+    def reshape_input(self, input_tensor):
+        rgb_embedding, w1, w2, w3 = self.embedder.get_embedding(input_tensor)
+        rgb_feature_rep = self.decoder.get_decoding(input_tensor, rgb_embedding, w1, w2, w3)
+
+        return torch.cat([input_tensor, rgb_feature_rep], 1)
+
+    def get_feature_rep(self, input_tensor):
+        rgb_embedding, w1, w2, w3 = self.embedder.get_embedding(input_tensor)
+        rgb_feature_rep = self.decoder.get_decoding(input_tensor, rgb_embedding, w1, w2, w3)
+
+        return rgb_feature_rep
 
     @abstractmethod
     def initialize_train_config(self, opts):
