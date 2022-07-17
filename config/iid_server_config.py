@@ -57,7 +57,7 @@ class IIDServerConfig():
             network_config[NETWORK_CONFIG_NUM] = 2
             network_config[NC_KEY] = 6
             network_config[NUM_BLOCKS_KEY] = 1
-            network_config[ALBEDO_MODE_KEY] = 2
+            network_config[ALBEDO_MODE_KEY] = 1
             network_config[DA_ENABLED] = 1
 
             # configure batch sizes
@@ -86,7 +86,7 @@ class IIDServerConfig():
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 6
             network_config[NUM_BLOCKS_KEY] = 4
-            network_config[ALBEDO_MODE_KEY] = 2
+            network_config[ALBEDO_MODE_KEY] = 1
             network_config[DA_ENABLED] = 1
 
             # configure batch sizes
@@ -115,7 +115,7 @@ class IIDServerConfig():
             network_config[NETWORK_CONFIG_NUM] = 5
             network_config[NC_KEY] = 6
             network_config[NUM_BLOCKS_KEY] = 6
-            network_config[ALBEDO_MODE_KEY] = 2
+            network_config[ALBEDO_MODE_KEY] = 1
             network_config[DA_ENABLED] = 1
 
             # configure batch sizes

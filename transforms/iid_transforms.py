@@ -56,7 +56,7 @@ class IIDTransform(nn.Module):
 
         rgb_recon = self.produce_rgb(albedo_refined, shading_refined, shadows_refined, False)
 
-        loss_op = nn.L1Loss()
+        # loss_op = nn.L1Loss()
         # print("Difference between RGB vs Recon: ", loss_op(rgb_recon, rgb_ws).item()) #0.06624698638916016
 
         rgb_recon = self.transform_op(rgb_recon)
@@ -84,12 +84,10 @@ class IIDTransform(nn.Module):
         min = 0.0
         max = 1.0
 
-        albedo_log = torch.log(self.mask_fill_nonzeros(albedo_tensor))
-        rgb_log = torch.log(rgb_tensor)
+        final_shading = self.extract_shading(rgb_tensor, albedo_tensor)
+        final_shading = self.mask_fill_nonzeros(final_shading)
 
-        shading_log = rgb_log - albedo_log
-        final_albedo = torch.exp(albedo_log)
-        final_shading = torch.exp(shading_log)
+        final_albedo = rgb_tensor / final_shading
 
         final_albedo = torch.clip(final_albedo, min, max)
         final_shading = torch.clip(final_shading, min, max)

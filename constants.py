@@ -96,4 +96,5 @@ rgb_dir_ns = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
 unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
 
 imgx_dir = "E:/Places Dataset/*.jpg"
-imgy_dir = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"
+# imgy_dir = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"
+imgy_dir = "E:/SynthWeather Dataset 8/albedo/*.png"
