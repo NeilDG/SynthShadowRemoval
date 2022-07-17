@@ -66,9 +66,11 @@ def update_config(opts):
 
     elif (constants.server_config == 4):
         opts.num_workers = 6
-        constants.DATASET_PLACES_PATH = "D:/Datasets/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "D:/Datasets/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.albedo_dir = "D:/Datasets/SynthWeather Dataset 8/albedo/"
+        constants.DATASET_PLACES_PATH = "C:/Datasets/Places Dataset/*.jpg"
+        constants.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+        constants.albedo_dir = "C:/Datasets/SynthWeather Dataset 8/albedo/"
+        constants.unlit_dir = "C:/Datasets/SynthWeather Dataset 8/unlit/"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers)
     else:
