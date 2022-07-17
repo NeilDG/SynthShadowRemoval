@@ -24,8 +24,6 @@ parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
 parser.add_option('--version', type=str, default="")
 parser.add_option('--iteration', type=int, help="Style version?", default="1")
-parser.add_option('--num_blocks', type=int)
-parser.add_option('--net_config', type=int)
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
@@ -104,8 +102,7 @@ def main(argv):
     start_epoch = 0
     iteration = 0
 
-
-    iid_server_config.IIDServerConfig.initialize()
+    iid_server_config.IIDServerConfig.initialize(opts.version)
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
     general_config = sc_instance.get_general_configs()
     network_config = sc_instance.interpret_network_config_from_version(opts.version)

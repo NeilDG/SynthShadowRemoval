@@ -4,15 +4,15 @@ class IIDServerConfig():
     _sharedInstance = None
 
     @staticmethod
-    def initialize():
+    def initialize(version):
         if(IIDServerConfig._sharedInstance == None):
-            IIDServerConfig._sharedInstance = IIDServerConfig()
+            IIDServerConfig._sharedInstance = IIDServerConfig(version)
 
     @staticmethod
     def getInstance():
         return IIDServerConfig._sharedInstance
 
-    def __init__(self):
+    def __init__(self, version):
         # COARE, CCS CLOUD, GCLOUD, RTX 2080TI, RTX 3090
         if(constants.server_config <= 5):
             self.general_configs = {"train_albedo_mask": {"min_epochs": 50, "max_epochs" : 200, "patch_size": 256},
@@ -22,12 +22,12 @@ class IIDServerConfig():
 
         #debug
         else:
-            self.general_configs = {"train_albedo_mask": {"min_epochs": 1, "max_epochs" : 3, "patch_size": 256},
-                                   "train_albedo": {"min_epochs": 1,"max_epochs" : 3, "patch_size": 64},
-                                   "train_shading": {"min_epochs": 1,"max_epochs" : 3, "patch_size": 64}}
+            self.general_configs = {"train_albedo_mask": {"min_epochs": 1, "max_epochs" : 10, "patch_size": 256},
+                                   "train_albedo": {"min_epochs": 1,"max_epochs" : 10, "patch_size": 64},
+                                   "train_shading": {"min_epochs": 1,"max_epochs" : 10, "patch_size": 64}}
 
 
-        self.version_config = {"version": "v9.00", "network_p_name": "rgb2mask", "network_a_name" : "rgb2albedo", "network_s_name" : "rgb2shading"}
+        self.version_config = {"version": version, "network_p_name": "rgb2mask", "network_a_name" : "rgb2albedo", "network_s_name" : "rgb2shading"}
 
 
     def get_general_configs(self):
@@ -92,24 +92,24 @@ class IIDServerConfig():
             # configure batch sizes
             if (constants.server_config == 1):  # COARE
                 network_config[BATCH_SIZE_KEY_P] = 16
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
-            elif (constants.server_config == 2):  # CCS JUPYTER
-                network_config[BATCH_SIZE_KEY_P] = 16
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
-            elif (constants.server_config == 3):  # GCLOUD
-                network_config[BATCH_SIZE_KEY_P] = 16
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
-            elif (constants.server_config == 4):  # RTX 2080Ti
-                network_config[BATCH_SIZE_KEY_P] = 8
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[BATCH_SIZE_KEY_P] = 16
+                network_config[BATCH_SIZE_KEY_A] = 128
+                network_config[BATCH_SIZE_KEY_S] = 128
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[BATCH_SIZE_KEY_P] = 16
+                network_config[BATCH_SIZE_KEY_A] = 128
+                network_config[BATCH_SIZE_KEY_S] = 128
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[BATCH_SIZE_KEY_P] = 8
+                network_config[BATCH_SIZE_KEY_A] = 64
+                network_config[BATCH_SIZE_KEY_S] = 64
             else:  # RTX 3090
                 network_config[BATCH_SIZE_KEY_P] = 16
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
+                network_config[BATCH_SIZE_KEY_A] = 128
+                network_config[BATCH_SIZE_KEY_S] = 128
 
         elif (version == "v9.02"):  # FFA
             network_config[NETWORK_CONFIG_NUM] = 5

@@ -49,7 +49,6 @@ class ShadingTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.fp16_scaler = amp.GradScaler()  # for automatic mixed precision
 
         self.visdom_reporter = plot_utils.VisdomReporter.getInstance()
-        iid_server_config.IIDServerConfig.initialize()
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         general_config = sc_instance.get_general_configs()
         network_config = sc_instance.interpret_network_config_from_version(opts.version)
@@ -73,48 +72,12 @@ class ShadingTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.load_saved_state()
 
     def initialize_shading_network(self, net_config, num_blocks, input_nc):
-        if (net_config == 1):
-            self.G_S = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
-        elif (net_config == 2):
-            self.G_S = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
-        elif (net_config == 3):
-            self.G_S = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
-        elif (net_config == 4):
-            params = {'dim': 64,  # number of filters in the bottommost layer
-                      'mlp_dim': 256,  # number of filters in MLP
-                      'style_dim': 8,  # length of style code
-                      'n_layer': 3,  # number of layers in feature merger/splitor
-                      'activ': 'relu',  # activation function [relu/lrelu/prelu/selu/tanh]
-                      'n_downsample': 2,  # number of downsampling layers in content encoder
-                      'n_res': num_blocks,  # number of residual blocks in content encoder/decoder
-                      'pad_type': 'reflect'}
-            self.G_S = usi3d_gan.AdaINGen(input_dim=input_nc, output_dim=3, params=params).to(self.gpu_device)
-        else:
-            self.G_S = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
-
-        self.D_S = cycle_gan.Discriminator(input_nc=3).to(self.gpu_device)  # use CycleGAN's discriminator
+        network_creator = abstract_iid_trainer.NetworkCreator(self.gpu_device)
+        self.G_S, self.D_S = network_creator.initialize_shading_network(net_config, num_blocks, input_nc)
 
     def initialize_shadow_network(self, net_config, num_blocks, input_nc):
-        if (net_config == 1):
-            self.G_Z = cycle_gan.Generator(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks).to(self.gpu_device)
-        elif (net_config == 2):
-            self.G_Z = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
-        elif (net_config == 3):
-            self.G_Z = cycle_gan.Generator(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
-        elif (net_config == 4):
-            params = {'dim': 64,  # number of filters in the bottommost layer
-                      'mlp_dim': 256,  # number of filters in MLP
-                      'style_dim': 8,  # length of style code
-                      'n_layer': 3,  # number of layers in feature merger/splitor
-                      'activ': 'relu',  # activation function [relu/lrelu/prelu/selu/tanh]
-                      'n_downsample': 2,  # number of downsampling layers in content encoder
-                      'n_res': num_blocks,  # number of residual blocks in content encoder/decoder
-                      'pad_type': 'reflect'}
-            self.G_Z = usi3d_gan.AdaINGen(input_dim=input_nc, output_dim=1, params=params).to(self.gpu_device)
-        else:
-            self.G_Z = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
-
-        self.D_Z = cycle_gan.Discriminator(input_nc=1).to(self.gpu_device)  # use CycleGAN's discriminator
+        network_creator = abstract_iid_trainer.NetworkCreator(self.gpu_device)
+        self.G_Z, self.D_Z = network_creator.initialize_shadow_network(net_config, num_blocks, input_nc)
 
     def adversarial_loss(self, pred, target):
         if (self.use_bce == 0):

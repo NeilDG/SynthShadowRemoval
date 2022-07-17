@@ -1,25 +1,13 @@
 from config import iid_server_config
 from trainers import abstract_iid_trainer, early_stopper
-import kornia
-from model import iteration_table, embedding_network
-from model import ffa_gan as ffa
-from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
-from model import usi3d_gan
-from model.modules import image_pool
 import constants
 import torch
 import torch.cuda.amp as amp
 import itertools
-import numpy as np
 import torch.nn as nn
-from model.iteration_table import IterationTable
-from trainers import paired_trainer
 from transforms import iid_transforms
 from utils import plot_utils
-from utils import tensor_utils
-from custom_losses import ssim_loss, iid_losses
-import lpips
 
 class AlbedoMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
@@ -34,7 +22,6 @@ class AlbedoMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.bce_loss = nn.BCEWithLogitsLoss()
 
         self.visdom_reporter = plot_utils.VisdomReporter.getInstance()
-        iid_server_config.IIDServerConfig.initialize()
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         general_config = sc_instance.get_general_configs()
         network_config = sc_instance.interpret_network_config_from_version(opts.version)
@@ -56,7 +43,8 @@ class AlbedoMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.load_saved_state()
 
     def initialize_parsing_network(self, input_nc):
-        self.G_P = unet_gan.UNetClassifier(num_channels=input_nc, num_classes=2).to(self.gpu_device)
+        network_creator = abstract_iid_trainer.NetworkCreator(self.gpu_device)
+        self.G_P = network_creator.initialize_parsing_network(input_nc)
         self.optimizerP = torch.optim.Adam(itertools.chain(self.G_P.parameters()), lr=self.g_lr)
         self.schedulerP = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerP, patience=100000 / self.batch_size, threshold=0.00005)
 

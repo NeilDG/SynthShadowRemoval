@@ -48,7 +48,6 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.fp16_scaler = amp.GradScaler()  # for automatic mixed precision
 
         self.visdom_reporter = plot_utils.VisdomReporter.getInstance()
-        iid_server_config.IIDServerConfig.initialize()
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         general_config = sc_instance.get_general_configs()
         network_config = sc_instance.interpret_network_config_from_version(opts.version)
@@ -67,27 +66,8 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.load_saved_state()
 
     def initialize_albedo_network(self, net_config, num_blocks, input_nc):
-        if (net_config == 1):
-            self.G_A = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
-        elif (net_config == 2):
-            self.G_A = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
-        elif (net_config == 3):
-            self.G_A = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
-        elif(net_config == 4):
-            params = {'dim': 64,                     # number of filters in the bottommost layer
-                      'mlp_dim': 256,                # number of filters in MLP
-                      'style_dim': 8,                # length of style code
-                      'n_layer': 3,                  # number of layers in feature merger/splitor
-                      'activ': 'relu',               # activation function [relu/lrelu/prelu/selu/tanh]
-                      'n_downsample': 2,             # number of downsampling layers in content encoder
-                      'n_res': num_blocks,                    # number of residual blocks in content encoder/decoder
-                      'pad_type': 'reflect'}
-            self.G_A = usi3d_gan.AdaINGen(input_dim=input_nc, output_dim=3, params=params).to(self.gpu_device)
-        else:
-            self.G_A = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
-
-        self.D_A = cycle_gan.Discriminator(input_nc=3).to(self.gpu_device)  # use CycleGAN's discriminator
-
+        network_creator = abstract_iid_trainer.NetworkCreator(self.gpu_device)
+        self.G_A, self.D_A = network_creator.initialize_albedo_network(net_config, num_blocks, input_nc)
         self.optimizerG_albedo = torch.optim.Adam(itertools.chain(self.G_A.parameters()), lr=self.g_lr)
         self.optimizerD_albedo = torch.optim.Adam(itertools.chain(self.D_A.parameters()), lr=self.d_lr)
         self.schedulerG_albedo = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG_albedo, patience=100000 / self.batch_size, threshold=0.00005)
@@ -144,6 +124,7 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         result = torch.squeeze(self.lpips_loss(pred, target))
         result = torch.mean(result)
         return result
+
     def train(self, epoch, iteration, input_map, target_map):
         input_rgb_tensor = input_map["rgb"]
         unlit_tensor = input_map["unlit"]
@@ -238,7 +219,6 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         with torch.no_grad():
             input_rgb_tensor = input_map["rgb"]
             unlit_tensor = input_map["unlit"]
-            mask_tensor = self.iid_op.create_sky_reflection_masks(input_map["albedo"])
 
             if (self.albedo_mode == 2):
                 input = unlit_tensor
@@ -248,7 +228,7 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             if (self.da_enabled == 1):
                 input = self.reshape_input(input)
 
-            rgb2albedo = self.G_A(input) * mask_tensor
+            rgb2albedo = self.G_A(input)
         return rgb2albedo
 
     def visdom_plot(self, iteration):
