@@ -74,6 +74,7 @@ class IIDTrainer:
         if(self.albedo_mode == 2):
             self.initialize_unlit_network(3, opts)
 
+
         self.visdom_reporter = plot_utils.VisdomReporter.getInstance()
         self.optimizerG_shading = torch.optim.Adam(itertools.chain(self.G_S.parameters(), self.G_Z.parameters()), lr=self.g_lr)
         self.optimizerD_shading = torch.optim.Adam(itertools.chain(self.D_S.parameters(), self.D_Z.parameters()), lr=self.d_lr)
@@ -81,7 +82,6 @@ class IIDTrainer:
         self.schedulerD_shading = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD_shading, patience=100000 / self.batch_size, threshold=0.00005)
 
         self.initialize_dict()
-
         self.fp16_scaler = amp.GradScaler()  # for automatic mixed precision
 
     def initialize_da_network(self, da_version_name):
@@ -164,11 +164,11 @@ class IIDTrainer:
 
     def initialize_shadow_network(self, net_config, num_blocks, input_nc):
         if (net_config == 1):
-            self.G_Z = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
+            self.G_Z = cycle_gan.Generator(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks).to(self.gpu_device)
         elif (net_config == 2):
-            self.G_Z = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
+            self.G_Z = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
-            self.G_Z = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
+            self.G_Z = cycle_gan.Generator(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
         elif (net_config == 4):
             params = {'dim': 64,  # number of filters in the bottommost layer
                       'mlp_dim': 256,  # number of filters in MLP
@@ -178,11 +178,11 @@ class IIDTrainer:
                       'n_downsample': 2,  # number of downsampling layers in content encoder
                       'n_res': num_blocks,  # number of residual blocks in content encoder/decoder
                       'pad_type': 'reflect'}
-            self.G_Z = usi3d_gan.AdaINGen(input_dim=input_nc, output_dim=3, params=params).to(self.gpu_device)
+            self.G_Z = usi3d_gan.AdaINGen(input_dim=input_nc, output_dim=1, params=params).to(self.gpu_device)
         else:
-            self.G_Z = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
+            self.G_Z = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
-        self.D_Z = cycle_gan.Discriminator(input_nc=3).to(self.gpu_device)  # use CycleGAN's discriminator
+        self.D_Z = cycle_gan.Discriminator(input_nc=1).to(self.gpu_device)  # use CycleGAN's discriminator
 
     def initialize_dict(self):
         # what to store in visdom?
@@ -248,14 +248,6 @@ class IIDTrainer:
 
         self.caption_dict_p = {}
         self.caption_dict_p[constants.LIKENESS_LOSS_KEY] = "Classifier loss per iteration"
-
-    def normalize(self, light_angle):
-        std = light_angle / 360.0
-        min = -1.0
-        max = 1.0
-        scaled = std * (max - min) + min
-
-        return scaled
 
     def adversarial_loss(self, pred, target):
         if (self.use_bce == 0):
@@ -499,7 +491,7 @@ class IIDTrainer:
             mask_loss = self.bce_loss(self.G_P(input), output)
             self.fp16_scaler.scale(mask_loss).backward()
             self.fp16_scaler.step(self.optimizerP)
-            self.schedulerG_shading.step(mask_loss)
+            self.schedulerP.step(mask_loss)
             self.fp16_scaler.update()
 
             # what to put to losses dict for visdom reporting?

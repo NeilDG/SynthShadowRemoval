@@ -104,6 +104,12 @@ class IterationTable():
     def is_bce_enabled(self, iteration, network_type: NetworkType):
         return self.iteration_table[str(iteration) + str(network_type)].is_bce_enabled()
 
+    def get_rgb_recon_weight(self):
+        return 1.0
+
+    def get_adv_weight(self):
+        return 1.0
+
 class IterationParameters():
     #6 weights total
     def __init__(self, iteration, weight_list, is_bce):

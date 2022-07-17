@@ -3,21 +3,17 @@
 import os
 
 def test_relighting():
-    os.system("python \"iid_test.py\"  --net_config=3 --num_blocks=6 --version_name=\"iid_networkv7.07\" --albedo_mode=0 --iteration=5 "
-              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
+    os.system("python \"iid_test_v2.py\" --server_config=6 --img_to_load=500 --test_mode=0 "
+              "--plot_enabled=1 --version=\"v9.00\" --iteration=15 "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
-    os.system("python \"iid_test.py\"  --net_config=3 --num_blocks=6 --version_name=\"iid_networkv7.07\" --albedo_mode=1 --iteration=6 "
-              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
-              "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
-
-    os.system("python \"iid_test.py\"  --net_config=3 --num_blocks=6 --version_name=\"iid_networkv7.07\" --albedo_mode=1 --iteration=7 "
-              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
-              "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
-
-    os.system("python \"iid_test.py\"  --net_config=3 --num_blocks=6 --version_name=\"iid_networkv7.07\" --albedo_mode=1 --iteration=8 "
-              "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
-              "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
+    # os.system("python \"iid_test.py\"  --net_config=4 --num_blocks=6 --version_name=\"iid_networkv9.04\" --albedo_mode=2 --iteration=13 "
+    #           "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
+    #           "--unlit_checkpt_file=\"synth2unlit_v1.00_1.pt\" --input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
+    #
+    # os.system("python \"iid_test.py\"  --net_config=4 --num_blocks=6 --version_name=\"iid_networkv9.04\" --albedo_mode=2 --iteration=14 "
+    #               "--da_enabled=1 --da_version_name=\"embedding_v5.00_5\" "
+    #               "--unlit_checkpt_file=\"synth2unlit_v1.00_1.pt\" --input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
 
 def main():

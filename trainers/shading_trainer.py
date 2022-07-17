@@ -1,102 +1,95 @@
-# -*- coding: utf-8 -*-
-# Shading trainer used for training.
+from config import iid_server_config
+from trainers import abstract_iid_trainer, early_stopper
 import kornia
-
+from model import iteration_table, embedding_network
 from model import ffa_gan as ffa
 from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
+from model import usi3d_gan
+from model.modules import image_pool
 import constants
 import torch
 import torch.cuda.amp as amp
 import itertools
 import numpy as np
 import torch.nn as nn
+from model.iteration_table import IterationTable
+from trainers import paired_trainer
+from transforms import iid_transforms
 from utils import plot_utils
-from custom_losses import ssim_loss
+from utils import tensor_utils
+from custom_losses import ssim_loss, iid_losses
 import lpips
 
-class ShadingTrainer:
+class ShadingTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
-    def __init__(self, gpu_device,  opts):
-        self.gpu_device = gpu_device
-        self.g_lr = opts.g_lr
-        self.d_lr = opts.d_lr
-        self.use_bce = opts.use_bce
-        self.light_angle = opts.light_angle
-        self.light_angle = self.normalize(self.light_angle)
+    def __init__(self, gpu_device, opts):
+        super().__init__(gpu_device, opts)
+        self.initialize_train_config(opts)
 
-        self.lpips_loss = lpips.LPIPS(net = 'vgg').to(self.gpu_device)
-        self.ssim_loss = ssim_loss.SSIM()
+    def initialize_train_config(self, opts):
+        self.iteration = opts.iteration
+        self.it_table = iteration_table.IterationTable()
+        self.use_bce = self.it_table.is_bce_enabled(self.iteration, IterationTable.NetworkType.SHADING)
+        self.adv_weight = self.it_table.get_adv_weight()
+        self.rgb_l1_weight = self.it_table.get_rgb_recon_weight()
+
+        self.lpips_loss = lpips.LPIPS(net='vgg').to(self.gpu_device)
+        self.ssim_loss = kornia.losses.SSIMLoss(5)
         self.l1_loss = nn.L1Loss()
+        self.mse_loss = nn.MSELoss()
         self.bce_loss = nn.BCEWithLogitsLoss()
+        self.multiscale_grad_loss = iid_losses.MultiScaleGradientLoss(4)
+        self.reflect_cons_loss = iid_losses.ReflectConsistentLoss(sample_num_per_area=1, split_areas=(1, 1))
 
-        num_blocks = opts.num_blocks
-        self.batch_size = opts.batch_size
-        net_config = opts.net_config
+        self.D_S_pool = image_pool.ImagePool(50)
+        self.D_Z_pool = image_pool.ImagePool(50)
 
-        if(net_config == 1):
-            self.G_A = cycle_gan.Generator(input_nc=4, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
-        elif(net_config == 2):
-            self.G_A = unet_gan.UnetGenerator(input_nc=4, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
-        elif (net_config == 3):
-            self.G_A = cycle_gan.Generator(input_nc=4, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
-        elif (net_config == 4):
-            self.G_A = cycle_gan.GeneratorV2(input_nc=4, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=True).to(self.gpu_device)
-        else:
-            self.G_A = cycle_gan.GeneratorV2(input_nc=4, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
-
-        self.D_A = cycle_gan.Discriminator(input_nc=3, use_bce=self.use_bce).to(self.gpu_device)  # use CycleGAN's discriminator
-
-        self.visdom_reporter = plot_utils.VisdomReporter()
-        self.optimizerG = torch.optim.Adam(itertools.chain(self.G_A.parameters()), lr=self.g_lr)
-        self.optimizerD = torch.optim.Adam(itertools.chain(self.D_A.parameters()), lr=self.d_lr)
-        self.schedulerG = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG, patience=100000 / self.batch_size, threshold=0.00005)
-        self.schedulerD = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD, patience=100000 / self.batch_size, threshold=0.00005)
-        self.initialize_dict()
-
+        self.iid_op = iid_transforms.IIDTransform().to(self.gpu_device)
         self.fp16_scaler = amp.GradScaler()  # for automatic mixed precision
 
-    def initialize_dict(self):
-        # what to store in visdom?
-        self.losses_dict = {}
-        self.losses_dict[constants.G_LOSS_KEY] = []
-        self.losses_dict[constants.D_OVERALL_LOSS_KEY] = []
-        self.losses_dict[constants.LIKENESS_LOSS_KEY] = []
-        self.losses_dict[constants.LPIP_LOSS_KEY] = []
-        self.losses_dict[constants.SSIM_LOSS_KEY] = []
-        self.losses_dict[constants.G_ADV_LOSS_KEY] = []
-        self.losses_dict[constants.D_A_FAKE_LOSS_KEY] = []
-        self.losses_dict[constants.D_A_REAL_LOSS_KEY] = []
+        self.visdom_reporter = plot_utils.VisdomReporter.getInstance()
+        sc_instance = iid_server_config.IIDServerConfig.getInstance()
+        general_config = sc_instance.get_general_configs()
+        network_config = sc_instance.interpret_network_config_from_version(opts.version)
+        self.batch_size = network_config["batch_size_s"]
+        self.da_enabled = network_config["da_enabled"]
 
-        self.caption_dict = {}
-        self.caption_dict[constants.G_LOSS_KEY] = "G loss per iteration"
-        self.caption_dict[constants.D_OVERALL_LOSS_KEY] = "D loss per iteration"
-        self.caption_dict[constants.LIKENESS_LOSS_KEY] = "L1 loss per iteration"
-        self.caption_dict[constants.LPIP_LOSS_KEY] = "LPIPS loss per iteration"
-        self.caption_dict[constants.SSIM_LOSS_KEY] = "SSIM loss per iteration"
-        self.caption_dict[constants.G_ADV_LOSS_KEY] = "G adv loss per iteration"
-        self.caption_dict[constants.D_A_FAKE_LOSS_KEY] = "D(A) fake loss per iteration"
-        self.caption_dict[constants.D_A_REAL_LOSS_KEY] = "D(A) real loss per iteration"
+        self.stopper_method = early_stopper.EarlyStopper(general_config["train_shading"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, constants.early_stop_threshold, 99999.9)
+        self.stop_result = False
 
-    def normalize(self, light_angle):
-        std = light_angle / 360.0
-        min = -1.0
-        max = 1.0
-        scaled = std * (max - min) + min
+        self.initialize_dict()
+        self.initialize_shading_network(network_config["net_config"], network_config["num_blocks"], network_config["nc"])
+        self.initialize_shadow_network(network_config["net_config"], network_config["num_blocks"], network_config["nc"])
 
-        return scaled
+        self.optimizerG_shading = torch.optim.Adam(itertools.chain(self.G_S.parameters(), self.G_Z.parameters()), lr=self.g_lr)
+        self.optimizerD_shading = torch.optim.Adam(itertools.chain(self.D_S.parameters(), self.D_Z.parameters()), lr=self.d_lr)
+        self.schedulerG_shading = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG_shading, patience=100000 / self.batch_size, threshold=0.00005)
+        self.schedulerD_shading = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD_shading, patience=100000 / self.batch_size, threshold=0.00005)
+
+        self.NETWORK_VERSION = sc_instance.get_version_config("network_s_name", self.iteration)
+        self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
+        self.load_saved_state()
+
+    def initialize_shading_network(self, net_config, num_blocks, input_nc):
+        network_creator = abstract_iid_trainer.NetworkCreator(self.gpu_device)
+        self.G_S, self.D_S = network_creator.initialize_shading_network(net_config, num_blocks, input_nc)
+
+    def initialize_shadow_network(self, net_config, num_blocks, input_nc):
+        network_creator = abstract_iid_trainer.NetworkCreator(self.gpu_device)
+        self.G_Z, self.D_Z = network_creator.initialize_shadow_network(net_config, num_blocks, input_nc)
 
     def adversarial_loss(self, pred, target):
         if (self.use_bce == 0):
-            return self.l1_loss(pred, target)
+            return self.mse_loss(pred, target)
         else:
             return self.bce_loss(pred, target)
 
-    def l1_loss(self, pred, target):
-        return self.l1_loss(pred, target)
+    def gradient_loss_term(self, pred, target):
+        pred_gradient = kornia.filters.spatial_gradient(pred)
+        target_gradient = kornia.filters.spatial_gradient(target)
 
-    def bce_loss_term(self, pred, target):
-        return self.bce_loss(pred, target)
+        return self.mse_loss(pred_gradient, target_gradient)
 
     def lpip_loss(self, pred, target):
         result = torch.squeeze(self.lpips_loss(pred, target))
@@ -104,694 +97,218 @@ class ShadingTrainer:
         return result
 
     def ssim_loss(self, pred, target):
-        return kornia.losses.ssim_loss(pred, target)
+        pred_normalized = (pred * 0.5) + 0.5
+        target_normalized = (target * 0.5) + 0.5
 
-    def update_penalties(self, adv_weight, l1_weight, lpip_weight, ssim_weight, bce_weight):
-        # what penalties to use for losses?
-        self.adv_weight = adv_weight
-        self.l1_weight = l1_weight
-        self.lpip_weight = lpip_weight
-        self.ssim_weight = ssim_weight
-        self.bce_weight = bce_weight
-
-        # save hyperparameters for bookeeping
-        HYPERPARAMS_PATH = "checkpoint/" + constants.SHADING_VERSION + "_" + constants.ITERATION + ".config"
-        with open(HYPERPARAMS_PATH, "w") as f:
-            print("Version: ", constants.SHADING_CHECKPATH, file=f)
-            print("Learning rate for G: ", str(self.g_lr), file=f)
-            print("Learning rate for D: ", str(self.d_lr), file=f)
-            print("====================================", file=f)
-            print("Adv weight: ", str(self.adv_weight), file=f)
-            print("Likeness weight: ", str(self.l1_weight), file=f)
-            print("LPIP weight: ", str(self.lpip_weight), file=f)
-            print("SSIM weight: ", str(self.ssim_weight), file=f)
-            print("BCE weight: ", str(self.bce_weight), file=f)
-
-    def train(self, a_tensor, b_tensor):
-        with amp.autocast():
-            light_tensor = torch.unsqueeze(torch.full_like(a_tensor[:, 0, :, :], self.light_angle), 1)
-            a_input = torch.cat([a_tensor, light_tensor], 1)
-            a2b = self.G_A(a_input)
-
-            self.D_A.train()
-            self.optimizerD.zero_grad()
-
-            prediction = self.D_A(b_tensor)
-            real_tensor = torch.ones_like(prediction)
-            fake_tensor = torch.zeros_like(prediction)
-
-            D_A_real_loss = self.adversarial_loss(self.D_A(b_tensor), real_tensor) * self.adv_weight
-            D_A_fake_loss = self.adversarial_loss(self.D_A(a2b.detach()), fake_tensor) * self.adv_weight
-
-            errD = D_A_real_loss + D_A_fake_loss
-
-            self.fp16_scaler.scale(errD).backward()
-            if (self.fp16_scaler.scale(errD).item() > 0.2):
-                self.fp16_scaler.step(self.optimizerD)
-                self.schedulerD.step(errD)
-
-            self.G_A.train()
-            self.optimizerG.zero_grad()
-
-            light_tensor = torch.unsqueeze(torch.full_like(a_tensor[:, 0, :, :], self.light_angle), 1)
-            a_input = torch.cat([a_tensor, light_tensor], 1)
-            a2b = self.G_A(a_input)
-
-            likeness_loss = self.l1_loss(a2b, b_tensor) * self.l1_weight
-            lpip_loss = self.lpip_loss(a2b, b_tensor) * self.lpip_weight
-            ssim_loss = self.ssim_loss(a2b, b_tensor) * self.ssim_weight
-            bce_loss_val = self.bce_loss_term(a2b, b_tensor) * self.bce_weight
-
-            prediction = self.D_A(a2b)
-            real_tensor = torch.ones_like(prediction)
-            A_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
-
-            errG = A_adv_loss + likeness_loss + lpip_loss + ssim_loss + bce_loss_val
-
-            self.fp16_scaler.scale(errG).backward()
-            self.fp16_scaler.step(self.optimizerG)
-            self.schedulerG.step(errG)
-            self.fp16_scaler.update()
-
-            # what to put to losses dict for visdom reporting?
-            self.losses_dict[constants.G_LOSS_KEY].append(errG.item())
-            self.losses_dict[constants.D_OVERALL_LOSS_KEY].append(errD.item())
-            self.losses_dict[constants.LIKENESS_LOSS_KEY].append(likeness_loss.item())
-            self.losses_dict[constants.LPIP_LOSS_KEY].append(lpip_loss.item())
-            self.losses_dict[constants.SSIM_LOSS_KEY].append(ssim_loss.item())
-            self.losses_dict[constants.G_ADV_LOSS_KEY].append(A_adv_loss.item())
-            self.losses_dict[constants.D_A_FAKE_LOSS_KEY].append(D_A_fake_loss.item())
-            self.losses_dict[constants.D_A_REAL_LOSS_KEY].append(D_A_real_loss.item())
-
-    def test(self, a_tensor):
-        with torch.no_grad():
-            light_tensor = torch.unsqueeze(torch.full_like(a_tensor[:, 0, :, :], self.light_angle), 1)
-            a_input = torch.cat([a_tensor, light_tensor], 1)
-            a2b = self.G_A(a_input)
-        return a2b
-
-    def visdom_plot(self, iteration):
-        self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict, constants.SHADING_CHECKPATH)
-
-    def visdom_visualize(self, a_tensor, b_tensor, a_test, b_test):
-        with torch.no_grad():
-            light_tensor = torch.unsqueeze(torch.full_like(a_tensor[:, 0, :, :], self.light_angle), 1)
-            a_input = torch.cat([a_tensor, light_tensor], 1)
-            a2b = self.G_A(a_input)
-
-            test_light_tensor = torch.unsqueeze(torch.full_like(a_test[:, 0, :, :], self.light_angle), 1)
-            a_test_input = torch.cat([a_test, test_light_tensor], 1)
-            test_a2b = self.G_A(a_test_input)
-
-            self.visdom_reporter.plot_image(a_tensor, "Training A images - " + constants.SHADING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(a2b, "Training A2B images - " + constants.SHADING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(b_tensor, "B images - " + constants.SHADING_VERSION + constants.ITERATION)
-
-            self.visdom_reporter.plot_image(a_test, "Test A images - " + constants.SHADING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(test_a2b, "Test A2B images - " + constants.SHADING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(b_test, "Test B images - " + constants.SHADING_VERSION + constants.ITERATION)
-
-    def visdom_infer(self, rw_tensor):
-        with torch.no_grad():
-            rw_light_tensor = torch.unsqueeze(torch.full_like(rw_tensor[:, 0, :, :], self.light_angle), 1)
-            rw_input = torch.cat([rw_tensor, rw_light_tensor], 1)
-            rw2b = self.G_A(rw_input)
-
-            self.visdom_reporter.plot_image(rw_tensor, "Real World images - " + constants.SHADING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(rw2b, "Real World A2B images - " + constants.SHADING_VERSION + constants.ITERATION)
-
-
-    def load_saved_state(self, checkpoint):
-        self.G_A.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
-        self.D_A.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "A"])
-        self.optimizerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY])
-        self.optimizerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY])
-        self.schedulerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler"])
-        self.schedulerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler"])
-
-    def save_states_checkpt(self, epoch, iteration):
-        save_dict = {'epoch': epoch, 'iteration': iteration}
-        netGA_state_dict = self.G_A.state_dict()
-        netDA_state_dict = self.D_A.state_dict()
-
-        optimizerG_state_dict = self.optimizerG.state_dict()
-        optimizerD_state_dict = self.optimizerD.state_dict()
-
-        schedulerG_state_dict = self.schedulerG.state_dict()
-        schedulerD_state_dict = self.schedulerD.state_dict()
-
-        save_dict[constants.GENERATOR_KEY + "A"] = netGA_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "A"] = netDA_state_dict
-
-        save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY] = optimizerG_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY] = optimizerD_state_dict
-
-        save_dict[constants.GENERATOR_KEY + "scheduler"] = schedulerG_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "scheduler"] = schedulerD_state_dict
-
-        torch.save(save_dict, constants.SHADING_CHECKPATH + ".checkpt")
-        print("Saved model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
-
-    def save_states(self, epoch, iteration):
-        save_dict = {'epoch': epoch, 'iteration': iteration}
-        netGA_state_dict = self.G_A.state_dict()
-        netDA_state_dict = self.D_A.state_dict()
-
-        optimizerG_state_dict = self.optimizerG.state_dict()
-        optimizerD_state_dict = self.optimizerD.state_dict()
-
-        schedulerG_state_dict = self.schedulerG.state_dict()
-        schedulerD_state_dict = self.schedulerD.state_dict()
-
-        save_dict[constants.GENERATOR_KEY + "A"] = netGA_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "A"] = netDA_state_dict
-
-        save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY] = optimizerG_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY] = optimizerD_state_dict
-
-        save_dict[constants.GENERATOR_KEY + "scheduler"] = schedulerG_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "scheduler"] = schedulerD_state_dict
-
-        torch.save(save_dict, constants.SHADING_CHECKPATH)
-        print("Saved model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
-
-class ShadingTrainerAlbedo:
-
-    def __init__(self, gpu_device,  opts):
-        self.gpu_device = gpu_device
-        self.g_lr = opts.g_lr
-        self.d_lr = opts.d_lr
-        self.use_bce = opts.use_bce
-        self.light_angle = opts.light_angle
-        self.light_angle = self.normalize(self.light_angle)
-
-        self.lpips_loss = lpips.LPIPS(net = 'vgg').to(self.gpu_device)
-        self.ssim_loss = ssim_loss.SSIM()
-        self.l1_loss = nn.L1Loss()
-        self.bce_loss = nn.BCEWithLogitsLoss()
-
-        num_blocks = opts.num_blocks
-        self.batch_size = opts.batch_size
-        net_config = opts.net_config
-
-        if(net_config == 1):
-            self.G_A = cycle_gan.Generator(input_nc=7, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
-        elif(net_config == 2):
-            self.G_A = unet_gan.UnetGenerator(input_nc=7, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
-        elif(net_config == 3):
-            self.G_A = ffa.FFAWithBackbone(input_nc=7, blocks = num_blocks).to(self.gpu_device)
-        elif (net_config == 4):
-            self.G_A = cycle_gan.Generator(input_nc=7, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
-        elif (net_config == 5):
-            self.G_A = cycle_gan.GeneratorV2(input_nc=7, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=True).to(self.gpu_device)
-        else:
-            self.G_A = cycle_gan.GeneratorV2(input_nc=7, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
-
-        self.D_A = cycle_gan.Discriminator(input_nc=3, use_bce=self.use_bce).to(self.gpu_device)  # use CycleGAN's discriminator
-
-        self.visdom_reporter = plot_utils.VisdomReporter()
-        self.optimizerG = torch.optim.Adam(itertools.chain(self.G_A.parameters()), lr=self.g_lr)
-        self.optimizerD = torch.optim.Adam(itertools.chain(self.D_A.parameters()), lr=self.d_lr)
-        self.schedulerG = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG, patience=100000 / self.batch_size, threshold=0.00005)
-        self.schedulerD = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD, patience=100000 / self.batch_size, threshold=0.00005)
-        self.initialize_dict()
-
-        self.fp16_scaler = amp.GradScaler()  # for automatic mixed precision
+        return self.ssim_loss(pred_normalized, target_normalized)
 
     def initialize_dict(self):
         # what to store in visdom?
-        self.losses_dict = {}
-        self.losses_dict[constants.G_LOSS_KEY] = []
-        self.losses_dict[constants.D_OVERALL_LOSS_KEY] = []
-        self.losses_dict[constants.LIKENESS_LOSS_KEY] = []
-        self.losses_dict[constants.LPIP_LOSS_KEY] = []
-        self.losses_dict[constants.SSIM_LOSS_KEY] = []
-        self.losses_dict[constants.G_ADV_LOSS_KEY] = []
-        self.losses_dict[constants.D_A_FAKE_LOSS_KEY] = []
-        self.losses_dict[constants.D_A_REAL_LOSS_KEY] = []
+        self.losses_dict_s = {}
+        self.losses_dict_s[constants.G_LOSS_KEY] = []
+        self.losses_dict_s[constants.D_OVERALL_LOSS_KEY] = []
+        self.losses_dict_s[constants.LIKENESS_LOSS_KEY] = []
+        self.losses_dict_s[constants.LPIP_LOSS_KEY] = []
+        self.losses_dict_s[constants.SSIM_LOSS_KEY] = []
+        self.GRADIENT_LOSS_KEY = "GRADIENT_LOSS_KEY"
+        self.RGB_RECONSTRUCTION_LOSS_KEY = "RGB_RECONSTRUCTION_LOSS_KEY"
+        self.losses_dict_s[self.GRADIENT_LOSS_KEY] = []
+        self.losses_dict_s[constants.G_ADV_LOSS_KEY] = []
+        self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY] = []
+        self.losses_dict_s[constants.D_A_REAL_LOSS_KEY] = []
+        self.losses_dict_s[self.RGB_RECONSTRUCTION_LOSS_KEY] = []
 
-        self.caption_dict = {}
-        self.caption_dict[constants.G_LOSS_KEY] = "G loss per iteration"
-        self.caption_dict[constants.D_OVERALL_LOSS_KEY] = "D loss per iteration"
-        self.caption_dict[constants.LIKENESS_LOSS_KEY] = "L1 loss per iteration"
-        self.caption_dict[constants.LPIP_LOSS_KEY] = "LPIPS loss per iteration"
-        self.caption_dict[constants.SSIM_LOSS_KEY] = "SSIM loss per iteration"
-        self.caption_dict[constants.G_ADV_LOSS_KEY] = "G adv loss per iteration"
-        self.caption_dict[constants.D_A_FAKE_LOSS_KEY] = "D(A) fake loss per iteration"
-        self.caption_dict[constants.D_A_REAL_LOSS_KEY] = "D(A) real loss per iteration"
+        self.caption_dict_s = {}
+        self.caption_dict_s[constants.G_LOSS_KEY] = "Shading + Shadow G loss per iteration"
+        self.caption_dict_s[constants.D_OVERALL_LOSS_KEY] = "D loss per iteration"
+        self.caption_dict_s[constants.LIKENESS_LOSS_KEY] = "L1 loss per iteration"
+        self.caption_dict_s[constants.LPIP_LOSS_KEY] = "LPIPS loss per iteration"
+        self.caption_dict_s[constants.SSIM_LOSS_KEY] = "SSIM loss per iteration"
+        self.caption_dict_s[self.GRADIENT_LOSS_KEY] = "Gradient loss per iteration"
+        self.caption_dict_s[constants.G_ADV_LOSS_KEY] = "G adv loss per iteration"
+        self.caption_dict_s[constants.D_A_FAKE_LOSS_KEY] = "D fake loss per iteration"
+        self.caption_dict_s[constants.D_A_REAL_LOSS_KEY] = "D real loss per iteration"
+        self.caption_dict_s[self.RGB_RECONSTRUCTION_LOSS_KEY] = "RGB Reconstruction loss per iteration"
 
-    def normalize(self, light_angle):
-        std = light_angle / 360.0
-        min = -1.0
-        max = 1.0
-        scaled = std * (max - min) + min
+    def train(self, epoch, iteration, input_map, target_map):
+        input_rgb_tensor = input_map["rgb"]
+        albedo_tensor = input_map["albedo"]
+        shading_tensor = target_map["shading"]
+        shadow_tensor = target_map["shadow"]
 
-        return scaled
-
-    def adversarial_loss(self, pred, target):
-        if (self.use_bce == 0):
-            return self.l1_loss(pred, target)
-        else:
-            return self.bce_loss(pred, target)
-
-    def l1_loss(self, pred, target):
-        return self.l1_loss(pred, target)
-
-    def bce_loss_term(self, pred, target):
-        return self.bce_loss(pred, target)
-
-    def lpip_loss(self, pred, target):
-        result = torch.squeeze(self.lpips_loss(pred, target))
-        result = torch.mean(result)
-        return result
-
-    def ssim_loss(self, pred, target):
-        return kornia.losses.ssim_loss(pred, target)
-
-    def update_penalties(self, adv_weight, l1_weight, lpip_weight, ssim_weight, bce_weight):
-        # what penalties to use for losses?
-        self.adv_weight = adv_weight
-        self.l1_weight = l1_weight
-        self.lpip_weight = lpip_weight
-        self.ssim_weight = ssim_weight
-        self.bce_weight = bce_weight
-
-        # save hyperparameters for bookeeping
-        HYPERPARAMS_PATH = "checkpoint/" + constants.SHADING_VERSION + "_" + constants.ITERATION + ".config"
-        with open(HYPERPARAMS_PATH, "w") as f:
-            print("Version: ", constants.SHADING_CHECKPATH, file=f)
-            print("Learning rate for G: ", str(self.g_lr), file=f)
-            print("Learning rate for D: ", str(self.d_lr), file=f)
-            print("====================================", file=f)
-            print("Adv weight: ", str(self.adv_weight), file=f)
-            print("Likeness weight: ", str(self.l1_weight), file=f)
-            print("LPIP weight: ", str(self.lpip_weight), file=f)
-            print("SSIM weight: ", str(self.ssim_weight), file=f)
-            print("BCE weight: ", str(self.bce_weight), file=f)
-
-    def train(self, input_tensor, albedo_tensor, result_tensor):
         with amp.autocast():
-            light_tensor = torch.unsqueeze(torch.full_like(input_tensor[:, 0, :, :], self.light_angle), 1)
-            a_input = torch.cat([input_tensor, albedo_tensor, light_tensor], 1)
-            a2b = self.G_A(a_input)
+            if (self.da_enabled == 1):
+                input = self.reshape_input(input_rgb_tensor)
 
-            self.D_A.train()
-            self.optimizerD.zero_grad()
+            self.optimizerD_shading.zero_grad()
 
-            prediction = self.D_A(result_tensor)
+            #shading discriminator
+            rgb2shading = self.G_S(input)
+            self.D_S.train()
+            prediction = self.D_S(shading_tensor)
             real_tensor = torch.ones_like(prediction)
             fake_tensor = torch.zeros_like(prediction)
+            D_S_real_loss = self.adversarial_loss(self.D_S(shading_tensor), real_tensor) * self.adv_weight
+            D_S_fake_loss = self.adversarial_loss(self.D_S_pool.query(self.D_S(rgb2shading.detach())), fake_tensor) * self.adv_weight
 
-            D_A_real_loss = self.adversarial_loss(self.D_A(result_tensor), real_tensor) * self.adv_weight
-            D_A_fake_loss = self.adversarial_loss(self.D_A(a2b.detach()), fake_tensor) * self.adv_weight
+            #shadow discriminator
+            rgb2shadow = self.G_Z(input)
+            self.D_Z.train()
+            prediction = self.D_Z(shadow_tensor)
+            real_tensor = torch.ones_like(prediction)
+            fake_tensor = torch.zeros_like(prediction)
+            D_Z_real_loss = self.adversarial_loss(self.D_Z(shadow_tensor), real_tensor) * self.adv_weight
+            D_Z_fake_loss = self.adversarial_loss(self.D_Z_pool.query(self.D_Z(rgb2shadow.detach())), fake_tensor) * self.adv_weight
 
-            errD = D_A_real_loss + D_A_fake_loss
+            errD = D_S_real_loss + D_S_fake_loss + D_Z_real_loss + D_Z_fake_loss
 
             self.fp16_scaler.scale(errD).backward()
-            if (self.fp16_scaler.scale(errD).item() > 0.2):
-                self.fp16_scaler.step(self.optimizerD)
-                self.schedulerD.step(errD)
+            if (self.fp16_scaler.scale(errD).item() > 0.0):
+                self.fp16_scaler.step(self.optimizerD_shading)
+                self.schedulerD_shading.step(errD)
 
-            self.G_A.train()
-            self.optimizerG.zero_grad()
+            self.optimizerG_shading.zero_grad()
 
-            light_tensor = torch.unsqueeze(torch.full_like(input_tensor[:, 0, :, :], self.light_angle), 1)
-            a_input = torch.cat([input_tensor, albedo_tensor, light_tensor], 1)
-            a2b = self.G_A(a_input)
-
-            likeness_loss = self.l1_loss(a2b, result_tensor) * self.l1_weight
-            lpip_loss = self.lpip_loss(a2b, result_tensor) * self.lpip_weight
-            ssim_loss = self.ssim_loss(a2b, result_tensor) * self.ssim_weight
-            bce_loss_val = self.bce_loss_term(a2b, result_tensor) * self.bce_weight
-
-            prediction = self.D_A(a2b)
+            #shading generator
+            self.G_S.train()
+            rgb2shading = self.G_S(input)
+            S_likeness_loss = self.l1_loss(rgb2shading, shading_tensor) * self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.SHADING)
+            S_lpip_loss = self.lpip_loss(rgb2shading, shading_tensor) * self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.SHADING)
+            S_ssim_loss = self.ssim_loss(rgb2shading, shading_tensor) * self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.SHADING)
+            S_gradient_loss = self.gradient_loss_term(rgb2shading, shading_tensor) * self.it_table.get_gradient_weight(self.iteration, IterationTable.NetworkType.SHADING)
+            prediction = self.D_S(rgb2shading)
             real_tensor = torch.ones_like(prediction)
-            A_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
+            S_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            errG = A_adv_loss + likeness_loss + lpip_loss + ssim_loss + bce_loss_val
+            # shadow generator
+            self.G_Z.train()
+            rgb2shadow = self.G_Z(input)
+            Z_likeness_loss = self.l1_loss(rgb2shadow, shadow_tensor) * self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.SHADOW)
+            Z_lpip_loss = self.lpip_loss(rgb2shadow, shadow_tensor) * self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.SHADOW)
+            Z_ssim_loss = self.ssim_loss(rgb2shadow, shadow_tensor) * self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.SHADOW)
+            Z_gradient_loss = self.gradient_loss_term(rgb2shadow, shadow_tensor) * self.it_table.get_gradient_weight(self.iteration, IterationTable.NetworkType.SHADOW)
+            prediction = self.D_Z(rgb2shadow)
+            real_tensor = torch.ones_like(prediction)
+            Z_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
+
+            rgb_like = self.iid_op.produce_rgb(albedo_tensor, self.G_S(input), self.G_Z(input))
+            rgb_l1_loss = self.l1_loss(rgb_like, input_rgb_tensor) * self.rgb_l1_weight
+
+            errG = S_likeness_loss + S_lpip_loss + S_ssim_loss + S_gradient_loss + S_adv_loss + \
+                   Z_likeness_loss + Z_lpip_loss + Z_ssim_loss + Z_gradient_loss + Z_adv_loss + rgb_l1_loss
 
             self.fp16_scaler.scale(errG).backward()
-            self.fp16_scaler.step(self.optimizerG)
-            self.schedulerG.step(errG)
+            self.fp16_scaler.step(self.optimizerG_shading)
+            self.schedulerG_shading.step(errG)
             self.fp16_scaler.update()
 
             # what to put to losses dict for visdom reporting?
-            self.losses_dict[constants.G_LOSS_KEY].append(errG.item())
-            self.losses_dict[constants.D_OVERALL_LOSS_KEY].append(errD.item())
-            self.losses_dict[constants.LIKENESS_LOSS_KEY].append(likeness_loss.item())
-            self.losses_dict[constants.LPIP_LOSS_KEY].append(lpip_loss.item())
-            self.losses_dict[constants.SSIM_LOSS_KEY].append(ssim_loss.item())
-            self.losses_dict[constants.G_ADV_LOSS_KEY].append(A_adv_loss.item())
-            self.losses_dict[constants.D_A_FAKE_LOSS_KEY].append(D_A_fake_loss.item())
-            self.losses_dict[constants.D_A_REAL_LOSS_KEY].append(D_A_real_loss.item())
+            self.losses_dict_s[constants.G_LOSS_KEY].append(errG.item())
+            self.losses_dict_s[constants.D_OVERALL_LOSS_KEY].append(errD.item())
+            self.losses_dict_s[constants.LIKENESS_LOSS_KEY].append(S_likeness_loss.item() + Z_likeness_loss.item())
+            self.losses_dict_s[constants.LPIP_LOSS_KEY].append(S_lpip_loss.item() + Z_lpip_loss.item())
+            self.losses_dict_s[constants.SSIM_LOSS_KEY].append(S_ssim_loss.item() + Z_ssim_loss.item())
+            self.losses_dict_s[self.GRADIENT_LOSS_KEY].append(S_gradient_loss.item() + Z_gradient_loss.item())
+            self.losses_dict_s[constants.G_ADV_LOSS_KEY].append(S_adv_loss.item() + Z_adv_loss.item())
+            self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY].append(D_S_fake_loss.item() + D_Z_fake_loss.item())
+            self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_S_real_loss.item())
+            self.losses_dict_s[self.RGB_RECONSTRUCTION_LOSS_KEY].append(rgb_l1_loss.item())
 
-    def test(self, input_tensor, albedo_tensor):
+            rgb2shading, rgb2shadow = self.test(input_map)
+            self.stopper_method.register_metric(rgb2shading, shading_tensor, epoch)
+            self.stopper_method.register_metric(rgb2shadow, shadow_tensor, epoch)
+            self.stop_result = self.stopper_method.test(epoch)
+
+            if (self.stopper_method.has_reset()):
+                self.save_states(epoch, iteration, False)
+
+    def test(self, input_map):
         with torch.no_grad():
-            light_tensor = torch.unsqueeze(torch.full_like(input_tensor[:, 0, :, :], self.light_angle), 1)
-            a_input = torch.cat([input_tensor, albedo_tensor, light_tensor], 1)
-            a2b = self.G_A(a_input)
-        return a2b
+            input_rgb_tensor = input_map["rgb"]
+            if (self.da_enabled == 1):
+                input = self.reshape_input(input_rgb_tensor)
+
+            rgb2shading = self.G_S(input)
+            rgb2shadow = self.G_Z(input)
+        return rgb2shading, rgb2shadow
 
     def visdom_plot(self, iteration):
-        self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict, constants.SHADING_CHECKPATH)
+        self.visdom_reporter.plot_finegrain_loss("a2b_loss_a", iteration, self.losses_dict_s, self.caption_dict_s, self.NETWORK_CHECKPATH)
 
-    def visdom_visualize(self, input_tensor, albedo_tensor, result_tensor, input_test, albedo_test, result_test):
-        with torch.no_grad():
-            light_tensor = torch.unsqueeze(torch.full_like(input_tensor[:, 0, :, :], self.light_angle), 1)
-            a_input = torch.cat([input_tensor, albedo_tensor, light_tensor], 1)
-            a2b = self.G_A(a_input)
+    def visdom_visualize(self, input_map, label="Train"):
+        input_rgb_tensor = input_map["rgb"]
+        shading_tensor = input_map["shading"]
+        shadow_tensor = input_map["shadow"]
 
-            test_light_tensor = torch.unsqueeze(torch.full_like(input_test[:, 0, :, :], self.light_angle), 1)
-            a_test_input = torch.cat([input_test, albedo_test, test_light_tensor], 1)
-            test_a2b = self.G_A(a_test_input)
+        embedding_rep = self.get_feature_rep(input_rgb_tensor)
+        rgb2shading, rgb2shadow = self.test(input_map)
 
-            input_tensor = (input_tensor * 0.5) + 0.5
-            input_test = (input_test * 0.5) + 0.5
+        self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(embedding_rep, str(label) + " Embedding Maps - " + self.NETWORK_VERSION + str(self.iteration))
 
-            self.visdom_reporter.plot_image(input_tensor, "Training A images - " + constants.SHADING_VERSION + constants.ITERATION, False)
-            self.visdom_reporter.plot_image(albedo_tensor, "Training Albedo images - " + constants.SHADING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(a2b, "Training A2B images - " + constants.SHADING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(result_tensor, "B images - " + constants.SHADING_VERSION + constants.ITERATION)
+        self.visdom_reporter.plot_image(rgb2shading, str(label) + " RGB2Shading images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(shading_tensor, str(label) + " Shading images - " + self.NETWORK_VERSION + str(self.iteration))
 
-            self.visdom_reporter.plot_image(input_test, "Test A images - " + constants.SHADING_VERSION + constants.ITERATION, False)
-            self.visdom_reporter.plot_image(albedo_test, "Test Albedo images - " + constants.SHADING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(test_a2b, "Test A2B images - " + constants.SHADING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(result_test, "Test B images - " + constants.SHADING_VERSION + constants.ITERATION)
+        self.visdom_reporter.plot_image(rgb2shadow, str(label) + " RGB2Shadow images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(shadow_tensor, str(label) + " Shadow images - " + self.NETWORK_VERSION + str(self.iteration))
 
-    # def visdom_infer(self, rw_tensor):
-    #     with torch.no_grad():
-    #         rw_light_tensor = torch.unsqueeze(torch.full_like(rw_tensor[:, 0, :, :], self.light_angle), 1)
-    #         rw_input = torch.cat([rw_tensor, rw_light_tensor], 1)
-    #         rw2b = self.G_A(rw_input)
-    #
-    #         self.visdom_reporter.plot_image(rw_tensor, "Real World images - " + constants.SHADING_VERSION + constants.ITERATION)
-    #         self.visdom_reporter.plot_image(rw2b, "Real World A2B images - " + constants.SHADING_VERSION + constants.ITERATION)
+    def visdom_infer(self, input_map):
+        input_rgb_tensor = input_map["rgb"]
+        rgb2shading, rgb2shadow = self.test(input_map)
 
+        self.visdom_reporter.plot_image(input_rgb_tensor, "Real World images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(rgb2shading, "Real WorldRGB2Shading images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(rgb2shadow, "Real World Shadow images - " + self.NETWORK_VERSION + str(self.iteration))
 
-    def load_saved_state(self, checkpoint):
-        self.G_A.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
-        self.D_A.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "A"])
-        self.optimizerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY])
-        self.optimizerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY])
-        self.schedulerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler"])
-        self.schedulerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler"])
+    def load_saved_state(self):
+        try:
+            checkpoint = torch.load(self.NETWORK_CHECKPATH, map_location=self.gpu_device)
+            print("Loaded network: ", self.NETWORK_CHECKPATH)
+        except:
+            # check if a .checkpt is available, load it
+            try:
+                checkpt_name = 'checkpoint/' + self.NETWORK_VERSION + ".pt.checkpt"
+                checkpoint = torch.load(checkpt_name, map_location=self.gpu_device)
+                print("Loaded network: ", checkpt_name)
+            except:
+                checkpoint = None
+                print("No existing checkpoint file found. Creating new network: ", self.NETWORK_CHECKPATH)
 
-    def save_states_checkpt(self, epoch, iteration):
-        save_dict = {'epoch': epoch, 'iteration': iteration}
-        netGA_state_dict = self.G_A.state_dict()
-        netDA_state_dict = self.D_A.state_dict()
+        if(checkpoint != None):
+            self.G_S.load_state_dict(checkpoint[constants.GENERATOR_KEY + "S"])
+            self.D_S.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "S"])
+            self.G_Z.load_state_dict(checkpoint[constants.GENERATOR_KEY + "Z"])
+            self.D_Z.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "Z"])
+            self.optimizerG_shading.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "S"])
+            self.optimizerD_shading.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "S"])
+            self.schedulerG_shading.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler" + "S"])
+            self.schedulerD_shading.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler" + "S"])
 
-        optimizerG_state_dict = self.optimizerG.state_dict()
-        optimizerD_state_dict = self.optimizerD.state_dict()
+    def save_states(self, epoch, iteration, is_temp:bool):
+        save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
+        netGS_state_dict = self.G_S.state_dict()
+        netDS_state_dict = self.D_S.state_dict()
+        netGZ_state_dict = self.G_Z.state_dict()
+        netDZ_state_dict = self.D_Z.state_dict()
 
-        schedulerG_state_dict = self.schedulerG.state_dict()
-        schedulerD_state_dict = self.schedulerD.state_dict()
+        optimizerGshading_state_dict = self.optimizerG_shading.state_dict()
+        optimizerDshading_state_dict = self.optimizerD_shading.state_dict()
+        schedulerGshading_state_dict = self.schedulerG_shading.state_dict()
+        schedulerDshading_state_dict = self.schedulerD_shading.state_dict()
 
-        save_dict[constants.GENERATOR_KEY + "A"] = netGA_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "A"] = netDA_state_dict
+        save_dict[constants.GENERATOR_KEY + "S"] = netGS_state_dict
+        save_dict[constants.DISCRIMINATOR_KEY + "S"] = netDS_state_dict
+        save_dict[constants.GENERATOR_KEY + "Z"] = netGZ_state_dict
+        save_dict[constants.DISCRIMINATOR_KEY + "Z"] = netDZ_state_dict
 
-        save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY] = optimizerG_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY] = optimizerD_state_dict
+        save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "S"] = optimizerGshading_state_dict
+        save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "S"] = optimizerDshading_state_dict
+        save_dict[constants.GENERATOR_KEY + "scheduler" + "S"] = schedulerGshading_state_dict
+        save_dict[constants.DISCRIMINATOR_KEY + "scheduler" + "S"] = schedulerDshading_state_dict
 
-        save_dict[constants.GENERATOR_KEY + "scheduler"] = schedulerG_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "scheduler"] = schedulerD_state_dict
-
-        torch.save(save_dict, constants.SHADING_CHECKPATH + ".checkpt")
-        print("Saved model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
-
-    def save_states(self, epoch, iteration):
-        save_dict = {'epoch': epoch, 'iteration': iteration}
-        netGA_state_dict = self.G_A.state_dict()
-        netDA_state_dict = self.D_A.state_dict()
-
-        optimizerG_state_dict = self.optimizerG.state_dict()
-        optimizerD_state_dict = self.optimizerD.state_dict()
-
-        schedulerG_state_dict = self.schedulerG.state_dict()
-        schedulerD_state_dict = self.schedulerD.state_dict()
-
-        save_dict[constants.GENERATOR_KEY + "A"] = netGA_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "A"] = netDA_state_dict
-
-        save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY] = optimizerG_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY] = optimizerD_state_dict
-
-        save_dict[constants.GENERATOR_KEY + "scheduler"] = schedulerG_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "scheduler"] = schedulerD_state_dict
-
-        torch.save(save_dict, constants.SHADING_CHECKPATH)
-        print("Saved model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
-
-
-class ShadingTrainerBasic:
-
-    def __init__(self, gpu_device,  opts):
-        self.gpu_device = gpu_device
-        self.g_lr = opts.g_lr
-        self.d_lr = opts.d_lr
-        self.use_bce = opts.use_bce
-
-        self.lpips_loss = lpips.LPIPS(net = 'vgg').to(self.gpu_device)
-        self.ssim_loss = ssim_loss.SSIM()
-        self.l1_loss = nn.L1Loss()
-        self.bce_loss = nn.BCEWithLogitsLoss()
-
-        num_blocks = opts.num_blocks
-        self.batch_size = opts.batch_size
-        net_config = opts.net_config
-
-        if(net_config == 1):
-            self.G_A = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
-        elif(net_config == 2):
-            self.G_A = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
-        elif(net_config == 3):
-            self.G_A = ffa.FFAWithBackbone(input_nc=3, blocks = num_blocks).to(self.gpu_device)
-        elif (net_config == 4):
-            self.G_A = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
-        elif (net_config == 5):
-            self.G_A = cycle_gan.GeneratorV2(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=True).to(self.gpu_device)
+        if (is_temp):
+            torch.save(save_dict, self.NETWORK_CHECKPATH + ".checkpt")
+            print("Saved checkpoint state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
         else:
-            self.G_A = cycle_gan.GeneratorV2(input_nc=3, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
-
-        self.D_A = cycle_gan.Discriminator(input_nc=3, use_bce=self.use_bce).to(self.gpu_device)  # use CycleGAN's discriminator
-
-        self.visdom_reporter = plot_utils.VisdomReporter()
-        self.optimizerG = torch.optim.Adam(itertools.chain(self.G_A.parameters()), lr=self.g_lr)
-        self.optimizerD = torch.optim.Adam(itertools.chain(self.D_A.parameters()), lr=self.d_lr)
-        self.schedulerG = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG, patience=100000 / self.batch_size, threshold=0.00005)
-        self.schedulerD = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD, patience=100000 / self.batch_size, threshold=0.00005)
-        self.initialize_dict()
-
-        self.fp16_scaler = amp.GradScaler()  # for automatic mixed precision
-
-    def initialize_dict(self):
-        # what to store in visdom?
-        self.losses_dict = {}
-        self.losses_dict[constants.G_LOSS_KEY] = []
-        self.losses_dict[constants.D_OVERALL_LOSS_KEY] = []
-        self.losses_dict[constants.LIKENESS_LOSS_KEY] = []
-        self.losses_dict[constants.LPIP_LOSS_KEY] = []
-        self.losses_dict[constants.SSIM_LOSS_KEY] = []
-        self.losses_dict[constants.G_ADV_LOSS_KEY] = []
-        self.losses_dict[constants.D_A_FAKE_LOSS_KEY] = []
-        self.losses_dict[constants.D_A_REAL_LOSS_KEY] = []
-
-        self.caption_dict = {}
-        self.caption_dict[constants.G_LOSS_KEY] = "G loss per iteration"
-        self.caption_dict[constants.D_OVERALL_LOSS_KEY] = "D loss per iteration"
-        self.caption_dict[constants.LIKENESS_LOSS_KEY] = "L1 loss per iteration"
-        self.caption_dict[constants.LPIP_LOSS_KEY] = "LPIPS loss per iteration"
-        self.caption_dict[constants.SSIM_LOSS_KEY] = "SSIM loss per iteration"
-        self.caption_dict[constants.G_ADV_LOSS_KEY] = "G adv loss per iteration"
-        self.caption_dict[constants.D_A_FAKE_LOSS_KEY] = "D(A) fake loss per iteration"
-        self.caption_dict[constants.D_A_REAL_LOSS_KEY] = "D(A) real loss per iteration"
-
-    def normalize(self, light_angle):
-        std = light_angle / 360.0
-        min = -1.0
-        max = 1.0
-        scaled = std * (max - min) + min
-
-        return scaled
-
-    def adversarial_loss(self, pred, target):
-        if (self.use_bce == 0):
-            return self.l1_loss(pred, target)
-        else:
-            return self.bce_loss(pred, target)
-
-    def l1_loss(self, pred, target):
-        return self.l1_loss(pred, target)
-
-    def bce_loss_term(self, pred, target):
-        return self.bce_loss(pred, target)
-
-    def lpip_loss(self, pred, target):
-        result = torch.squeeze(self.lpips_loss(pred, target))
-        result = torch.mean(result)
-        return result
-
-    def ssim_loss(self, pred, target):
-        return kornia.losses.ssim_loss(pred, target)
-
-    def update_penalties(self, adv_weight, l1_weight, lpip_weight, ssim_weight, bce_weight):
-        # what penalties to use for losses?
-        self.adv_weight = adv_weight
-        self.l1_weight = l1_weight
-        self.lpip_weight = lpip_weight
-        self.ssim_weight = ssim_weight
-        self.bce_weight = bce_weight
-
-        # save hyperparameters for bookeeping
-        # HYPERPARAMS_PATH = "checkpoint/" + constants.SHADING_VERSION + "_" + constants.ITERATION + ".config"
-        # with open(HYPERPARAMS_PATH, "w") as f:
-        #     print("Version: ", constants.SHADING_CHECKPATH, file=f)
-        #     print("Learning rate for G: ", str(self.g_lr), file=f)
-        #     print("Learning rate for D: ", str(self.d_lr), file=f)
-        #     print("====================================", file=f)
-        #     print("Adv weight: ", str(self.adv_weight), file=f)
-        #     print("Likeness weight: ", str(self.l1_weight), file=f)
-        #     print("LPIP weight: ", str(self.lpip_weight), file=f)
-        #     print("SSIM weight: ", str(self.ssim_weight), file=f)
-        #     print("BCE weight: ", str(self.bce_weight), file=f)
-
-    def train(self, input_tensor, result_tensor):
-        with amp.autocast():
-            a2b = self.G_A(input_tensor)
-
-            self.D_A.train()
-            self.optimizerD.zero_grad()
-
-            prediction = self.D_A(result_tensor)
-            real_tensor = torch.ones_like(prediction)
-            fake_tensor = torch.zeros_like(prediction)
-
-            D_A_real_loss = self.adversarial_loss(self.D_A(result_tensor), real_tensor) * self.adv_weight
-            D_A_fake_loss = self.adversarial_loss(self.D_A(a2b.detach()), fake_tensor) * self.adv_weight
-
-            errD = D_A_real_loss + D_A_fake_loss
-
-            self.fp16_scaler.scale(errD).backward()
-            if (self.fp16_scaler.scale(errD).item() > 0.2):
-                self.fp16_scaler.step(self.optimizerD)
-                self.schedulerD.step(errD)
-
-            self.G_A.train()
-            self.optimizerG.zero_grad()
-
-            a2b = self.G_A(input_tensor)
-
-            likeness_loss = self.l1_loss(a2b, result_tensor) * self.l1_weight
-            lpip_loss = self.lpip_loss(a2b, result_tensor) * self.lpip_weight
-            ssim_loss = self.ssim_loss(a2b, result_tensor) * self.ssim_weight
-            bce_loss_val = self.bce_loss_term(a2b, result_tensor) * self.bce_weight
-
-            prediction = self.D_A(a2b)
-            real_tensor = torch.ones_like(prediction)
-            A_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
-
-            errG = A_adv_loss + likeness_loss + lpip_loss + ssim_loss + bce_loss_val
-
-            self.fp16_scaler.scale(errG).backward()
-            self.fp16_scaler.step(self.optimizerG)
-            self.schedulerG.step(errG)
-            self.fp16_scaler.update()
-
-            # what to put to losses dict for visdom reporting?
-            self.losses_dict[constants.G_LOSS_KEY].append(errG.item())
-            self.losses_dict[constants.D_OVERALL_LOSS_KEY].append(errD.item())
-            self.losses_dict[constants.LIKENESS_LOSS_KEY].append(likeness_loss.item())
-            self.losses_dict[constants.LPIP_LOSS_KEY].append(lpip_loss.item())
-            self.losses_dict[constants.SSIM_LOSS_KEY].append(ssim_loss.item())
-            self.losses_dict[constants.G_ADV_LOSS_KEY].append(A_adv_loss.item())
-            self.losses_dict[constants.D_A_FAKE_LOSS_KEY].append(D_A_fake_loss.item())
-            self.losses_dict[constants.D_A_REAL_LOSS_KEY].append(D_A_real_loss.item())
-
-    def test(self, input_tensor):
-        with torch.no_grad():
-            a2b = self.G_A(input_tensor)
-        return a2b
-
-    def visdom_plot(self, iteration):
-        self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict, constants.SHADING_CHECKPATH)
-
-    def visdom_visualize(self, input_tensor, result_tensor, input_test, result_test):
-        with torch.no_grad():
-            a2b = self.G_A(input_tensor)
-            test_a2b = self.G_A(input_test)
-
-            input_tensor = (input_tensor * 0.5) + 0.5
-            input_test = (input_test * 0.5) + 0.5
-
-            self.visdom_reporter.plot_image(input_tensor, "Training A images - " + constants.SHADING_VERSION + constants.ITERATION, False)
-            self.visdom_reporter.plot_image(a2b, "Training A2B images - " + constants.SHADING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(result_tensor, "B images - " + constants.SHADING_VERSION + constants.ITERATION)
-
-            self.visdom_reporter.plot_image(input_test, "Test A images - " + constants.SHADING_VERSION + constants.ITERATION, False)
-            self.visdom_reporter.plot_image(test_a2b, "Test A2B images - " + constants.SHADING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(result_test, "Test B images - " + constants.SHADING_VERSION + constants.ITERATION)
-
-    def visdom_infer(self, rw_tensor):
-        with torch.no_grad():
-            # rw_light_tensor = torch.unsqueeze(torch.full_like(rw_tensor[:, 0, :, :], self.light_angle), 1)
-            # rw_input = torch.cat([rw_tensor, rw_light_tensor], 1)
-            # rw2b = self.G_A(rw_input)
-            rw2b = self.G_A(rw_tensor)
-
-            self.visdom_reporter.plot_image(rw_tensor, "Real World images - " + constants.SHADING_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(rw2b, "Real World A2B images - " + constants.SHADING_VERSION + constants.ITERATION)
-
-
-    def load_saved_state(self, checkpoint):
-        self.G_A.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
-        self.D_A.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "A"])
-        self.optimizerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY])
-        self.optimizerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY])
-        self.schedulerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler"])
-        self.schedulerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler"])
-
-    def save_states_checkpt(self, epoch, iteration, last_metric):
-        save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: last_metric}
-        netGA_state_dict = self.G_A.state_dict()
-        netDA_state_dict = self.D_A.state_dict()
-
-        optimizerG_state_dict = self.optimizerG.state_dict()
-        optimizerD_state_dict = self.optimizerD.state_dict()
-
-        schedulerG_state_dict = self.schedulerG.state_dict()
-        schedulerD_state_dict = self.schedulerD.state_dict()
-
-        save_dict[constants.GENERATOR_KEY + "A"] = netGA_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "A"] = netDA_state_dict
-
-        save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY] = optimizerG_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY] = optimizerD_state_dict
-
-        save_dict[constants.GENERATOR_KEY + "scheduler"] = schedulerG_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "scheduler"] = schedulerD_state_dict
-
-        torch.save(save_dict, constants.SHADING_CHECKPATH + ".checkpt")
-        print("Saved model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
-
-    def save_states(self, epoch, iteration, last_metric):
-        save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: last_metric}
-        netGA_state_dict = self.G_A.state_dict()
-        netDA_state_dict = self.D_A.state_dict()
-
-        optimizerG_state_dict = self.optimizerG.state_dict()
-        optimizerD_state_dict = self.optimizerD.state_dict()
-
-        schedulerG_state_dict = self.schedulerG.state_dict()
-        schedulerD_state_dict = self.schedulerD.state_dict()
-
-        save_dict[constants.GENERATOR_KEY + "A"] = netGA_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "A"] = netDA_state_dict
-
-        save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY] = optimizerG_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY] = optimizerD_state_dict
-
-        save_dict[constants.GENERATOR_KEY + "scheduler"] = schedulerG_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "scheduler"] = schedulerD_state_dict
-
-        torch.save(save_dict, constants.SHADING_CHECKPATH)
-        print("Saved model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
+            torch.save(save_dict, self.NETWORK_CHECKPATH)
+            print("Saved stable model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))

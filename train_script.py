@@ -2,10 +2,17 @@
 
 import os
 def train_relighting():
-    os.system("python \"iid_train.py\" --server_config=5 --img_to_load=-1 --load_previous=0 --test_mode=0 --patch_size=64 --batch_size=72 --min_epochs=20 "
-              "--net_config=4 --num_blocks=6 "
-              "--plot_enabled=1 --debug_mode=0 --version_name=\"iid_networkv8.04\" --iteration=13 "
-              "--unlit_checkpt_file=\"synth2unlit_v1.00_1.pt\" --da_enabled=1 --da_version_name=\"embedding_v5.00_5\" --albedo_mode=2")
+    os.system("python \"iid_train_v2.py\" --server_config=6 --img_to_load=-1 --test_mode=0 "
+              "--plot_enabled=0 --version=\"v9.01\" --iteration=15")
+
+    os.system("python \"iid_train_v2.py\" --server_config=6 --img_to_load=-1 --test_mode=0 "
+              "--plot_enabled=0 --version=\"v9.01\" --iteration=16")
+
+    os.system("python \"iid_train_v2.py\" --server_config=6 --img_to_load=-1 --test_mode=0 "
+              "--plot_enabled=0 --version=\"v9.01\" --iteration=17")
+
+    os.system("python \"iid_train_v2.py\" --server_config=6 --img_to_load=-1 --test_mode=0 "
+              "--plot_enabled=0 --version=\"v9.01\" --iteration=18")
 
 
 def train_domain_adaptation():
@@ -53,7 +60,7 @@ def main():
     train_relighting()
     # train_domain_adaptation()
     # train_embedding()
-    # os.system("shutdown /s /t 1")
+    os.system("shutdown /s /t 1")
 
 
 if __name__ == "__main__":
