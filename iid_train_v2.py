@@ -111,8 +111,8 @@ def main(argv):
     tf = trainer_factory.TrainerFactory(device, opts)
     iid_op = iid_transforms.IIDTransform()
 
-    # for mode in (["train_albedo_mask", "train_albedo", "train_shading"]):
-    for mode in (["train_albedo", "train_shading"]):
+    for mode in (["train_albedo_mask", "train_albedo", "train_shading"]):
+    # for mode in (["train_albedo", "train_shading"]):
         patch_size = general_config[mode]["patch_size"]
         batch_size = sc_instance.get_batch_size_from_mode(mode, network_config)
         train_loader = dataset_loader.load_iid_datasetv2_train(constants.rgb_dir_ws, constants.rgb_dir_ns, constants.unlit_dir, constants.albedo_dir, patch_size, batch_size, opts)
