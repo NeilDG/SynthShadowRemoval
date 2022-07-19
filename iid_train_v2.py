@@ -27,7 +27,7 @@ parser.add_option('--iteration', type=int, help="Style version?", default="1")
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
-parser.add_option('--test_mode', type=int, help="Test mode?", default=0)
+parser.add_option('--debug_run', type=int, help="Debug mode?", default=0)
 parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
 
 def update_config(opts):

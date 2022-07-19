@@ -89,6 +89,7 @@ start_epoch = 0
 
 #Running on local = 0, Running on COARE = 1, Running on CCS server = 2
 server_config = 0
+debug_run = 0
 num_workers = 12
 
 albedo_dir = "E:/SynthWeather Dataset 8/albedo/"

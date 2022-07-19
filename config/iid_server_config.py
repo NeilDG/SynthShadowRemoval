@@ -17,14 +17,13 @@ class IIDServerConfig():
         if(constants.server_config <= 5):
             self.general_configs = {"train_albedo_mask": {"min_epochs": 3, "max_epochs" : 10, "patch_size": 256},
                                     "train_albedo": {"min_epochs": 5,"max_epochs" : 40, "patch_size": 64},
-                                    "train_shading": {"min_epochs": 5,"max_epochs" : 40, "patch_size": 64},
-                                    "train_shadow": {"min_epochs": 5,"max_epochs" : 40, "patch_size": 64}}
+                                    "train_shading": {"min_epochs": 5,"max_epochs" : 40, "patch_size": 64}}
 
         #debug
-        else:
-            self.general_configs = {"train_albedo_mask": {"min_epochs": 1, "max_epochs" : 3, "patch_size": 256},
-                                   "train_albedo": {"min_epochs": 1,"max_epochs" : 3, "patch_size": 64},
-                                   "train_shading": {"min_epochs": 1,"max_epochs" : 3, "patch_size": 64}}
+        if(constants.debug_run):
+            self.general_configs = {"train_albedo_mask": {"min_epochs": 1, "max_epochs" : 2, "patch_size": 256},
+                                   "train_albedo": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 64},
+                                   "train_shading": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 64}}
 
 
         self.version_config = {"version": version, "network_p_name": "rgb2mask", "network_a_name" : "rgb2albedo", "network_s_name" : "rgb2shading"}
