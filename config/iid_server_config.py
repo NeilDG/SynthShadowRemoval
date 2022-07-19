@@ -15,10 +15,10 @@ class IIDServerConfig():
     def __init__(self, version):
         # COARE, CCS CLOUD, GCLOUD, RTX 2080TI, RTX 3090
         if(constants.server_config <= 5):
-            self.general_configs = {"train_albedo_mask": {"min_epochs": 5, "max_epochs" : 30, "patch_size": 256},
-                                    "train_albedo": {"min_epochs": 5,"max_epochs" : 30, "patch_size": 64},
-                                    "train_shading": {"min_epochs": 5,"max_epochs" : 30, "patch_size": 64},
-                                    "train_shadow": {"min_epochs": 5,"max_epochs" : 30, "patch_size": 64}}
+            self.general_configs = {"train_albedo_mask": {"min_epochs": 3, "max_epochs" : 30, "patch_size": 256},
+                                    "train_albedo": {"min_epochs": 5,"max_epochs" : 40, "patch_size": 64},
+                                    "train_shading": {"min_epochs": 5,"max_epochs" : 40, "patch_size": 64},
+                                    "train_shadow": {"min_epochs": 5,"max_epochs" : 40, "patch_size": 64}}
 
         #debug
         else:
@@ -96,8 +96,8 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_S] = 128
             elif (constants.server_config == 2):  # CCS JUPYTER
                 network_config[BATCH_SIZE_KEY_P] = 16
-                network_config[BATCH_SIZE_KEY_A] = 128
-                network_config[BATCH_SIZE_KEY_S] = 128
+                network_config[BATCH_SIZE_KEY_A] = 192
+                network_config[BATCH_SIZE_KEY_S] = 192
             elif (constants.server_config == 3):  # GCLOUD
                 network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
