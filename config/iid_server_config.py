@@ -95,7 +95,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
             elif (constants.server_config == 2):  # CCS JUPYTER
-                network_config[BATCH_SIZE_KEY_P] = 32
+                network_config[BATCH_SIZE_KEY_P] = 24
                 network_config[BATCH_SIZE_KEY_A] = 192
                 network_config[BATCH_SIZE_KEY_S] = 192
             elif (constants.server_config == 3):  # GCLOUD
