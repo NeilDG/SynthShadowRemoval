@@ -32,14 +32,16 @@ class EarlyStopper():
         self.stop_condition_met = False
         self.network = None
 
-        print("Set last metric to: ", self.last_metric)
-
         if(early_stopper_method is EarlyStopperMethod.L1_TYPE):
             self.loss_op = nn.L1Loss()
         elif(early_stopper_method is EarlyStopperMethod.SSIM_TYPE):
             self.loss_op = kornia.losses.SSIMLoss(5)
 
         self.test_metric_list = []
+
+    def update_last_metric(self, last_metric):
+        self.last_metric = last_metric
+        print("Updated last metric to: ", self.last_metric)
 
     def register_metric(self, input, target, epoch):
         if(epoch >= self.min_epochs):

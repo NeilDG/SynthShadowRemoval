@@ -101,9 +101,6 @@ def main(argv):
     print(constants.rgb_dir_ws, constants.albedo_dir)
     plot_utils.VisdomReporter.initialize()
 
-    start_epoch = 0
-    iteration = 0
-
     iid_server_config.IIDServerConfig.initialize(opts.version)
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
     general_config = sc_instance.get_general_configs()
@@ -122,9 +119,9 @@ def main(argv):
         test_loader = dataset_loader.load_iid_datasetv2_test(constants.rgb_dir_ws, constants.rgb_dir_ns, constants.unlit_dir, constants.albedo_dir, 256, opts)
         rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
 
-        print("Started Training loop for mode: ", mode)
         iteration = 0
-
+        start_epoch = constants.start_epoch
+        print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
         for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
             for i, (train_data, test_data, rw_data) in enumerate(zip(train_loader, test_loader, itertools.cycle(rw_loader))):
                 _, rgb_ws_batch, rgb_ns_batch, albedo_batch, unlit_batch = train_data
