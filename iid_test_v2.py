@@ -237,15 +237,18 @@ def main(argv):
             rgb2mask = mask_t.test(input)
             rgb2albedo = albedo_t.test(input)
             rgb2shading, rgb2shadow = shading_t.test(input)
+            rgb_like = iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
 
             #normalize everything
             rgb_ws_tensor = tensor_utils.normalize_to_01(rgb_ws_tensor)
             shading_tensor = tensor_utils.normalize_to_01(shading_tensor)
             shadow_tensor = tensor_utils.normalize_to_01(shadow_tensor)
+            albedo_tensor = tensor_utils.normalize_to_01(albedo_tensor)
+            rgb2shading = tensor_utils.normalize_to_01(rgb2shading)
+            rgb2shadow = tensor_utils.normalize_to_01(rgb2shadow)
             rgb2albedo = tensor_utils.normalize_to_01(rgb2albedo)
             rgb2albedo = rgb2albedo * rgb2mask
             rgb2albedo = iid_op.mask_fill_nonzeros(rgb2albedo)
-            rgb_like = iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
 
             visdom_reporter.plot_image(rgb_ws_tensor, "Input RGB Images - " + opts.version + str(opts.iteration))
             visdom_reporter.plot_image(rgb_like, "RGB Reconstruction Images - " + opts.version + str(opts.iteration))

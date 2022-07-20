@@ -2,17 +2,17 @@
 
 import os
 def train_relighting():
-    # os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --test_mode=0 "
-    #           "--plot_enabled=0 --version=\"v9.01\" --iteration=15")
+    os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --test_mode=0 "
+              "--plot_enabled=0 --version=\"v9.01\" --iteration=15")
 
-    # os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --test_mode=0 "
-    #           "--plot_enabled=0 --version=\"v9.01\" --iteration=16")
+    os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --test_mode=0 "
+              "--plot_enabled=0 --version=\"v9.01\" --iteration=16")
+
+    # os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 "
+    #           "--plot_enabled=0 --version=\"v9.01\" --iteration=5")
     #
-    os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 "
-              "--plot_enabled=0 --version=\"v9.01\" --iteration=5")
-
-    os.system("python \"iid_train_v2.py\" --server_config=6 --img_to_load=-1 "
-              "--plot_enabled=0 --version=\"v9.01\" --iteration=6")
+    # os.system("python \"iid_train_v2.py\" --server_config=6 --img_to_load=-1 "
+    #           "--plot_enabled=0 --version=\"v9.01\" --iteration=6")
 
 
 def train_domain_adaptation():
