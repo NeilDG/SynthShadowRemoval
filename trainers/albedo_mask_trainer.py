@@ -63,6 +63,8 @@ class AlbedoMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         with amp.autocast():
             if (self.da_enabled == 1):
                 input = self.reshape_input(input_rgb_tensor)
+            else:
+                input = input_rgb_tensor
 
             mask_tensor_inv = 1 - mask_tensor
             output = torch.cat([mask_tensor, mask_tensor_inv], 1)

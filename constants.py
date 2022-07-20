@@ -93,8 +93,10 @@ debug_run = 0
 num_workers = 12
 
 albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
-rgb_dir_ws = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-rgb_dir_ns = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+rgb_dir_ws_styled = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+rgb_dir_ns_styled = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+rgb_dir_ws = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"
+rgb_dir_ns = "E:/SynthWeather Dataset 8/train_rgb_noshadows/"
 unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
 
 imgx_dir = "E:/Places Dataset/*.jpg"
