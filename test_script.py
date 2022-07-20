@@ -8,6 +8,10 @@ def test_relighting():
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
     os.system("python \"iid_test_v2.py\" --server_config=5 --img_to_load=-1 --test_mode=0 "
+              "--plot_enabled=1 --version=\"v9.01\" --iteration=6 "
+              "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
+
+    os.system("python \"iid_test_v2.py\" --server_config=5 --img_to_load=-1 --test_mode=0 "
               "--plot_enabled=1 --version=\"v9.01\" --iteration=15 "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
