@@ -301,6 +301,8 @@ def main(argv):
     torch.manual_seed(manualSeed)
     np.random.seed(manualSeed)
 
+    plot_utils.VisdomReporter.initialize()
+
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
