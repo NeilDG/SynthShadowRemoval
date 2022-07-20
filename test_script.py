@@ -3,12 +3,16 @@
 import os
 
 def test_relighting():
-    os.system("python \"iid_test_v2.py\" --server_config=6 --img_to_load=-1 --test_mode=0 "
-              "--plot_enabled=1 --version=\"v9.00\" --iteration=15 "
+    os.system("python \"iid_test_v2.py\" --server_config=5 --img_to_load=-1 --test_mode=0 "
+              "--plot_enabled=1 --version=\"v9.01\" --iteration=5 "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
-    os.system("python \"iid_test_v2.py\" --server_config=6 --img_to_load=-1 --test_mode=0 "
-              "--plot_enabled=1 --version=\"v9.00\" --iteration=16 "
+    os.system("python \"iid_test_v2.py\" --server_config=5 --img_to_load=-1 --test_mode=0 "
+              "--plot_enabled=1 --version=\"v9.01\" --iteration=15 "
+              "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
+
+    os.system("python \"iid_test_v2.py\" --server_config=5 --img_to_load=-1 --test_mode=0 "
+              "--plot_enabled=1 --version=\"v9.01\" --iteration=16 "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
     # os.system("python \"iid_test.py\"  --net_config=4 --num_blocks=6 --version_name=\"iid_networkv9.04\" --albedo_mode=2 --iteration=13 "

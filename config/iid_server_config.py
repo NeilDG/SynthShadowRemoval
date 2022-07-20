@@ -48,6 +48,7 @@ class IIDServerConfig():
         BATCH_SIZE_KEY_S = "batch_size_s"
         ALBEDO_MODE_KEY = "albedo_mode"
         DA_ENABLED = "da_enabled"
+        STYLE_TRANSFER_KEY = "style_transferred"
 
         network_config["unlit_version_name"] = "synth2unlit_v1.00_1.pt"
         network_config["da_version_name"] = "embedding_v5.00_5"
