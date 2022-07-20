@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from loaders import dataset_loader
 from trainers import cyclegan_trainer, early_stopper
 import constants
-from transforms import cyclegan_transforms
+from transforms import cyclegan_transforms, iid_transforms
 
 parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
@@ -81,7 +81,8 @@ def update_config(opts):
     else:
         opts.num_workers = 12
         constants.imgx_dir = "E:/Places Dataset/*.jpg"
-        constants.imgy_dir = "E:/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
+        # constants.imgy_dir = "E:/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
+        constants.imgy_dir = "E:/SynthWeather Dataset 8/albedo/*.png"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers, " ", opts.version_name)
 
 def main(argv):
@@ -137,6 +138,8 @@ def main(argv):
 
     else:
         print("Starting Training Loop...")
+        iid_op = iid_transforms.IIDTransform()
+
         for epoch in range(start_epoch, constants.num_epochs):
             # For each batch in the dataloader
             for i, (train_data, test_data) in enumerate(zip(train_loader, test_loader)):
@@ -144,12 +147,15 @@ def main(argv):
                 imgx_tensor = imgx_batch.to(device)
                 imgy_tensor = imgy_batch.to(device)
 
+                masky_tensor = iid_op.create_sky_reflection_masks(imgy_tensor)
+                imgy_tensor = iid_op.mask_fill_nonzeros(imgy_tensor * masky_tensor)
+
                 gt.train(imgx_tensor, imgy_tensor, i)
                 iteration = iteration + 1
 
                 x2y, _ = gt.test(imgx_tensor, imgy_tensor)
                 stopper_method.register_metric(x2y, imgy_tensor, epoch)
-                stopper_method.test(gt, epoch, iteration)  # stop training if reconstruction no longer becomes close to Y
+                stopper_method.test(epoch)  # stop training if reconstruction no longer becomes close to Y
 
                 if (i % 256 == 0):
                     gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")

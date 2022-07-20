@@ -603,9 +603,11 @@ def main(argv):
     # produce_color_images("E:/SynthWeather Dataset 6/azimuth/144deg/rgb/", "E:/SynthWeather Dataset 6/azimuth/144deg/rgb - styled/", "synth2rgb_v4.07_3.pt", 2, argv)
     # produce_color_images("E:/SynthWeather Dataset 6/no_shadows/*.png", "E:/SynthWeather Dataset 6/no_shadows_styled/", "synth2rgb_v4.07_3.pt", 2, argv)
 
-    base_path = "E:/SynthWeather Dataset 8/train_rgb_noshadows/"
+    base_path = "E:/SynthWeather Dataset 8/train_rgb/"
+    # base_path = "E:/SynthWeather Dataset 8/train_rgb_noshadows/"
+    output_base_path = "E:/SynthWeather Dataset 8/train_rgb_styled/"
     # output_base_path = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
-    output_base_path = "E:/SynthWeather Dataset 8/temp_styled/"
+    # output_base_path = "E:/SynthWeather Dataset 8/temp_styled/"
     try:
         os.mkdir(output_base_path)
     except OSError as error:
@@ -616,7 +618,7 @@ def main(argv):
     for dir in dirlist:
         input_path = base_path + dir + "/*.png"
         output_path = output_base_path + dir + "/"
-        produce_color_images(input_path, output_path, "synth2rgb_v5.00_6.pt", 2, argv)
+        produce_color_images(input_path, output_path, "synth2rgb_v5.00_5.pt", 2, argv)
 
     # create_patches(argv)
 

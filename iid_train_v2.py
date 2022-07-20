@@ -27,7 +27,7 @@ parser.add_option('--iteration', type=int, help="Style version?", default="1")
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
-parser.add_option('--test_mode', type=int, help="Test mode?", default=0)
+parser.add_option('--debug_run', type=int, help="Debug mode?", default=0)
 parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
 
 def update_config(opts):
@@ -66,9 +66,11 @@ def update_config(opts):
 
     elif (constants.server_config == 4):
         opts.num_workers = 6
-        constants.DATASET_PLACES_PATH = "D:/Datasets/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "D:/Datasets/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.albedo_dir = "D:/Datasets/SynthWeather Dataset 8/albedo/"
+        constants.DATASET_PLACES_PATH = "C:/Datasets/Places Dataset/*.jpg"
+        constants.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+        constants.albedo_dir = "C:/Datasets/SynthWeather Dataset 8/albedo/"
+        constants.unlit_dir = "C:/Datasets/SynthWeather Dataset 8/unlit/"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers)
     else:
@@ -99,9 +101,6 @@ def main(argv):
     print(constants.rgb_dir_ws, constants.albedo_dir)
     plot_utils.VisdomReporter.initialize()
 
-    start_epoch = 0
-    iteration = 0
-
     iid_server_config.IIDServerConfig.initialize(opts.version)
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
     general_config = sc_instance.get_general_configs()
@@ -120,9 +119,9 @@ def main(argv):
         test_loader = dataset_loader.load_iid_datasetv2_test(constants.rgb_dir_ws, constants.rgb_dir_ns, constants.unlit_dir, constants.albedo_dir, 256, opts)
         rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
 
-        print("Started Training loop for mode: ", mode)
         iteration = 0
-
+        start_epoch = constants.start_epoch
+        print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
         for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
             for i, (train_data, test_data, rw_data) in enumerate(zip(train_loader, test_loader, itertools.cycle(rw_loader))):
                 _, rgb_ws_batch, rgb_ns_batch, albedo_batch, unlit_batch = train_data

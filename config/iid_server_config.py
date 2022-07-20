@@ -15,16 +15,15 @@ class IIDServerConfig():
     def __init__(self, version):
         # COARE, CCS CLOUD, GCLOUD, RTX 2080TI, RTX 3090
         if(constants.server_config <= 5):
-            self.general_configs = {"train_albedo_mask": {"min_epochs": 50, "max_epochs" : 200, "patch_size": 256},
-                                    "train_albedo": {"min_epochs": 50,"max_epochs" : 200, "patch_size": 64},
-                                    "train_shading": {"min_epochs": 50,"max_epochs" : 200, "patch_size": 64},
-                                    "train_shadow": {"min_epochs": 50,"max_epochs" : 200, "patch_size": 64}}
+            self.general_configs = {"train_albedo_mask": {"min_epochs": 3, "max_epochs" : 10, "patch_size": 256},
+                                    "train_albedo": {"min_epochs": 5,"max_epochs" : 40, "patch_size": 64},
+                                    "train_shading": {"min_epochs": 5,"max_epochs" : 40, "patch_size": 64}}
 
         #debug
-        else:
-            self.general_configs = {"train_albedo_mask": {"min_epochs": 1, "max_epochs" : 10, "patch_size": 256},
-                                   "train_albedo": {"min_epochs": 1,"max_epochs" : 10, "patch_size": 64},
-                                   "train_shading": {"min_epochs": 1,"max_epochs" : 10, "patch_size": 64}}
+        if(constants.debug_run):
+            self.general_configs = {"train_albedo_mask": {"min_epochs": 1, "max_epochs" : 2, "patch_size": 256},
+                                   "train_albedo": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 64},
+                                   "train_shading": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 64}}
 
 
         self.version_config = {"version": version, "network_p_name": "rgb2mask", "network_a_name" : "rgb2albedo", "network_s_name" : "rgb2shading"}
@@ -49,6 +48,7 @@ class IIDServerConfig():
         BATCH_SIZE_KEY_S = "batch_size_s"
         ALBEDO_MODE_KEY = "albedo_mode"
         DA_ENABLED = "da_enabled"
+        STYLE_TRANSFER_KEY = "style_transferred"
 
         network_config["unlit_version_name"] = "synth2unlit_v1.00_1.pt"
         network_config["da_version_name"] = "embedding_v5.00_5"
@@ -57,7 +57,7 @@ class IIDServerConfig():
             network_config[NETWORK_CONFIG_NUM] = 2
             network_config[NC_KEY] = 6
             network_config[NUM_BLOCKS_KEY] = 1
-            network_config[ALBEDO_MODE_KEY] = 2
+            network_config[ALBEDO_MODE_KEY] = 1
             network_config[DA_ENABLED] = 1
 
             # configure batch sizes
@@ -86,7 +86,7 @@ class IIDServerConfig():
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 6
             network_config[NUM_BLOCKS_KEY] = 4
-            network_config[ALBEDO_MODE_KEY] = 2
+            network_config[ALBEDO_MODE_KEY] = 1
             network_config[DA_ENABLED] = 1
 
             # configure batch sizes
@@ -95,9 +95,9 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
             elif (constants.server_config == 2):  # CCS JUPYTER
-                network_config[BATCH_SIZE_KEY_P] = 16
-                network_config[BATCH_SIZE_KEY_A] = 128
-                network_config[BATCH_SIZE_KEY_S] = 128
+                network_config[BATCH_SIZE_KEY_P] = 24
+                network_config[BATCH_SIZE_KEY_A] = 192
+                network_config[BATCH_SIZE_KEY_S] = 192
             elif (constants.server_config == 3):  # GCLOUD
                 network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
@@ -115,7 +115,7 @@ class IIDServerConfig():
             network_config[NETWORK_CONFIG_NUM] = 5
             network_config[NC_KEY] = 6
             network_config[NUM_BLOCKS_KEY] = 6
-            network_config[ALBEDO_MODE_KEY] = 2
+            network_config[ALBEDO_MODE_KEY] = 1
             network_config[DA_ENABLED] = 1
 
             # configure batch sizes

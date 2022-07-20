@@ -237,15 +237,18 @@ def main(argv):
             rgb2mask = mask_t.test(input)
             rgb2albedo = albedo_t.test(input)
             rgb2shading, rgb2shadow = shading_t.test(input)
+            rgb_like = iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
 
             #normalize everything
             rgb_ws_tensor = tensor_utils.normalize_to_01(rgb_ws_tensor)
             shading_tensor = tensor_utils.normalize_to_01(shading_tensor)
             shadow_tensor = tensor_utils.normalize_to_01(shadow_tensor)
+            albedo_tensor = tensor_utils.normalize_to_01(albedo_tensor)
+            rgb2shading = tensor_utils.normalize_to_01(rgb2shading)
+            rgb2shadow = tensor_utils.normalize_to_01(rgb2shadow)
             rgb2albedo = tensor_utils.normalize_to_01(rgb2albedo)
             rgb2albedo = rgb2albedo * rgb2mask
             rgb2albedo = iid_op.mask_fill_nonzeros(rgb2albedo)
-            rgb_like = iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
 
             visdom_reporter.plot_image(rgb_ws_tensor, "Input RGB Images - " + opts.version + str(opts.iteration))
             visdom_reporter.plot_image(rgb_like, "RGB Reconstruction Images - " + opts.version + str(opts.iteration))
@@ -268,7 +271,7 @@ def main(argv):
             ssim_shadow = np.round(1.0 - kornia.losses.ssim_loss(rgb2shadow, shadow_tensor, 5).item(), 4)
             psnr_rgb = np.round(kornia.metrics.psnr(rgb_like, rgb_ws_tensor, max_val=1.0).item(), 4)
             ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb_like, rgb_ws_tensor, 5).item(), 4)
-            display_text = "Test Set - Versions: " + opts.version + str(opts.iteration) + \
+            display_text = "Test Set - Versions: " + opts.version + "_" + str(opts.iteration) + \
                            "<br> Albedo PSNR: " + str(psnr_albedo) + "<br> Albedo SSIM: " + str(ssim_albedo) + \
                            "<br> Shading PSNR: " + str(psnr_shading) + "<br> Shading SSIM: " + str(ssim_shading) + \
                            "<br> Shadow PSNR: " + str(psnr_shadow) + "<br> Shadow SSIM: " + str(ssim_shadow) + \

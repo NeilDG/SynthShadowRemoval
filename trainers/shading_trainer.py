@@ -275,6 +275,8 @@ class ShadingTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 print("No existing checkpoint file found. Creating new network: ", self.NETWORK_CHECKPATH)
 
         if(checkpoint != None):
+            constants.start_epoch = checkpoint["epoch"]
+            self.stopper_method.update_last_metric(checkpoint[constants.LAST_METRIC_KEY])
             self.G_S.load_state_dict(checkpoint[constants.GENERATOR_KEY + "S"])
             self.D_S.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "S"])
             self.G_Z.load_state_dict(checkpoint[constants.GENERATOR_KEY + "Z"])
