@@ -280,7 +280,7 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 print("No existing checkpoint file found. Creating new network: ", self.NETWORK_CHECKPATH)
 
         if (checkpoint != None):
-            constants.start_epoch = checkpoint["epoch"]
+            iid_server_config.IIDServerConfig.getInstance().store_epoch_from_checkpt("train_albedo", checkpoint["epoch"])
             self.stopper_method.update_last_metric(checkpoint[constants.LAST_METRIC_KEY])
             self.G_A.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
             self.D_A.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "A"])

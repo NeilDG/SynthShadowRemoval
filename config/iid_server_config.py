@@ -13,6 +13,8 @@ class IIDServerConfig():
         return IIDServerConfig._sharedInstance
 
     def __init__(self, version):
+        self.epoch_map = {"train_albedo_mask" : 0, "train_albedo" : 0, "train_shading" : 0}
+
         # COARE, CCS CLOUD, GCLOUD, RTX 2080TI, RTX 3090
         if(constants.server_config <= 5):
             self.general_configs = {"train_albedo_mask": {"min_epochs": 3, "max_epochs" : 10, "patch_size": 256},
@@ -20,7 +22,7 @@ class IIDServerConfig():
                                     "train_shading": {"min_epochs": 5,"max_epochs" : 40, "patch_size": 64}}
 
         #debug
-        if(constants.debug_run):
+        if(constants.debug_run == 1):
             self.general_configs = {"train_albedo_mask": {"min_epochs": 1, "max_epochs" : 2, "patch_size": 256},
                                    "train_albedo": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 64},
                                    "train_shading": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 64}}
@@ -37,6 +39,12 @@ class IIDServerConfig():
         version = self.version_config["version"]
 
         return network + "_" + version + "_" + str(iteration)
+
+    def store_epoch_from_checkpt(self, mode, epoch):
+        self.epoch_map[mode] = epoch
+
+    def get_last_epoch_from_mode(self, mode):
+        return self.epoch_map[mode]
 
     def interpret_network_config_from_version(self, version): #interprets a given version name + iteration, to its corresponding network config. Ex: v.9.00.XX = U-Net config
         network_config = {}

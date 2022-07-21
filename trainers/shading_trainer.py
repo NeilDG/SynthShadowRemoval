@@ -139,6 +139,8 @@ class ShadingTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         with amp.autocast():
             if (self.da_enabled == 1):
                 input = self.reshape_input(input_rgb_tensor)
+            else:
+                input = input_rgb_tensor
 
             self.optimizerD_shading.zero_grad()
 
@@ -275,7 +277,7 @@ class ShadingTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 print("No existing checkpoint file found. Creating new network: ", self.NETWORK_CHECKPATH)
 
         if(checkpoint != None):
-            constants.start_epoch = checkpoint["epoch"]
+            iid_server_config.IIDServerConfig.getInstance().store_epoch_from_checkpt("train_shading", checkpoint["epoch"])
             self.stopper_method.update_last_metric(checkpoint[constants.LAST_METRIC_KEY])
             self.G_S.load_state_dict(checkpoint[constants.GENERATOR_KEY + "S"])
             self.D_S.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "S"])

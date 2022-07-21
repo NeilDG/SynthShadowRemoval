@@ -53,7 +53,7 @@ class IIDTransform(nn.Module):
 
     def forward(self, rgb_ws, rgb_ns, albedo_tensor):
         #extract shadows
-        shadows_refined = self.extract_shadow(rgb_ws, rgb_ns, False)
+        shadows_refined = self.extract_shadow(rgb_ws, rgb_ns, True)
         albedo_refined, shading_refined = self.decompose(rgb_ns, albedo_tensor)
 
         rgb_recon = self.produce_rgb(albedo_refined, shading_refined, shadows_refined, False)

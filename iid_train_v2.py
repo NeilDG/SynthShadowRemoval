@@ -34,6 +34,7 @@ def update_config(opts):
     constants.server_config = opts.server_config
     constants.ITERATION = str(opts.iteration)
     constants.plot_enabled = opts.plot_enabled
+    constants.debug_run = opts.debug_run
 
     ## COARE
     if (constants.server_config == 1):
@@ -128,7 +129,7 @@ def main(argv):
         rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
 
         iteration = 0
-        start_epoch = constants.start_epoch
+        start_epoch = sc_instance.get_last_epoch_from_mode(mode)
         print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
         for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
             for i, (train_data, test_data, rw_data) in enumerate(zip(train_loader, test_loader, itertools.cycle(rw_loader))):

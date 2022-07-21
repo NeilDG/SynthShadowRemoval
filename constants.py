@@ -85,7 +85,6 @@ plot_enabled = 1
 early_stop_threshold = 1000
 min_epochs = 50
 num_epochs = 100
-start_epoch = 0
 
 #Running on local = 0, Running on COARE = 1, Running on CCS server = 2
 server_config = 0
