@@ -35,6 +35,8 @@ class IIDTransform(nn.Module):
             albedo_tensor = (albedo_tensor * 0.5) + 0.5
 
         albedo_gray = kornia.color.rgb_to_grayscale(albedo_tensor)
+        # albedo_gray = kornia.filters.median_blur(albedo_gray, (3, 3))
+
         output_tensor = torch.ones_like(albedo_gray)
         masked_tensor = (albedo_gray >= 1.0)
         return output_tensor.masked_fill_(masked_tensor, 0)
@@ -51,7 +53,7 @@ class IIDTransform(nn.Module):
 
     def forward(self, rgb_ws, rgb_ns, albedo_tensor):
         #extract shadows
-        shadows_refined = self.extract_shadow(rgb_ws, rgb_ns, True)
+        shadows_refined = self.extract_shadow(rgb_ws, rgb_ns, False)
         albedo_refined, shading_refined = self.decompose(rgb_ns, albedo_tensor)
 
         rgb_recon = self.produce_rgb(albedo_refined, shading_refined, shadows_refined, False)
@@ -98,11 +100,10 @@ class IIDTransform(nn.Module):
         min = 0.0
         max = 1.0
 
-        ws_refined = self.mask_fill_nonzeros(rgb_tensor_ws)
-        ns_refined = self.mask_fill_nonzeros(rgb_tensor_ns)
+        ws_refined = rgb_tensor_ws
+        ns_refined = rgb_tensor_ns
 
-        shadow_tensor = torch.log(ws_refined) - torch.log(ns_refined)
-        shadow_tensor = torch.exp(shadow_tensor)
+        shadow_tensor = ns_refined - ws_refined
 
         if(one_channel == True):
             shadow_tensor = kornia.color.rgb_to_grayscale(shadow_tensor)
@@ -141,7 +142,7 @@ class IIDTransform(nn.Module):
 
         # albedo_tensor = self.mask_fill_nonzeros(albedo_tensor)
         # shading_tensor = self.mask_fill_nonzeros(shading_tensor)
-        rgb_recon = albedo_tensor * shading_tensor * shadow_tensor
+        rgb_recon = (albedo_tensor * shading_tensor) - (shadow_tensor * 0.7)
         rgb_recon = torch.clip(rgb_recon, 0.0, 1.0)
         return rgb_recon
 
