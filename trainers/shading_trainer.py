@@ -229,6 +229,8 @@ class ShadingTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             input_rgb_tensor = input_map["rgb"]
             if (self.da_enabled == 1):
                 input = self.reshape_input(input_rgb_tensor)
+            else:
+                input = input_rgb_tensor
 
             rgb2shading = self.G_S(input)
             rgb2shadow = self.G_Z(input)
