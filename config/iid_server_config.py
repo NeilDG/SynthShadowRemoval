@@ -191,7 +191,7 @@ class IIDServerConfig():
 
             # configure batch sizes
             if (constants.server_config == 1):  # COARE
-                network_config[BATCH_SIZE_KEY_P] = 16
+                network_config[BATCH_SIZE_KEY_P] = 32
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
             elif (constants.server_config == 2):  # CCS JUPYTER

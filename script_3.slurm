@@ -19,14 +19,8 @@ module load cuda/10.1_cudnn-7.6.5
 
 source activate NeilGAN_V2
 
-srun python iid_train.py \
---iteration=$ITERATION \
---server_config=1 \
---batch_size=128 \
---patch_size=64 \
---plot_enabled=0 \
---version_name="iid_networkv8.01" --min_epochs=40 --net_config=4 --num_blocks=4 \
---da_enabled=1 --da_version_name="embedding_v5.00_5" \
---img_to_load=-1 --load_previous=0
+srun python iid_train_v2.py \
+--version="v9.07" --iteration=$ITERATION \
+--server_config=1 --plot_enabled=0 --img_to_load=-1
 
 conda deactivate
