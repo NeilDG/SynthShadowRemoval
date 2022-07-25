@@ -55,6 +55,7 @@ class TrainerFactory():
 #         checkpoint = torch.load("./checkpoint/" + unlit_version_name, map_location=self.gpu_device)
 #         net_config = checkpoint['net_config']
 #         num_blocks = checkpoint['num_blocks']
+        net_config = 2
 
         if (net_config == 1):
             self.G_unlit = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
