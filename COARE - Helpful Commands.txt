@@ -11,6 +11,7 @@ cd scratch2/NeuralNets-GenerativeExperiment-4
 cd scratch2/NeuralNets-GenerativeExperiment-5
 cd scratch2/NeuralNets-GenerativeExperiment-6
 cd scratch2/NeuralNets-GenerativeExperiment-V8.XX.XX
+cd scratch2/NeuralNets-GenerativeExperiment-V9.XX.XX
 cd scratch2/Visdom
 
 git clone -b "workspace/V8.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "/NeuralNets-GenerativeExperiment-V8.XX.XX"
