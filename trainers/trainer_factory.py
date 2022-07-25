@@ -52,9 +52,9 @@ class TrainerFactory():
         print("Loaded fixed decoder network")
 
     def initialize_unlit_network(self, unlit_version_name):
-        checkpoint = torch.load("./checkpoint/" + unlit_version_name, map_location=self.gpu_device)
-        net_config = checkpoint['net_config']
-        num_blocks = checkpoint['num_blocks']
+#         checkpoint = torch.load("./checkpoint/" + unlit_version_name, map_location=self.gpu_device)
+#         net_config = checkpoint['net_config']
+#         num_blocks = checkpoint['num_blocks']
 
         if (net_config == 1):
             self.G_unlit = cycle_gan.Generator(input_nc=3, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
@@ -63,7 +63,7 @@ class TrainerFactory():
         else:
             self.G_unlit = ffa.FFA(gps=3, blocks=num_blocks).to(self.gpu_device)
 
-        self.G_unlit.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
+#         self.G_unlit.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
         print("Loaded unlit network: " + unlit_version_name)
 
     def train(self, mode, epoch, iteration, input_map, target_map):
