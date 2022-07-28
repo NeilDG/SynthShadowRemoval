@@ -103,6 +103,7 @@ def main(argv):
     random.seed(manualSeed)
     torch.manual_seed(manualSeed)
     np.random.seed(manualSeed)
+    torch.multiprocessing.set_sharing_strategy('file_system')
 
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
