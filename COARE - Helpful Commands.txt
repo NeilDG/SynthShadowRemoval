@@ -11,9 +11,10 @@ cd scratch2/NeuralNets-GenerativeExperiment-4
 cd scratch2/NeuralNets-GenerativeExperiment-5
 cd scratch2/NeuralNets-GenerativeExperiment-6
 cd scratch2/NeuralNets-GenerativeExperiment-V8.XX.XX
+cd scratch2/NeuralNets-GenerativeExperiment-V9.XX.XX
 cd scratch2/Visdom
 
-git clone -b "workspace/V8.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "/NeuralNets-GenerativeExperiment-V8.XX.XX"
+git clone -b "workspace/V9.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "scratch2/NeuralNets-GenerativeExperiment-V9.XX.XX"
 
 //Execute job
 sbatch slurm_install.slurm
@@ -75,6 +76,14 @@ cd NeuralNets-GenerativeExperiment-V8.XX.XX
 cd NeuralNets-GenerativeExperiment-V9.XX.XX
 python "ccs1_main.py"
 python "ccs2_main.py"
+
+zip -r "albedo_checkpoints.zip" "rgb2albedo_v9.01_7.pt" "rgb2albedo_v9.01_8.pt" "rgb2albedo_v9.01_9.pt" "rgb2albedo_v9.01_10.pt" "rgb2albedo_v9.01_11.pt" "rgb2albedo_v9.01_12.pt" "rgb2albedo_v9.01_13.pt" "rgb2albedo_v9.01_14.pt"
+zip -r "mask_checkpoints.zip" "rgb2mask_v9.01_7.pt" "rgb2mask_v9.01_8.pt" "rgb2mask_v9.01_9.pt" "rgb2mask_v9.01_10.pt" "rgb2mask_v9.01_11.pt" "rgb2mask_v9.01_12.pt" "rgb2mask_v9.01_13.pt" "rgb2mask_v9.01_14.pt"
+zip -r "shading_checkpoints.zip" "rgb2shading_v9.01_7.pt" "rgb2shading_v9.01_8.pt" "rgb2shading_v9.01_9.pt" "rgb2shading_v9.01_10.pt" "rgb2shading_v9.01_11.pt" "rgb2shading_v9.01_12.pt" "rgb2shading_v9.01_13.pt" "rgb2shading_v9.01_14.pt"
+
+zip -r "checkpoints.zip" "rgb2albedo_v9.01_7.pt" "rgb2albedo_v9.01_8.pt" "rgb2albedo_v9.01_9.pt" "rgb2albedo_v9.01_10.pt" "rgb2albedo_v9.01_11.pt" "rgb2albedo_v9.01_12.pt" "rgb2albedo_v9.01_13.pt" "rgb2albedo_v9.01_14.pt" \
+"rgb2mask_v9.01_7.pt" "rgb2mask_v9.01_8.pt" "rgb2mask_v9.01_9.pt" "rgb2mask_v9.01_10.pt" "rgb2mask_v9.01_11.pt" "rgb2mask_v9.01_12.pt" "rgb2mask_v9.01_13.pt" "rgb2mask_v9.01_14.pt" \
+"rgb2shading_v9.01_7.pt" "rgb2shading_v9.01_8.pt" "rgb2shading_v9.01_9.pt" "rgb2shading_v9.01_10.pt" "rgb2shading_v9.01_11.pt" "rgb2shading_v9.01_12.pt" "rgb2shading_v9.01_13.pt" "rgb2shading_v9.01_14.pt"
 
 //GCLOUD
 cd NeuralNets-GenerativeExperiment
