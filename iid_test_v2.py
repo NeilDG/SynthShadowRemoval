@@ -218,7 +218,15 @@ def main(argv):
 
     iid_op = iid_transforms.IIDTransform()
 
-    test_loader = dataset_loader.load_iid_datasetv2_test(constants.rgb_dir_ws_styled, constants.rgb_dir_ns_styled, constants.unlit_dir, constants.albedo_dir, 256, opts)
+    style_enabled = network_config["style_transferred"]
+    if (style_enabled == 1):
+        rgb_dir_ws = constants.rgb_dir_ws_styled
+        rgb_dir_ns = constants.rgb_dir_ns_styled
+    else:
+        rgb_dir_ws = constants.rgb_dir_ws
+        rgb_dir_ns = constants.rgb_dir_ns
+
+    test_loader = dataset_loader.load_iid_datasetv2_test(rgb_dir_ws, rgb_dir_ns, constants.unlit_dir, constants.albedo_dir, 256, opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
 
     tf = trainer_factory.TrainerFactory(device, opts)
