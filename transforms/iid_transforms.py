@@ -21,7 +21,7 @@ class IIDTransform(nn.Module):
 
     def mask_fill_nonzeros(self, input_tensor):
         output_tensor = torch.clone(input_tensor)
-        masked_tensor = (input_tensor <= 0.0)
+        masked_tensor = (input_tensor <= 0.01)
         return output_tensor.masked_fill(masked_tensor, 1.0)
 
     def revert_mask_fill_nonzeros(self, input_tensor):
@@ -54,7 +54,7 @@ class IIDTransform(nn.Module):
     def forward(self, rgb_ws, rgb_ns, albedo_tensor):
         #extract shadows
         shadows_refined = self.extract_shadow(rgb_ws, rgb_ns, True)
-        albedo_refined, shading_refined = self.decompose(rgb_ns, albedo_tensor)
+        albedo_refined, shading_refined = self.decompose(rgb_ns, albedo_tensor, True)
 
         rgb_recon = self.produce_rgb(albedo_refined, shading_refined, shadows_refined, False)
 
@@ -70,8 +70,8 @@ class IIDTransform(nn.Module):
         return rgb_recon, albedo_refined, shading_refined, shadow_tensor
 
     def extract_shading(self, rgb_tensor, albedo_tensor, one_channel = False):
-        min = 0.0
-        max = 1.0
+        min = torch.min(rgb_tensor)
+        max = torch.max(rgb_tensor)
 
         albedo_refined = self.mask_fill_nonzeros(albedo_tensor)
         shading_tensor = rgb_tensor / albedo_refined
@@ -82,11 +82,11 @@ class IIDTransform(nn.Module):
         shading_tensor = torch.clip(shading_tensor, min, max)
         return shading_tensor
 
-    def decompose(self, rgb_tensor, albedo_tensor):
-        min = 0.0
-        max = 1.0
+    def decompose(self, rgb_tensor, albedo_tensor, one_channel = False):
+        min = torch.min(rgb_tensor)
+        max = torch.max(rgb_tensor)
 
-        final_shading = self.extract_shading(rgb_tensor, albedo_tensor)
+        final_shading = self.extract_shading(rgb_tensor, albedo_tensor, one_channel)
         final_shading = self.mask_fill_nonzeros(final_shading)
 
         final_albedo = rgb_tensor / final_shading
@@ -97,8 +97,8 @@ class IIDTransform(nn.Module):
         return final_albedo, final_shading
 
     def extract_shadow(self, rgb_tensor_ws, rgb_tensor_ns, one_channel = False):
-        min = 0.0
-        max = 1.0
+        min = torch.min(rgb_tensor_ws)
+        max = torch.max(rgb_tensor_ws)
 
         ws_refined = rgb_tensor_ws
         ns_refined = rgb_tensor_ns
@@ -145,5 +145,24 @@ class IIDTransform(nn.Module):
         rgb_recon = (albedo_tensor * shading_tensor) - (shadow_tensor * 0.7)
         rgb_recon = torch.clip(rgb_recon, 0.0, 1.0)
         return rgb_recon
+
+class CGITransform(IIDTransform):
+    
+    def __init__(self):
+        super(CGITransform, self).__init__()
+
+    def decompose_cgi(self, rgb_tensor, albedo_tensor):
+        albedo_refined, shading_refined = self.decompose(rgb_tensor, albedo_tensor, True)
+
+        rgb_recon = albedo_refined * shading_refined
+        rgb_recon = torch.clip(rgb_recon, 0.0, 1.0)
+
+        # loss_op = nn.L1Loss()
+        # print("Difference between RGB vs Recon: ", loss_op(rgb_recon, rgb_tensor).item())
+
+
+        return rgb_recon, albedo_refined, shading_refined
+
+    
 
 

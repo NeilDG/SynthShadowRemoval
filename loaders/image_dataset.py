@@ -10,6 +10,7 @@ import torchvision.transforms.functional
 import torch.nn.functional as F
 import constants
 import kornia
+from pathlib import Path
 
 class ColorTransferDataset(data.Dataset):
     def __init__(self, image_list_a, path_b, path_segment, transform_config):
@@ -212,17 +213,8 @@ class IIDDatasetV2(data.Dataset):
                 transforms.ToTensor()
             ])
 
-            self.mask_op = transforms.Compose([
-                transforms.ToTensor()
-            ])
-
         else:
             self.final_transform_op = transforms.Compose([
-                transforms.Resize(constants.TEST_IMAGE_SIZE),
-                transforms.ToTensor()
-            ])
-
-            self.mask_op = transforms.Compose([
                 transforms.Resize(constants.TEST_IMAGE_SIZE),
                 transforms.ToTensor()
             ])
@@ -264,6 +256,71 @@ class IIDDatasetV2(data.Dataset):
         unlit = self.final_transform_op(unlit)
 
         return file_name, input_rgb_ws, input_rgb_ns, albedo, unlit
+
+    def __len__(self):
+        return self.img_length
+
+class CGIDataset(data.Dataset):
+    def __init__(self, img_length, rgb_list_ws, transform_config, patch_size):
+        self.img_length = img_length
+        self.rgb_list_ws = rgb_list_ws
+        self.transform_config = transform_config
+        self.patch_size = (patch_size, patch_size)
+        self.light_angles = [0, 36, 72, 108, 144]
+
+        self.initial_op = transforms.Compose([
+            transforms.ToPILImage()])
+
+        if (transform_config == 1):
+            self.final_transform_op = transforms.Compose([
+                transforms.ToTensor()
+            ])
+
+            self.mask_op = transforms.Compose([
+                transforms.ToTensor()
+            ])
+
+        else:
+            self.final_transform_op = transforms.Compose([
+                transforms.Resize(constants.TEST_IMAGE_SIZE),
+                transforms.ToTensor()
+            ])
+
+            self.mask_op = transforms.Compose([
+                transforms.Resize(constants.TEST_IMAGE_SIZE),
+                transforms.ToTensor()
+            ])
+
+    def __getitem__(self, idx):
+        file_name = self.rgb_list_ws[idx].split("/")[-1].split(".png")[0]
+        file_path = Path(self.rgb_list_ws[idx])
+
+        albedo_path = str(file_path.parent) + "/" + file_name + "_albedo.png"
+        mask_path = str(file_path.parent) + "/" + file_name + "_mask.png"
+
+        albedo = cv2.imread(albedo_path) #albedo
+        albedo = cv2.cvtColor(albedo, cv2.COLOR_BGR2RGB)
+
+        input_rgb_ws = cv2.imread(self.rgb_list_ws[idx])  # input rgb
+        input_rgb_ws = cv2.cvtColor(input_rgb_ws, cv2.COLOR_BGR2RGB)
+
+        # albedo_mask = cv2.imread(mask_path)
+        # albedo_mask = cv2.cvtColor(albedo_mask, cv2.COLOR_BGR2GRAY)
+
+        input_rgb_ws = self.initial_op(input_rgb_ws)
+        albedo = self.initial_op(albedo)
+
+        if (self.transform_config == 1):
+            crop_indices = transforms.RandomCrop.get_params(input_rgb_ws, output_size=self.patch_size)
+            i, j, h, w = crop_indices
+
+            input_rgb_ws = transforms.functional.crop(input_rgb_ws, i, j, h, w)
+            albedo = transforms.functional.crop(albedo, i, j, h, w)
+
+        input_rgb_ws = self.final_transform_op(input_rgb_ws)
+        albedo = self.final_transform_op(albedo)
+
+        return file_name, input_rgb_ws, albedo
 
     def __len__(self):
         return self.img_length

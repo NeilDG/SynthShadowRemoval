@@ -218,9 +218,9 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def test(self, input_map):
         with torch.no_grad():
             input_rgb_tensor = input_map["rgb"]
-            unlit_tensor = input_map["unlit"]
 
             if (self.albedo_mode == 2):
+                unlit_tensor = input_map["unlit"]
                 input = unlit_tensor
             else:
                 input = input_rgb_tensor

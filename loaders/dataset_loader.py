@@ -107,6 +107,26 @@ def load_iid_datasetv2_train(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, patc
 
     return data_loader
 
+def load_cgi_dataset(rgb_dir, patch_size, opts):
+    rgb_list = glob.glob(rgb_dir)
+    if (opts.img_to_load > 0):
+        rgb_list = rgb_list[0: opts.img_to_load]
+
+    for i in range(0, len(rgb_list)):
+        rgb_list[i] = rgb_list[i].replace("\\", "/")
+
+    img_length = len(rgb_list)
+    print("Length of images: %d" % img_length)
+
+    data_loader = torch.utils.data.DataLoader(
+        image_dataset.CGIDataset(img_length, rgb_list, 2, patch_size),
+        batch_size=8,
+        num_workers=1,
+        shuffle=False
+    )
+
+    return data_loader
+
 def load_iid_datasetv2_test(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, patch_size, opts):
     rgb_list_ws = glob.glob(rgb_dir_ws)
     random.shuffle(rgb_list_ws)
