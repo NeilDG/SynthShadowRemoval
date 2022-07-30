@@ -9,6 +9,7 @@ import kornia
 import torch
 import torch.nn.parallel
 import torch.utils.data
+import torchvision.utils
 import torchvision.utils as vutils
 import numpy as np
 import matplotlib.pyplot as plt
@@ -23,6 +24,7 @@ import constants
 from utils import plot_utils, tensor_utils
 from trainers import trainer_factory
 from trainers import albedo_trainer, shading_trainer, albedo_mask_trainer
+from custom_losses import whdr
 
 parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
@@ -189,6 +191,101 @@ def measure_performance():
     visdom_reporter.plot_image(albedo_d_tensor, "Albedo zhu_iccp21")
     visdom_reporter.plot_image(albedo_e_tensor, "Albedo Ours")
 
+class TesterClass():
+    def __init__(self, mask_t, albedo_t, shading_t):
+        print("Initiating")
+        self.cgi_op = iid_transforms.CGITransform()
+        self.iid_op = iid_transforms.IIDTransform()
+        self.visdom_reporter = plot_utils.VisdomReporter.getInstance()
+
+        self.mask_t = mask_t
+        self.albedo_t = albedo_t
+        self.shading_t = shading_t
+
+        self.wdhr_metric_list = []
+
+    def test_cgi(self, rgb_tensor, albedo_tensor, opts):
+        rgb_tensor, albedo_tensor, shading_tensor = self.cgi_op.decompose_cgi(rgb_tensor, albedo_tensor)
+        albedo_inferred = self.cgi_op.extract_albedo(rgb_tensor, shading_tensor, torch.ones_like(shading_tensor))
+        rgb_inferred = shading_tensor * albedo_inferred
+
+        input = {"rgb": rgb_tensor, "albedo": albedo_tensor}
+        rgb2mask = self.mask_t.test(input)
+        rgb2albedo = self.albedo_t.test(input)
+        rgb2shading, rgb2shadow = self.shading_t.test(input)
+        rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
+
+        # normalize everything
+        shading_tensor = tensor_utils.normalize_to_01(shading_tensor)
+        albedo_tensor = tensor_utils.normalize_to_01(albedo_tensor)
+        rgb_tensor = tensor_utils.normalize_to_01(rgb_tensor)
+        rgb2shading = tensor_utils.normalize_to_01(rgb2shading)
+        rgb2shadow = tensor_utils.normalize_to_01(rgb2shadow)
+        rgb2albedo = tensor_utils.normalize_to_01(rgb2albedo)
+        rgb2albedo = rgb2albedo * rgb2mask
+        rgb2albedo = self.iid_op.mask_fill_nonzeros(rgb2albedo)
+
+        self.visdom_reporter.plot_image(rgb_tensor, "CGI RGB Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb_inferred, "CGI RGB Inferred - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb_like, "CGI RGB Like - " + opts.version + str(opts.iteration))
+
+        self.visdom_reporter.plot_image(albedo_tensor, "CGI Albedo Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(albedo_inferred, "CGI Albedo Inferred - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb2albedo, "CGI Albedo Like - " + opts.version + str(opts.iteration))
+
+        self.visdom_reporter.plot_image(shading_tensor, "CGI Shading Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb2shading, "CGI Shading Like - " + opts.version + str(opts.iteration))
+
+        self.visdom_reporter.plot_image(rgb2shadow, "CGI Shadow Like - " + opts.version + str(opts.iteration))
+
+        psnr_albedo = np.round(kornia.metrics.psnr(rgb2albedo, albedo_tensor, max_val=1.0).item(), 4)
+        ssim_albedo = np.round(1.0 - kornia.losses.ssim_loss(rgb2albedo, albedo_tensor, 5).item(), 4)
+        psnr_shading = np.round(kornia.metrics.psnr(shading_tensor, shading_tensor, max_val=1.0).item(), 4)
+        ssim_shading = np.round(1.0 - kornia.losses.ssim_loss(shading_tensor, shading_tensor, 5).item(), 4)
+        psnr_rgb = np.round(kornia.metrics.psnr(rgb_like, rgb_tensor, max_val=1.0).item(), 4)
+        ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb_like, rgb_tensor, 5).item(), 4)
+        display_text = "CGI Set - Versions: " + opts.version + "_" + str(opts.iteration) + \
+                       "<br> Albedo PSNR: " + str(psnr_albedo) + "<br> Albedo SSIM: " + str(ssim_albedo) + \
+                       "<br> Shading PSNR: " + str(psnr_shading) + "<br> Shading SSIM: " + str(ssim_shading) + \
+                       "<br> RGB Reconstruction PSNR: " + str(psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ssim_rgb)
+
+        self.visdom_reporter.plot_text(display_text)
+
+    def test_iiw(self, file_name, rgb_tensor, opts):
+        input = {"rgb": rgb_tensor}
+        rgb2mask = self.mask_t.test(input)
+        rgb2albedo = self.albedo_t.test(input)
+        rgb2shading, rgb2shadow = self.shading_t.test(input)
+        rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
+
+        # normalize everything
+        rgb_tensor = tensor_utils.normalize_to_01(rgb_tensor)
+        rgb2shading = tensor_utils.normalize_to_01(rgb2shading)
+        rgb2shadow = tensor_utils.normalize_to_01(rgb2shadow)
+        rgb2albedo = tensor_utils.normalize_to_01(rgb2albedo)
+        rgb2albedo = rgb2albedo * rgb2mask
+        rgb2albedo = self.iid_op.mask_fill_nonzeros(rgb2albedo)
+
+        self.visdom_reporter.plot_image(rgb_tensor, "IIW RGB Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb2albedo, "IIW Albedo Images - " + opts.version + str(opts.iteration))
+
+        judgements_dir = "E:/iiw-decompositions/iiw-dataset/data/"
+        # print(np.shape(rgb2albedo))
+        for i in range(np.shape(rgb2albedo)[0]):
+            img_file_name = "./iiw_temp/" + file_name[i] + ".png"
+            torchvision.utils.save_image(rgb2albedo[i], img_file_name)
+
+            whdr_metric = whdr.whdr_final(img_file_name, judgements_dir + file_name[i] + ".json")
+            self.wdhr_metric_list.append(whdr_metric)
+
+    def get_average_whdr(self, opts):
+        ave_whdr = np.round(np.mean(self.wdhr_metric_list), 4)
+        display_text = "IIW Average WHDR for Version: " + opts.version + "_" + str(opts.iteration) + \
+        "<br> Average WHDR: " + str(ave_whdr)
+
+        self.visdom_reporter.plot_text(display_text)
+
+
 def main(argv):
     (opts, args) = parser.parse_args(argv)
     update_config(opts)
@@ -217,7 +314,6 @@ def main(argv):
     print("Network config: ", network_config)
 
     iid_op = iid_transforms.IIDTransform()
-    cgi_op = iid_transforms.CGITransform()
 
     style_enabled = network_config["style_transferred"]
     if (style_enabled == 1):
@@ -234,6 +330,7 @@ def main(argv):
 
     tf = trainer_factory.TrainerFactory(device, opts)
     mask_t, albedo_t, shading_t = tf.get_all_trainers()
+    dataset_tester = TesterClass(mask_t, albedo_t, shading_t)
 
     for i, (train_data, test_data, rw_data) in enumerate(zip(train_loader, test_loader, itertools.cycle(rw_loader))):
         with torch.no_grad():
@@ -294,54 +391,19 @@ def main(argv):
             _, rgb_batch, albedo_batch = test_data
             rgb_tensor = rgb_batch.to(device)
             albedo_tensor = albedo_batch.to(device)
-
-            rgb_tensor, albedo_tensor, shading_tensor = cgi_op.decompose_cgi(rgb_tensor, albedo_tensor)
-            albedo_inferred = cgi_op.extract_albedo(rgb_tensor, shading_tensor, torch.ones_like(shading_tensor))
-            rgb_inferred = shading_tensor * albedo_inferred
-
-            input = {"rgb": rgb_tensor, "albedo": albedo_tensor}
-            rgb2mask = mask_t.test(input)
-            rgb2albedo = albedo_t.test(input)
-            rgb2shading, rgb2shadow = shading_t.test(input)
-            rgb_like = iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
-
-            # normalize everything
-            shading_tensor = tensor_utils.normalize_to_01(shading_tensor)
-            albedo_tensor = tensor_utils.normalize_to_01(albedo_tensor)
-            rgb_tensor = tensor_utils.normalize_to_01(rgb_tensor)
-            rgb2shading = tensor_utils.normalize_to_01(rgb2shading)
-            rgb2shadow = tensor_utils.normalize_to_01(rgb2shadow)
-            rgb2albedo = tensor_utils.normalize_to_01(rgb2albedo)
-            rgb2albedo = rgb2albedo * rgb2mask
-            rgb2albedo = iid_op.mask_fill_nonzeros(rgb2albedo)
-
-            visdom_reporter.plot_image(rgb_tensor, "CGI RGB Images - " + opts.version + str(opts.iteration))
-            visdom_reporter.plot_image(rgb_inferred, "CGI RGB Inferred - " + opts.version + str(opts.iteration))
-            visdom_reporter.plot_image(rgb_like, "CGI RGB Like - " + opts.version + str(opts.iteration))
-
-            visdom_reporter.plot_image(albedo_tensor, "CGI Albedo Images - " + opts.version + str(opts.iteration))
-            visdom_reporter.plot_image(albedo_inferred, "CGI Albedo Inferred - " + opts.version + str(opts.iteration))
-            visdom_reporter.plot_image(rgb2albedo, "CGI Albedo Like - " + opts.version + str(opts.iteration))
-
-            visdom_reporter.plot_image(shading_tensor, "CGI Shading Images - " + opts.version + str(opts.iteration))
-            visdom_reporter.plot_image(rgb2shading, "CGI Shading Like - " + opts.version + str(opts.iteration))
-
-            visdom_reporter.plot_image(rgb2shadow, "CGI Shadow Like - " + opts.version + str(opts.iteration))
-
-            psnr_albedo = np.round(kornia.metrics.psnr(rgb2albedo, albedo_tensor, max_val=1.0).item(), 4)
-            ssim_albedo = np.round(1.0 - kornia.losses.ssim_loss(rgb2albedo, albedo_tensor, 5).item(), 4)
-            psnr_shading = np.round(kornia.metrics.psnr(shading_tensor, shading_tensor, max_val=1.0).item(), 4)
-            ssim_shading = np.round(1.0 - kornia.losses.ssim_loss(shading_tensor, shading_tensor, 5).item(), 4)
-            psnr_rgb = np.round(kornia.metrics.psnr(rgb_like, rgb_tensor, max_val=1.0).item(), 4)
-            ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb_like, rgb_tensor, 5).item(), 4)
-            display_text = "CGI Set - Versions: " + opts.version + "_" + str(opts.iteration) + \
-                           "<br> Albedo PSNR: " + str(psnr_albedo) + "<br> Albedo SSIM: " + str(ssim_albedo) + \
-                           "<br> Shading PSNR: " + str(psnr_shading) + "<br> Shading SSIM: " + str(ssim_shading) + \
-                           "<br> RGB Reconstruction PSNR: " + str(psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ssim_rgb)
-
-            visdom_reporter.plot_text(display_text)
+            # cgi_tester.test_cgi(rgb_tensor, albedo_tensor, opts)
 
             break
+
+    #IIW dataset
+    iiw_rgb_dir = "E:/iiw-decompositions/original_image/*.jpg"
+    test_loader = dataset_loader.load_iiw_dataset(iiw_rgb_dir, opts)
+    for i, (file_name, rgb_img) in enumerate(test_loader, 0):
+        with torch.no_grad():
+            rgb_tensor = rgb_img.to(device)
+            dataset_tester.test_iiw(file_name, rgb_tensor, opts)
+
+    dataset_tester.get_average_whdr(opts)
 
     #check RW performance
     _, input_rgb_batch = next(iter(rw_loader))
@@ -392,6 +454,7 @@ def main(argv):
         vutils.save_image(rgb2albedo.squeeze(), opts.output_path + filename)
 
     measure_performance()
+
 
 if __name__ == "__main__":
     main(sys.argv)
