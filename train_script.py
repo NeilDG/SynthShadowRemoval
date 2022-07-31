@@ -3,10 +3,10 @@
 import os
 def train_relighting():
     os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-              "--plot_enabled=0 --version=\"v9.07\" --iteration=15")
+              "--plot_enabled=1 --version=\"v9.07\" --iteration=15")
 
-    os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-              "--plot_enabled=0 --version=\"v9.07\" --iteration=16")
+    # os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
+    #           "--plot_enabled=0 --version=\"v9.07\" --iteration=16")
     #
     # os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
     #           "--plot_enabled=0 --version=\"v9.07\" --iteration=17")

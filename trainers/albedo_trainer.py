@@ -183,8 +183,10 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             real_tensor = torch.ones_like(prediction)
             A_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            rgb_like = self.iid_op.produce_rgb(rgb2albedo, shading_tensor, shadow_tensor)
+            # rgb_like = self.iid_op.reconstruct_rgb(rgb2albedo, shading_tensor, shadow_tensor)
+            rgb_like = self.iid_op.produce_rgb(input_rgb_tensor, rgb2albedo, shadow_tensor)
             rgb_l1_loss = self.l1_loss(rgb_like, input_rgb_tensor) * self.rgb_l1_weight
+
 
             errG = A_likeness_loss + A_lpip_loss + A_ssim_loss + A_gradient_loss + A_adv_loss + A_ms_grad_loss + A_reflective_loss + rgb_l1_loss
             self.fp16_scaler.scale(errG).backward()

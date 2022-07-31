@@ -193,7 +193,7 @@ class ShadingTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             real_tensor = torch.ones_like(prediction)
             Z_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            rgb_like = self.iid_op.produce_rgb(albedo_tensor, self.G_S(input), self.G_Z(input))
+            rgb_like = self.iid_op.reconstruct_rgb(albedo_tensor, self.G_S(input), self.G_Z(input))
             rgb_l1_loss = self.l1_loss(rgb_like, input_rgb_tensor) * self.rgb_l1_weight
 
             errG = S_likeness_loss + S_lpip_loss + S_ssim_loss + S_gradient_loss + S_adv_loss + \

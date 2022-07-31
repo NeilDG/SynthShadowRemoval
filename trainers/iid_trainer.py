@@ -378,7 +378,7 @@ class IIDTrainer:
             real_tensor = torch.ones_like(prediction)
             Z_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            rgb_like = self.iid_op.produce_rgb(albedo_tensor, self.G_S(input), self.G_Z(input))
+            rgb_like = self.iid_op.reconstruct_rgb(albedo_tensor, self.G_S(input), self.G_Z(input))
             rgb_l1_loss = self.l1_loss(rgb_like, input_rgb_tensor) * self.rgb_l1_weight
 
             errG = S_likeness_loss + S_lpip_loss + S_ssim_loss + S_gradient_loss + S_adv_loss + \
@@ -454,7 +454,7 @@ class IIDTrainer:
             real_tensor = torch.ones_like(prediction)
             A_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            rgb_like = self.iid_op.produce_rgb(rgb2albedo, shading_tensor, shadow_tensor)
+            rgb_like = self.iid_op.reconstruct_rgb(rgb2albedo, shading_tensor, shadow_tensor)
             rgb_l1_loss = self.l1_loss(rgb_like, input_rgb_tensor) * self.rgb_l1_weight
 
             errG = A_likeness_loss + A_lpip_loss + A_ssim_loss + A_gradient_loss + A_adv_loss + A_ms_grad_loss + A_reflective_loss + rgb_l1_loss
@@ -504,7 +504,7 @@ class IIDTrainer:
             rgb2shadow = self.G_Z(input_rgb_tensor)
             # rgb2albedo = self.G_A(input)
             rgb2albedo = self.iid_op.extract_albedo(input_rgb_tensor, rgb2shading, rgb2shadow)
-            rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
+            rgb_like = self.iid_op.reconstruct_rgb(rgb2albedo, rgb2shading, rgb2shadow)
         return rgb_like
 
     def visdom_plot(self, iteration):
@@ -521,7 +521,7 @@ class IIDTrainer:
             mask_tensor = self.iid_op.create_sky_reflection_masks(albedo_tensor)
             rgb2albedo, rgb2shading, rgb2shadow, rgb2mask = self.decompose(input_rgb_tensor)
             embedding_rep = self.get_feature_rep(input_rgb_tensor)
-            rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
+            rgb_like = self.iid_op.reconstruct_rgb(rgb2albedo, rgb2shading, rgb2shadow)
 
             # print("Difference between Albedo vs Recon: ", self.l1_loss(rgb2albedo, albedo_tensor).item())  #0.42321497201919556
 
@@ -554,7 +554,7 @@ class IIDTrainer:
     def visdom_measure(self, input_rgb_tensor, albedo_tensor, shading_tensor, shadow_tensor, label="Training"):
         with torch.no_grad():
             rgb2albedo, rgb2shading, rgb2shadow, rgb2mask = self.decompose(input_rgb_tensor)
-            rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
+            rgb_like = self.iid_op.reconstruct_rgb(rgb2albedo, rgb2shading, rgb2shadow)
 
             # plot metrics
             # rgb2albedo = (rgb2albedo * 0.5) + 0.5
@@ -583,7 +583,7 @@ class IIDTrainer:
         with torch.no_grad():
             rgb2albedo, rgb2shading, rgb2shadow, rgb2mask = self.decompose(rw_tensor)
             embedding_rep = self.get_feature_rep(rw_tensor)
-            rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
+            rgb_like = self.iid_op.reconstruct_rgb(rgb2albedo, rgb2shading, rgb2shadow)
 
             self.visdom_reporter.plot_image(rw_tensor, "Real World images - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(embedding_rep, "Real World Embeddings - " + constants.IID_VERSION + constants.ITERATION)
@@ -592,7 +592,7 @@ class IIDTrainer:
     def visdom_measure_gta(self, gta_rgb, gta_albedo):
         with torch.no_grad():
             rgb2albedo, rgb2shading, rgb2shadow, rgb2mask = self.decompose(gta_rgb)
-            rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
+            rgb_like = self.iid_op.reconstruct_rgb(rgb2albedo, rgb2shading, rgb2shadow)
 
             self.visdom_reporter.plot_image(gta_albedo, "GTA Albedo - " + constants.IID_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(rgb2albedo, "GTA Albedo-Like - " + constants.IID_VERSION + constants.ITERATION)
