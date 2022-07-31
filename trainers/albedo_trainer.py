@@ -241,16 +241,16 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         shading_tensor = input_map["shading"]
         shadow_tensor = input_map["shadow"]
 
-        mask_tensor = self.iid_op.create_sky_reflection_masks(albedo_tensor)
+        # mask_tensor = self.iid_op.create_sky_reflection_masks(albedo_tensor)
         embedding_rep = self.get_feature_rep(input_rgb_tensor)
         rgb2albedo = self.test(input_map)
 
         # normalize to 0-1
-        rgb_tensor = tensor_utils.normalize_to_01(input_rgb_tensor)
+        input_rgb_tensor = tensor_utils.normalize_to_01(input_rgb_tensor)
         rgb2albedo = tensor_utils.normalize_to_01(rgb2albedo)
 
-        rgb2albedo = rgb2albedo * mask_tensor
-        rgb2albedo = self.iid_op.mask_fill_nonzeros(rgb2albedo)
+        # rgb2albedo = rgb2albedo * mask_tensor
+        # rgb2albedo = self.iid_op.mask_fill_nonzeros(rgb2albedo)
 
         self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(embedding_rep, str(label) + " Embedding Maps - " + self.NETWORK_VERSION + str(self.iteration))
