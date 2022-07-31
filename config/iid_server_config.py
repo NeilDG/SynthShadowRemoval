@@ -18,8 +18,8 @@ class IIDServerConfig():
         # COARE, CCS CLOUD, GCLOUD, RTX 2080TI, RTX 3090
         if(constants.server_config <= 5):
             self.general_configs = {"train_albedo_mask": {"min_epochs": 3, "max_epochs" : 10, "patch_size": 256},
-                                    "train_albedo": {"min_epochs": 5,"max_epochs" : 40, "patch_size": 64},
-                                    "train_shading": {"min_epochs": 5,"max_epochs" : 40, "patch_size": 64}}
+                                    "train_albedo": {"min_epochs": 20,"max_epochs" : 40, "patch_size": 64},
+                                    "train_shading": {"min_epochs": 20,"max_epochs" : 40, "patch_size": 64}}
 
         #debug
         if(constants.debug_run == 1):
@@ -151,7 +151,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_A] = 256
                 network_config[BATCH_SIZE_KEY_S] = 256
 
-        elif (version == "v9.06"):  # U-Net
+        elif (version == "v10.06"):  # U-Net
             network_config[NETWORK_CONFIG_NUM] = 2
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 1
@@ -181,7 +181,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
 
-        elif (version == "v9.07"):  # Adain-GEN
+        elif (version == "v10.07"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4
@@ -211,7 +211,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
 
-        elif (version == "v9.08"):  # FFA
+        elif (version == "v10.08"):  # FFA
             network_config[NETWORK_CONFIG_NUM] = 5
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 6
@@ -241,7 +241,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_A] = 256
                 network_config[BATCH_SIZE_KEY_S] = 256
 
-        elif (version == "v9.09"):  # U-Net
+        elif (version == "v10.09"):  # U-Net
             network_config[NETWORK_CONFIG_NUM] = 2
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 1
@@ -271,7 +271,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
 
-        elif (version == "v9.10"):  # Adain-GEN
+        elif (version == "v10.10"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4
@@ -301,7 +301,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
 
-        elif (version == "v9.11"):  # FFA
+        elif (version == "v10.11"):  # FFA
             network_config[NETWORK_CONFIG_NUM] = 5
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 6

@@ -138,10 +138,10 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             else:
                 input = input_rgb_tensor
 
-            albedo_masks = self.iid_op.create_sky_reflection_masks(albedo_tensor)
-            # input_rgb_tensor = input_rgb_tensor * albedo_masks
-            albedo_tensor = albedo_tensor * albedo_masks
-            albedo_masks = torch.cat([albedo_masks, albedo_masks, albedo_masks], 1)
+            # albedo_masks = self.iid_op.create_sky_reflection_masks(albedo_tensor)
+            # albedo_tensor = albedo_tensor * albedo_masks
+            # albedo_masks = torch.cat([albedo_masks, albedo_masks, albedo_masks], 1)
+            albedo_masks = torch.ones_like(albedo_tensor)
 
             if (self.da_enabled == 1):
                 input = self.reshape_input(input)
@@ -183,8 +183,7 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             real_tensor = torch.ones_like(prediction)
             A_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            # rgb_like = self.iid_op.reconstruct_rgb(rgb2albedo, shading_tensor, shadow_tensor)
-            rgb_like = self.iid_op.produce_rgb(input_rgb_tensor, rgb2albedo, shadow_tensor)
+            rgb_like = self.iid_op.produce_rgb(rgb2albedo, shading_tensor, shadow_tensor)
             rgb_l1_loss = self.l1_loss(rgb_like, input_rgb_tensor) * self.rgb_l1_weight
 
 
