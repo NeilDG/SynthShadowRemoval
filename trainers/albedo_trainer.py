@@ -240,23 +240,29 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         input_rgb_tensor = input_map["rgb"]
         albedo_tensor = input_map["albedo"]
         unlit_tensor = input_map["unlit"]
-        mask_tensor = self.iid_op.create_sky_reflection_masks(albedo_tensor)
+        shading_tensor = input_map["shading"]
+        shadow_tensor = input_map["shadow"]
+
+        # mask_tensor = self.iid_op.create_sky_reflection_masks(albedo_tensor)
         embedding_rep = self.get_feature_rep(input_rgb_tensor)
         rgb2albedo = self.test(input_map)
 
         # normalize to 0-1
-        rgb_tensor = tensor_utils.normalize_to_01(input_rgb_tensor)
+        input_rgb_tensor = tensor_utils.normalize_to_01(input_rgb_tensor)
         rgb2albedo = tensor_utils.normalize_to_01(rgb2albedo)
 
-        rgb2albedo = rgb2albedo * mask_tensor
-        rgb2albedo = self.iid_op.mask_fill_nonzeros(rgb2albedo)
+        # rgb2albedo = rgb2albedo * mask_tensor
+        # rgb2albedo = self.iid_op.mask_fill_nonzeros(rgb2albedo)
 
         self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(embedding_rep, str(label) + " Embedding Maps - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(unlit_tensor, str(label) + " Unlit Images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(self.iid_op.produce_rgb(rgb2albedo, shading_tensor, shadow_tensor), str(label) + " RGB Reconstructed Images - " + self.NETWORK_VERSION + str(self.iteration))
 
         self.visdom_reporter.plot_image(rgb2albedo, str(label) + " RGB2Albedo images - " + self.NETWORK_VERSION + str(self.iteration), True)
         self.visdom_reporter.plot_image(albedo_tensor, str(label) + " Albedo images - " + self.NETWORK_VERSION + str(self.iteration))
+
+        self.visdom_reporter.plot_image(shading_tensor, str(label) + " Shading images - " + self.NETWORK_VERSION + str(self.iteration))
 
     def visdom_infer(self, input_map):
         input_rgb_tensor = input_map["rgb"]

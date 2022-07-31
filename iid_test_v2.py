@@ -263,8 +263,8 @@ class TesterClass():
         rgb2shading = tensor_utils.normalize_to_01(rgb2shading)
         rgb2shadow = tensor_utils.normalize_to_01(rgb2shadow)
         rgb2albedo = tensor_utils.normalize_to_01(rgb2albedo)
-        rgb2albedo = rgb2albedo * rgb2mask
-        rgb2albedo = self.iid_op.mask_fill_nonzeros(rgb2albedo)
+        # rgb2albedo = rgb2albedo * rgb2mask
+        # rgb2albedo = self.iid_op.mask_fill_nonzeros(rgb2albedo)
 
         self.visdom_reporter.plot_image(rgb_tensor, "IIW RGB Images - " + opts.version + str(opts.iteration))
         self.visdom_reporter.plot_image(rgb2albedo, "IIW Albedo Images - " + opts.version + str(opts.iteration))
