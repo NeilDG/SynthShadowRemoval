@@ -41,16 +41,6 @@ class IIDTransform(nn.Module):
         masked_tensor = (albedo_gray >= 1.0)
         return output_tensor.masked_fill_(masked_tensor, 0)
 
-    def infer_albedo(self, input, G_A, sky_reflection_mask, tozeroone = True):
-        if (tozeroone):
-            input = (input * 0.5) + 0.5
-
-        albedo_like = G_A(input)
-        output_tensor = torch.clone(input)
-        output_tensor = output_tensor * sky_reflection_mask
-
-        return output_tensor
-
     def forward(self, rgb_ws, rgb_ns, albedo_tensor):
         #extract shadows
         shadows_refined = self.extract_shadow(rgb_ws, rgb_ns, True)
@@ -58,22 +48,35 @@ class IIDTransform(nn.Module):
 
         rgb_recon = self.produce_rgb(albedo_refined, shading_refined, shadows_refined, False)
 
-        # loss_op = nn.L1Loss()
-        # print("Difference between RGB vs Recon: ", loss_op(rgb_recon, rgb_ws).item()) #0.06624698638916016
+        loss_op = nn.L1Loss()
+        print("Difference between RGB vs Recon: ", loss_op(rgb_recon, rgb_ws).item()) #0.06624698638916016
 
         rgb_recon = self.transform_op(rgb_recon)
         albedo_refined = self.transform_op(albedo_refined)
         shading_refined = self.transform_op(shading_refined)
         shadow_tensor = self.transform_op(shadows_refined)
 
-        # return rgb_recon, albedo_refined, shading_tensor, shadow_tensor
-        return rgb_recon, albedo_refined, shading_refined, shadow_tensor
+        return rgb_recon, self.mask_fill_nonzeros(albedo_refined), shading_refined, shadow_tensor
+
+    def produce_rgb(self, albedo_tensor, shading_tensor, shadow_tensor, tozeroone = True):
+        if(tozeroone):
+            albedo_tensor = (albedo_tensor * 0.5) + 0.5
+            shading_tensor = (shading_tensor * 0.5) + 0.5
+            shadow_tensor = (shadow_tensor * 0.5) + 0.5
+
+        # albedo_tensor = self.mask_fill_nonzeros(albedo_tensor)
+        # shading_tensor = self.mask_fill_nonzeros(shading_tensor)
+
+        rgb_recon = (albedo_tensor * shading_tensor) - (shadow_tensor * 0.7)
+        rgb_recon = torch.clip(rgb_recon, 0.0, 1.0)
+        return rgb_recon
 
     def extract_shading(self, rgb_tensor, albedo_tensor, one_channel = False):
         min = torch.min(rgb_tensor)
         max = torch.max(rgb_tensor)
 
-        albedo_refined = self.mask_fill_nonzeros(albedo_tensor)
+        mask_tensor = self.create_sky_reflection_masks(self.mask_fill_nonzeros(albedo_tensor))
+        albedo_refined = self.mask_fill_nonzeros(albedo_tensor * mask_tensor)
         shading_tensor = rgb_tensor / albedo_refined
 
         if(one_channel == True):
@@ -134,17 +137,6 @@ class IIDTransform(nn.Module):
             albedo_tensor = (albedo_tensor * 0.5) + 0.5
         return self.revert_mask_fill_nonzeros(albedo_tensor)
 
-    def produce_rgb(self, albedo_tensor, shading_tensor, shadow_tensor, tozeroone = True):
-        if(tozeroone):
-            albedo_tensor = (albedo_tensor * 0.5) + 0.5
-            shading_tensor = (shading_tensor * 0.5) + 0.5
-            shadow_tensor = (shadow_tensor * 0.5) + 0.5
-
-        # albedo_tensor = self.mask_fill_nonzeros(albedo_tensor)
-        # shading_tensor = self.mask_fill_nonzeros(shading_tensor)
-        rgb_recon = (albedo_tensor * shading_tensor) - (shadow_tensor * 0.7)
-        rgb_recon = torch.clip(rgb_recon, 0.0, 1.0)
-        return rgb_recon
 
 class CGITransform(IIDTransform):
     
