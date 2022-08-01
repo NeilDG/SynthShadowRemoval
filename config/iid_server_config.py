@@ -28,7 +28,7 @@ class IIDServerConfig():
                                    "train_shading": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 64}}
 
 
-        self.version_config = {"version": version, "network_p_name": "rgb2mask", "network_a_name" : "rgb2albedo", "network_s_name" : "rgb2shading"}
+        self.version_config = {"version": version, "network_p_name": "rgb2mask", "network_a_name" : "rgb2albedo", "network_s_name" : "rgb2shading", "network_z_name" : "rgb2noshadow"}
 
 
     def get_general_configs(self):

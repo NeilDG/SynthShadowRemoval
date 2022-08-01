@@ -68,6 +68,14 @@ class IIDTransform(nn.Module):
         rgb_recon = torch.clip(rgb_recon, 0.0, 1.0)
         return rgb_recon
 
+    def remove_rgb_shadow(self, rgb_tensor, shadow_tensor, tozeroone = True):
+        if (tozeroone):
+            rgb_tensor = (rgb_tensor * 0.5) + 0.5
+            shadow_tensor = (shadow_tensor * 0.5) + 0.5
+
+        rgb_recon = rgb_tensor - shadow_tensor
+        rgb_recon = torch.clip(rgb_recon, 0.0, 1.0)
+        return rgb_recon
 
     def decompose(self, rgb_tensor, albedo_tensor, one_channel = False):
         min = torch.min(rgb_tensor)
