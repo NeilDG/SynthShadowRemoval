@@ -242,6 +242,9 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         shading_tensor = input_map["shading"]
         shadow_tensor = input_map["shadow"]
 
+        #remove shadow
+        input_rgb_tensor = self.iid_op.remove_rgb_shadow(input_rgb_tensor, shadow_tensor)
+
         # mask_tensor = self.iid_op.create_sky_reflection_masks(albedo_tensor)
         embedding_rep = self.get_feature_rep(input_rgb_tensor)
         rgb2albedo = self.test(input_map)

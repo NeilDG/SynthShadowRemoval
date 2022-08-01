@@ -17,6 +17,7 @@ class IIDTransform(nn.Module):
         super(IIDTransform, self).__init__()
 
         self.transform_op = transforms.Normalize((0.5,), (0.5,))
+        self.shadow_intensity = 0.7
 
 
     def mask_fill_nonzeros(self, input_tensor):
@@ -64,7 +65,7 @@ class IIDTransform(nn.Module):
             shading_tensor = (shading_tensor * 0.5) + 0.5
             shadow_tensor = (shadow_tensor * 0.5) + 0.5
 
-        rgb_recon = (albedo_tensor * shading_tensor) - (shadow_tensor * 0.7)
+        rgb_recon = (albedo_tensor * shading_tensor) - (shadow_tensor * self.shadow_intensity)
         rgb_recon = torch.clip(rgb_recon, 0.0, 1.0)
         return rgb_recon
 
@@ -73,7 +74,16 @@ class IIDTransform(nn.Module):
             rgb_tensor = (rgb_tensor * 0.5) + 0.5
             shadow_tensor = (shadow_tensor * 0.5) + 0.5
 
-        rgb_recon = rgb_tensor - shadow_tensor
+        rgb_recon = rgb_tensor + (shadow_tensor * self.shadow_intensity)
+        rgb_recon = torch.clip(rgb_recon, 0.0, 1.0)
+        return rgb_recon
+
+    def add_rgb_shadow(self, rgb_tensor, shadow_tensor, tozeroone=True):
+        if (tozeroone):
+            rgb_tensor = (rgb_tensor * 0.5) + 0.5
+            shadow_tensor = (shadow_tensor * 0.5) + 0.5
+
+        rgb_recon = rgb_tensor - (shadow_tensor * self.shadow_intensity)
         rgb_recon = torch.clip(rgb_recon, 0.0, 1.0)
         return rgb_recon
 

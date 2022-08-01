@@ -42,8 +42,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.multiscale_grad_loss = iid_losses.MultiScaleGradientLoss(4)
         self.reflect_cons_loss = iid_losses.ReflectConsistentLoss(sample_num_per_area=1, split_areas=(1, 1))
 
-        self.D_S_pool = image_pool.ImagePool(50)
         self.D_Z_pool = image_pool.ImagePool(50)
+        self.D_Z2_pool = image_pool.ImagePool(50)
 
         self.iid_op = iid_transforms.IIDTransform().to(self.gpu_device)
         self.fp16_scaler = amp.GradScaler()  # for automatic mixed precision
@@ -66,7 +66,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.schedulerG_shading = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG_shading, patience=100000 / self.batch_size, threshold=0.00005)
         self.schedulerD_shading = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD_shading, patience=100000 / self.batch_size, threshold=0.00005)
 
-        self.NETWORK_VERSION = sc_instance.get_version_config("network_Z_name", self.iteration)
+        self.NETWORK_VERSION = sc_instance.get_version_config("network_z_name", self.iteration)
         self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
         self.load_saved_state()
 
@@ -127,8 +127,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def train(self, epoch, iteration, input_map, target_map):
         input_rgb_tensor = input_map["rgb"]
-        input_rgb_tensor_noshadow = input_map["rgb_ns"]
         shadow_tensor = target_map["shadow"]
+        input_rgb_tensor_noshadow = self.iid_op.remove_rgb_shadow(input_rgb_tensor, shadow_tensor)
 
         with amp.autocast():
             if (self.da_enabled == 1):
@@ -147,6 +147,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             D_Z_real_loss = self.adversarial_loss(self.D_Z(shadow_tensor), real_tensor) * self.adv_weight
             D_Z_fake_loss = self.adversarial_loss(self.D_Z_pool.query(self.D_Z(rgb2shadow.detach())), fake_tensor) * self.adv_weight
 
+
             errD = D_Z_real_loss + D_Z_fake_loss
             self.fp16_scaler.scale(errD).backward()
             if (self.fp16_scaler.scale(errD).item() > 0.0):
@@ -157,6 +158,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
             # shadow generator
             self.G_Z.train()
+
             rgb2shadow = self.G_Z(input)
             Z_likeness_loss = self.l1_loss(rgb2shadow, shadow_tensor) * self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.SHADOW)
             Z_lpip_loss = self.lpip_loss(rgb2shadow, shadow_tensor) * self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.SHADOW)
@@ -165,8 +167,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             prediction = self.D_Z(rgb2shadow)
             real_tensor = torch.ones_like(prediction)
             Z_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
-
-            rgb_noshadow_like = self.iid_op.remove_rgb_shadow(input_rgb_tensor, self.G_Z(input_rgb_tensor))
+            rgb_noshadow_like = self.iid_op.remove_rgb_shadow(input_rgb_tensor, rgb2shadow)
             rgb_l1_loss = self.l1_loss(rgb_noshadow_like, input_rgb_tensor_noshadow) * self.rgb_l1_weight
 
             errG = Z_likeness_loss + Z_lpip_loss + Z_ssim_loss + Z_gradient_loss + Z_adv_loss + rgb_l1_loss
@@ -214,12 +215,69 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def visdom_visualize(self, input_map, label="Train"):
         input_rgb_tensor = input_map["rgb"]
         shadow_tensor = input_map["shadow"]
+        input_rgb_tensor_noshadow = self.iid_op.remove_rgb_shadow(input_rgb_tensor, shadow_tensor)
 
         embedding_rep = self.get_feature_rep(input_rgb_tensor)
         rgb2shadow = self.test(input_map)
+        rgbshadow_like = self.iid_op.add_rgb_shadow(input_rgb_tensor_noshadow, rgb2shadow)
+        rgb_noshadows_like = self.iid_op.remove_rgb_shadow(input_rgb_tensor, rgb2shadow)
 
         self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(rgbshadow_like, str(label) + " RGB-Like Images " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(embedding_rep, str(label) + " Embedding Maps - " + self.NETWORK_VERSION + str(self.iteration))
 
-        self.visdom_reporter.plot_image(rgb2shadow, str(label) + " RGB2Shadow images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(rgb2shadow, str(label) + " RGB2Shadow G(Z) images - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(shadow_tensor, str(label) + " Shadow images - " + self.NETWORK_VERSION + str(self.iteration))
+
+        self.visdom_reporter.plot_image(rgb_noshadows_like, str(label) + " RGB No Shadow-Like Images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(input_rgb_tensor_noshadow, str(label) + " RGB No Shadow Images - " + self.NETWORK_VERSION + str(self.iteration))
+
+
+    def load_saved_state(self):
+        try:
+            checkpoint = torch.load(self.NETWORK_CHECKPATH, map_location=self.gpu_device)
+            print("Loaded network: ", self.NETWORK_CHECKPATH)
+        except:
+            # check if a .checkpt is available, load it
+            try:
+                checkpt_name = 'checkpoint/' + self.NETWORK_VERSION + ".pt.checkpt"
+                checkpoint = torch.load(checkpt_name, map_location=self.gpu_device)
+                print("Loaded network: ", checkpt_name)
+            except:
+                checkpoint = None
+                print("No existing checkpoint file found. Creating new network: ", self.NETWORK_CHECKPATH)
+
+        if(checkpoint != None):
+            iid_server_config.IIDServerConfig.getInstance().store_epoch_from_checkpt("train_shading", checkpoint["epoch"])
+            self.stopper_method.update_last_metric(checkpoint[constants.LAST_METRIC_KEY])
+            self.G_Z.load_state_dict(checkpoint[constants.GENERATOR_KEY + "Z"])
+            self.G_Z.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "Z"])
+            self.optimizerG_shading.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "Z"])
+            self.optimizerD_shading.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "Z"])
+            self.schedulerG_shading.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler" + "Z"])
+            self.schedulerD_shading.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler" + "Z"])
+
+    def save_states(self, epoch, iteration, is_temp:bool):
+        save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
+        netGS_state_dict = self.G_Z.state_dict()
+        netDS_state_dict = self.G_Z.state_dict()
+
+        optimizerGshading_state_dict = self.optimizerG_shading.state_dict()
+        optimizerDshading_state_dict = self.optimizerD_shading.state_dict()
+        schedulerGshading_state_dict = self.schedulerG_shading.state_dict()
+        schedulerDshading_state_dict = self.schedulerD_shading.state_dict()
+
+        save_dict[constants.GENERATOR_KEY + "Z"] = netGS_state_dict
+        save_dict[constants.DISCRIMINATOR_KEY + "Z"] = netDS_state_dict
+
+        save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "Z"] = optimizerGshading_state_dict
+        save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "Z"] = optimizerDshading_state_dict
+        save_dict[constants.GENERATOR_KEY + "scheduler" + "Z"] = schedulerGshading_state_dict
+        save_dict[constants.DISCRIMINATOR_KEY + "scheduler" + "Z"] = schedulerDshading_state_dict
+
+        if (is_temp):
+            torch.save(save_dict, self.NETWORK_CHECKPATH + ".checkpt")
+            print("Saved checkpoint state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
+        else:
+            torch.save(save_dict, self.NETWORK_CHECKPATH)
+            print("Saved stable model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))

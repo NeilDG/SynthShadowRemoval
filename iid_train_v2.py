@@ -121,7 +121,7 @@ def main(argv):
     iid_op = iid_transforms.IIDTransform()
 
     # for mode in (["train_albedo_mask", "train_albedo", "train_shading"]):
-    for mode in (["train_albedo", "train_shading"]):
+    for mode in (["train_shadow", "train_albedo", "train_shading"]):
         patch_size = general_config[mode]["patch_size"]
         style_enabled = network_config["style_transferred"]
 

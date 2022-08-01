@@ -168,7 +168,7 @@ class ShadingTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             real_tensor = torch.ones_like(prediction)
             S_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
-            rgb_like = self.iid_op.produce_rgb(input_rgb_tensor, albedo_tensor, self.G_S(input_rgb_tensor), shadow_tensor)
+            rgb_like = self.iid_op.produce_rgb(albedo_tensor, self.G_S(input_rgb_tensor), shadow_tensor)
             rgb_l1_loss = self.l1_loss(rgb_like, input_rgb_tensor) * self.rgb_l1_weight
 
             errG = S_likeness_loss + S_lpip_loss + S_ssim_loss + S_gradient_loss + S_adv_loss + rgb_l1_loss
@@ -190,9 +190,8 @@ class ShadingTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_S_real_loss.item())
             self.losses_dict_s[self.RGB_RECONSTRUCTION_LOSS_KEY].append(rgb_l1_loss.item())
 
-            rgb2shading, rgb2shadow = self.test(input_map)
+            rgb2shading = self.test(input_map)
             self.stopper_method.register_metric(rgb2shading, shading_tensor, epoch)
-            self.stopper_method.register_metric(rgb2shadow, shadow_tensor, epoch)
             self.stop_result = self.stopper_method.test(epoch)
 
             if (self.stopper_method.has_reset()):

@@ -9,6 +9,7 @@ from trainers import early_stopper
 from trainers.albedo_mask_trainer import AlbedoMaskTrainer
 from trainers.albedo_trainer import AlbedoTrainer
 from trainers.shading_trainer import ShadingTrainer
+from trainers.shadow_trainer import ShadowTrainer
 from transforms import iid_transforms
 import torch
 
@@ -27,17 +28,19 @@ class TrainerFactory():
         self.trainer_list["train_albedo_mask"] = AlbedoMaskTrainer(self.gpu_device, opts)
         self.trainer_list["train_albedo"] = AlbedoTrainer(self.gpu_device, opts)
         self.trainer_list["train_shading"] = ShadingTrainer(self.gpu_device, opts)
+        self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device, opts)
 
         self.initialize_da_network(self.network_config["da_version_name"])
         self.initialize_unlit_network(self.network_config["unlit_version_name"])
         self.trainer_list["train_albedo_mask"].assign_embedder_decoder(self.embedder, self.decoder_fixed)
         self.trainer_list["train_albedo"].assign_embedder_decoder(self.embedder, self.decoder_fixed)
         self.trainer_list["train_shading"].assign_embedder_decoder(self.embedder, self.decoder_fixed)
+        self.trainer_list["train_shadow"].assign_embedder_decoder(self.embedder, self.decoder_fixed)
 
         self.iid_op = iid_transforms.IIDTransform()
 
     def get_all_trainers(self):
-        return self.trainer_list["train_albedo_mask"], self.trainer_list["train_albedo"], self.trainer_list["train_shading"]
+        return self.trainer_list["train_albedo_mask"], self.trainer_list["train_albedo"], self.trainer_list["train_shading"], self.trainer_list["train_shadow"]
 
     def get_unlit_network(self):
         return self.G_unlit
