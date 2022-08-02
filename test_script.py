@@ -5,7 +5,7 @@ import os
 def test_relighting():
 
     os.system("python \"iid_test_v2.py\" --server_config=5 --img_to_load=-1 --test_mode=0 "
-              "--plot_enabled=1 --version=\"v10.07\" --iteration=15 "
+              "--plot_enabled=1 --version=\"v11.07\" --iteration=15 "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
 def main():

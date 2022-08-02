@@ -55,7 +55,7 @@ class IIDTransform(nn.Module):
         rgb_recon = self.transform_op(rgb_recon)
         albedo_refined = self.transform_op(albedo_refined)
         shading_refined = self.transform_op(shading_refined)
-        shadow_tensor = self.transform_op(shadows_refined)
+        shadow_tensor = self.transform_op(1.0 - shadows_refined)
 
         return rgb_recon, albedo_refined, shading_refined, shadow_tensor
 
@@ -69,19 +69,25 @@ class IIDTransform(nn.Module):
         rgb_recon = torch.clip(rgb_recon, 0.0, 1.0)
         return rgb_recon
 
-    def remove_rgb_shadow(self, rgb_tensor, shadow_tensor, tozeroone = True):
+    def remove_rgb_shadow(self, rgb_tensor, shadow_tensor, tozeroone = True, invert = False):
         if (tozeroone):
             rgb_tensor = (rgb_tensor * 0.5) + 0.5
             shadow_tensor = (shadow_tensor * 0.5) + 0.5
+
+        if(invert):
+            shadow_tensor = 1.0 - shadow_tensor
 
         rgb_recon = rgb_tensor + (shadow_tensor * self.shadow_intensity)
         rgb_recon = torch.clip(rgb_recon, 0.0, 1.0)
         return rgb_recon
 
-    def add_rgb_shadow(self, rgb_tensor, shadow_tensor, tozeroone=True):
+    def add_rgb_shadow(self, rgb_tensor, shadow_tensor, tozeroone=True, invert = False):
         if (tozeroone):
             rgb_tensor = (rgb_tensor * 0.5) + 0.5
             shadow_tensor = (shadow_tensor * 0.5) + 0.5
+
+        if (invert):
+            shadow_tensor = 1.0 - shadow_tensor
 
         rgb_recon = rgb_tensor - (shadow_tensor * self.shadow_intensity)
         rgb_recon = torch.clip(rgb_recon, 0.0, 1.0)

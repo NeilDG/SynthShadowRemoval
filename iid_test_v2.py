@@ -192,7 +192,7 @@ def measure_performance():
     visdom_reporter.plot_image(albedo_e_tensor, "Albedo Ours")
 
 class TesterClass():
-    def __init__(self, mask_t, albedo_t, shading_t):
+    def __init__(self, mask_t, albedo_t, shading_t, shadow_t):
         print("Initiating")
         self.cgi_op = iid_transforms.CGITransform()
         self.iid_op = iid_transforms.IIDTransform()
@@ -201,6 +201,7 @@ class TesterClass():
         self.mask_t = mask_t
         self.albedo_t = albedo_t
         self.shading_t = shading_t
+        self.shadow_t = shadow_t
 
         self.wdhr_metric_list = []
 
@@ -255,7 +256,8 @@ class TesterClass():
         input = {"rgb": rgb_tensor}
         rgb2mask = self.mask_t.test(input)
         rgb2albedo = self.albedo_t.test(input)
-        rgb2shading, rgb2shadow = self.shading_t.test(input)
+        rgb2shading = self.shading_t.test(input)
+        rgb2shadow = self.shadow_t.test(input)
         rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
 
         # normalize everything
@@ -329,8 +331,8 @@ def main(argv):
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
 
     tf = trainer_factory.TrainerFactory(device, opts)
-    mask_t, albedo_t, shading_t = tf.get_all_trainers()
-    dataset_tester = TesterClass(mask_t, albedo_t, shading_t)
+    mask_t, albedo_t, shading_t, shadow_t = tf.get_all_trainers()
+    dataset_tester = TesterClass(mask_t, albedo_t, shading_t, shadow_t)
 
     for i, (train_data, test_data, rw_data) in enumerate(zip(train_loader, test_loader, itertools.cycle(rw_loader))):
         with torch.no_grad():
@@ -344,7 +346,8 @@ def main(argv):
             input = {"rgb" : rgb_ws_tensor, "unlit" : unlit_tensor, "albedo" : albedo_tensor}
             rgb2mask = mask_t.test(input)
             rgb2albedo = albedo_t.test(input)
-            rgb2shading, rgb2shadow = shading_t.test(input)
+            rgb2shading = shading_t.test(input)
+            rgb2shadow = shadow_t.test(input)
             rgb_like = iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
 
             #normalize everything

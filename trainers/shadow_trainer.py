@@ -42,8 +42,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.multiscale_grad_loss = iid_losses.MultiScaleGradientLoss(4)
         self.reflect_cons_loss = iid_losses.ReflectConsistentLoss(sample_num_per_area=1, split_areas=(1, 1))
 
-        self.D_Z_pool = image_pool.ImagePool(50)
-        self.D_Z2_pool = image_pool.ImagePool(50)
+        self.D_NS_pool = image_pool.ImagePool(50)
+        self.D_WS_pool = image_pool.ImagePool(50)
 
         self.iid_op = iid_transforms.IIDTransform().to(self.gpu_device)
         self.fp16_scaler = amp.GradScaler()  # for automatic mixed precision
@@ -61,8 +61,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.initialize_dict()
         self.initialize_shadow_network(network_config["net_config"], network_config["num_blocks"], network_config["nc"])
 
-        self.optimizerG_shading = torch.optim.Adam(itertools.chain(self.G_Z.parameters()), lr=self.g_lr)
-        self.optimizerD_shading = torch.optim.Adam(itertools.chain(self.D_Z.parameters()), lr=self.d_lr)
+        self.optimizerG_shading = torch.optim.Adam(itertools.chain(self.G_NS.parameters(), self.G_WS.parameters()), lr=self.g_lr)
+        self.optimizerD_shading = torch.optim.Adam(itertools.chain(self.D_NS.parameters(), self.D_WS.parameters()), lr=self.d_lr)
         self.schedulerG_shading = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG_shading, patience=100000 / self.batch_size, threshold=0.00005)
         self.schedulerD_shading = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD_shading, patience=100000 / self.batch_size, threshold=0.00005)
 
@@ -72,7 +72,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def initialize_shadow_network(self, net_config, num_blocks, input_nc):
         network_creator = abstract_iid_trainer.NetworkCreator(self.gpu_device)
-        self.G_Z, self.D_Z = network_creator.initialize_shadow_network(net_config, num_blocks, input_nc)
+        self.G_NS, self.D_NS = network_creator.initialize_shadow_network(net_config, num_blocks, input_nc)
+        self.G_WS, self.D_WS = network_creator.initialize_shadow_network(net_config, num_blocks, input_nc)
 
     def adversarial_loss(self, pred, target):
         if (self.use_bce == 0):
@@ -112,6 +113,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY] = []
         self.losses_dict_s[constants.D_A_REAL_LOSS_KEY] = []
         self.losses_dict_s[self.RGB_RECONSTRUCTION_LOSS_KEY] = []
+        self.losses_dict_s[constants.CYCLE_LOSS_KEY] = []
 
         self.caption_dict_s = {}
         self.caption_dict_s[constants.G_LOSS_KEY] = "Shadow G loss per iteration"
@@ -124,6 +126,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.caption_dict_s[constants.D_A_FAKE_LOSS_KEY] = "D fake loss per iteration"
         self.caption_dict_s[constants.D_A_REAL_LOSS_KEY] = "D real loss per iteration"
         self.caption_dict_s[self.RGB_RECONSTRUCTION_LOSS_KEY] = "RGB Reconstruction loss per iteration"
+        self.caption_dict_s[constants.CYCLE_LOSS_KEY] = "Cycle loss per iteration"
+
 
     def train(self, epoch, iteration, input_map, target_map):
         input_rgb_tensor = input_map["rgb"]
@@ -132,23 +136,32 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         with amp.autocast():
             if (self.da_enabled == 1):
-                input = self.reshape_input(input_rgb_tensor)
+                input_ws = self.reshape_input(input_rgb_tensor)
+                input_ns = self.reshape_input(input_rgb_tensor_noshadow)
             else:
-                input = input_rgb_tensor
+                input_ws = input_rgb_tensor
+                input_ns = input_rgb_tensor_noshadow
 
             self.optimizerD_shading.zero_grad()
 
             # shadow discriminator
-            rgb2shadow = self.G_Z(input)
-            self.D_Z.train()
-            prediction = self.D_Z(shadow_tensor)
+            self.D_NS.train()
+            output = self.G_NS(input_ws)
+            prediction = self.D_NS(output)
             real_tensor = torch.ones_like(prediction)
             fake_tensor = torch.zeros_like(prediction)
-            D_Z_real_loss = self.adversarial_loss(self.D_Z(shadow_tensor), real_tensor) * self.adv_weight
-            D_Z_fake_loss = self.adversarial_loss(self.D_Z_pool.query(self.D_Z(rgb2shadow.detach())), fake_tensor) * self.adv_weight
+            D_NS_real_loss = self.adversarial_loss(self.D_NS(torch.cat([input_ns, shadow_tensor], 1)), real_tensor) * self.adv_weight
+            D_NS_fake_loss = self.adversarial_loss(self.D_NS_pool.query(self.D_NS(output.detach())), fake_tensor) * self.adv_weight
 
+            self.D_WS.train()
+            output = self.G_WS(input_ns)
+            prediction = self.D_WS(output)
+            real_tensor = torch.ones_like(prediction)
+            fake_tensor = torch.zeros_like(prediction)
+            D_WS_real_loss = self.adversarial_loss(self.D_WS(torch.cat([input_ws, shadow_tensor], 1)), real_tensor) * self.adv_weight
+            D_WS_fake_loss = self.adversarial_loss(self.D_WS_pool.query(self.D_WS(output.detach())), fake_tensor) * self.adv_weight
 
-            errD = D_Z_real_loss + D_Z_fake_loss
+            errD = D_NS_real_loss + D_NS_fake_loss + D_WS_real_loss + D_WS_fake_loss
             self.fp16_scaler.scale(errD).backward()
             if (self.fp16_scaler.scale(errD).item() > 0.0):
                 self.fp16_scaler.step(self.optimizerD_shading)
@@ -157,20 +170,45 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             self.optimizerG_shading.zero_grad()
 
             # shadow generator
-            self.G_Z.train()
+            self.G_NS.train()
+            self.G_WS.train()
 
-            rgb2shadow = self.G_Z(input)
-            Z_likeness_loss = self.l1_loss(rgb2shadow, shadow_tensor) * self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.SHADOW)
-            Z_lpip_loss = self.lpip_loss(rgb2shadow, shadow_tensor) * self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.SHADOW)
-            Z_ssim_loss = self.ssim_loss(rgb2shadow, shadow_tensor) * self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.SHADOW)
-            Z_gradient_loss = self.gradient_loss_term(rgb2shadow, shadow_tensor) * self.it_table.get_gradient_weight(self.iteration, IterationTable.NetworkType.SHADOW)
-            prediction = self.D_Z(rgb2shadow)
+            output = self.G_NS(input_ws)
+            rgb2ns, rgb2shadow = torch.split(output, [3, 1], 1)
+            NS_likeness_loss = self.l1_loss(rgb2shadow, shadow_tensor) * self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.SHADOW)
+            NS_lpip_loss = self.lpip_loss(rgb2shadow, shadow_tensor) * self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.SHADOW)
+            NS_ssim_loss = self.ssim_loss(rgb2shadow, shadow_tensor) * self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.SHADOW)
+            NS_gradient_loss = self.gradient_loss_term(rgb2shadow, shadow_tensor) * self.it_table.get_gradient_weight(self.iteration, IterationTable.NetworkType.SHADOW)
+            prediction = self.D_NS(output)
             real_tensor = torch.ones_like(prediction)
-            Z_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
-            rgb_noshadow_like = self.iid_op.remove_rgb_shadow(input_rgb_tensor, rgb2shadow)
-            rgb_l1_loss = self.l1_loss(rgb_noshadow_like, input_rgb_tensor_noshadow) * self.rgb_l1_weight
+            NS_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
+            rgb_ns_equation = self.iid_op.remove_rgb_shadow(input_rgb_tensor, rgb2shadow)
+            NS_rgb_loss = (self.l1_loss(rgb_ns_equation, input_rgb_tensor_noshadow) + self.l1_loss(rgb2ns, input_rgb_tensor_noshadow)) * self.rgb_l1_weight
 
-            errG = Z_likeness_loss + Z_lpip_loss + Z_ssim_loss + Z_gradient_loss + Z_adv_loss + rgb_l1_loss
+            output = self.G_WS(input_ns)
+            rgb2ws, rgb2shadow = torch.split(output, [3, 1], 1)
+            WS_likeness_loss = self.l1_loss(rgb2shadow, shadow_tensor) * self.it_table.get_l1_weight(self.iteration, IterationTable.NetworkType.SHADOW)
+            WS_lpip_loss = self.lpip_loss(rgb2shadow, shadow_tensor) * self.it_table.get_lpip_weight(self.iteration, IterationTable.NetworkType.SHADOW)
+            WS_ssim_loss = self.ssim_loss(rgb2shadow, shadow_tensor) * self.it_table.get_ssim_weight(self.iteration, IterationTable.NetworkType.SHADOW)
+            WS_gradient_loss = self.gradient_loss_term(rgb2shadow, shadow_tensor) * self.it_table.get_gradient_weight(self.iteration, IterationTable.NetworkType.SHADOW)
+            prediction = self.D_WS(output)
+            real_tensor = torch.ones_like(prediction)
+            WS_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
+            rgb_ws_equation = self.iid_op.add_rgb_shadow(input_rgb_tensor_noshadow, rgb2shadow)
+            WS_rgb_loss = (self.l1_loss(rgb_ws_equation, input_rgb_tensor) + self.l1_loss(rgb2ws, input_rgb_tensor)) * self.rgb_l1_weight
+
+            #cycleloss
+            rgb2ws, rgb2shadow = torch.split(self.G_WS(input_ns), [3, 1], 1)
+            ns_output = torch.cat([input_ns, shadow_tensor], 1)
+            NS_cycle_loss = self.l1_loss(self.G_NS(rgb2ws), ns_output) * 10.0
+
+            rgb2ns, rgb2shadow = torch.split(self.G_NS(input_ws), [3, 1], 1)
+            ws_output = torch.cat([input_ws, shadow_tensor], 1)
+            WS_cycle_loss = self.l1_loss(self.G_WS(rgb2ns), ws_output) * 10.0
+
+            errG = NS_likeness_loss + NS_lpip_loss + NS_ssim_loss + NS_gradient_loss + NS_adv_loss + NS_rgb_loss + \
+                   WS_likeness_loss + WS_lpip_loss + WS_ssim_loss + WS_gradient_loss + WS_adv_loss + WS_rgb_loss + \
+                   NS_cycle_loss + WS_cycle_loss
 
             self.fp16_scaler.scale(errG).backward()
             self.fp16_scaler.step(self.optimizerG_shading)
@@ -180,14 +218,15 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             # what to put to losses dict for visdom reporting?
             self.losses_dict_s[constants.G_LOSS_KEY].append(errG.item())
             self.losses_dict_s[constants.D_OVERALL_LOSS_KEY].append(errD.item())
-            self.losses_dict_s[constants.LIKENESS_LOSS_KEY].append(Z_likeness_loss.item())
-            self.losses_dict_s[constants.LPIP_LOSS_KEY].append(Z_lpip_loss.item())
-            self.losses_dict_s[constants.SSIM_LOSS_KEY].append(Z_ssim_loss.item())
-            self.losses_dict_s[self.GRADIENT_LOSS_KEY].append(Z_gradient_loss.item())
-            self.losses_dict_s[constants.G_ADV_LOSS_KEY].append(Z_adv_loss.item())
-            self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY].append(D_Z_fake_loss.item())
-            self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_Z_real_loss.item())
-            self.losses_dict_s[self.RGB_RECONSTRUCTION_LOSS_KEY].append(rgb_l1_loss.item())
+            self.losses_dict_s[constants.LIKENESS_LOSS_KEY].append(NS_likeness_loss.item())
+            self.losses_dict_s[constants.LPIP_LOSS_KEY].append(NS_lpip_loss.item())
+            self.losses_dict_s[constants.SSIM_LOSS_KEY].append(NS_ssim_loss.item())
+            self.losses_dict_s[self.GRADIENT_LOSS_KEY].append(NS_gradient_loss.item())
+            self.losses_dict_s[constants.G_ADV_LOSS_KEY].append(NS_adv_loss.item())
+            self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY].append(D_NS_fake_loss.item() + D_WS_fake_loss.item())
+            self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_NS_real_loss.item() + D_WS_real_loss.item())
+            self.losses_dict_s[self.RGB_RECONSTRUCTION_LOSS_KEY].append(NS_rgb_loss.item() + WS_rgb_loss.item())
+            self.losses_dict_s[constants.CYCLE_LOSS_KEY].append(NS_cycle_loss.item() + WS_cycle_loss.item())
 
             rgb2shadow = self.test(input_map)
             self.stopper_method.register_metric(rgb2shadow, shadow_tensor, epoch)
@@ -201,13 +240,14 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         with torch.no_grad():
             input_rgb_tensor = input_map["rgb"]
             if (self.da_enabled == 1):
-                input = self.reshape_input(input_rgb_tensor)
+                input_ws = self.reshape_input(input_rgb_tensor)
             else:
-                input = input_rgb_tensor
+                input_ws = input_rgb_tensor
 
-            rgb2shadow = self.G_Z(input)
+            output = self.G_NS(input_ws)
+            rgb2ns, rgb2shadow = torch.split(output, [3, 1], 1)
 
-        return rgb2shadow
+        return rgb2ns, rgb2shadow
 
     def visdom_plot(self, iteration):
         self.visdom_reporter.plot_finegrain_loss("a2b_loss_a", iteration, self.losses_dict_s, self.caption_dict_s, self.NETWORK_CHECKPATH)
@@ -215,21 +255,33 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def visdom_visualize(self, input_map, label="Train"):
         input_rgb_tensor = input_map["rgb"]
         shadow_tensor = input_map["shadow"]
-        input_rgb_tensor_noshadow = self.iid_op.remove_rgb_shadow(input_rgb_tensor, shadow_tensor)
+        input_rgb_tensor_noshadow = self.iid_op.remove_rgb_shadow(input_rgb_tensor, shadow_tensor, invert=True)
+
+        if (self.da_enabled == 1):
+            input_ns = self.reshape_input(input_rgb_tensor_noshadow)
+        else:
+            input_ns = input_rgb_tensor_noshadow
 
         embedding_rep = self.get_feature_rep(input_rgb_tensor)
-        rgb2shadow = self.test(input_map)
-        rgbshadow_like = self.iid_op.add_rgb_shadow(input_rgb_tensor_noshadow, rgb2shadow)
-        rgb_noshadows_like = self.iid_op.remove_rgb_shadow(input_rgb_tensor, rgb2shadow)
+        rgb2ns, rgb2shadow_ns = self.test(input_map)
+        output = self.G_WS(input_ns)
+        rgb2ws, rgb2shadow_ws = torch.split(output, [3, 1], 1)
+
+        rgb2ws_equation = self.iid_op.add_rgb_shadow(input_rgb_tensor_noshadow, rgb2shadow_ws, invert=True)
+        rgb2ns_equation = self.iid_op.remove_rgb_shadow(input_rgb_tensor, rgb2shadow_ns, invert=True)
+
 
         self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + self.NETWORK_VERSION + str(self.iteration))
-        self.visdom_reporter.plot_image(rgbshadow_like, str(label) + " RGB-Like Images " + self.NETWORK_VERSION + str(self.iteration))
-        self.visdom_reporter.plot_image(embedding_rep, str(label) + " Embedding Maps - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(rgb2ws_equation, str(label) + " RGB-WS (Equation) Images " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(rgb2ws, str(label) + " RGB-WS (Generated) Images " + self.NETWORK_VERSION + str(self.iteration))
+        # self.visdom_reporter.plot_image(embedding_rep, str(label) + " Embedding Maps - " + self.NETWORK_VERSION + str(self.iteration))
 
-        self.visdom_reporter.plot_image(rgb2shadow, str(label) + " RGB2Shadow G(Z) images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(rgb2shadow_ns, str(label) + " RGB2Shadow G_NS(Z) images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(rgb2shadow_ws, str(label) + " RGB2Shadow G_WS(Z) images - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(shadow_tensor, str(label) + " Shadow images - " + self.NETWORK_VERSION + str(self.iteration))
 
-        self.visdom_reporter.plot_image(rgb_noshadows_like, str(label) + " RGB No Shadow-Like Images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(rgb2ns_equation, str(label) + " RGB-NS (Equation) Images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(rgb2ns, str(label) + " RGB-NS (Generated) Images - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(input_rgb_tensor_noshadow, str(label) + " RGB No Shadow Images - " + self.NETWORK_VERSION + str(self.iteration))
 
 
@@ -250,8 +302,10 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         if(checkpoint != None):
             iid_server_config.IIDServerConfig.getInstance().store_epoch_from_checkpt("train_shading", checkpoint["epoch"])
             self.stopper_method.update_last_metric(checkpoint[constants.LAST_METRIC_KEY])
-            self.G_Z.load_state_dict(checkpoint[constants.GENERATOR_KEY + "Z"])
-            self.G_Z.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "Z"])
+            self.G_NS.load_state_dict(checkpoint[constants.GENERATOR_KEY + "NS"])
+            self.D_NS.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "NS"])
+            self.G_WS.load_state_dict(checkpoint[constants.GENERATOR_KEY + "WS"])
+            self.D_WS.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "WS"])
             self.optimizerG_shading.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "Z"])
             self.optimizerD_shading.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "Z"])
             self.schedulerG_shading.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler" + "Z"])
@@ -259,16 +313,20 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def save_states(self, epoch, iteration, is_temp:bool):
         save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
-        netGS_state_dict = self.G_Z.state_dict()
-        netDS_state_dict = self.G_Z.state_dict()
+        netGNS_state_dict = self.G_NS.state_dict()
+        netDNS_state_dict = self.D_NS.state_dict()
+        netGWS_state_dict = self.G_WS.state_dict()
+        netDWS_state_dict = self.D_WS.state_dict()
 
         optimizerGshading_state_dict = self.optimizerG_shading.state_dict()
         optimizerDshading_state_dict = self.optimizerD_shading.state_dict()
         schedulerGshading_state_dict = self.schedulerG_shading.state_dict()
         schedulerDshading_state_dict = self.schedulerD_shading.state_dict()
 
-        save_dict[constants.GENERATOR_KEY + "Z"] = netGS_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "Z"] = netDS_state_dict
+        save_dict[constants.GENERATOR_KEY + "NS"] = netGNS_state_dict
+        save_dict[constants.DISCRIMINATOR_KEY + "NS"] = netDNS_state_dict
+        save_dict[constants.GENERATOR_KEY + "WS"] = netGWS_state_dict
+        save_dict[constants.DISCRIMINATOR_KEY + "WS"] = netDWS_state_dict
 
         save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "Z"] = optimizerGshading_state_dict
         save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "Z"] = optimizerDshading_state_dict
