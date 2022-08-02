@@ -114,6 +114,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.losses_dict_s[constants.D_A_REAL_LOSS_KEY] = []
         self.losses_dict_s[self.RGB_RECONSTRUCTION_LOSS_KEY] = []
         self.losses_dict_s[constants.CYCLE_LOSS_KEY] = []
+        self.SHADOW_SIM_KEY = "SHADOPW_SIM_KEY"
+        self.losses_dict_s[self.SHADOW_SIM_KEY] = []
 
         self.caption_dict_s = {}
         self.caption_dict_s[constants.G_LOSS_KEY] = "Shadow G loss per iteration"
@@ -127,12 +129,13 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.caption_dict_s[constants.D_A_REAL_LOSS_KEY] = "D real loss per iteration"
         self.caption_dict_s[self.RGB_RECONSTRUCTION_LOSS_KEY] = "RGB Reconstruction loss per iteration"
         self.caption_dict_s[constants.CYCLE_LOSS_KEY] = "Cycle loss per iteration"
+        self.caption_dict_s[self.SHADOW_SIM_KEY] = "Shadow sim per iteration"
 
 
     def train(self, epoch, iteration, input_map, target_map):
         input_rgb_tensor = input_map["rgb"]
         shadow_tensor = target_map["shadow"]
-        input_rgb_tensor_noshadow = self.iid_op.remove_rgb_shadow(input_rgb_tensor, shadow_tensor)
+        input_rgb_tensor_noshadow = self.iid_op.remove_rgb_shadow(input_rgb_tensor, shadow_tensor, False)
 
         with amp.autocast():
             if (self.da_enabled == 1):
@@ -182,7 +185,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             prediction = self.D_NS(output)
             real_tensor = torch.ones_like(prediction)
             NS_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
-            rgb_ns_equation = self.iid_op.remove_rgb_shadow(input_rgb_tensor, rgb2shadow)
+            rgb_ns_equation = self.iid_op.remove_rgb_shadow(input_rgb_tensor, rgb2shadow, False)
             NS_rgb_loss = (self.l1_loss(rgb_ns_equation, input_rgb_tensor_noshadow) + self.l1_loss(rgb2ns, input_rgb_tensor_noshadow)) * self.rgb_l1_weight
 
             output = self.G_WS(input_ns)
@@ -194,7 +197,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             prediction = self.D_WS(output)
             real_tensor = torch.ones_like(prediction)
             WS_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
-            rgb_ws_equation = self.iid_op.add_rgb_shadow(input_rgb_tensor_noshadow, rgb2shadow)
+            rgb_ws_equation = self.iid_op.add_rgb_shadow(input_rgb_tensor_noshadow, rgb2shadow, False)
             WS_rgb_loss = (self.l1_loss(rgb_ws_equation, input_rgb_tensor) + self.l1_loss(rgb2ws, input_rgb_tensor)) * self.rgb_l1_weight
 
             #cycleloss
@@ -206,9 +209,12 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             ws_output = torch.cat([input_ws, shadow_tensor], 1)
             WS_cycle_loss = self.l1_loss(self.G_WS(rgb2ns), ws_output) * 10.0
 
+            #reduce shadow difference
+            Z_sim_loss = self.l1_loss(rgb2ws, rgb2ns) * 20.0
+
             errG = NS_likeness_loss + NS_lpip_loss + NS_ssim_loss + NS_gradient_loss + NS_adv_loss + NS_rgb_loss + \
                    WS_likeness_loss + WS_lpip_loss + WS_ssim_loss + WS_gradient_loss + WS_adv_loss + WS_rgb_loss + \
-                   NS_cycle_loss + WS_cycle_loss
+                   NS_cycle_loss + WS_cycle_loss + Z_sim_loss
 
             self.fp16_scaler.scale(errG).backward()
             self.fp16_scaler.step(self.optimizerG_shading)
@@ -227,8 +233,9 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_NS_real_loss.item() + D_WS_real_loss.item())
             self.losses_dict_s[self.RGB_RECONSTRUCTION_LOSS_KEY].append(NS_rgb_loss.item() + WS_rgb_loss.item())
             self.losses_dict_s[constants.CYCLE_LOSS_KEY].append(NS_cycle_loss.item() + WS_cycle_loss.item())
+            self.losses_dict_s[self.SHADOW_SIM_KEY].append(Z_sim_loss.item())
 
-            rgb2shadow = self.test(input_map)
+            _, rgb2shadow = self.test(input_map)
             self.stopper_method.register_metric(rgb2shadow, shadow_tensor, epoch)
             self.stop_result = self.stopper_method.test(epoch)
 
@@ -255,7 +262,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def visdom_visualize(self, input_map, label="Train"):
         input_rgb_tensor = input_map["rgb"]
         shadow_tensor = input_map["shadow"]
-        input_rgb_tensor_noshadow = self.iid_op.remove_rgb_shadow(input_rgb_tensor, shadow_tensor, invert=True)
+        input_rgb_tensor_noshadow = self.iid_op.remove_rgb_shadow(input_rgb_tensor, shadow_tensor, False)
 
         if (self.da_enabled == 1):
             input_ns = self.reshape_input(input_rgb_tensor_noshadow)
@@ -267,9 +274,14 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         output = self.G_WS(input_ns)
         rgb2ws, rgb2shadow_ws = torch.split(output, [3, 1], 1)
 
-        rgb2ws_equation = self.iid_op.add_rgb_shadow(input_rgb_tensor_noshadow, rgb2shadow_ws, invert=True)
-        rgb2ns_equation = self.iid_op.remove_rgb_shadow(input_rgb_tensor, rgb2shadow_ns, invert=True)
+        shadow_tensor = tensor_utils.normalize_to_01(shadow_tensor)
+        input_rgb_tensor = tensor_utils.normalize_to_01(input_rgb_tensor)
+        input_rgb_tensor_noshadow = tensor_utils.normalize_to_01(input_rgb_tensor_noshadow)
+        rgb2shadow_ns = tensor_utils.normalize_to_01(rgb2shadow_ns)
+        rgb2shadow_ws = tensor_utils.normalize_to_01(rgb2shadow_ws)
 
+        rgb2ws_equation = self.iid_op.add_rgb_shadow(input_rgb_tensor_noshadow, rgb2shadow_ws, False)
+        rgb2ns_equation = self.iid_op.remove_rgb_shadow(input_rgb_tensor, rgb2shadow_ns, False)
 
         self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(rgb2ws_equation, str(label) + " RGB-WS (Equation) Images " + self.NETWORK_VERSION + str(self.iteration))
@@ -300,7 +312,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 print("No existing checkpoint file found. Creating new network: ", self.NETWORK_CHECKPATH)
 
         if(checkpoint != None):
-            iid_server_config.IIDServerConfig.getInstance().store_epoch_from_checkpt("train_shading", checkpoint["epoch"])
+            iid_server_config.IIDServerConfig.getInstance().store_epoch_from_checkpt("train_shadow", checkpoint["epoch"])
             self.stopper_method.update_last_metric(checkpoint[constants.LAST_METRIC_KEY])
             self.G_NS.load_state_dict(checkpoint[constants.GENERATOR_KEY + "NS"])
             self.D_NS.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "NS"])
