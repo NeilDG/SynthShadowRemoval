@@ -53,11 +53,12 @@ class IIDTransform(nn.Module):
         # print("Difference between RGB vs Recon: ", loss_op(rgb_recon, rgb_ws).item())
 
         rgb_recon = self.transform_op(rgb_recon)
+        rgb_ns = self.transform_op(rgb_ns)
         albedo_refined = self.transform_op(albedo_refined)
         shading_refined = self.transform_op(shading_refined)
-        shadow_tensor = self.transform_op(shadows_refined)
+        shadows_refined = self.transform_op(shadows_refined)
 
-        return rgb_recon, albedo_refined, shading_refined, shadow_tensor
+        return rgb_recon, rgb_ns, albedo_refined, shading_refined, shadows_refined
 
     def produce_rgb(self, albedo_tensor, shading_tensor, shadow_tensor, tozeroone = True):
         if(tozeroone):
@@ -99,11 +100,15 @@ class IIDTransform(nn.Module):
 
         return final_albedo, final_shading
 
-    def extract_shading(self, rgb_tensor, albedo_tensor, one_channel = False):
+    def extract_shading(self, rgb_tensor, albedo_tensor, one_channel = False, mask_fill = True):
         min = torch.min(rgb_tensor)
         max = torch.max(rgb_tensor)
 
-        albedo_refined = self.mask_fill_nonzeros(albedo_tensor)
+        if(mask_fill):
+            albedo_refined = self.mask_fill_nonzeros(albedo_tensor)
+        else:
+            albedo_refined = albedo_tensor
+
         shading_tensor = rgb_tensor / albedo_refined
 
         if(one_channel == True):
@@ -128,19 +133,20 @@ class IIDTransform(nn.Module):
         return shadow_tensor
 
     def extract_albedo(self, rgb_tensor, shading_tensor, shadow_tensor, tozeroone = True):
-        min = 0.0
-        max = 1.0
+        min = torch.min(rgb_tensor)
+        max = torch.max(rgb_tensor)
         if(tozeroone):
             rgb_tensor = (rgb_tensor * 0.5) + 0.5
             shading_tensor = (shading_tensor * 0.5) + 0.5
             shadow_tensor = (shadow_tensor * 0.5) + 0.5
 
-        # shading_tensor = self.mask_fill_nonzeros(shading_tensor)
+        shading_tensor = self.mask_fill_nonzeros(shading_tensor)
         # shadow_tensor = self.mask_fill_nonzeros(shadow_tensor)
 
-        albedo_refined = rgb_tensor / (shading_tensor * shadow_tensor)
-        # albedo_tensor = torch.clip(albedo_refined, min, max)
-        albedo_tensor = albedo_refined
+        albedo_refined = (rgb_tensor + (shadow_tensor * self.shadow_intensity)) / shading_tensor
+        # albedo_refined = rgb_tensor / shading_tensor
+        albedo_tensor = torch.clip(albedo_refined, min, max)
+        # albedo_tensor = albedo_refined
 
         return albedo_tensor
 

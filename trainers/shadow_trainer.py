@@ -279,6 +279,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         input_rgb_tensor_noshadow = tensor_utils.normalize_to_01(input_rgb_tensor_noshadow)
         rgb2shadow_ns = tensor_utils.normalize_to_01(rgb2shadow_ns)
         rgb2shadow_ws = tensor_utils.normalize_to_01(rgb2shadow_ws)
+        rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
+        rgb2ws = tensor_utils.normalize_to_01(rgb2ws)
 
         rgb2ws_equation = self.iid_op.add_rgb_shadow(input_rgb_tensor_noshadow, rgb2shadow_ws, False)
         rgb2ns_equation = self.iid_op.remove_rgb_shadow(input_rgb_tensor, rgb2shadow_ns, False)
