@@ -17,10 +17,15 @@ class IIDServerConfig():
 
         # COARE, CCS CLOUD, GCLOUD, RTX 2080TI, RTX 3090
         if(constants.server_config <= 5):
-            self.general_configs = {"train_albedo_mask": {"min_epochs": 3, "max_epochs" : 10, "patch_size": 256},
-                                    "train_albedo": {"min_epochs": 20,"max_epochs" : 40, "patch_size": 64},
-                                    "train_shading": {"min_epochs": 20,"max_epochs" : 40, "patch_size": 64},
-                                    "train_shadow": {"min_epochs": 20,"max_epochs" : 40, "patch_size": 64}}
+            # self.general_configs = {"train_albedo_mask": {"min_epochs": 3, "max_epochs" : 10, "patch_size": 256},
+            #                         "train_albedo": {"min_epochs": 20,"max_epochs" : 40, "patch_size": 256},
+            #                         "train_shading": {"min_epochs": 20,"max_epochs" : 40, "patch_size": 256},
+            #                         "train_shadow": {"min_epochs": 20,"max_epochs" : 40, "patch_size": 256}}
+
+            self.general_configs = {"train_albedo_mask": {"min_epochs": 3, "max_epochs": 10, "patch_size": 256},
+                                    "train_albedo": {"min_epochs": 3, "max_epochs": 10, "patch_size": 256},
+                                    "train_shading": {"min_epochs": 3, "max_epochs": 10, "patch_size": 256},
+                                    "train_shadow": {"min_epochs": 3, "max_epochs": 10, "patch_size": 256}}
 
         #debug
         if(constants.debug_run == 1):
@@ -93,7 +98,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
 
-        elif (version == "v11.07"):  # Adain-GEN
+        elif (version == "v12.07"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4
@@ -120,8 +125,8 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_S] = 64
             else:  # RTX 3090
                 network_config[BATCH_SIZE_KEY_P] = 32
-                network_config[BATCH_SIZE_KEY_A] = 128
-                network_config[BATCH_SIZE_KEY_S] = 128
+                network_config[BATCH_SIZE_KEY_A] = 8
+                network_config[BATCH_SIZE_KEY_S] = 8
 
         elif (version == "v11.08"):  # FFA
             network_config[NETWORK_CONFIG_NUM] = 5

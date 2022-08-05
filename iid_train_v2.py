@@ -147,9 +147,9 @@ def main(argv):
                 rgb_ns_tensor = rgb_ns_batch.to(device)
                 albedo_tensor = albedo_batch.to(device)
                 unlit_tensor = unlit_batch.to(device)
-                rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor = iid_op(rgb_ws_tensor, rgb_ns_tensor, albedo_tensor)
+                rgb_ws_tensor, rgb_ns_tensor, albedo_tensor, shading_tensor, shadow_tensor = iid_op(rgb_ws_tensor, rgb_ns_tensor, albedo_tensor)
 
-                input_map = {"rgb": rgb_ws_tensor, "albedo": albedo_tensor, "unlit": unlit_tensor, "shading" : shading_tensor, "shadow" : shadow_tensor}
+                input_map = {"rgb": rgb_ws_tensor, "rgb_ns" : rgb_ns_tensor, "albedo": albedo_tensor, "unlit": unlit_tensor, "shading" : shading_tensor, "shadow" : shadow_tensor}
                 target_map = input_map
 
                 tf.train(mode, epoch, iteration, input_map, target_map)
@@ -168,7 +168,7 @@ def main(argv):
                     albedo_tensor = albedo_batch.to(device)
                     unlit_tensor = unlit_batch.to(device)
 
-                    rgb_ws_tensor, albedo_tensor, shading_tensor, shadow_tensor = iid_op(rgb_ws_tensor, rgb_ns_tensor, albedo_tensor)
+                    rgb_ws_tensor, rgb_ns_tensor, albedo_tensor, shading_tensor, shadow_tensor = iid_op(rgb_ws_tensor, rgb_ns_tensor, albedo_tensor)
                     input_map = {"rgb": rgb_ws_tensor, "albedo": albedo_tensor, "unlit": unlit_tensor, "shading" : shading_tensor, "shadow" : shadow_tensor}
                     tf.visdom_visualize(mode, input_map, "Test")
 
