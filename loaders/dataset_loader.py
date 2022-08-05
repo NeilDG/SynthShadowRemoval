@@ -4,7 +4,7 @@ import torch
 from torch.utils import data
 
 import constants
-from loaders import image_dataset
+from loaders import image_dataset, iid_test_datasets
 import os
 
 def assemble_unpaired_data(path_a, num_image_to_load=-1, force_complete=False):
@@ -29,6 +29,19 @@ def assemble_unpaired_data(path_a, num_image_to_load=-1, force_complete=False):
                     break
 
     return a_list
+
+def assemble_img_list(img_dir, opts, shuffle = False):
+    img_list = glob.glob(img_dir)
+    if(shuffle):
+        random.shuffle(img_list)
+
+    if (opts.img_to_load > 0):
+        img_list = img_list[0: opts.img_to_load]
+
+    for i in range(0, len(img_list)):
+        img_list[i] = img_list[i].replace("\\", "/")
+
+    return img_list
 
 def load_map_train_dataset(path_a, path_c, opts):
     a_list = assemble_unpaired_data(path_a, opts.img_to_load)
@@ -107,6 +120,52 @@ def load_iid_datasetv2_train(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, patc
 
     return data_loader
 
+def load_cgi_dataset(rgb_dir, patch_size, opts):
+    rgb_list = assemble_img_list(rgb_dir, opts)
+
+    img_length = len(rgb_list)
+    print("Length of images: %d" % img_length)
+
+    data_loader = torch.utils.data.DataLoader(
+        iid_test_datasets.CGIDataset(img_length, rgb_list, 2, patch_size),
+        batch_size=8,
+        num_workers=1,
+        shuffle=False
+    )
+
+    return data_loader
+
+def load_iiw_dataset(rgb_dir, opts):
+    rgb_list = assemble_img_list(rgb_dir, opts)
+
+    img_length = len(rgb_list)
+    print("Length of images: %d" % img_length)
+
+    data_loader = torch.utils.data.DataLoader(
+        iid_test_datasets.IIWDataset(img_length, rgb_list),
+        batch_size=8,
+        num_workers=1,
+        shuffle=False
+    )
+
+    return data_loader
+
+def load_bell2014_dataset(r_dir, s_dir, patch_size, opts):
+    r_list = assemble_img_list(r_dir, opts)
+    s_list = assemble_img_list(s_dir, opts)
+
+    img_length = len(r_list)
+    print("Length of images: %d" % img_length)
+
+    data_loader = torch.utils.data.DataLoader(
+        iid_test_datasets.Bell2014Dataset(img_length, r_list, s_list, 2, patch_size),
+        batch_size=8,
+        num_workers=1,
+        shuffle=False
+    )
+
+    return data_loader
+
 def load_iid_datasetv2_test(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, patch_size, opts):
     rgb_list_ws = glob.glob(rgb_dir_ws)
     random.shuffle(rgb_list_ws)
@@ -137,58 +196,6 @@ def load_single_test_dataset(path_a):
         batch_size=4,
         num_workers=1,
         shuffle=True
-    )
-
-    return data_loader
-
-def load_shadowrelight_train_dataset(sample_path, path_rgb, path_a, path_b, opts):
-    img_length = len(assemble_unpaired_data(sample_path, opts.img_to_load))
-    print("Length of images: %d" % img_length)
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.ShadowRelightDatset(img_length, path_rgb, path_a, path_b, 1, opts),
-        batch_size=opts.batch_size,
-        num_workers=opts.num_workers,
-        shuffle=True
-    )
-
-    return data_loader
-
-def load_shadowrelight_test_dataset(sample_path, path_rgb, path_a, path_b, opts):
-    img_length = len(assemble_unpaired_data(sample_path, opts.img_to_load))
-    print("Length of images: %d" % img_length)
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.ShadowRelightDatset(img_length, path_rgb, path_a, path_b, 2, opts),
-        batch_size=2,
-        num_workers=1,
-        shuffle=False
-    )
-
-    return data_loader
-
-def load_shadowmap_train_recursive(path_a, folder_b, folder_c, return_shading: bool, opts):
-    a_list = glob.glob(path_a + "/*/rgb/*.png")
-    print("Length of images: %d" % len(a_list))
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.IIDDataset(a_list, folder_b, folder_c, 1, return_shading, opts),
-        batch_size=opts.batch_size,
-        num_workers=opts.num_workers,
-        shuffle=True
-    )
-
-    return data_loader
-
-def load_shadowmap_test_recursive(path_a, folder_b, folder_c, return_shading: bool, opts):
-    a_list = glob.glob(path_a + "/*/rgb/*.png")
-    print("Length of images: %d" % len(a_list))
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.IIDDataset(a_list, folder_b, folder_c, 2, return_shading, opts),
-        batch_size=2,
-        num_workers=1,
-        shuffle=False
     )
 
     return data_loader
@@ -270,7 +277,6 @@ def load_unlit_dataset_test(styled_dir, unlit_dir, opts):
     )
 
     return data_loader
-
 
 
 def load_da_dataset_test(imgx_dir, imgy_dir, opts):

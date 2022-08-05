@@ -85,7 +85,6 @@ plot_enabled = 1
 early_stop_threshold = 1000
 min_epochs = 50
 num_epochs = 100
-start_epoch = 0
 
 #Running on local = 0, Running on COARE = 1, Running on CCS server = 2
 server_config = 0
@@ -93,8 +92,10 @@ debug_run = 0
 num_workers = 12
 
 albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
-rgb_dir_ws = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-rgb_dir_ns = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+rgb_dir_ws_styled = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+rgb_dir_ns_styled = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+rgb_dir_ws = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"
+rgb_dir_ns = "E:/SynthWeather Dataset 8/train_rgb_noshadows/"
 unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
 
 imgx_dir = "E:/Places Dataset/*.jpg"

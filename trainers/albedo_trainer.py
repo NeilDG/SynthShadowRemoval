@@ -138,10 +138,10 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             else:
                 input = input_rgb_tensor
 
-            albedo_masks = self.iid_op.create_sky_reflection_masks(albedo_tensor)
-            # input_rgb_tensor = input_rgb_tensor * albedo_masks
-            albedo_tensor = albedo_tensor * albedo_masks
-            albedo_masks = torch.cat([albedo_masks, albedo_masks, albedo_masks], 1)
+            # albedo_masks = self.iid_op.create_sky_reflection_masks(albedo_tensor)
+            # albedo_tensor = albedo_tensor * albedo_masks
+            # albedo_masks = torch.cat([albedo_masks, albedo_masks, albedo_masks], 1)
+            albedo_masks = torch.ones_like(albedo_tensor)
 
             if (self.da_enabled == 1):
                 input = self.reshape_input(input)
@@ -186,6 +186,7 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             rgb_like = self.iid_op.produce_rgb(rgb2albedo, shading_tensor, shadow_tensor)
             rgb_l1_loss = self.l1_loss(rgb_like, input_rgb_tensor) * self.rgb_l1_weight
 
+
             errG = A_likeness_loss + A_lpip_loss + A_ssim_loss + A_gradient_loss + A_adv_loss + A_ms_grad_loss + A_reflective_loss + rgb_l1_loss
             self.fp16_scaler.scale(errG).backward()
             self.schedulerG_albedo.step(errG)
@@ -218,9 +219,9 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def test(self, input_map):
         with torch.no_grad():
             input_rgb_tensor = input_map["rgb"]
-            unlit_tensor = input_map["unlit"]
 
             if (self.albedo_mode == 2):
+                unlit_tensor = input_map["unlit"]
                 input = unlit_tensor
             else:
                 input = input_rgb_tensor
@@ -238,23 +239,32 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         input_rgb_tensor = input_map["rgb"]
         albedo_tensor = input_map["albedo"]
         unlit_tensor = input_map["unlit"]
-        mask_tensor = self.iid_op.create_sky_reflection_masks(albedo_tensor)
+        shading_tensor = input_map["shading"]
+        shadow_tensor = input_map["shadow"]
+
+        #remove shadow
+        input_rgb_tensor = self.iid_op.remove_rgb_shadow(input_rgb_tensor, shadow_tensor)
+
+        # mask_tensor = self.iid_op.create_sky_reflection_masks(albedo_tensor)
         embedding_rep = self.get_feature_rep(input_rgb_tensor)
         rgb2albedo = self.test(input_map)
 
         # normalize to 0-1
-        rgb_tensor = tensor_utils.normalize_to_01(input_rgb_tensor)
+        input_rgb_tensor = tensor_utils.normalize_to_01(input_rgb_tensor)
         rgb2albedo = tensor_utils.normalize_to_01(rgb2albedo)
 
-        rgb2albedo = rgb2albedo * mask_tensor
-        rgb2albedo = self.iid_op.mask_fill_nonzeros(rgb2albedo)
+        # rgb2albedo = rgb2albedo * mask_tensor
+        # rgb2albedo = self.iid_op.mask_fill_nonzeros(rgb2albedo)
 
         self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(embedding_rep, str(label) + " Embedding Maps - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(unlit_tensor, str(label) + " Unlit Images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(self.iid_op.produce_rgb(rgb2albedo, shading_tensor, shadow_tensor), str(label) + " RGB Reconstructed Images - " + self.NETWORK_VERSION + str(self.iteration))
 
         self.visdom_reporter.plot_image(rgb2albedo, str(label) + " RGB2Albedo images - " + self.NETWORK_VERSION + str(self.iteration), True)
         self.visdom_reporter.plot_image(albedo_tensor, str(label) + " Albedo images - " + self.NETWORK_VERSION + str(self.iteration))
+
+        self.visdom_reporter.plot_image(shading_tensor, str(label) + " Shading images - " + self.NETWORK_VERSION + str(self.iteration))
 
     def visdom_infer(self, input_map):
         input_rgb_tensor = input_map["rgb"]
@@ -280,7 +290,7 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 print("No existing checkpoint file found. Creating new network: ", self.NETWORK_CHECKPATH)
 
         if (checkpoint != None):
-            constants.start_epoch = checkpoint["epoch"]
+            iid_server_config.IIDServerConfig.getInstance().store_epoch_from_checkpt("train_albedo", checkpoint["epoch"])
             self.stopper_method.update_last_metric(checkpoint[constants.LAST_METRIC_KEY])
             self.G_A.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
             self.D_A.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "A"])

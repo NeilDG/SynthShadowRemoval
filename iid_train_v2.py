@@ -34,25 +34,30 @@ def update_config(opts):
     constants.server_config = opts.server_config
     constants.ITERATION = str(opts.iteration)
     constants.plot_enabled = opts.plot_enabled
+    constants.debug_run = opts.debug_run
 
     ## COARE
     if (constants.server_config == 1):
         opts.num_workers = 6
         print("Using COARE configuration. Workers: ", opts.num_workers)
         constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.rgb_dir_ns = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+        constants.rgb_dir_ws_styled = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.rgb_dir_ns_styled = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+        constants.rgb_dir_ws = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb/*/*.png"
+        constants.rgb_dir_ns = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows/"
         constants.albedo_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/unlit/"
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
         constants.num_workers = 6
-        constants.rgb_dir_ws = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.rgb_dir_ns = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+        constants.rgb_dir_ws_styled = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.rgb_dir_ns_styled = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+        constants.rgb_dir_ws = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb/*/*.png"
+        constants.rgb_dir_ns = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows/"
         constants.albedo_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/unlit/"
-        constants.DATASET_PLACES_PATH = constants.rgb_dir_ws
+        constants.DATASET_PLACES_PATH = constants.rgb_dir_ws_styled
 
         print("Using CCS configuration. Workers: ", opts.num_workers)
 
@@ -61,14 +66,16 @@ def update_config(opts):
         opts.num_workers = 8
         print("Using GCloud configuration. Workers: ", opts.num_workers)
         constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "/home/neil_delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.rgb_dir_ws_styled = "/home/neil_delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
         constants.albedo_dir = "/home/neil_delgallego/SynthWeather Dataset 8/albedo/"
 
     elif (constants.server_config == 4):
         opts.num_workers = 6
         constants.DATASET_PLACES_PATH = "C:/Datasets/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+        constants.rgb_dir_ws_styled = "C:/Datasets/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.rgb_dir_ns_styled = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+        constants.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 8/train_rgb/*/*.png"
+        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows/"
         constants.albedo_dir = "C:/Datasets/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "C:/Datasets/SynthWeather Dataset 8/unlit/"
 
@@ -76,8 +83,10 @@ def update_config(opts):
     else:
         opts.num_workers = 6
         constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.rgb_dir_ns = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+        constants.rgb_dir_ws_styled = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.rgb_dir_ns_styled = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+        constants.rgb_dir_ws = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"
+        constants.rgb_dir_ns = "E:/SynthWeather Dataset 8/train_rgb_noshadows/"
         constants.albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)
@@ -96,11 +105,11 @@ def main(argv):
     random.seed(manualSeed)
     torch.manual_seed(manualSeed)
     np.random.seed(manualSeed)
+    torch.multiprocessing.set_sharing_strategy('file_system')
 
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    print(constants.rgb_dir_ws, constants.albedo_dir)
     plot_utils.VisdomReporter.initialize()
 
     iid_server_config.IIDServerConfig.initialize(opts.version)
@@ -113,16 +122,25 @@ def main(argv):
     tf = trainer_factory.TrainerFactory(device, opts)
     iid_op = iid_transforms.IIDTransform()
 
-    for mode in (["train_albedo_mask", "train_albedo", "train_shading"]):
-    # for mode in (["train_albedo", "train_shading"]):
+    # for mode in (["train_albedo_mask", "train_albedo", "train_shading"]):
+    for mode in (["train_shadow", "train_albedo", "train_shading"]):
         patch_size = general_config[mode]["patch_size"]
+        style_enabled = network_config["style_transferred"]
+
+        if(style_enabled == 1):
+            rgb_dir_ws = constants.rgb_dir_ws_styled
+            rgb_dir_ns = constants.rgb_dir_ns_styled
+        else:
+            rgb_dir_ws = constants.rgb_dir_ws
+            rgb_dir_ns = constants.rgb_dir_ns
+
         batch_size = sc_instance.get_batch_size_from_mode(mode, network_config)
-        train_loader = dataset_loader.load_iid_datasetv2_train(constants.rgb_dir_ws, constants.rgb_dir_ns, constants.unlit_dir, constants.albedo_dir, patch_size, batch_size, opts)
-        test_loader = dataset_loader.load_iid_datasetv2_test(constants.rgb_dir_ws, constants.rgb_dir_ns, constants.unlit_dir, constants.albedo_dir, 256, opts)
+        train_loader = dataset_loader.load_iid_datasetv2_train(rgb_dir_ws, rgb_dir_ns, constants.unlit_dir, constants.albedo_dir, patch_size, batch_size, opts)
+        test_loader = dataset_loader.load_iid_datasetv2_test(rgb_dir_ws, rgb_dir_ns, constants.unlit_dir, constants.albedo_dir, 256, opts)
         rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
 
         iteration = 0
-        start_epoch = constants.start_epoch
+        start_epoch = sc_instance.get_last_epoch_from_mode(mode)
         print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
         for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
             for i, (train_data, test_data, rw_data) in enumerate(zip(train_loader, test_loader, itertools.cycle(rw_loader))):

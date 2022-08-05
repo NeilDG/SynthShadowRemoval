@@ -1,5 +1,4 @@
 import os.path
-
 import torch
 import cv2
 import numpy as np
@@ -10,6 +9,7 @@ import torchvision.transforms.functional
 import torch.nn.functional as F
 import constants
 import kornia
+from pathlib import Path
 
 class ColorTransferDataset(data.Dataset):
     def __init__(self, image_list_a, path_b, path_segment, transform_config):
@@ -191,7 +191,6 @@ class RelightDataset(data.Dataset):
         return self.img_length
 
 
-
 class IIDDatasetV2(data.Dataset):
     def __init__(self, img_length, rgb_list_ws, rgb_dir_ns, unlit_dir, albedo_dir, transform_config, patch_size):
         self.img_length = img_length
@@ -212,17 +211,8 @@ class IIDDatasetV2(data.Dataset):
                 transforms.ToTensor()
             ])
 
-            self.mask_op = transforms.Compose([
-                transforms.ToTensor()
-            ])
-
         else:
             self.final_transform_op = transforms.Compose([
-                transforms.Resize(constants.TEST_IMAGE_SIZE),
-                transforms.ToTensor()
-            ])
-
-            self.mask_op = transforms.Compose([
                 transforms.Resize(constants.TEST_IMAGE_SIZE),
                 transforms.ToTensor()
             ])

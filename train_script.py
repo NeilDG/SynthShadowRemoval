@@ -2,17 +2,17 @@
 
 import os
 def train_relighting():
-    os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --test_mode=0 "
-              "--plot_enabled=0 --version=\"v9.01\" --iteration=15")
+    # os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
+    #           "--plot_enabled=0 --version=\"v11.07\" --iteration=15")
+    #
+    # os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
+    #           "--plot_enabled=0 --version=\"v11.07\" --iteration=16")
+    #
+    # os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
+    #           "--plot_enabled=0 --version=\"v11.07\" --iteration=5")
 
-    os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --test_mode=0 "
-              "--plot_enabled=0 --version=\"v9.01\" --iteration=16")
-
-    os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 "
-              "--plot_enabled=0 --version=\"v9.01\" --iteration=5")
-
-    os.system("python \"iid_train_v2.py\" --server_config=6 --img_to_load=-1 "
-              "--plot_enabled=0 --version=\"v9.01\" --iteration=6")
+    os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
+              "--plot_enabled=0 --version=\"v11.07\" --iteration=6")
 
 
 def train_domain_adaptation():
@@ -60,7 +60,7 @@ def main():
     train_relighting()
     # train_domain_adaptation()
     # train_embedding()
-    os.system("shutdown /s /t 1")
+    # os.system("shutdown /s /t 1")
 
 
 if __name__ == "__main__":
