@@ -210,7 +210,7 @@ class TesterClass():
         rgb2shading = self.shading_t.test(input)
         _, rgb2shadow = self.shadow_t.test(input)
         rgb2albedo = self.albedo_t.test(input)
-        rgb_ns_like = self.iid_op.remove_rgb_shadow(rgb_ws_tensor, shadow_tensor, False)
+        rgb_ns_like = self.iid_op.remove_rgb_shadow(rgb_ws_tensor, rgb2shadow, False)
 
         # normalize everything
         rgb_ws_tensor = tensor_utils.normalize_to_01(rgb_ws_tensor)
@@ -256,14 +256,15 @@ class TesterClass():
 
     def test_cgi(self, rgb_tensor, albedo_tensor, opts):
         rgb_tensor, albedo_tensor, shading_tensor = self.cgi_op.decompose_cgi(rgb_tensor, albedo_tensor)
-        albedo_inferred = self.cgi_op.extract_albedo(rgb_tensor, shading_tensor, torch.zeros_like(shading_tensor))
-        rgb_inferred = shading_tensor * albedo_inferred
+        # albedo_inferred = self.cgi_op.extract_albedo(rgb_tensor, shading_tensor, torch.zeros_like(shading_tensor))
+        # rgb_inferred = shading_tensor * albedo_inferred
 
         input = {"rgb": rgb_tensor}
         rgb2mask = self.mask_t.test(input)
         rgb2albedo = self.albedo_t.test(input)
         rgb2shading = self.shading_t.test(input)
         _, rgb2shadow = self.shadow_t.test(input)
+        rgb_ns_like = self.iid_op.remove_rgb_shadow(rgb_tensor, rgb2shadow, False)
 
         # normalize everything
         shading_tensor = tensor_utils.normalize_to_01(shading_tensor)
@@ -273,13 +274,15 @@ class TesterClass():
         rgb2shadow = tensor_utils.normalize_to_01(rgb2shadow)
         rgb2albedo = tensor_utils.normalize_to_01(rgb2albedo)
         rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow, False)
+        rgb_ns_like = tensor_utils.normalize_to_01(rgb_ns_like)
 
         self.visdom_reporter.plot_image(rgb_tensor, "CGI RGB Images - " + opts.version + str(opts.iteration))
-        self.visdom_reporter.plot_image(rgb_inferred, "CGI RGB Inferred - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb_ns_like, "CGI RGB (No Shadows) Images - " + opts.version + str(opts.iteration))
+        # self.visdom_reporter.plot_image(rgb_inferred, "CGI RGB Inferred - " + opts.version + str(opts.iteration))
         self.visdom_reporter.plot_image(rgb_like, "CGI RGB Like - " + opts.version + str(opts.iteration))
 
         self.visdom_reporter.plot_image(albedo_tensor, "CGI Albedo Images - " + opts.version + str(opts.iteration))
-        self.visdom_reporter.plot_image(albedo_inferred, "CGI Albedo Inferred - " + opts.version + str(opts.iteration))
+        # self.visdom_reporter.plot_image(albedo_inferred, "CGI Albedo Inferred - " + opts.version + str(opts.iteration))
         self.visdom_reporter.plot_image(rgb2albedo, "CGI Albedo Like - " + opts.version + str(opts.iteration))
 
         self.visdom_reporter.plot_image(shading_tensor, "CGI Shading Images - " + opts.version + str(opts.iteration))
@@ -306,15 +309,19 @@ class TesterClass():
         rgb2albedo = self.albedo_t.test(input)
         rgb2shading = self.shading_t.test(input)
         _, rgb2shadow = self.shadow_t.test(input)
+        rgb_ns_like = self.iid_op.remove_rgb_shadow(rgb_tensor, rgb2shadow, False)
 
         # normalize everything
         rgb_tensor = tensor_utils.normalize_to_01(rgb_tensor)
         rgb2shading = tensor_utils.normalize_to_01(rgb2shading)
         rgb2shadow = tensor_utils.normalize_to_01(rgb2shadow)
         rgb2albedo = tensor_utils.normalize_to_01(rgb2albedo)
+        rgb_ns_like = tensor_utils.normalize_to_01(rgb_ns_like)
+
         rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow, False)
 
         self.visdom_reporter.plot_image(rgb_tensor, "IIW RGB Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb_ns_like, "IIW RGB (No Shadow) Images - " + opts.version + str(opts.iteration))
         self.visdom_reporter.plot_image(rgb2albedo, "IIW Albedo Images - " + opts.version + str(opts.iteration))
 
         judgements_dir = "E:/iiw-decompositions/iiw-dataset/data/"
@@ -325,6 +332,30 @@ class TesterClass():
 
             whdr_metric = whdr.whdr_final(img_file_name, judgements_dir + file_name[i] + ".json")
             self.wdhr_metric_list.append(whdr_metric)
+
+    def test_rw(self, rgb_tensor, rgb2unlit, opts):
+        input = {"rgb": rgb_tensor, "unlit": rgb2unlit}
+        rgb2mask = self.mask_t.test(input)
+        rgb2albedo = self.albedo_t.test(input)
+        rgb2shading = self.shading_t.test(input)
+        _, rgb2shadow = self.shadow_t.test(input)
+        rgb_ns_like = self.iid_op.remove_rgb_shadow(rgb_tensor, rgb2shadow, False)
+
+        # normalize everything
+        rgb_tensor = tensor_utils.normalize_to_01(rgb_tensor)
+        rgb2albedo = tensor_utils.normalize_to_01(rgb2albedo)
+        # rgb2albedo = rgb2albedo * rgb2mask
+        # rgb2albedo = iid_op.mask_fill_nonzeros(rgb2albedo)
+        rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
+        rgb_ns_like = tensor_utils.normalize_to_01(rgb_ns_like)
+
+        self.visdom_reporter.plot_image(rgb_tensor, "RW RGB Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb_ns_like, "RW RGB (No Shadow) Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb_like, "RW RGB Reconstruction Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb2unlit, "RW RGB2Unlit Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb2albedo, "RW RGB2Albedo - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb2shading, "RW RGB2Shading - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb2shadow, "RW RGB2Shadow - " + opts.version + str(opts.iteration))
 
     def get_average_whdr(self, opts):
         ave_whdr = np.round(np.mean(self.wdhr_metric_list), 4)
@@ -412,25 +443,7 @@ def main(argv):
     _, input_rgb_batch = next(iter(rw_loader))
     input_rgb_tensor = input_rgb_batch.to(device)
     rgb2unlit = tf.get_unlit_network()(input_rgb_tensor)
-    input = {"rgb": input_rgb_tensor, "unlit": rgb2unlit}
-    rgb2mask = mask_t.test(input)
-    rgb2albedo = albedo_t.test(input)
-    rgb2shading = shading_t.test(input)
-    _, rgb2shadow = shadow_t.test(input)
-
-    # normalize everything
-    input_rgb_tensor = tensor_utils.normalize_to_01(input_rgb_tensor)
-    rgb2albedo = tensor_utils.normalize_to_01(rgb2albedo)
-    # rgb2albedo = rgb2albedo * rgb2mask
-    # rgb2albedo = iid_op.mask_fill_nonzeros(rgb2albedo)
-    rgb_like = iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
-
-    visdom_reporter.plot_image(input_rgb_tensor, "RW RGB Images - " + opts.version + str(opts.iteration))
-    visdom_reporter.plot_image(rgb_like, "RW RGB Reconstruction Images - " + opts.version + str(opts.iteration))
-    visdom_reporter.plot_image(rgb2unlit, "RW RGB2Unlit Images - " + opts.version + str(opts.iteration))
-    visdom_reporter.plot_image(rgb2albedo, "RW RGB2Albedo - " + opts.version + str(opts.iteration))
-    visdom_reporter.plot_image(rgb2shading, "RW RGB2Shading - " + opts.version + str(opts.iteration))
-    visdom_reporter.plot_image(rgb2shadow, "RW RGB2Shadow - " + opts.version + str(opts.iteration))
+    dataset_tester.test_rw(input_rgb_tensor, rgb2unlit, opts)
 
     #measure GTA performance
     img_list = glob.glob(opts.input_path + "*.jpg") + glob.glob(opts.input_path + "*.png")
