@@ -210,9 +210,11 @@ class TesterClass():
         rgb2shading = self.shading_t.test(input)
         _, rgb2shadow = self.shadow_t.test(input)
         rgb2albedo = self.albedo_t.test(input)
+        rgb_ns_like = self.iid_op.remove_rgb_shadow(rgb_ws_tensor, shadow_tensor, False)
 
         # normalize everything
         rgb_ws_tensor = tensor_utils.normalize_to_01(rgb_ws_tensor)
+        rgb_ns_like = tensor_utils.normalize_to_01(rgb_ns_like)
         shading_tensor = tensor_utils.normalize_to_01(shading_tensor)
         shadow_tensor = tensor_utils.normalize_to_01(shadow_tensor)
         albedo_tensor = tensor_utils.normalize_to_01(albedo_tensor)
@@ -223,6 +225,7 @@ class TesterClass():
         rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow, False)
 
         self.visdom_reporter.plot_image(rgb_ws_tensor, "Input RGB Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb_ns_like, "Input RGB (No Shadow) Images - " + opts.version + str(opts.iteration))
         self.visdom_reporter.plot_image(rgb_like, "RGB Reconstruction Images - " + opts.version + str(opts.iteration))
         self.visdom_reporter.plot_image(unlit_tensor, "Input Unlit Images - " + opts.version + str(opts.iteration))
 
