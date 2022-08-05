@@ -137,6 +137,7 @@ def load_cgi_dataset(rgb_dir, patch_size, opts):
 
 def load_iiw_dataset(rgb_dir, opts):
     rgb_list = assemble_img_list(rgb_dir, opts)
+    rgb_list = rgb_list[0:100] #temporary short
 
     img_length = len(rgb_list)
     print("Length of images: %d" % img_length)

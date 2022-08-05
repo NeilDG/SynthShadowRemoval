@@ -412,7 +412,8 @@ def main(argv):
     input = {"rgb": input_rgb_tensor, "unlit": rgb2unlit}
     rgb2mask = mask_t.test(input)
     rgb2albedo = albedo_t.test(input)
-    rgb2shading, rgb2shadow = shading_t.test(input)
+    rgb2shading = shading_t.test(input)
+    _, rgb2shadow = shadow_t.test(input)
 
     # normalize everything
     input_rgb_tensor = tensor_utils.normalize_to_01(input_rgb_tensor)
@@ -443,7 +444,8 @@ def main(argv):
         input = {"rgb": input_rgb_tensor, "unlit": rgb2unlit}
         rgb2mask = mask_t.test(input)
         rgb2albedo = albedo_t.test(input)
-        rgb2shading, rgb2shadow = shading_t.test(input)
+        rgb2shading = shading_t.test(input)
+        _, rgb2shadow = shadow_t.test(input)
 
         # normalize everything
         rgb2albedo = tensor_utils.normalize_to_01(rgb2albedo)
