@@ -465,8 +465,8 @@ def main(argv):
 
         # normalize everything
         rgb2albedo = tensor_utils.normalize_to_01(rgb2albedo)
-        rgb2albedo = rgb2albedo * rgb2mask
-        rgb2albedo = iid_op.mask_fill_nonzeros(rgb2albedo)
+        # rgb2albedo = rgb2albedo * rgb2mask
+        # rgb2albedo = iid_op.mask_fill_nonzeros(rgb2albedo)
         rgb_like = iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
 
         vutils.save_image(rgb2albedo.squeeze(), opts.output_path + filename)

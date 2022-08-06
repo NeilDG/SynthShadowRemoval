@@ -16,6 +16,7 @@ from lpips import lpips
 import constants
 from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
+from model import usi3d_gan
 from model import new_style_transfer_gan
 from utils import plot_utils
 from utils import pytorch_colors
@@ -112,17 +113,26 @@ class CycleGANTrainer:
         self.update_penalties(it_params.adv_weight, it_params.id_weight, it_params.l1_weight, it_params.lpip_weight, it_params.cycle_weight)
 
         if(net_config == 1):
-            print("Using vanilla cycle GAN")
-            self.G_A = cycle_gan.Generator(n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
-            self.G_B = cycle_gan.Generator(n_residual_blocks=num_blocks, has_dropout=False).to(self.gpu_device)
+            print("Using CBAM Cycle GAN")
+            self.G_A = cycle_gan.Generator(n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
+            self.G_B = cycle_gan.Generator(n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
         elif(net_config == 2):
             print("Using U-Net GAN")
             self.G_A = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
             self.G_B = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         else:
-            print("Using CBAM CycleGAN")
-            self.G_A = cycle_gan.Generator(n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
-            self.G_B = cycle_gan.Generator(n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
+            print("Using AdainGEN")
+            params = {'dim': 64,  # number of filters in the bottommost layer
+                      'mlp_dim': 256,  # number of filters in MLP
+                      'style_dim': 8,  # length of style code
+                      'n_layer': 3,  # number of layers in feature merger/splitor
+                      'activ': 'relu',  # activation function [relu/lrelu/prelu/selu/tanh]
+                      'n_downsample': 2,  # number of downsampling layers in content encoder
+                      'n_res': num_blocks,  # number of residual blocks in content encoder/decoder
+                      'pad_type': 'reflect'}
+            self.G_A = usi3d_gan.AdaINGen(input_dim=3, output_dim=3, params=params).to(self.gpu_device)
+            self.G_B = usi3d_gan.AdaINGen(input_dim=3, output_dim=3, params=params).to(self.gpu_device)
+
 
         self.D_A = cycle_gan.Discriminator().to(self.gpu_device)  # use CycleGAN's discriminator
         self.D_B = cycle_gan.Discriminator().to(self.gpu_device)
