@@ -2,11 +2,17 @@
 
 import os
 def train_relighting():
-    # os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-    #           "--plot_enabled=0 --version=\"v12.07\" --iteration=15")
+    os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
+              "--plot_enabled=0 --version=\"v13.07\" --iteration=15")
 
     os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-              "--plot_enabled=0 --version=\"v12.07\" --iteration=5")
+              "--plot_enabled=0 --version=\"v13.10\" --iteration=15")
+
+    os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
+              "--plot_enabled=0 --version=\"v13.07\" --iteration=5")
+
+    os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
+              "--plot_enabled=0 --version=\"v13.10\" --iteration=5")
 
 
 def train_domain_adaptation():
