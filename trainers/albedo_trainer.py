@@ -126,7 +126,8 @@ class AlbedoTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         return result
 
     def train(self, epoch, iteration, input_map, target_map):
-        input_rgb_tensor = input_map["rgb"]
+        # input_rgb_tensor = input_map["rgb"]
+        input_rgb_tensor = input_map["rgb_ns"]
         unlit_tensor = input_map["unlit"]
         shading_tensor = input_map["shading"]
         shadow_tensor = input_map["shadow"]

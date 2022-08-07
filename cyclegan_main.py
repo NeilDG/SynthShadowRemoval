@@ -81,8 +81,8 @@ def update_config(opts):
     else:
         opts.num_workers = 12
         constants.imgx_dir = "E:/Places Dataset/*.jpg"
-        # constants.imgy_dir = "E:/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
-        constants.imgy_dir = "E:/SynthWeather Dataset 8/albedo/*.png"
+        constants.imgy_dir = "E:/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
+        # constants.imgy_dir = "E:/SynthWeather Dataset 8/albedo/*.png"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers, " ", opts.version_name)
 
 def main(argv):
@@ -146,9 +146,6 @@ def main(argv):
                 imgx_batch, imgy_batch = train_data
                 imgx_tensor = imgx_batch.to(device)
                 imgy_tensor = imgy_batch.to(device)
-
-                masky_tensor = iid_op.create_sky_reflection_masks(imgy_tensor)
-                imgy_tensor = iid_op.mask_fill_nonzeros(imgy_tensor * masky_tensor)
 
                 gt.train(imgx_tensor, imgy_tensor, i)
                 iteration = iteration + 1

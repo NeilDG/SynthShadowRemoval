@@ -605,9 +605,9 @@ def main(argv):
 
     base_path = "E:/SynthWeather Dataset 8/train_rgb/"
     # base_path = "E:/SynthWeather Dataset 8/train_rgb_noshadows/"
-    output_base_path = "E:/SynthWeather Dataset 8/train_rgb_styled/"
+    # output_base_path = "E:/SynthWeather Dataset 8/train_rgb_styled/"
     # output_base_path = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
-    # output_base_path = "E:/SynthWeather Dataset 8/temp_styled/"
+    output_base_path = "E:/SynthWeather Dataset 8/temp_styled/"
     try:
         os.mkdir(output_base_path)
     except OSError as error:
@@ -618,7 +618,7 @@ def main(argv):
     for dir in dirlist:
         input_path = base_path + dir + "/*.png"
         output_path = output_base_path + dir + "/"
-        produce_color_images(input_path, output_path, "synth2rgb_v5.00_5.pt", 2, argv)
+        produce_color_images(input_path, output_path, "synth2rgb_v5.00_10.pt", 2, argv)
 
     # create_patches(argv)
 
