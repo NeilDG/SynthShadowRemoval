@@ -81,7 +81,7 @@ def update_config(opts):
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers)
     else:
-        opts.num_workers = 6
+        opts.num_workers = 12
         constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
         constants.rgb_dir_ws_styled = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
         constants.rgb_dir_ns_styled = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
