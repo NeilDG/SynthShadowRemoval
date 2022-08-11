@@ -2,11 +2,11 @@
 
 import os
 def train_relighting():
-    os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-              "--plot_enabled=0 --version=\"v13.07\" --iteration=15")
+    # os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
+    #           "--plot_enabled=0 --version=\"v13.07\" --iteration=15")
 
-    os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-              "--plot_enabled=0 --version=\"v13.10\" --iteration=15")
+    # os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
+    #           "--plot_enabled=0 --version=\"v13.10\" --iteration=15")
 
     os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
               "--plot_enabled=0 --version=\"v13.07\" --iteration=5")
@@ -16,9 +16,9 @@ def train_relighting():
 
 
 def train_domain_adaptation():
-    os.system("python \"cyclegan_main.py\" --server_config=5 --img_to_load=50 --load_previous=0 --test_mode=0 --net_config=3 --num_blocks=4 "
-              "--patch_size=32 --img_per_iter=8 --batch_size=1 --plot_enabled=1 " 
-              "--min_epochs=30 --g_lr=0.00002 --d_lr=0.00002 --version_name=\"synth2rgbv6.03\" --iteration=1")
+    os.system("python \"cyclegan_main.py\" --server_config=5 --img_to_load=-1 --debug_run=1 "
+              "--patch_size=32 --img_per_iter=8 --plot_enabled=1 " 
+              "--g_lr=0.0002 --d_lr=0.0002 --version=\"v6.03\" --iteration=1")
 
 def train_embedding():
     os.system("python \"embedding_main.py\" --server_config=5 --img_to_load=-1 --load_previous=1 --test_mode=0 --net_config=4 --num_blocks=4 "
@@ -57,10 +57,10 @@ def train_unlit():
 
 def main():
     # train_unlit()
-    train_relighting()
-    # train_domain_adaptation()
+    # train_relighting()
+    train_domain_adaptation()
     # train_embedding()
-    os.system("shutdown /s /t 1")
+    # os.system("shutdown /s /t 1")
 
 
 if __name__ == "__main__":

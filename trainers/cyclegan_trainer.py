@@ -14,10 +14,12 @@ import torchvision.utils as vutils
 from lpips import lpips
 
 import constants
+from config import iid_server_config
 from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
 from model import usi3d_gan
 from model import new_style_transfer_gan
+from trainers import early_stopper
 from utils import plot_utils
 from utils import pytorch_colors
 from transforms import cyclegan_transforms
@@ -95,16 +97,21 @@ class CycleGANTrainer:
 
     def __init__(self, gpu_device, opts):
         self.gpu_device = gpu_device
-        self.batch_size = opts.batch_size
         self.img_per_iter = opts.img_per_iter
         self.g_lr = opts.g_lr
         self.d_lr = opts.d_lr
 
         self.iteration = opts.iteration
-        net_config = opts.net_config
+        sc_instance = iid_server_config.IIDServerConfig.getInstance()
+        general_config = sc_instance.get_general_configs()
+        network_config = sc_instance.interpret_style_transfer_config_from_version(opts.version)
+
+        net_config = network_config["net_config"]
+        num_blocks = network_config["num_blocks"]
+        self.batch_size = network_config["batch_size"]
+
         it_params = DomainAdaptIterationTable().get_version(self.iteration)
         self.disc_mode = it_params.disc_mode
-        num_blocks = opts.num_blocks
 
         self.lpips_loss = lpips.LPIPS(net='vgg').to(self.gpu_device)
         self.mse_loss = nn.MSELoss()
@@ -150,6 +157,13 @@ class CycleGANTrainer:
         self.initialize_dict()
 
         self.fp16_scaler = amp.GradScaler()  # for automatic mixed precision
+
+        self.stopper_method = early_stopper.EarlyStopper(general_config["train_style_transfer"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, constants.early_stop_threshold, 99999.9)
+        self.stop_result = False
+
+        self.NETWORK_VERSION = sc_instance.get_version_config("style_transfer_name", self.iteration)
+        self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
+        self.load_saved_state()
 
     def initialize_dict(self):
         # what to store in visdom?
@@ -238,7 +252,7 @@ class CycleGANTrainer:
     #     self.input_y = None
     #     self.accumulated_size = 0
 
-    def train(self, tensor_x, tensor_y, img_batch):
+    def train(self, epoch, iteration, tensor_x, tensor_y, img_batch):
         with amp.autocast():
             # print("Current batch: ", img_batch)
             tensor_x = self.transform_op(tensor_x).detach()
@@ -303,6 +317,7 @@ class CycleGANTrainer:
 
             errG = A_identity_loss + B_identity_loss + A_likeness_loss + B_likeness_loss + A_lpip_loss + B_lpip_loss + A_adv_loss + B_adv_loss + A_cycle_loss + B_cycle_loss
             self.fp16_scaler.scale(errG).backward()
+
             if(img_batch % self.batch_size == 0):
                 self.schedulerG.step(errG)
                 self.fp16_scaler.step(self.optimizerG)
@@ -321,19 +336,15 @@ class CycleGANTrainer:
                 self.losses_dict[constants.D_B_REAL_LOSS_KEY].append(D_B_real_loss.item())
                 self.losses_dict[constants.CYCLE_LOSS_KEY].append(A_cycle_loss.item() + B_cycle_loss.item())
 
-        # # clear plots to avoid potential sudden jumps in visualization due to unstable gradients during early training
-        # if (iteration < 200 == 0):
-        #     self.losses_dict[constants.G_LOSS_KEY].clear()
-        #     self.losses_dict[constants.D_OVERALL_LOSS_KEY].clear()
-        #     self.losses_dict[constants.IDENTITY_LOSS_KEY].clear()
-        #     self.losses_dict[constants.LIKENESS_LOSS_KEY].clear()
-        #     self.losses_dict[constants.SMOOTHNESS_LOSS_KEY].clear()
-        #     self.losses_dict[constants.G_ADV_LOSS_KEY].clear()
-        #     self.losses_dict[constants.D_A_FAKE_LOSS_KEY].clear()
-        #     self.losses_dict[constants.D_A_REAL_LOSS_KEY].clear()
-        #     self.losses_dict[constants.D_B_FAKE_LOSS_KEY].clear()
-        #     self.losses_dict[constants.D_B_REAL_LOSS_KEY].clear()
-        #     self.losses_dict[constants.CYCLE_LOSS_KEY].clear()
+            x2y, _ = self.test(tensor_x, tensor_y)
+            self.stopper_method.register_metric(x2y, tensor_y, epoch)
+            self.stop_result = self.stopper_method.test(epoch)
+
+            if (self.stopper_method.has_reset()):
+                self.save_states(epoch, iteration, False)
+
+    def is_stop_condition_met(self):
+        return self.stopper_method.did_stop_condition_met()
 
     def test(self, tensor_x, tensor_y):
         with torch.no_grad():
@@ -364,18 +375,34 @@ class CycleGANTrainer:
             self.visdom_reporter.plot_image(y2x2y, str(label) + " Input Y Cycle - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
             self.visdom_reporter.plot_image(y2x, str(label) + " Y2X Transfer - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
 
-    def load_saved_state(self, checkpoint):
-        self.G_A.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
-        self.G_B.load_state_dict(checkpoint[constants.GENERATOR_KEY + "B"])
-        self.D_A.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "A"])
-        self.D_B.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "B"])
-        self.optimizerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY])
-        self.optimizerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY])
-        # self.schedulerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler"])
-        # self.schedulerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler"])
+    def load_saved_state(self):
+        try:
+            checkpoint = torch.load(self.NETWORK_CHECKPATH, map_location=self.gpu_device)
+            print("Loaded network: ", self.NETWORK_CHECKPATH)
+        except:
+            # check if a .checkpt is available, load it
+            try:
+                checkpt_name = 'checkpoint/' + self.NETWORK_VERSION + ".pt.checkpt"
+                checkpoint = torch.load(checkpt_name, map_location=self.gpu_device)
+                print("Loaded network: ", checkpt_name)
+            except:
+                checkpoint = None
+                print("No existing checkpoint file found. Creating new network: ", self.NETWORK_CHECKPATH)
 
-    def save_states(self, epoch, iteration, last_metric):
-        save_dict = {'epoch': epoch, 'iteration': iteration}
+        if (checkpoint != None):
+            iid_server_config.IIDServerConfig.getInstance().store_epoch_from_checkpt("train_style_transfer", checkpoint["epoch"])
+            self.stopper_method.update_last_metric(checkpoint[constants.LAST_METRIC_KEY])
+            self.G_A.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
+            self.G_B.load_state_dict(checkpoint[constants.GENERATOR_KEY + "B"])
+            self.D_A.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "A"])
+            self.D_B.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "B"])
+            self.optimizerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY])
+            self.optimizerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY])
+            self.schedulerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler"])
+            self.schedulerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler"])
+
+    def save_states(self, epoch, iteration, is_temp:bool):
+        save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
         netGA_state_dict = self.G_A.state_dict()
         netGB_state_dict = self.G_B.state_dict()
         netDA_state_dict = self.D_A.state_dict()
@@ -398,32 +425,9 @@ class CycleGANTrainer:
         save_dict[constants.GENERATOR_KEY + "scheduler"] = schedulerG_state_dict
         save_dict[constants.DISCRIMINATOR_KEY + "scheduler"] = schedulerD_state_dict
 
-        torch.save(save_dict, constants.STYLE_TRANSFER_CHECKPATH)
-        print("Saved model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
-
-    def save_states_checkpt(self, epoch, iteration):
-        save_dict = {'epoch': epoch, 'iteration': iteration}
-        netGA_state_dict = self.G_A.state_dict()
-        netGB_state_dict = self.G_B.state_dict()
-        netDA_state_dict = self.D_A.state_dict()
-        netDB_state_dict = self.D_B.state_dict()
-
-        optimizerG_state_dict = self.optimizerG.state_dict()
-        optimizerD_state_dict = self.optimizerD.state_dict()
-
-        schedulerG_state_dict = self.schedulerG.state_dict()
-        schedulerD_state_dict = self.schedulerD.state_dict()
-
-        save_dict[constants.GENERATOR_KEY + "A"] = netGA_state_dict
-        save_dict[constants.GENERATOR_KEY + "B"] = netGB_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "A"] = netDA_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "B"] = netDB_state_dict
-
-        save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY] = optimizerG_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY] = optimizerD_state_dict
-
-        save_dict[constants.GENERATOR_KEY + "scheduler"] = schedulerG_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "scheduler"] = schedulerD_state_dict
-
-        torch.save(save_dict, constants.STYLE_TRANSFER_CHECKPATH + ".checkpt")
-        print("Saved model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
+        if (is_temp):
+            torch.save(save_dict, self.NETWORK_CHECKPATH + ".checkpt")
+            print("Saved checkpoint state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
+        else:
+            torch.save(save_dict, self.NETWORK_CHECKPATH)
+            print("Saved stable model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
