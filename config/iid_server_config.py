@@ -13,23 +13,26 @@ class IIDServerConfig():
         return IIDServerConfig._sharedInstance
 
     def __init__(self, version):
-        self.epoch_map = {"train_albedo_mask" : 0, "train_albedo" : 0, "train_shading" : 0, "train_shadow" : 0}
+        self.epoch_map = {"train_style_transfer" : 0, "train_albedo_mask" : 0, "train_albedo" : 0, "train_shading" : 0, "train_shadow" : 0}
 
         # COARE, CCS CLOUD, GCLOUD, RTX 2080TI, RTX 3090
         if(constants.server_config <= 5):
-            self.general_configs = {"train_albedo_mask": {"min_epochs": 3, "max_epochs" : 10, "patch_size": 256},
+            self.general_configs = {"train_style_transfer" : {"min_epochs" : 3, "max_epochs" : 10},
+                                    "train_albedo_mask": {"min_epochs": 3, "max_epochs" : 10, "patch_size": 256},
                                     "train_albedo": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64},
                                     "train_shading": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64},
                                     "train_shadow": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64}}
         #debug
         if(constants.debug_run == 1):
-            self.general_configs = {"train_albedo_mask": {"min_epochs": 1, "max_epochs" : 2, "patch_size": 256},
+            self.general_configs = {"train_style_transfer" : {"min_epochs" : 1, "max_epochs" : 5},
+                                    "train_albedo_mask": {"min_epochs": 1, "max_epochs" : 2, "patch_size": 256},
                                    "train_albedo": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 64},
                                    "train_shading": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 64},
                                     "train_shadow": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 64}}
 
 
-        self.version_config = {"version": version, "network_p_name": "rgb2mask", "network_a_name" : "rgb2albedo", "network_s_name" : "rgb2shading", "network_z_name" : "rgb2noshadow"}
+        self.version_config = {"version": version, "network_p_name": "rgb2mask", "network_a_name" : "rgb2albedo", "network_s_name" : "rgb2shading", "network_z_name" : "rgb2noshadow",
+                               "style_transfer_name": "synth2rgb"}
 
 
     def get_general_configs(self):
@@ -182,6 +185,21 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_A] = 256
                 network_config[BATCH_SIZE_KEY_S] = 256
 
+        return network_config
+
+    def interpret_style_transfer_config_from_version(self, version):
+        network_config = {}
+        NETWORK_CONFIG_NUM = "net_config"
+        NUM_BLOCKS_KEY = "num_blocks"
+        BATCH_SIZE_KEY = "batch_size"
+
+
+        if(version == "v6.03"): #AdainGEN
+            network_config[NETWORK_CONFIG_NUM] = 3
+            network_config[NUM_BLOCKS_KEY] = 4
+            network_config[BATCH_SIZE_KEY] = 128
+        else:
+            print("Network config not found for ", version)
 
         return network_config
 
