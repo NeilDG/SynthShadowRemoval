@@ -11,10 +11,10 @@ import numpy as np
 
 class CycleGANTransform(nn.Module):
 
-    def __init__(self, opts):
+    def __init__(self, patch_size):
         super(CycleGANTransform, self).__init__()
 
-        self.patch_size = (opts.patch_size, opts.patch_size)
+        self.patch_size = (patch_size, patch_size)
 
         self.transform_op = kornia.augmentation.ImageSequential(
             kornia.augmentation.RandomVerticalFlip(p=0.5),

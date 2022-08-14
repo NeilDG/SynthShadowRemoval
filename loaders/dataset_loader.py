@@ -4,6 +4,7 @@ import torch
 from torch.utils import data
 
 import constants
+from config import iid_server_config
 from loaders import image_dataset, iid_test_datasets
 import os
 
@@ -217,6 +218,9 @@ def load_gta_dataset(rgb_dir, albedo_dir, opts):
     return data_loader
 
 def load_da_dataset_train(imgx_dir, imgy_dir, opts):
+    sc_instance = iid_server_config.IIDServerConfig.getInstance()
+    network_config = sc_instance.interpret_style_transfer_config_from_version(opts.version)
+
     imgx_list = glob.glob(imgx_dir)
     imgy_list = glob.glob(imgy_dir)
 
@@ -233,11 +237,11 @@ def load_da_dataset_train(imgx_dir, imgy_dir, opts):
         return None
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.GenericPairedDataset(imgx_list, imgy_list, 1, opts),
-        batch_size=opts.img_per_iter,
+        image_dataset.GenericPairedDataset(imgx_list, imgy_list, 1, network_config["patch_size"]),
+        batch_size=network_config["img_per_iter"],
         num_workers = opts.num_workers,
         shuffle=False,
-        pin_memory=False
+        pin_memory=True
 
     )
 
@@ -281,6 +285,9 @@ def load_unlit_dataset_test(styled_dir, unlit_dir, opts):
 
 
 def load_da_dataset_test(imgx_dir, imgy_dir, opts):
+    sc_instance = iid_server_config.IIDServerConfig.getInstance()
+    network_config = sc_instance.interpret_style_transfer_config_from_version(opts.version)
+
     imgx_list = glob.glob(imgx_dir)
     imgy_list = glob.glob(imgy_dir)
 
@@ -294,7 +301,7 @@ def load_da_dataset_test(imgx_dir, imgy_dir, opts):
     print("Length of images: %d %d" % (len(imgx_list), len(imgy_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.GenericPairedDataset(imgx_list, imgy_list, 2, opts),
+        image_dataset.GenericPairedDataset(imgx_list, imgy_list, 2, network_config["patch_size"]),
         batch_size=4,
         num_workers=1,
         shuffle=False,

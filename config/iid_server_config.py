@@ -17,7 +17,7 @@ class IIDServerConfig():
 
         # COARE, CCS CLOUD, GCLOUD, RTX 2080TI, RTX 3090
         if(constants.server_config <= 5):
-            self.general_configs = {"train_style_transfer" : {"min_epochs" : 3, "max_epochs" : 10},
+            self.general_configs = {"train_style_transfer" : {"min_epochs" : 20, "max_epochs" : 100},
                                     "train_albedo_mask": {"min_epochs": 3, "max_epochs" : 10, "patch_size": 256},
                                     "train_albedo": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64},
                                     "train_shading": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64},
@@ -192,12 +192,21 @@ class IIDServerConfig():
         NETWORK_CONFIG_NUM = "net_config"
         NUM_BLOCKS_KEY = "num_blocks"
         BATCH_SIZE_KEY = "batch_size"
-
+        PATCH_SIZE_KEY = "patch_size"
+        IMG_PER_ITER = "img_per_iter"
 
         if(version == "v6.03"): #AdainGEN
             network_config[NETWORK_CONFIG_NUM] = 3
             network_config[NUM_BLOCKS_KEY] = 4
-            network_config[BATCH_SIZE_KEY] = 128
+            network_config[PATCH_SIZE_KEY] = 32
+            network_config[BATCH_SIZE_KEY] = 512
+            network_config[IMG_PER_ITER] = 8
+        elif(version == "v6.04"): #Unet
+            network_config[NETWORK_CONFIG_NUM] = 2
+            network_config[NUM_BLOCKS_KEY] = 0
+            network_config[PATCH_SIZE_KEY] = 32
+            network_config[BATCH_SIZE_KEY] = 1024
+            network_config[IMG_PER_ITER] = 32
         else:
             print("Network config not found for ", version)
 

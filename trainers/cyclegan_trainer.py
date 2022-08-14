@@ -97,7 +97,6 @@ class CycleGANTrainer:
 
     def __init__(self, gpu_device, opts):
         self.gpu_device = gpu_device
-        self.img_per_iter = opts.img_per_iter
         self.g_lr = opts.g_lr
         self.d_lr = opts.d_lr
 
@@ -109,6 +108,7 @@ class CycleGANTrainer:
         net_config = network_config["net_config"]
         num_blocks = network_config["num_blocks"]
         self.batch_size = network_config["batch_size"]
+        self.img_per_iter = network_config["img_per_iter"]
 
         it_params = DomainAdaptIterationTable().get_version(self.iteration)
         self.disc_mode = it_params.disc_mode
@@ -147,7 +147,7 @@ class CycleGANTrainer:
         self.D_A_pool = image_pool.ImagePool(50)
         self.D_B_pool = image_pool.ImagePool(50)
 
-        self.transform_op = cyclegan_transforms.CycleGANTransform(opts).requires_grad_(False)
+        self.transform_op = cyclegan_transforms.CycleGANTransform(network_config["patch_size"]).requires_grad_(False)
 
         self.visdom_reporter = plot_utils.VisdomReporter()
         self.optimizerG = torch.optim.Adam(itertools.chain(self.G_A.parameters(), self.G_B.parameters()), lr=self.g_lr)
@@ -318,7 +318,7 @@ class CycleGANTrainer:
             errG = A_identity_loss + B_identity_loss + A_likeness_loss + B_likeness_loss + A_lpip_loss + B_lpip_loss + A_adv_loss + B_adv_loss + A_cycle_loss + B_cycle_loss
             self.fp16_scaler.scale(errG).backward()
 
-            if(img_batch % self.batch_size == 0):
+            if((img_batch * self.img_per_iter) % self.batch_size == 0):
                 self.schedulerG.step(errG)
                 self.fp16_scaler.step(self.optimizerG)
                 self.fp16_scaler.update()

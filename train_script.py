@@ -8,17 +8,28 @@ def train_relighting():
     # os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
     #           "--plot_enabled=0 --version=\"v13.10\" --iteration=15")
 
-    os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-              "--plot_enabled=0 --version=\"v13.07\" --iteration=5")
+    # os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
+    #           "--plot_enabled=0 --version=\"v13.07\" --iteration=5")
+    #
+    # os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
+    #           "--plot_enabled=0 --version=\"v13.10\" --iteration=5")
 
     os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-              "--plot_enabled=0 --version=\"v13.10\" --iteration=5")
+              "--plot_enabled=0 --version=\"v13.07\" --iteration=6")
+
+    os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
+              "--plot_enabled=0 --version=\"v13.10\" --iteration=6")
+
+    os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
+              "--plot_enabled=0 --version=\"v13.07\" --iteration=7")
+
+    os.system("python \"iid_train_v2.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
+              "--plot_enabled=0 --version=\"v13.10\" --iteration=7")
 
 
 def train_domain_adaptation():
-    os.system("python \"cyclegan_main.py\" --server_config=5 --img_to_load=-1 --debug_run=1 "
-              "--patch_size=32 --img_per_iter=8 --plot_enabled=1 " 
-              "--g_lr=0.0002 --d_lr=0.0002 --version=\"v6.03\" --iteration=1")
+    os.system("python \"cyclegan_main.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
+              "--plot_enabled=1 --g_lr=0.0002 --d_lr=0.0002 --version=\"v6.04\" --iteration=5")
 
 def train_embedding():
     os.system("python \"embedding_main.py\" --server_config=5 --img_to_load=-1 --load_previous=1 --test_mode=0 --net_config=4 --num_blocks=4 "
@@ -57,10 +68,10 @@ def train_unlit():
 
 def main():
     # train_unlit()
-    # train_relighting()
-    train_domain_adaptation()
+    # train_domain_adaptation()
+    train_relighting()
     # train_embedding()
-    # os.system("shutdown /s /t 1")
+    os.system("shutdown /s /t 1")
 
 
 if __name__ == "__main__":

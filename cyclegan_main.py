@@ -16,7 +16,6 @@ import torch.utils.data
 import torchvision.utils as vutils
 import numpy as np
 import matplotlib.pyplot as plt
-
 from config import iid_server_config
 from loaders import dataset_loader
 from trainers import cyclegan_trainer, early_stopper
@@ -30,8 +29,6 @@ parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
 parser.add_option('--iteration', type=int, help="Style version?", default="1")
 parser.add_option('--g_lr', type=float, help="LR", default="0.00002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.00005")
-parser.add_option('--patch_size', type=int, help="patch_size", default="64")
-parser.add_option('--img_per_iter', type=int, help="Num images to load per iteration", default="128")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--version', type=str, help="")
 parser.add_option('--debug_run', type=int, help="Debug mode?", default=0)
@@ -125,7 +122,7 @@ def main(argv):
             if (i % 32 == 0):
                 print("Iteration:", iteration)
 
-            if(iteration % network_config["batch_size"] == 0):
+            if((i * network_config["img_per_iter"]) % (network_config["batch_size"] * 3) == 0): #every X batches
                 gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
 
                 gt.save_states(epoch, iteration, False)
