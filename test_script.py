@@ -4,12 +4,20 @@ import os
 
 def test_relighting():
 
+    # os.system("python \"iid_test_v2.py\" --server_config=5 --img_to_load=-1 --test_mode=0 "
+    #           "--plot_enabled=1 --version=\"v13.07\" --iteration=6 "
+    #           "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
+    #
+    # os.system("python \"iid_test_v2.py\" --server_config=5 --img_to_load=-1 --test_mode=0 "
+    #           "--plot_enabled=1 --version=\"v13.10\" --iteration=6 "
+    #           "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
+
     os.system("python \"iid_test_v2.py\" --server_config=5 --img_to_load=-1 --test_mode=0 "
-              "--plot_enabled=1 --version=\"v13.07\" --iteration=5 "
+              "--plot_enabled=1 --version=\"v13.07\" --iteration=7 "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
     os.system("python \"iid_test_v2.py\" --server_config=5 --img_to_load=-1 --test_mode=0 "
-              "--plot_enabled=1 --version=\"v13.10\" --iteration=5 "
+              "--plot_enabled=1 --version=\"v13.10\" --iteration=7 "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
 def main():

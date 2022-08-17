@@ -19,16 +19,16 @@ class IIDServerConfig():
         if(constants.server_config <= 5):
             self.general_configs = {"train_style_transfer" : {"min_epochs" : 20, "max_epochs" : 100},
                                     "train_albedo_mask": {"min_epochs": 3, "max_epochs" : 10, "patch_size": 256},
-                                    "train_albedo": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64},
-                                    "train_shading": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64},
-                                    "train_shadow": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64}}
+                                    "train_albedo": {"min_epochs": 20,"max_epochs" : 80, "patch_size": 32},
+                                    "train_shading": {"min_epochs": 20,"max_epochs" : 80, "patch_size": 32},
+                                    "train_shadow": {"min_epochs": 20,"max_epochs" : 80, "patch_size": 32}}
         #debug
         if(constants.debug_run == 1):
             self.general_configs = {"train_style_transfer" : {"min_epochs" : 1, "max_epochs" : 5},
                                     "train_albedo_mask": {"min_epochs": 1, "max_epochs" : 2, "patch_size": 256},
-                                   "train_albedo": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 64},
-                                   "train_shading": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 64},
-                                    "train_shadow": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 64}}
+                                   "train_albedo": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 32},
+                                   "train_shading": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 32},
+                                    "train_shadow": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 32}}
 
 
         self.version_config = {"version": version, "network_p_name": "rgb2mask", "network_a_name" : "rgb2albedo", "network_s_name" : "rgb2shading", "network_z_name" : "rgb2noshadow",
@@ -65,7 +65,7 @@ class IIDServerConfig():
         network_config["unlit_version_name"] = "synth2unlit_v1.00_1.pt"
         network_config["da_version_name"] = "embedding_v5.00_5"
 
-        if (version == "v13.07"):  # Adain-GEN
+        if (version == "v14.07"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4
@@ -92,8 +92,8 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_S] = 64
             else:  # RTX 3090
                 network_config[BATCH_SIZE_KEY_P] = 16
-                network_config[BATCH_SIZE_KEY_A] = 128
-                network_config[BATCH_SIZE_KEY_S] = 128
+                network_config[BATCH_SIZE_KEY_A] = 512
+                network_config[BATCH_SIZE_KEY_S] = 512
 
         elif (version == "v11.08"):  # FFA
             network_config[NETWORK_CONFIG_NUM] = 5
@@ -125,7 +125,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_A] = 256
                 network_config[BATCH_SIZE_KEY_S] = 256
 
-        elif (version == "v13.10"):  # Adain-GEN
+        elif (version == "v14.10"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4
@@ -152,8 +152,8 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_S] = 64
             else:  # RTX 3090
                 network_config[BATCH_SIZE_KEY_P] = 16
-                network_config[BATCH_SIZE_KEY_A] = 128
-                network_config[BATCH_SIZE_KEY_S] = 128
+                network_config[BATCH_SIZE_KEY_A] = 512
+                network_config[BATCH_SIZE_KEY_S] = 512
 
         elif (version == "v11.11"):  # FFA
             network_config[NETWORK_CONFIG_NUM] = 5
