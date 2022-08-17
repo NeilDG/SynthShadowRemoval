@@ -58,6 +58,7 @@ class IIDServerConfig():
         BATCH_SIZE_KEY_P = "batch_size_p"
         BATCH_SIZE_KEY_A = "batch_size_a"
         BATCH_SIZE_KEY_S = "batch_size_s"
+        BATCH_SIZE_KEY_Z = "batch_size_z"
         ALBEDO_MODE_KEY = "albedo_mode"
         DA_ENABLED = "da_enabled"
         STYLE_TRANSFER = "style_transferred"
@@ -65,7 +66,7 @@ class IIDServerConfig():
         network_config["unlit_version_name"] = "synth2unlit_v1.00_1.pt"
         network_config["da_version_name"] = "embedding_v5.00_5"
 
-        if (version == "v13.07"):  # Adain-GEN
+        if (version == "v15.07"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4
@@ -78,54 +79,29 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_P] = 32
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
+                network_config[BATCH_SIZE_KEY_Z] = 256
             elif (constants.server_config == 2):  # CCS JUPYTER
                 network_config[BATCH_SIZE_KEY_P] = 24
                 network_config[BATCH_SIZE_KEY_A] = 192
                 network_config[BATCH_SIZE_KEY_S] = 192
+                network_config[BATCH_SIZE_KEY_Z] = 256
             elif (constants.server_config == 3):  # GCLOUD
                 network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
+                network_config[BATCH_SIZE_KEY_Z] = 256
             elif (constants.server_config == 4):  # RTX 2080Ti
                 network_config[BATCH_SIZE_KEY_P] = 8
                 network_config[BATCH_SIZE_KEY_A] = 64
                 network_config[BATCH_SIZE_KEY_S] = 64
+                network_config[BATCH_SIZE_KEY_Z] = 128
             else:  # RTX 3090
                 network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
+                network_config[BATCH_SIZE_KEY_Z] = 256
 
-        elif (version == "v11.08"):  # FFA
-            network_config[NETWORK_CONFIG_NUM] = 5
-            network_config[NC_KEY] = 3
-            network_config[NUM_BLOCKS_KEY] = 6
-            network_config[ALBEDO_MODE_KEY] = 1
-            network_config[DA_ENABLED] = 0
-            network_config[STYLE_TRANSFER] = 0
-
-            # configure batch sizes
-            if (constants.server_config == 1):  # COARE
-                network_config[BATCH_SIZE_KEY_P] = 16
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
-            elif (constants.server_config == 2):  # CCS JUPYTER
-                network_config[BATCH_SIZE_KEY_P] = 16
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
-            elif (constants.server_config == 3):  # GCLOUD
-                network_config[BATCH_SIZE_KEY_P] = 16
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
-            elif (constants.server_config == 4):  # RTX 2080Ti
-                network_config[BATCH_SIZE_KEY_P] = 8
-                network_config[BATCH_SIZE_KEY_A] = 128
-                network_config[BATCH_SIZE_KEY_S] = 128
-            else:  # RTX 3090
-                network_config[BATCH_SIZE_KEY_P] = 16
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
-
-        elif (version == "v13.10"):  # Adain-GEN
+        elif (version == "v15.10"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4
@@ -135,55 +111,30 @@ class IIDServerConfig():
 
             # configure batch sizes
             if (constants.server_config == 1):  # COARE
-                network_config[BATCH_SIZE_KEY_P] = 16
+                network_config[BATCH_SIZE_KEY_P] = 32
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
+                network_config[BATCH_SIZE_KEY_Z] = 256
             elif (constants.server_config == 2):  # CCS JUPYTER
                 network_config[BATCH_SIZE_KEY_P] = 24
                 network_config[BATCH_SIZE_KEY_A] = 192
                 network_config[BATCH_SIZE_KEY_S] = 192
+                network_config[BATCH_SIZE_KEY_Z] = 256
             elif (constants.server_config == 3):  # GCLOUD
                 network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
+                network_config[BATCH_SIZE_KEY_Z] = 256
             elif (constants.server_config == 4):  # RTX 2080Ti
                 network_config[BATCH_SIZE_KEY_P] = 8
                 network_config[BATCH_SIZE_KEY_A] = 64
                 network_config[BATCH_SIZE_KEY_S] = 64
+                network_config[BATCH_SIZE_KEY_Z] = 128
             else:  # RTX 3090
                 network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
-
-        elif (version == "v11.11"):  # FFA
-            network_config[NETWORK_CONFIG_NUM] = 5
-            network_config[NC_KEY] = 3
-            network_config[NUM_BLOCKS_KEY] = 6
-            network_config[ALBEDO_MODE_KEY] = 1
-            network_config[DA_ENABLED] = 0
-            network_config[STYLE_TRANSFER] = 0
-
-            # configure batch sizes
-            if (constants.server_config == 1):  # COARE
-                network_config[BATCH_SIZE_KEY_P] = 16
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
-            elif (constants.server_config == 2):  # CCS JUPYTER
-                network_config[BATCH_SIZE_KEY_P] = 16
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
-            elif (constants.server_config == 3):  # GCLOUD
-                network_config[BATCH_SIZE_KEY_P] = 16
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
-            elif (constants.server_config == 4):  # RTX 2080Ti
-                network_config[BATCH_SIZE_KEY_P] = 8
-                network_config[BATCH_SIZE_KEY_A] = 128
-                network_config[BATCH_SIZE_KEY_S] = 128
-            else:  # RTX 3090
-                network_config[BATCH_SIZE_KEY_P] = 16
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
+                network_config[BATCH_SIZE_KEY_Z] = 256
 
         return network_config
 
@@ -220,7 +171,7 @@ class IIDServerConfig():
         elif(mode == "train_shading"):
             return network_config["batch_size_s"]
         elif(mode == "train_shadow"):
-            return network_config["batch_size_s"]
+            return network_config["batch_size_z"]
         else:
             print("Mode ", mode, " not recognized.")
             return -1
