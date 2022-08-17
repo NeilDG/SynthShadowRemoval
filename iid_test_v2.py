@@ -91,7 +91,7 @@ def update_config(opts):
         constants.unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)
 
-def measure_performance():
+def measure_performance(opts):
     visdom_reporter = plot_utils.VisdomReporter()
 
     GTA_BASE_PATH = "E:/IID-TestDataset/GTA/"
@@ -174,7 +174,7 @@ def measure_performance():
     ssim_albedo_d = np.round(1.0 - kornia.losses.ssim_loss(albedo_d_tensor, albedo_tensor, 5).item(), 4)
     psnr_albedo_e = np.round(kornia.metrics.psnr(albedo_e_tensor, albedo_tensor, max_val=1.0).item(), 4)
     ssim_albedo_e = np.round(1.0 - kornia.losses.ssim_loss(albedo_e_tensor, albedo_tensor, 5).item(), 4)
-    display_text = str(constants.IID_VERSION) + str(constants.ITERATION) + "<br>" \
+    display_text = "GTA Performance " + str(opts.version) + str(opts.iteration) + "<br>" \
                    "Mean Albedo PSNR, SSIM: <br>" \
                     "li_eccv18 PSNR: " + str(psnr_albedo_a) + "<br> SSIM: " + str(ssim_albedo_a) + "<br>" \
                     "yu_cvpr19 PSNR: " + str(psnr_albedo_b) + "<br> SSIM: " + str(ssim_albedo_b) + "<br>" \
@@ -471,7 +471,7 @@ def main(argv):
 
         vutils.save_image(rgb2albedo.squeeze(), opts.output_path + filename)
 
-    measure_performance()
+    measure_performance(opts)
 
 
 if __name__ == "__main__":
