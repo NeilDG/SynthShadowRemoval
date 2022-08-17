@@ -154,7 +154,7 @@ def main(argv):
                 stopper_method.register_metric(x2y, imgy_tensor, epoch)
                 stopper_method.test(epoch)  # stop training if reconstruction no longer becomes close to Y
 
-                if (i % 256 == 0):
+                if (i % 500 == 0):
                     gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
 
                     gt.save_states_checkpt(epoch, iteration)
