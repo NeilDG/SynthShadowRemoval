@@ -65,6 +65,10 @@ class IterationTable():
         self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, [10.0, 0.0, 0.0, 0.0, 0.0, 1.0], is_bce=1)
         self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, [10.0, 0.0, 0.0, 0.0, 0.0, 1.0], is_bce=1)
 
+        iteration = 15
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.ALBEDO)] = IterationParameters(iteration, [10.0, 0.0, 0.0, 0.0, 0.0, 1.0], is_bce=1)
+        self.iteration_table[str(iteration) + str(IterationTable.NetworkType.SHADING)] = IterationParameters(iteration, [10.0, 0.0, 0.0, 0.0, 0.0, 1.0], is_bce=1)
+
 
     def get_version(self, iteration, network_type: NetworkType):
         return self.iteration_table[str(iteration) + str(network_type)].get_version()

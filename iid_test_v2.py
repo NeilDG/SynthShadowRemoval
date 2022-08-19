@@ -253,11 +253,13 @@ class TesterClass():
         # rgb_inferred = shading_tensor * albedo_inferred
 
         input = {"rgb": rgb_tensor}
-        # rgb2mask = self.mask_t.test(input)
-        rgb2albedo = self.albedo_t.test(input)
-        rgb2shading = self.shading_t.test(input)
         _, rgb2shadow = self.shadow_t.test(input)
         rgb_ns_like = self.iid_op.remove_rgb_shadow(rgb_tensor, rgb2shadow, False)
+
+        # rgb2mask = self.mask_t.test(input)
+        input = {"rgb": rgb_ns_like}
+        rgb2albedo = self.albedo_t.test(input)
+        rgb2shading = self.shading_t.test(input)
 
         # normalize everything
         shading_tensor = tensor_utils.normalize_to_01(shading_tensor)
@@ -299,10 +301,12 @@ class TesterClass():
     def test_iiw(self, file_name, rgb_tensor, opts):
         input = {"rgb": rgb_tensor}
         # rgb2mask = self.mask_t.test(input)
-        rgb2albedo = self.albedo_t.test(input)
-        rgb2shading = self.shading_t.test(input)
         _, rgb2shadow = self.shadow_t.test(input)
         rgb_ns_like = self.iid_op.remove_rgb_shadow(rgb_tensor, rgb2shadow, False)
+
+        input = {"rgb" : rgb_ns_like}
+        rgb2albedo = self.albedo_t.test(input)
+        rgb2shading = self.shading_t.test(input)
 
         # normalize everything
         rgb_tensor = tensor_utils.normalize_to_01(rgb_tensor)
@@ -375,14 +379,13 @@ class TesterClass():
             # rgb2albedo = rgb2albedo * rgb2mask
             # rgb2albedo = iid_op.mask_fill_nonzeros(rgb2albedo)
             rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
+            rgb2shadow = tensor_utils.normalize_to_01(rgb2shadow)
             input_rgb_tensor = tensor_utils.normalize_to_01(input_rgb_tensor)
             rgb_ns_like = tensor_utils.normalize_to_01(rgb_ns_like)
 
-            view_tensor = torch.cat([input_rgb_tensor, rgb_ns_like], 0)
-            self.visdom_reporter.plot_image(view_tensor, "GTA WS vs NS - " + opts.version + str(opts.iteration) + str(i))
             self.visdom_reporter.plot_image(rgb2shadow, "GTA Shadow Maps - " + opts.version + str(opts.iteration) + str(i))
-            # self.visdom_reporter.plot_image(input_rgb_tensor, "GTA RGB (Original) Images - " + opts.version + str(opts.iteration) + str(i))
-            # self.visdom_reporter.plot_image(rgb_ns_like, "GTA RGB (No Shadow) Images - " + opts.version + str(opts.iteration) + str(i))
+            self.visdom_reporter.plot_image(input_rgb_tensor, "GTA RGB (Original) Images - " + opts.version + str(opts.iteration) + str(i))
+            self.visdom_reporter.plot_image(rgb_ns_like, "GTA RGB (No Shadow) Images - " + opts.version + str(opts.iteration) + str(i))
 
             vutils.save_image(rgb2albedo.squeeze(), opts.output_path + filename)
 

@@ -42,8 +42,8 @@ parser.add_option('--img_size', type=int, default=(256, 256))
 
 version_a ="v13.07"
 iteration_a = 8
-version_s = "v13.10"
-iteration_s = 8
+version_s = "v12.07"
+iteration_s = 15
 version_z = "v15.10"
 iteration_z = 9
 
