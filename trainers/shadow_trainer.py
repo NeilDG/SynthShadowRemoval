@@ -186,10 +186,10 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             input_ns_like = self.iid_op.remove_rgb_shadow(input_ws, rgb2sm, False)
             input_ns_like = self.G_rgb(input_ns_like)
             RGB_recon_loss = self.l1_loss(input_ns_like, input_ns) * self.it_table.get_rgb_recon_weight()
-            RGB_lpip_loss = self.lpip_loss(input_ns_like, input_ns) * self.it_table.get_lpip_weight(self.iteration)
+            RGB_lpip_loss = self.lpip_loss(input_ns_like, input_ns) * self.it_table.get_rgb_lpips_weight()
             prediction = self.D_rgb(input_ns_like)
             real_tensor = torch.ones_like(prediction)
-            RGB_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
+            RGB_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.it_table.get_rgb_adv_weight()
 
             errG = SM_likeness_loss + SM_lpip_loss + SM_masking_loss + SM_adv_loss + \
                 RGB_recon_loss + RGB_lpip_loss + RGB_adv_loss

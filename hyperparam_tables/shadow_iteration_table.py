@@ -30,10 +30,10 @@ class ShadowIterationTable():
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [10.0, 1.0, 1.0], is_bce=1)
 
         iteration = 9
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, [10.0, 1.0, 10.0], is_bce=0)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, [100.0, 1.0, 10.0], is_bce=0)
 
         iteration = 10
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, [10.0, 1.0, 10.0], is_bce=1)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, [100.0, 1.0, 10.0], is_bce=1)
 
 
     def get_version(self, iteration):
@@ -52,7 +52,13 @@ class ShadowIterationTable():
         return self.iteration_table[str(iteration)].is_bce_enabled()
 
     def get_rgb_recon_weight(self):
-        return 15.0
+        return 0.0
+
+    def get_rgb_lpips_weight(self):
+        return 0.0
+
+    def get_rgb_adv_weight(self):
+        return 0.0
 
     def get_adv_weight(self):
         return 1.0
