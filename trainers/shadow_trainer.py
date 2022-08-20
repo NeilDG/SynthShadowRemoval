@@ -45,7 +45,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         general_config = sc_instance.get_general_configs()
         network_config = sc_instance.interpret_network_config_from_version(opts.version)
-        self.batch_size = network_config["batch_size_s"]
+        self.batch_size = network_config["batch_size_z"]
         self.da_enabled = network_config["da_enabled"]
 
         self.stopper_method = early_stopper.EarlyStopper(general_config["train_shading"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, constants.early_stop_threshold, 99999.9)

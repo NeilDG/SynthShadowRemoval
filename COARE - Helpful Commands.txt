@@ -10,11 +10,10 @@ cd scratch2/NeuralNets-GenerativeExperiment-3
 cd scratch2/NeuralNets-GenerativeExperiment-4
 cd scratch2/NeuralNets-GenerativeExperiment-5
 cd scratch2/NeuralNets-GenerativeExperiment-6
-cd scratch2/NeuralNets-GenerativeExperiment-V9.XX.XX
-cd scratch2/NeuralNets-GenerativeExperiment-V13.XX.XX
+cd scratch2/NeuralNets-GenerativeExperiment-V15.XX.XX
 cd scratch2/Visdom
 
-git clone -b "workspace/V13.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "scratch2/NeuralNets-GenerativeExperiment-V13.XX.XX"
+git clone -b "workspace/V15.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "scratch2/NeuralNets-GenerativeExperiment-V15.XX.XX"
 
 //Execute job
 sbatch slurm_install.slurm
