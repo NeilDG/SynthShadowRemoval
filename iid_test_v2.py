@@ -1,9 +1,7 @@
 import glob
-import itertools
 import sys
 from optparse import OptionParser
 import random
-
 import cv2
 import kornia
 import torch
@@ -12,18 +10,13 @@ import torch.utils.data
 import torchvision.utils
 import torchvision.utils as vutils
 import numpy as np
-import matplotlib.pyplot as plt
 from torchvision.transforms import transforms
-
 from config import iid_server_config
 from loaders import dataset_loader
-from trainers import iid_trainer
-from trainers import early_stopper
 from transforms import iid_transforms
 import constants
 from utils import plot_utils, tensor_utils
 from trainers import trainer_factory
-from trainers import albedo_trainer, shading_trainer, albedo_mask_trainer
 from custom_losses import whdr
 
 parser = OptionParser()
@@ -83,7 +76,7 @@ def update_config(opts):
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers)
     else:
-        opts.num_workers = 6
+        opts.num_workers = 12
         constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
         constants.rgb_dir_ws_styled = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
         constants.rgb_dir_ns_styled = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
@@ -91,7 +84,7 @@ def update_config(opts):
         constants.unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)
 
-def measure_performance():
+def measure_performance(opts):
     visdom_reporter = plot_utils.VisdomReporter()
 
     GTA_BASE_PATH = "E:/IID-TestDataset/GTA/"
@@ -174,7 +167,7 @@ def measure_performance():
     ssim_albedo_d = np.round(1.0 - kornia.losses.ssim_loss(albedo_d_tensor, albedo_tensor, 5).item(), 4)
     psnr_albedo_e = np.round(kornia.metrics.psnr(albedo_e_tensor, albedo_tensor, max_val=1.0).item(), 4)
     ssim_albedo_e = np.round(1.0 - kornia.losses.ssim_loss(albedo_e_tensor, albedo_tensor, 5).item(), 4)
-    display_text = str(constants.IID_VERSION) + str(constants.ITERATION) + "<br>" \
+    display_text = "GTA Performance " + str(opts.version) + str(opts.iteration) + "<br>" \
                    "Mean Albedo PSNR, SSIM: <br>" \
                     "li_eccv18 PSNR: " + str(psnr_albedo_a) + "<br> SSIM: " + str(ssim_albedo_a) + "<br>" \
                     "yu_cvpr19 PSNR: " + str(psnr_albedo_b) + "<br> SSIM: " + str(ssim_albedo_b) + "<br>" \
@@ -192,18 +185,21 @@ def measure_performance():
     visdom_reporter.plot_image(albedo_e_tensor, "Albedo Ours")
 
 class TesterClass():
-    def __init__(self, mask_t, albedo_t, shading_t, shadow_t):
+    def __init__(self, albedo_t, shading_t, shadow_t):
         print("Initiating")
         self.cgi_op = iid_transforms.CGITransform()
         self.iid_op = iid_transforms.IIDTransform()
         self.visdom_reporter = plot_utils.VisdomReporter.getInstance()
 
-        self.mask_t = mask_t
+        # self.mask_t = mask_t
         self.albedo_t = albedo_t
         self.shading_t = shading_t
         self.shadow_t = shadow_t
 
         self.wdhr_metric_list = []
+
+        self.istd_psnr_list = []
+        self.istd_ssim_list = []
 
     def test_own_dataset(self, rgb_ws_tensor, rgb_ns_tensor, unlit_tensor, albedo_tensor, shading_tensor, shadow_tensor, opts):
         input = {"rgb": rgb_ws_tensor, "unlit": unlit_tensor, "albedo": albedo_tensor}
@@ -260,11 +256,13 @@ class TesterClass():
         # rgb_inferred = shading_tensor * albedo_inferred
 
         input = {"rgb": rgb_tensor}
-        rgb2mask = self.mask_t.test(input)
-        rgb2albedo = self.albedo_t.test(input)
-        rgb2shading = self.shading_t.test(input)
         _, rgb2shadow = self.shadow_t.test(input)
         rgb_ns_like = self.iid_op.remove_rgb_shadow(rgb_tensor, rgb2shadow, False)
+
+        # rgb2mask = self.mask_t.test(input)
+        input = {"rgb": rgb_ns_like}
+        rgb2albedo = self.albedo_t.test(input)
+        rgb2shading = self.shading_t.test(input)
 
         # normalize everything
         shading_tensor = tensor_utils.normalize_to_01(shading_tensor)
@@ -303,13 +301,60 @@ class TesterClass():
 
         self.visdom_reporter.plot_text(display_text)
 
+    def test_shadow(self, rgb_tensor_ws, rgb_tensor_ns, opts):
+        transform_op = transforms.Normalize((0.5,), (0.5,))
+
+        # shadows_refined = self.iid_op.extract_shadow(rgb_tensor_ws, rgb_tensor_ns, True)
+        # shadow_intensity = np.random.uniform(0.0, 0.5)
+        # shadows_refined = shadows_refined * shadow_intensity
+        # rgb_tensor_ws = self.iid_op.add_rgb_shadow(rgb_tensor_ns, shadows_refined, False)
+
+        rgb_tensor_ws = torch.clip(rgb_tensor_ws, 0.0, 1.0)
+        rgb_tensor_ns = torch.clip(rgb_tensor_ns, 0.0, 1.0)
+
+        rgb_tensor_ws = transform_op(rgb_tensor_ws)
+        rgb_tensor_ns = transform_op(rgb_tensor_ns)
+
+        input = {"rgb": rgb_tensor_ws}
+        _, rgb2shadow = self.shadow_t.test(input)
+        rgb_ns_like = self.iid_op.remove_rgb_shadow(rgb_tensor_ws, rgb2shadow, False)
+
+        # normalize everything
+        rgb_tensor_ws = tensor_utils.normalize_to_01(rgb_tensor_ws)
+        rgb_tensor_ns = tensor_utils.normalize_to_01(rgb_tensor_ns)
+        rgb2shadow = tensor_utils.normalize_to_01(rgb2shadow)
+        rgb_ns_like = tensor_utils.normalize_to_01(rgb_ns_like)
+
+        self.visdom_reporter.plot_image(rgb_tensor_ws, "ISTD WS Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb_ns_like, "ISTD NS-Like Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb_tensor_ns, "ISTD NS Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb2shadow, "ISTD Shadow Map - " + opts.version + str(opts.iteration))
+
+        psnr_rgb = np.round(kornia.metrics.psnr(rgb_ns_like, rgb_tensor_ns, max_val=1.0).item(), 4)
+        ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb_ns_like, rgb_tensor_ns, 5).item(), 4)
+        self.istd_psnr_list.append(psnr_rgb)
+        self.istd_ssim_list.append(ssim_rgb)
+
+    def print_average_istd_performance(self, opts):
+        ave_psnr = np.round(np.mean(self.istd_psnr_list), 4)
+        ave_ssim = np.round(np.mean(self.istd_ssim_list), 4)
+        display_text = "ISTD Set - Versions: " + opts.version + "_" + str(opts.iteration) + \
+                       "<br> RGB Reconstruction PSNR: " + str(ave_psnr) + "<br> RGB Reconstruction SSIM: " + str(ave_ssim)
+
+        self.visdom_reporter.plot_text(display_text)
+
+        self.istd_psnr_list.clear()
+        self.istd_ssim_list.clear()
+
     def test_iiw(self, file_name, rgb_tensor, opts):
         input = {"rgb": rgb_tensor}
-        rgb2mask = self.mask_t.test(input)
-        rgb2albedo = self.albedo_t.test(input)
-        rgb2shading = self.shading_t.test(input)
+        # rgb2mask = self.mask_t.test(input)
         _, rgb2shadow = self.shadow_t.test(input)
         rgb_ns_like = self.iid_op.remove_rgb_shadow(rgb_tensor, rgb2shadow, False)
+
+        input = {"rgb" : rgb_ns_like}
+        rgb2albedo = self.albedo_t.test(input)
+        rgb2shading = self.shading_t.test(input)
 
         # normalize everything
         rgb_tensor = tensor_utils.normalize_to_01(rgb_tensor)
@@ -333,9 +378,9 @@ class TesterClass():
             whdr_metric = whdr.whdr_final(img_file_name, judgements_dir + file_name[i] + ".json")
             self.wdhr_metric_list.append(whdr_metric)
 
-    def test_rw(self, rgb_tensor, rgb2unlit, opts):
-        input = {"rgb": rgb_tensor, "unlit": rgb2unlit}
-        rgb2mask = self.mask_t.test(input)
+    def test_rw(self, rgb_tensor, opts):
+        input = {"rgb": rgb_tensor}
+        # rgb2mask = self.mask_t.test(input)
         rgb2albedo = self.albedo_t.test(input)
         rgb2shading = self.shading_t.test(input)
         _, rgb2shadow = self.shadow_t.test(input)
@@ -352,10 +397,45 @@ class TesterClass():
         self.visdom_reporter.plot_image(rgb_tensor, "RW RGB Images - " + opts.version + str(opts.iteration))
         self.visdom_reporter.plot_image(rgb_ns_like, "RW RGB (No Shadow) Images - " + opts.version + str(opts.iteration))
         self.visdom_reporter.plot_image(rgb_like, "RW RGB Reconstruction Images - " + opts.version + str(opts.iteration))
-        self.visdom_reporter.plot_image(rgb2unlit, "RW RGB2Unlit Images - " + opts.version + str(opts.iteration))
         self.visdom_reporter.plot_image(rgb2albedo, "RW RGB2Albedo - " + opts.version + str(opts.iteration))
         self.visdom_reporter.plot_image(rgb2shading, "RW RGB2Shading - " + opts.version + str(opts.iteration))
         self.visdom_reporter.plot_image(rgb2shadow, "RW RGB2Shadow - " + opts.version + str(opts.iteration))
+
+    def test_gta(self, opts):
+        img_list = glob.glob(opts.input_path + "*.jpg") + glob.glob(opts.input_path + "*.png")
+        print("Images found: ", len(img_list))
+
+        normalize_op = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
+
+        for i, input_path in enumerate(img_list, 0):
+            filename = input_path.split("\\")[-1]
+            input_rgb_tensor = tensor_utils.load_metric_compatible_img(input_path, cv2.COLOR_BGR2RGB, True, True, opts.img_size).to(device)
+            input_rgb_tensor = normalize_op(input_rgb_tensor)
+            input = {"rgb": input_rgb_tensor}
+            _, rgb2shadow = self.shadow_t.test(input)
+
+            rgb_ns_like = self.iid_op.remove_rgb_shadow(input_rgb_tensor, rgb2shadow, False)
+
+            # rgb2mask = mask_t.test(input)
+            input = {"rgb": rgb_ns_like}
+            rgb2albedo = self.albedo_t.test(input)
+            rgb2shading = self.shading_t.test(input)
+
+            # normalize everything
+            rgb2albedo = tensor_utils.normalize_to_01(rgb2albedo)
+            # rgb2albedo = rgb2albedo * rgb2mask
+            # rgb2albedo = iid_op.mask_fill_nonzeros(rgb2albedo)
+            rgb_like = self.iid_op.produce_rgb(rgb2albedo, rgb2shading, rgb2shadow)
+            rgb2shadow = tensor_utils.normalize_to_01(rgb2shadow)
+            input_rgb_tensor = tensor_utils.normalize_to_01(input_rgb_tensor)
+            rgb_ns_like = tensor_utils.normalize_to_01(rgb_ns_like)
+
+            self.visdom_reporter.plot_image(rgb2shadow, "GTA Shadow Maps - " + opts.version + str(opts.iteration) + str(i))
+            self.visdom_reporter.plot_image(input_rgb_tensor, "GTA RGB (Original) Images - " + opts.version + str(opts.iteration) + str(i))
+            self.visdom_reporter.plot_image(rgb_ns_like, "GTA RGB (No Shadow) Images - " + opts.version + str(opts.iteration) + str(i))
+
+            vutils.save_image(rgb2albedo.squeeze(), opts.output_path + filename)
 
     def get_average_whdr(self, opts):
         ave_whdr = np.round(np.mean(self.wdhr_metric_list), 4)
@@ -471,7 +551,7 @@ def main(argv):
 
         vutils.save_image(rgb2albedo.squeeze(), opts.output_path + filename)
 
-    measure_performance()
+    measure_performance(opts)
 
 
 if __name__ == "__main__":

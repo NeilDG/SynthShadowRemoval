@@ -19,12 +19,14 @@ class TrainerFactory():
         self.g_lr = opts.g_lr
         self.d_lr = opts.d_lr
         self.opts = opts
+        self.iid_op = iid_transforms.IIDTransform()
+        self.trainer_list = {}
 
+    def initialize_all_trainers(self, opts):
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         self.server_config = sc_instance.get_general_configs()
         self.network_config = sc_instance.interpret_network_config_from_version(opts.version)
 
-        self.trainer_list = {}
         self.trainer_list["train_albedo_mask"] = AlbedoMaskTrainer(self.gpu_device, opts)
         self.trainer_list["train_albedo"] = AlbedoTrainer(self.gpu_device, opts)
         self.trainer_list["train_shading"] = ShadingTrainer(self.gpu_device, opts)
@@ -37,10 +39,30 @@ class TrainerFactory():
         self.trainer_list["train_shading"].assign_embedder_decoder(self.embedder, self.decoder_fixed)
         self.trainer_list["train_shadow"].assign_embedder_decoder(self.embedder, self.decoder_fixed)
 
-        self.iid_op = iid_transforms.IIDTransform()
-
-    def get_all_trainers(self):
+    def get_all_trainers(self, opts):
+        self.initialize_all_trainers(opts)
         return self.trainer_list["train_albedo_mask"], self.trainer_list["train_albedo"], self.trainer_list["train_shading"], self.trainer_list["train_shadow"]
+
+    def get_albedo_trainer(self):
+        if("train_albedo" in self.trainer_list):
+            return self.trainer_list["train_albedo"]
+        else:
+            self.trainer_list["train_albedo"] = AlbedoTrainer(self.gpu_device, self.opts)
+            return self.trainer_list["train_albedo"]
+
+    def get_shading_trainer(self):
+        if("train_shading" in self.trainer_list):
+            return self.trainer_list["train_shading"]
+        else:
+            self.trainer_list["train_shading"] = ShadingTrainer(self.gpu_device, self.opts)
+            return self.trainer_list["train_shading"]
+
+    def get_shadow_trainer(self):
+        if ("train_shadow" in self.trainer_list):
+            return self.trainer_list["train_shadow"]
+        else:
+            self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device, self.opts)
+            return self.trainer_list["train_shadow"]
 
     def get_unlit_network(self):
         return self.G_unlit

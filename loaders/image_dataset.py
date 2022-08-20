@@ -11,6 +11,9 @@ import constants
 import kornia
 from pathlib import Path
 
+from config import iid_server_config
+
+
 class ColorTransferDataset(data.Dataset):
     def __init__(self, image_list_a, path_b, path_segment, transform_config):
         self.image_list_a = image_list_a
@@ -104,11 +107,11 @@ def normalize(light_angle):
     return scaled
 
 class GenericPairedDataset(data.Dataset):
-    def __init__(self, imgx_dir, img_ydir, transform_config, opts):
+    def __init__(self, imgx_dir, img_ydir, transform_config, patch_size):
         self.imgx_dir = imgx_dir
         self.imgy_dir = img_ydir
         self.transform_config = transform_config
-        self.patch_size = (opts.patch_size, opts.patch_size)
+        self.patch_size = (patch_size, patch_size)
 
         if(transform_config == 1):
             # self.transform_op = transforms.Compose([

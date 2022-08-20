@@ -44,8 +44,10 @@ class IIDTransform(nn.Module):
     def forward(self, rgb_ws, rgb_ns, albedo_tensor):
         #extract shadows
         shadows_refined = self.extract_shadow(rgb_ws, rgb_ns, True)
-        shadow_intensity = np.random.uniform(0.2, 0.7)
+        # shadow_intensity = np.random.uniform(1.0, 1.7)
+        shadow_intensity = 0.5
         shadows_refined = shadows_refined * shadow_intensity
+        rgb_ns = self.remove_rgb_shadow(rgb_ws, shadows_refined)
         albedo_refined, shading_refined = self.decompose(rgb_ns, albedo_tensor, True)
 
         rgb_recon = self.produce_rgb(albedo_refined, shading_refined, shadows_refined, False)
@@ -59,7 +61,8 @@ class IIDTransform(nn.Module):
         shading_refined = self.transform_op(shading_refined)
         shadows_refined = self.transform_op(shadows_refined)
 
-        return rgb_recon, rgb_ns, albedo_refined, shading_refined, shadows_refined
+        # return rgb_recon, rgb_ns, albedo_refined, shading_refined, shadows_refined
+        return rgb_ws, rgb_ns, albedo_refined, shading_refined, shadows_refined #return original RGB
 
     def produce_rgb(self, albedo_tensor, shading_tensor, shadow_tensor, tozeroone = True):
         if(tozeroone):
