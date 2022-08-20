@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J V8_3
+#SBATCH -J Z3
 #SBATCH --partition=gpu
 #SBATCH --qos=12c-1h_2gpu
 #SBATCH --cpus-per-task=6
@@ -9,7 +9,7 @@
 #SBATCH --mail-user=neil.delgallego@dlsu.edu.ph
 #SBATCH --mail-type=END
 
-ITERATION=8
+ITERATION=3
 echo "CUDA_DEVICE=/dev/nvidia/$CUDA_VISIBLE_DEVICES"
 nvidia-smi
 
@@ -20,7 +20,7 @@ module load cuda/10.1_cudnn-7.6.5
 source activate NeilGAN_V2
 
 srun python iid_train_v2.py \
---version="v13.07" --iteration=$ITERATION \
+--version="v15.10" --iteration=$ITERATION \
 --server_config=1 --plot_enabled=0 --img_to_load=-1
 
 conda deactivate
