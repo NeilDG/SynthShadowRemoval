@@ -42,9 +42,13 @@ class IIDTransform(nn.Module):
         return output_tensor.masked_fill_(masked_tensor, 0)
 
     def forward(self, rgb_ws, rgb_ns, albedo_tensor):
+        # rgb_ws = kornia.color.rgb_to_linear_rgb(rgb_ws)
+        # rgb_ns = kornia.color.rgb_to_linear_rgb(rgb_ns)
+
         #extract shadows
         shadows_refined = self.extract_shadow(rgb_ws, rgb_ns, True)
-        shadow_intensity = np.random.uniform(0.2, 0.7)
+        # shadow_intensity = np.random.uniform(0.2, 0.7)
+        shadow_intensity = 0.5
         shadows_refined = shadows_refined * shadow_intensity
         albedo_refined, shading_refined = self.decompose(rgb_ns, albedo_tensor, True)
 
@@ -59,7 +63,8 @@ class IIDTransform(nn.Module):
         shading_refined = self.transform_op(shading_refined)
         shadows_refined = self.transform_op(shadows_refined)
 
-        return rgb_recon, rgb_ns, albedo_refined, shading_refined, shadows_refined
+        # return rgb_recon, rgb_ns, albedo_refined, shading_refined, shadows_refined
+        return rgb_ws, rgb_ns, albedo_refined, shading_refined, shadows_refined #return original RGB
 
     def produce_rgb(self, albedo_tensor, shading_tensor, shadow_tensor, tozeroone = True):
         if(tozeroone):

@@ -198,6 +198,9 @@ class TesterClass():
 
         self.wdhr_metric_list = []
 
+        self.istd_psnr_list = []
+        self.istd_ssim_list = []
+
     def test_own_dataset(self, rgb_ws_tensor, rgb_ns_tensor, unlit_tensor, albedo_tensor, shading_tensor, shadow_tensor, opts):
         input = {"rgb": rgb_ws_tensor, "unlit": unlit_tensor, "albedo": albedo_tensor}
         rgb2shading = self.shading_t.test(input)
@@ -297,6 +300,51 @@ class TesterClass():
                        "<br> RGB Reconstruction PSNR: " + str(psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ssim_rgb)
 
         self.visdom_reporter.plot_text(display_text)
+
+    def test_shadow(self, rgb_tensor_ws, rgb_tensor_ns, opts):
+        transform_op = transforms.Normalize((0.5,), (0.5,))
+
+        # shadows_refined = self.iid_op.extract_shadow(rgb_tensor_ws, rgb_tensor_ns, True)
+        # shadow_intensity = np.random.uniform(0.0, 0.5)
+        # shadows_refined = shadows_refined * shadow_intensity
+        # rgb_tensor_ws = self.iid_op.add_rgb_shadow(rgb_tensor_ns, shadows_refined, False)
+
+        rgb_tensor_ws = torch.clip(rgb_tensor_ws, 0.0, 1.0)
+        rgb_tensor_ns = torch.clip(rgb_tensor_ns, 0.0, 1.0)
+
+        rgb_tensor_ws = transform_op(rgb_tensor_ws)
+        rgb_tensor_ns = transform_op(rgb_tensor_ns)
+
+        input = {"rgb": rgb_tensor_ws}
+        _, rgb2shadow = self.shadow_t.test(input)
+        rgb_ns_like = self.iid_op.remove_rgb_shadow(rgb_tensor_ws, rgb2shadow, False)
+
+        # normalize everything
+        rgb_tensor_ws = tensor_utils.normalize_to_01(rgb_tensor_ws)
+        rgb_tensor_ns = tensor_utils.normalize_to_01(rgb_tensor_ns)
+        rgb2shadow = tensor_utils.normalize_to_01(rgb2shadow)
+        rgb_ns_like = tensor_utils.normalize_to_01(rgb_ns_like)
+
+        self.visdom_reporter.plot_image(rgb_tensor_ws, "ISTD WS Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb_ns_like, "ISTD NS-Like Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb_tensor_ns, "ISTD NS Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb2shadow, "ISTD Shadow Map - " + opts.version + str(opts.iteration))
+
+        psnr_rgb = np.round(kornia.metrics.psnr(rgb_ns_like, rgb_tensor_ns, max_val=1.0).item(), 4)
+        ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb_ns_like, rgb_tensor_ns, 5).item(), 4)
+        self.istd_psnr_list.append(psnr_rgb)
+        self.istd_ssim_list.append(ssim_rgb)
+
+    def print_average_istd_performance(self, opts):
+        ave_psnr = np.round(np.mean(self.istd_psnr_list), 4)
+        ave_ssim = np.round(np.mean(self.istd_ssim_list), 4)
+        display_text = "ISTD Set - Versions: " + opts.version + "_" + str(opts.iteration) + \
+                       "<br> RGB Reconstruction PSNR: " + str(ave_psnr) + "<br> RGB Reconstruction SSIM: " + str(ave_ssim)
+
+        self.visdom_reporter.plot_text(display_text)
+
+        self.istd_psnr_list.clear()
+        self.istd_ssim_list.clear()
 
     def test_iiw(self, file_name, rgb_tensor, opts):
         input = {"rgb": rgb_tensor}

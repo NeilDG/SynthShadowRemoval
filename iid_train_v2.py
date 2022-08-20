@@ -118,6 +118,7 @@ def main(argv):
     print("Network config: ", network_config)
 
     tf = trainer_factory.TrainerFactory(device, opts)
+    tf.initialize_all_trainers(opts)
     iid_op = iid_transforms.IIDTransform()
 
     # for mode in (["train_albedo_mask", "train_albedo", "train_shading"]):

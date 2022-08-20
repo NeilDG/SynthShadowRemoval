@@ -226,6 +226,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             else:
                 input_ws = input_rgb_tensor
 
+            # print("Tensor properties. Min: ", torch.min(input_ws), " Max:", torch.max(input_ws))
             rgb2shadow = self.G_SM_predictor(input_ws)
             rgb2ns = self.iid_op.remove_rgb_shadow(input_ws, rgb2shadow, False)
             rgb2ns = self.G_rgb(rgb2ns)
@@ -255,23 +256,23 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.visdom_reporter.plot_image(shadow_tensor, str(label) + " Shadow images - " + self.NETWORK_VERSION + str(self.iteration))
 
         self.visdom_reporter.plot_image(rgb2ns_equation, str(label) + " RGB-NS (Equation) Images - " + self.NETWORK_VERSION + str(self.iteration))
-        self.visdom_reporter.plot_image(rgb2ns, str(label) + " RGB-NS (Generated) Images - " + self.NETWORK_VERSION + str(self.iteration))
+        # self.visdom_reporter.plot_image(rgb2ns, str(label) + " RGB-NS (Generated) Images - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(input_rgb_tensor_noshadow, str(label) + " RGB No Shadow Images - " + self.NETWORK_VERSION + str(self.iteration))
 
 
     def load_saved_state(self):
         try:
             checkpoint = torch.load(self.NETWORK_CHECKPATH, map_location=self.gpu_device)
-            print("Loaded network: ", self.NETWORK_CHECKPATH)
+            print("Loaded shadow network: ", self.NETWORK_CHECKPATH)
         except:
             # check if a .checkpt is available, load it
             try:
                 checkpt_name = 'checkpoint/' + self.NETWORK_VERSION + ".pt.checkpt"
                 checkpoint = torch.load(checkpt_name, map_location=self.gpu_device)
-                print("Loaded network: ", checkpt_name)
+                print("Loaded shadow network: ", checkpt_name)
             except:
                 checkpoint = None
-                print("No existing checkpoint file found. Creating new network: ", self.NETWORK_CHECKPATH)
+                print("No existing checkpoint file found. Creating new shadow network: ", self.NETWORK_CHECKPATH)
 
         if(checkpoint != None):
             iid_server_config.IIDServerConfig.getInstance().store_epoch_from_checkpt("train_shadow", checkpoint["epoch"])

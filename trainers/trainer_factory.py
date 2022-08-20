@@ -22,7 +22,7 @@ class TrainerFactory():
         self.iid_op = iid_transforms.IIDTransform()
         self.trainer_list = {}
 
-    def get_all_trainers(self, opts):
+    def initialize_all_trainers(self, opts):
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         self.server_config = sc_instance.get_general_configs()
         self.network_config = sc_instance.interpret_network_config_from_version(opts.version)
@@ -39,6 +39,8 @@ class TrainerFactory():
         self.trainer_list["train_shading"].assign_embedder_decoder(self.embedder, self.decoder_fixed)
         self.trainer_list["train_shadow"].assign_embedder_decoder(self.embedder, self.decoder_fixed)
 
+    def get_all_trainers(self, opts):
+        self.initialize_all_trainers(opts)
         return self.trainer_list["train_albedo_mask"], self.trainer_list["train_albedo"], self.trainer_list["train_shading"], self.trainer_list["train_shadow"]
 
     def get_albedo_trainer(self):

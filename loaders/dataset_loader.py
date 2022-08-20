@@ -168,6 +168,22 @@ def load_bell2014_dataset(r_dir, s_dir, patch_size, opts):
 
     return data_loader
 
+def load_shadow_test_dataset(ws_path, ns_path, opts):
+    ws_list = assemble_img_list(ws_path, opts)
+    ns_list = assemble_img_list(ns_path, opts)
+
+    img_length = len(ws_list)
+    print("Length of images: %d %d" % (len(ws_list), len(ns_list)))
+
+    data_loader = torch.utils.data.DataLoader(
+        iid_test_datasets.ShadowTestDataset(img_length, ws_list, ns_list),
+        batch_size=16,
+        num_workers=1,
+        shuffle=False
+    )
+
+    return data_loader
+
 def load_iid_datasetv2_test(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, patch_size, opts):
     rgb_list_ws = glob.glob(rgb_dir_ws)
     random.shuffle(rgb_list_ws)

@@ -92,7 +92,7 @@ def update_config(opts):
         opts.num_workers = 12
         constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
         constants.rgb_dir_ws_styled = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.rgb_dir_ns_styled = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+        constants.rgb_dir_ns_styled = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
         constants.albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)
@@ -145,7 +145,8 @@ def main(argv):
     dataset_tester = TesterClass(albedo_t, shading_t, shadow_t)
 
     network_config = sc_instance.interpret_network_config_from_version(opts.version)
-    style_enabled = network_config["style_transferred"]
+    # style_enabled = network_config["style_transferred"]
+    style_enabled = 1
     if (style_enabled == 1):
         rgb_dir_ws = constants.rgb_dir_ws_styled
         rgb_dir_ns = constants.rgb_dir_ns_styled
@@ -153,35 +154,61 @@ def main(argv):
         rgb_dir_ws = constants.rgb_dir_ws
         rgb_dir_ns = constants.rgb_dir_ns
 
-    cgi_rgb_dir = "E:/CGIntrinsics/images/*/*_mlt.png"
-    rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
+    #SHADOW dataset test
+    #Using train dataset
+    print(rgb_dir_ws, rgb_dir_ns)
+    shadow_loader = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
+    for i, (file_name, rgb_ws, rgb_ns) in enumerate(shadow_loader, 0):
+        rgb_ws_tensor = rgb_ws.to(device)
+        rgb_ns_tensor = rgb_ns.to(device)
 
-    test_loader = dataset_loader.load_cgi_dataset(cgi_rgb_dir, 480, opts)
-    for i, (file_name, rgb_batch, albedo_batch) in enumerate(test_loader, 0):
-        # CGI dataset
-        rgb_tensor = rgb_batch.to(device)
-        albedo_tensor = albedo_batch.to(device)
-        dataset_tester.test_cgi(rgb_tensor, albedo_tensor, opts)
+        dataset_tester.test_shadow(rgb_ws_tensor, rgb_ns_tensor, opts)
         break
 
-    #IIW dataset
-    iiw_rgb_dir = "E:/iiw-decompositions/original_image/*.jpg"
-    test_loader = dataset_loader.load_iiw_dataset(iiw_rgb_dir, opts)
-    for i, (file_name, rgb_img) in enumerate(test_loader, 0):
-        with torch.no_grad():
-            rgb_tensor = rgb_img.to(device)
-            dataset_tester.test_iiw(file_name, rgb_tensor, opts)
+    dataset_tester.print_average_istd_performance(opts)
 
-    dataset_tester.get_average_whdr(opts)
+    # ISTD test dataset
+    ws_path = "E:/ISTD_Dataset/test/test_A/*.png"
+    ns_path = "E:/ISTD_Dataset/test/test_C/*.png"
+    shadow_loader = dataset_loader.load_shadow_test_dataset(ws_path, ns_path, opts)
+    for i, (file_name, rgb_ws, rgb_ns) in enumerate(shadow_loader, 0):
+        rgb_ws_tensor = rgb_ws.to(device)
+        rgb_ns_tensor = rgb_ns.to(device)
 
-    #check RW performance
-    _, input_rgb_batch = next(iter(rw_loader))
-    input_rgb_tensor = input_rgb_batch.to(device)
-    dataset_tester.test_rw(input_rgb_tensor, opts)
+        dataset_tester.test_shadow(rgb_ws_tensor, rgb_ns_tensor, opts)
+        # break
 
-    #measure GTA performance
-    dataset_tester.test_gta(opts)
-    iid_test_v2.measure_performance(opts)
+    dataset_tester.print_average_istd_performance(opts)
+
+    # cgi_rgb_dir = "E:/CGIntrinsics/images/*/*_mlt.png"
+    # rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
+    #
+    # test_loader = dataset_loader.load_cgi_dataset(cgi_rgb_dir, 480, opts)
+    # for i, (file_name, rgb_batch, albedo_batch) in enumerate(test_loader, 0):
+    #     # CGI dataset
+    #     rgb_tensor = rgb_batch.to(device)
+    #     albedo_tensor = albedo_batch.to(device)
+    #     dataset_tester.test_cgi(rgb_tensor, albedo_tensor, opts)
+    #     break
+    #
+    # #IIW dataset
+    # iiw_rgb_dir = "E:/iiw-decompositions/original_image/*.jpg"
+    # test_loader = dataset_loader.load_iiw_dataset(iiw_rgb_dir, opts)
+    # for i, (file_name, rgb_img) in enumerate(test_loader, 0):
+    #     with torch.no_grad():
+    #         rgb_tensor = rgb_img.to(device)
+    #         dataset_tester.test_iiw(file_name, rgb_tensor, opts)
+    #
+    # dataset_tester.get_average_whdr(opts)
+    #
+    # #check RW performance
+    # _, input_rgb_batch = next(iter(rw_loader))
+    # input_rgb_tensor = input_rgb_batch.to(device)
+    # dataset_tester.test_rw(input_rgb_tensor, opts)
+    #
+    # #measure GTA performance
+    # dataset_tester.test_gta(opts)
+    # iid_test_v2.measure_performance(opts)
 
 if __name__ == "__main__":
     main(sys.argv)

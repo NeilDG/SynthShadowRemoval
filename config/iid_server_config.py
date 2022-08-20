@@ -80,10 +80,10 @@ class IIDServerConfig():
 
             # configure batch sizes
             if (constants.server_config == 1):  # COARE
-                network_config[BATCH_SIZE_KEY_P] = 32
+                network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
-                network_config[BATCH_SIZE_KEY_Z] = 256
+                network_config[BATCH_SIZE_KEY_Z] = 16
             elif (constants.server_config == 2):  # CCS JUPYTER
                 network_config[BATCH_SIZE_KEY_P] = 24
                 network_config[BATCH_SIZE_KEY_A] = 192
@@ -103,7 +103,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
-                network_config[BATCH_SIZE_KEY_Z] = 12
+                network_config[BATCH_SIZE_KEY_Z] = 16
 
         elif (version == "v15.10" or version == "v13.10" or version == "v12.10"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
@@ -115,10 +115,10 @@ class IIDServerConfig():
 
             # configure batch sizes
             if (constants.server_config == 1):  # COARE
-                network_config[BATCH_SIZE_KEY_P] = 32
+                network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
-                network_config[BATCH_SIZE_KEY_Z] = 256
+                network_config[BATCH_SIZE_KEY_Z] = 16
             elif (constants.server_config == 2):  # CCS JUPYTER
                 network_config[BATCH_SIZE_KEY_P] = 24
                 network_config[BATCH_SIZE_KEY_A] = 192
@@ -138,7 +138,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
-                network_config[BATCH_SIZE_KEY_Z] = 12
+                network_config[BATCH_SIZE_KEY_Z] = 16
 
         return network_config
 
