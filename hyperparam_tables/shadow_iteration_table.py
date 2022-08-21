@@ -57,7 +57,7 @@ class ShadowIterationTable():
         return 15.0
 
     def get_rgb_lpips_weight(self):
-        return 100.0
+        return 1.0
 
     def get_rgb_adv_weight(self):
         return 0.0

@@ -66,7 +66,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def initialize_shadow_network(self, net_config, num_blocks, input_nc):
         network_creator = abstract_iid_trainer.NetworkCreator(self.gpu_device)
         self.G_SM_predictor, self.D_SM_discriminator = network_creator.initialize_shadow_network(net_config, num_blocks, input_nc)
-        self.G_rgb, _ = network_creator.initialize_rgb_network(net_config, num_blocks, input_nc)
+        self.G_rgb, _ = network_creator.initialize_rgb_network(net_config, num_blocks, 4)
         self.D_rgb = cycle_gan.Discriminator(input_nc=3).to(self.gpu_device)  # use CycleGAN's discriminator
 
     def adversarial_loss(self, pred, target):
@@ -134,8 +134,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def train(self, epoch, iteration, input_map, target_map):
         input_rgb_tensor = input_map["rgb"]
         shadow_tensor = target_map["shadow"]
-
-        input_ns = self.iid_op.remove_rgb_shadow(input_rgb_tensor, shadow_tensor, False)
+        # input_ns = self.iid_op.remove_rgb_shadow(input_rgb_tensor, shadow_tensor, False)
+        input_ns = input_map["rgb_ns"]
 
         with amp.autocast():
             if (self.da_enabled == 1):
@@ -156,7 +156,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
             #RGB (no shadows) image discriminator
             self.D_rgb.train()
-            output = self.G_rgb(input_ws)
+            output = self.G_rgb(torch.cat([input_ws, shadow_tensor], 1))
             prediction = self.D_rgb(output)
             real_tensor = torch.ones_like(prediction)
             fake_tensor = torch.zeros_like(prediction)
@@ -183,11 +183,11 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             SM_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
             #rgb refinement
-            input_ns_like = self.iid_op.remove_rgb_shadow(input_ws, rgb2sm, False)
-            input_ns_like = self.G_rgb(input_ns_like)
-            RGB_recon_loss = self.l1_loss(input_ns_like, input_ns) * self.it_table.get_rgb_recon_weight()
-            RGB_lpip_loss = self.lpip_loss(input_ns_like, input_ns) * self.it_table.get_rgb_lpips_weight()
-            prediction = self.D_rgb(input_ns_like)
+            # input_ns_eq = self.iid_op.remove_rgb_shadow(input_ws, rgb2sm, False)
+            input_ns_img = self.G_rgb(torch.cat([input_ws, shadow_tensor], 1))
+            RGB_recon_loss = self.l1_loss(input_ns_img, input_ns) * self.it_table.get_rgb_recon_weight()
+            RGB_lpip_loss = self.lpip_loss(input_ns_img, input_ns) * self.it_table.get_rgb_lpips_weight()
+            prediction = self.D_rgb(input_ns_img)
             real_tensor = torch.ones_like(prediction)
             RGB_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.it_table.get_rgb_adv_weight()
 
@@ -229,7 +229,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             # print("Tensor properties. Min: ", torch.min(input_ws), " Max:", torch.max(input_ws))
             rgb2shadow = self.G_SM_predictor(input_ws)
             rgb2ns = self.iid_op.remove_rgb_shadow(input_ws, rgb2shadow, False)
-            rgb2ns = self.G_rgb(rgb2ns)
+
+            rgb2ns = self.G_rgb(torch.cat([rgb2ns, rgb2shadow], 1))
 
         return rgb2ns, rgb2shadow
 
@@ -245,7 +246,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         shadow_tensor = tensor_utils.normalize_to_01(shadow_tensor)
         input_rgb_tensor = tensor_utils.normalize_to_01(input_rgb_tensor)
-        rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
+        # rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
         rgb2ns_equation = tensor_utils.normalize_to_01(rgb2ns_equation)
         rgb2shadow = tensor_utils.normalize_to_01(rgb2shadow)
         input_rgb_tensor_noshadow = tensor_utils.normalize_to_01(input_rgb_tensor_noshadow)
@@ -256,7 +257,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.visdom_reporter.plot_image(shadow_tensor, str(label) + " Shadow images - " + self.NETWORK_VERSION + str(self.iteration))
 
         self.visdom_reporter.plot_image(rgb2ns_equation, str(label) + " RGB-NS (Equation) Images - " + self.NETWORK_VERSION + str(self.iteration))
-        # self.visdom_reporter.plot_image(rgb2ns, str(label) + " RGB-NS (Generated) Images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(rgb2ns, str(label) + " RGB-NS (Generated) Images - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(input_rgb_tensor_noshadow, str(label) + " RGB No Shadow Images - " + self.NETWORK_VERSION + str(self.iteration))
 
 
