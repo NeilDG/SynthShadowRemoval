@@ -133,7 +133,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_P] = 8
                 network_config[BATCH_SIZE_KEY_A] = 64
                 network_config[BATCH_SIZE_KEY_S] = 64
-                network_config[BATCH_SIZE_KEY_Z] = 128
+                network_config[BATCH_SIZE_KEY_Z] = 64
             else:  # RTX 3090
                 network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
