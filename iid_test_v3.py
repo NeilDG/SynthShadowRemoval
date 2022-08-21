@@ -44,7 +44,7 @@ version_a ="v13.07"
 iteration_a = 8
 version_s = "v12.07"
 iteration_s = 15
-version_z = "v14.10"
+version_z = "v16.10"
 iteration_z = 9
 
 def update_config(opts):
@@ -162,8 +162,9 @@ def main(argv):
         rgb_ws_tensor = rgb_ws.to(device)
         rgb_ns_tensor = rgb_ns.to(device)
 
-        dataset_tester.test_shadow(rgb_ws_tensor, rgb_ns_tensor, opts)
-        break
+        dataset_tester.test_shadow(rgb_ws_tensor, rgb_ns_tensor, "Train", opts)
+        if (i % 16 == 0):
+            break
 
     dataset_tester.print_average_istd_performance(opts)
 
@@ -175,8 +176,8 @@ def main(argv):
         rgb_ws_tensor = rgb_ws.to(device)
         rgb_ns_tensor = rgb_ns.to(device)
 
-        dataset_tester.test_shadow(rgb_ws_tensor, rgb_ns_tensor, opts)
-        # break
+        dataset_tester.test_shadow(rgb_ws_tensor, rgb_ns_tensor, "ISTD", opts)
+        break
 
     dataset_tester.print_average_istd_performance(opts)
 

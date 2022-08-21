@@ -54,10 +54,10 @@ class ShadowIterationTable():
         return self.iteration_table[str(iteration)].is_bce_enabled()
 
     def get_rgb_recon_weight(self):
-        return 0.0
+        return 15.0
 
     def get_rgb_lpips_weight(self):
-        return 0.0
+        return 100.0
 
     def get_rgb_adv_weight(self):
         return 0.0

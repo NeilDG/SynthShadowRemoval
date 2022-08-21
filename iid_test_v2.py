@@ -301,7 +301,7 @@ class TesterClass():
 
         self.visdom_reporter.plot_text(display_text)
 
-    def test_shadow(self, rgb_tensor_ws, rgb_tensor_ns, opts):
+    def test_shadow(self, rgb_tensor_ws, rgb_tensor_ns, prefix, opts):
         transform_op = transforms.Normalize((0.5,), (0.5,))
 
         # shadows_refined = self.iid_op.extract_shadow(rgb_tensor_ws, rgb_tensor_ns, True)
@@ -316,22 +316,25 @@ class TesterClass():
         rgb_tensor_ns = transform_op(rgb_tensor_ns)
 
         input = {"rgb": rgb_tensor_ws}
-        _, rgb2shadow = self.shadow_t.test(input)
-        rgb_ns_like = self.iid_op.remove_rgb_shadow(rgb_tensor_ws, rgb2shadow, False)
+        rgb2ns_img, rgb2shadow = self.shadow_t.test(input)
+        # rgb2shadow = rgb2shadow * 1.25
+        rgb2ns_eq = self.iid_op.remove_rgb_shadow(rgb_tensor_ws, rgb2shadow, False)
 
         # normalize everything
         rgb_tensor_ws = tensor_utils.normalize_to_01(rgb_tensor_ws)
         rgb_tensor_ns = tensor_utils.normalize_to_01(rgb_tensor_ns)
         rgb2shadow = tensor_utils.normalize_to_01(rgb2shadow)
-        rgb_ns_like = tensor_utils.normalize_to_01(rgb_ns_like)
+        rgb2ns_eq = tensor_utils.normalize_to_01(rgb2ns_eq)
+        rgb2ns_img = tensor_utils.normalize_to_01(rgb2ns_img)
 
-        self.visdom_reporter.plot_image(rgb_tensor_ws, "ISTD WS Images - " + opts.version + str(opts.iteration))
-        self.visdom_reporter.plot_image(rgb_ns_like, "ISTD NS-Like Images - " + opts.version + str(opts.iteration))
-        self.visdom_reporter.plot_image(rgb_tensor_ns, "ISTD NS Images - " + opts.version + str(opts.iteration))
-        self.visdom_reporter.plot_image(rgb2shadow, "ISTD Shadow Map - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb_tensor_ws, prefix + " WS Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb2ns_eq, prefix + " NS-Like (Equation) Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb2ns_img, prefix + " NS-Like (Generated) Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb_tensor_ns, prefix + " NS Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb2shadow, prefix + " Shadow Map - " + opts.version + str(opts.iteration))
 
-        psnr_rgb = np.round(kornia.metrics.psnr(rgb_ns_like, rgb_tensor_ns, max_val=1.0).item(), 4)
-        ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb_ns_like, rgb_tensor_ns, 5).item(), 4)
+        psnr_rgb = np.round(kornia.metrics.psnr(rgb2ns_img, rgb_tensor_ns, max_val=1.0).item(), 4)
+        ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb2ns_img, rgb_tensor_ns, 5).item(), 4)
         self.istd_psnr_list.append(psnr_rgb)
         self.istd_ssim_list.append(ssim_rgb)
 
