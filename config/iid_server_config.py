@@ -70,7 +70,7 @@ class IIDServerConfig():
         network_config["unlit_version_name"] = "synth2unlit_v1.00_1.pt"
         network_config["da_version_name"] = "embedding_v5.00_5"
 
-        if (version == "v16.07" or version == "v14.07" or version == "v13.07" or version == "v12.07"):  # Adain-GEN
+        if (version == "v17.07" or version == "v14.07" or version == "v13.07" or version == "v12.07"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4
@@ -105,7 +105,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_S] = 128
                 network_config[BATCH_SIZE_KEY_Z] = 256
 
-        elif (version == "v16.10" or version == "v14.10" or version == "v13.10" or version == "v12.10"):  # Adain-GEN
+        elif (version == "v17.10" or version == "v14.10" or version == "v13.10" or version == "v12.10"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4

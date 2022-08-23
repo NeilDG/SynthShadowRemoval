@@ -41,15 +41,27 @@ class IIDTransform(nn.Module):
         masked_tensor = (albedo_gray >= 1.0)
         return output_tensor.masked_fill_(masked_tensor, 0)
 
+    def decompose_shadow(self, rgb_ws, rgb_ns):
+        gamma = 0.75
+        beta = 0.75
+
+        shadow_matte = 1.0 - self.extract_shadow(rgb_ws, rgb_ns)
+        rgb_ws = self.add_shadow(rgb_ns, shadow_matte, gamma, beta)
+        rgb_ws_relit = self.extract_relit(rgb_ws, gamma, beta)
+        rgb_ns_eq = self.remove_shadow(rgb_ws, rgb_ws_relit, shadow_matte)
+
+        rgb_ws = self.transform_op(rgb_ws)
+        rgb_ns = self.transform_op(rgb_ns)
+        rgb_ns_eq = self.transform_op(rgb_ns_eq)
+        shadow_matte = self.transform_op(shadow_matte)
+        rgb_ws_relit = self.transform_op(rgb_ws_relit)
+
+        return rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, rgb_ns_eq
+
     def forward(self, rgb_ws, rgb_ns, albedo_tensor):
         #extract shadows
-        shadows_refined = self.extract_shadow(rgb_ws, rgb_ns, True)
-        # shadow_intensity = np.random.uniform(1.0, 1.7)
-        # shadow_intensity = 0.5
-        # shadows_refined = shadows_refined * shadow_intensity
-        # rgb_ns = self.remove_rgb_shadow(rgb_ws, shadows_refined)
-        albedo_refined, shading_refined = self.decompose(rgb_ns, albedo_tensor, True)
 
+        albedo_refined, shading_refined = self.decompose(rgb_ns, albedo_tensor, True)
         rgb_recon = self.produce_rgb(albedo_refined, shading_refined, shadows_refined, False)
 
         # loss_op = nn.L1Loss()
@@ -121,6 +133,22 @@ class IIDTransform(nn.Module):
         shading_tensor = torch.clip(shading_tensor, min, max)
         return shading_tensor
 
+    def extract_relit(self, rgb_ws, gamma, beta):
+        relit_ws = (gamma * rgb_ws) + beta
+        relit_ws = torch.clip(relit_ws, 0.0, 1.0)
+        return relit_ws
+
+    def add_shadow(self, rgb_ns, shadow_matte, gamma, beta):
+        darkened = (rgb_ns - beta) / gamma
+        rgb_ws = (rgb_ns * shadow_matte) + (darkened * (1.0 - shadow_matte))
+
+        rgb_ws = torch.clip(rgb_ws, 0.0, 1.0)
+        return rgb_ws
+
+    def remove_shadow(self, rgb_ws, rgb_ws_relit, shadow_matte):
+        shadow_free = (rgb_ws * shadow_matte) + (rgb_ws_relit * (1.0 - shadow_matte))
+        return torch.clip(shadow_free, 0.0, 1.0)
+
     def extract_shadow(self, rgb_tensor_ws, rgb_tensor_ns, one_channel = False):
         min = torch.min(rgb_tensor_ws)
         max = torch.max(rgb_tensor_ws)
@@ -135,6 +163,18 @@ class IIDTransform(nn.Module):
 
         shadow_tensor = torch.clip(shadow_tensor, min, max)
         return shadow_tensor
+
+    def extract_shadow_matte(self, rgb_ws, rgb_ns, rgb_ws_relit):
+        min = torch.min(rgb_ws)
+        max = torch.max(rgb_ws)
+
+        a = rgb_ns - rgb_ws_relit
+        b = rgb_ws - rgb_ws_relit
+
+        matte = a / b
+        matte = torch.clip(matte, min, max)
+        matte = kornia.color.rgb_to_grayscale(matte)
+        return matte
 
     def extract_albedo(self, rgb_tensor, shading_tensor, shadow_tensor, tozeroone = True):
         min = torch.min(rgb_tensor)

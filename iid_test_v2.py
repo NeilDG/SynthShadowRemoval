@@ -301,42 +301,35 @@ class TesterClass():
 
         self.visdom_reporter.plot_text(display_text)
 
-    def test_shadow(self, rgb_tensor_ws, rgb_tensor_ns, prefix, opts):
-        transform_op = transforms.Normalize((0.5,), (0.5,))
+    def test_shadow(self, rgb_ws, rgb_ns, prefix, opts):
+        rgb_ws = torch.clip(rgb_ws, 0.0, 1.0)
+        rgb_ns = torch.clip(rgb_ns, 0.0, 1.0)
 
-        # shadows_refined = self.iid_op.extract_shadow(rgb_tensor_ws, rgb_tensor_ns, True)
-        # shadow_intensity = np.random.uniform(0.0, 0.5)
-        # shadows_refined = shadows_refined * shadow_intensity
-        # rgb_tensor_ws = self.iid_op.add_rgb_shadow(rgb_tensor_ns, shadows_refined, False)
+        # input = {"rgb": rgb_tensor_ws}
+        # rgb2ns_img, rgb2shadow = self.shadow_t.test(input)
+        # rgb2ns_eq = self.iid_op.remove_rgb_shadow(rgb_tensor_ws, rgb2shadow, False)
 
-        rgb_tensor_ws = torch.clip(rgb_tensor_ws, 0.0, 1.0)
-        rgb_tensor_ns = torch.clip(rgb_tensor_ns, 0.0, 1.0)
-
-        rgb_tensor_ws = transform_op(rgb_tensor_ws)
-        rgb_tensor_ns = transform_op(rgb_tensor_ns)
-
-        input = {"rgb": rgb_tensor_ws}
-        rgb2ns_img, rgb2shadow = self.shadow_t.test(input)
-        # rgb2shadow = rgb2shadow * 1.25
-        rgb2ns_eq = self.iid_op.remove_rgb_shadow(rgb_tensor_ws, rgb2shadow, False)
+        rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, rgb_ns_eq = self.iid_op.decompose_shadow(rgb_ws, rgb_ns)
 
         # normalize everything
-        rgb_tensor_ws = tensor_utils.normalize_to_01(rgb_tensor_ws)
-        rgb_tensor_ns = tensor_utils.normalize_to_01(rgb_tensor_ns)
-        rgb2shadow = tensor_utils.normalize_to_01(rgb2shadow)
-        rgb2ns_eq = tensor_utils.normalize_to_01(rgb2ns_eq)
-        rgb2ns_img = tensor_utils.normalize_to_01(rgb2ns_img)
+        rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
+        rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
+        shadow_matte = tensor_utils.normalize_to_01(shadow_matte)
+        rgb_ws_relit = tensor_utils.normalize_to_01(rgb_ws_relit)
+        rgb_ns_eq = tensor_utils.normalize_to_01(rgb_ns_eq)
 
-        self.visdom_reporter.plot_image(rgb_tensor_ws, prefix + " WS Images - " + opts.version + str(opts.iteration))
-        self.visdom_reporter.plot_image(rgb2ns_eq, prefix + " NS-Like (Equation) Images - " + opts.version + str(opts.iteration))
-        self.visdom_reporter.plot_image(rgb2ns_img, prefix + " NS-Like (Generated) Images - " + opts.version + str(opts.iteration))
-        self.visdom_reporter.plot_image(rgb_tensor_ns, prefix + " NS Images - " + opts.version + str(opts.iteration))
-        self.visdom_reporter.plot_image(rgb2shadow, prefix + " Shadow Map - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb_ws_relit, prefix + " Relit Images - " + opts.version + str(opts.iteration))
+        # self.visdom_reporter.plot_image(rgb2ns_eq, prefix + " NS-Like (Equation) Images - " + opts.version + str(opts.iteration))
+        # self.visdom_reporter.plot_image(rgb2ns_img, prefix + " NS-Like (Generated) Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb_ns, prefix + " NS Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb_ns_eq, prefix + " NS (equation) Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(shadow_matte, prefix + " Shadow Matte - " + opts.version + str(opts.iteration))
 
-        psnr_rgb = np.round(kornia.metrics.psnr(rgb2ns_img, rgb_tensor_ns, max_val=1.0).item(), 4)
-        ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb2ns_img, rgb_tensor_ns, 5).item(), 4)
-        self.istd_psnr_list.append(psnr_rgb)
-        self.istd_ssim_list.append(ssim_rgb)
+        # psnr_rgb = np.round(kornia.metrics.psnr(rgb2ns_img, rgb_ns, max_val=1.0).item(), 4)
+        # ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb2ns_img, rgb_ns, 5).item(), 4)
+        # self.istd_psnr_list.append(psnr_rgb)
+        # self.istd_ssim_list.append(ssim_rgb)
 
     def print_average_istd_performance(self, opts):
         ave_psnr = np.round(np.mean(self.istd_psnr_list), 4)
