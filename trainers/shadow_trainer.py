@@ -183,7 +183,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             SM_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
 
             #rgb refinement
-            # input_ns_eq = self.iid_op.remove_rgb_shadow(input_ws, rgb2sm, False)
+            # input_ns_eq = self.iid_op.remove_rgb_shadow(input_ws, shadow_tensor, False)
             input_ns_img = self.G_rgb(torch.cat([input_ws, shadow_tensor], 1))
             RGB_recon_loss = self.l1_loss(input_ns_img, input_ns) * self.it_table.get_rgb_recon_weight()
             RGB_lpip_loss = self.lpip_loss(input_ns_img, input_ns) * self.it_table.get_rgb_lpips_weight()
@@ -242,14 +242,15 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         shadow_tensor = input_map["shadow"]
         rgb2ns, rgb2shadow = self.test(input_map)
         rgb2ns_equation = self.iid_op.remove_rgb_shadow(input_rgb_tensor, rgb2shadow, False)
-        input_rgb_tensor_noshadow = self.iid_op.remove_rgb_shadow(input_rgb_tensor, shadow_tensor, False)
+        # input_rgb_tensor_noshadow = self.iid_op.remove_rgb_shadow(input_rgb_tensor, shadow_tensor, False)
+        input_ns = input_map["rgb_ns"]
 
         shadow_tensor = tensor_utils.normalize_to_01(shadow_tensor)
         input_rgb_tensor = tensor_utils.normalize_to_01(input_rgb_tensor)
-        # rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
+        rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
         rgb2ns_equation = tensor_utils.normalize_to_01(rgb2ns_equation)
         rgb2shadow = tensor_utils.normalize_to_01(rgb2shadow)
-        input_rgb_tensor_noshadow = tensor_utils.normalize_to_01(input_rgb_tensor_noshadow)
+        input_ns = tensor_utils.normalize_to_01(input_ns)
 
         self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + self.NETWORK_VERSION + str(self.iteration))
 
@@ -258,7 +259,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         self.visdom_reporter.plot_image(rgb2ns_equation, str(label) + " RGB-NS (Equation) Images - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(rgb2ns, str(label) + " RGB-NS (Generated) Images - " + self.NETWORK_VERSION + str(self.iteration))
-        self.visdom_reporter.plot_image(input_rgb_tensor_noshadow, str(label) + " RGB No Shadow Images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(input_ns, str(label) + " RGB No Shadow Images - " + self.NETWORK_VERSION + str(self.iteration))
 
 
     def load_saved_state(self):

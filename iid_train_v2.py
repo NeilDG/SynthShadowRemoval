@@ -171,7 +171,7 @@ def main(argv):
                     unlit_tensor = unlit_batch.to(device)
 
                     rgb_ws_tensor, rgb_ns_tensor, albedo_tensor, shading_tensor, shadow_tensor = iid_op(rgb_ws_tensor, rgb_ns_tensor, albedo_tensor)
-                    input_map = {"rgb": rgb_ws_tensor, "albedo": albedo_tensor, "unlit": unlit_tensor, "shading" : shading_tensor, "shadow" : shadow_tensor}
+                    input_map = {"rgb": rgb_ws_tensor, "rgb_ns" : rgb_ns_tensor, "albedo": albedo_tensor, "unlit": unlit_tensor, "shading" : shading_tensor, "shadow" : shadow_tensor}
                     tf.visdom_visualize(mode, input_map, "Test")
 
                     # _, rgb_ws_batch = rw_data
