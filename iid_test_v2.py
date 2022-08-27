@@ -491,8 +491,8 @@ def main(argv):
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
 
     tf = trainer_factory.TrainerFactory(device, opts)
-    mask_t, albedo_t, shading_t, shadow_t = tf.get_all_trainers()
-    dataset_tester = TesterClass(mask_t, albedo_t, shading_t, shadow_t)
+    mask_t, albedo_t, shading_t, shadow_t = tf.get_all_trainers(opts)
+    dataset_tester = TesterClass(albedo_t, shading_t, shadow_t)
 
     for i, (_, rgb_ws_batch, rgb_ns_batch, albedo_batch, unlit_batch) in enumerate(train_loader, 0):
         with torch.no_grad():

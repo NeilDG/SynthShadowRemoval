@@ -44,8 +44,8 @@ version_a ="v13.07"
 iteration_a = 8
 version_s = "v12.07"
 iteration_s = 15
-version_z = "v16.10"
-iteration_z = 9
+version_z = "v15.10"
+iteration_z = 2
 
 def update_config(opts):
     constants.server_config = opts.server_config
