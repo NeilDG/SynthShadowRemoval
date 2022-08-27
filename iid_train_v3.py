@@ -149,8 +149,7 @@ def main(argv):
     start_epoch = sc_instance.get_last_epoch_from_mode(mode)
     print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
     for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
-        for i, (train_data, test_data, test_istd, rw_data) in enumerate(zip(train_loader, test_loader_train, test_loader_istd, itertools.cycle(rw_loader))):
-            _, rgb_ws_batch, rgb_ns_batch = train_data
+        for i, (_, rgb_ws_batch, rgb_ns_batch) in enumerate(train_loader, 0):
             rgb_ws_tensor = rgb_ws_batch.to(device)
             rgb_ns_tensor = rgb_ns_batch.to(device)
             rgb_ws_tensor, rgb_ns_tensor, shadow_matte_tensor, _ = iid_op.decompose_shadow(rgb_ws_tensor, rgb_ns_tensor)
@@ -165,31 +164,34 @@ def main(argv):
                 break
 
             if (i % 300 == 0):
-                tf.visdom_plot(mode, iteration)
-                tf.visdom_visualize(mode, input_map, "Train")
-
-                _, rgb_ws_batch, rgb_ns_batch = test_data
-                rgb_ws_tensor = rgb_ws_batch.to(device)
-                rgb_ns_tensor = rgb_ns_batch.to(device)
-                rgb_ws_tensor, rgb_ns_tensor, shadow_matte_tensor, _ = iid_op.decompose_shadow(rgb_ws_tensor, rgb_ns_tensor)
-
-                input_map = {"rgb": rgb_ws_tensor, "rgb_ns": rgb_ns_tensor, "shadow_matte": shadow_matte_tensor}
-                tf.visdom_visualize(mode, input_map, "Test Synthetic")
-
-                _, rgb_ws_batch, rgb_ns_batch = test_istd
-                rgb_ws_tensor = rgb_ws_batch.to(device)
-                rgb_ns_tensor = rgb_ns_batch.to(device)
-                rgb_ws_tensor, rgb_ns_tensor, shadow_matte_tensor, _ = iid_op.decompose_shadow(rgb_ws_tensor, rgb_ns_tensor)
-
-                input_map = {"rgb": rgb_ws_tensor, "rgb_ns" : rgb_ns_tensor, "shadow_matte" : shadow_matte_tensor}
-                tf.visdom_visualize(mode, input_map, "Test ISTD")
-
-                _, rgb_ws_batch = rw_data
-                rgb_ws_tensor = rgb_ws_batch.to(device)
-                input_map = {"rgb": rgb_ws_tensor}
-                tf.visdom_infer(mode, input_map)
-
                 tf.save(mode, epoch, iteration, True)
+
+                if(opts.plot_enabled == 1):
+                    tf.visdom_plot(mode, iteration)
+                    tf.visdom_visualize(mode, input_map, "Train")
+
+                    _, rgb_ws_batch, rgb_ns_batch = next(itertools.cycle(test_loader_train))
+                    rgb_ws_tensor = rgb_ws_batch.to(device)
+                    rgb_ns_tensor = rgb_ns_batch.to(device)
+                    rgb_ws_tensor, rgb_ns_tensor, shadow_matte_tensor, _ = iid_op.decompose_shadow(rgb_ws_tensor, rgb_ns_tensor)
+
+                    input_map = {"rgb": rgb_ws_tensor, "rgb_ns": rgb_ns_tensor, "shadow_matte": shadow_matte_tensor}
+                    tf.visdom_visualize(mode, input_map, "Test Synthetic")
+
+                    _, rgb_ws_batch, rgb_ns_batch = next(itertools.cycle(test_loader_istd))
+                    rgb_ws_tensor = rgb_ws_batch.to(device)
+                    rgb_ns_tensor = rgb_ns_batch.to(device)
+                    rgb_ws_tensor, rgb_ns_tensor, shadow_matte_tensor, _ = iid_op.decompose_shadow(rgb_ws_tensor, rgb_ns_tensor)
+
+                    input_map = {"rgb": rgb_ws_tensor, "rgb_ns" : rgb_ns_tensor, "shadow_matte" : shadow_matte_tensor}
+                    tf.visdom_visualize(mode, input_map, "Test ISTD")
+
+                    _, rgb_ws_batch = next(itertools.cycle(rw_loader))
+                    rgb_ws_tensor = rgb_ws_batch.to(device)
+                    input_map = {"rgb": rgb_ws_tensor}
+                    tf.visdom_infer(mode, input_map)
+
+
 
             if (tf.is_stop_condition_met(mode)):
                 break
