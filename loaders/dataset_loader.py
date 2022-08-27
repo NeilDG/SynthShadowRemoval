@@ -168,6 +168,33 @@ def load_bell2014_dataset(r_dir, s_dir, patch_size, opts):
 
     return data_loader
 
+def load_shadow_train_dataset(ws_path, ns_path, ws_istd, ns_istd, patch_size, batch_size,
+                              should_mix, opts):
+    ws_list = assemble_img_list(ws_path, opts)
+    ns_list = assemble_img_list(ns_path, opts)
+
+    ws_istd_list = assemble_img_list(ws_istd, opts)
+    ns_istd_list = assemble_img_list(ns_istd, opts)
+
+    if(should_mix):
+        print("Mixing ISTD and synthetic train datasets")
+        ws_list = ws_list + ws_istd_list
+        ns_list = ns_list + ns_istd_list
+    else:
+        print("Retaining synthetic train dataset")
+
+    img_length = len(ws_list)
+    print("Length of images: %d %d" % (len(ws_list), len(ns_list)))
+
+    data_loader = torch.utils.data.DataLoader(
+        iid_test_datasets.ShadowPairedDataset(img_length, ws_list, ns_list, 1, patch_size),
+        batch_size=batch_size,
+        num_workers=opts.num_workers,
+        shuffle=False
+    )
+
+    return data_loader
+
 def load_shadow_test_dataset(ws_path, ns_path, opts):
     ws_list = assemble_img_list(ws_path, opts)
     ns_list = assemble_img_list(ns_path, opts)
@@ -176,7 +203,7 @@ def load_shadow_test_dataset(ws_path, ns_path, opts):
     print("Length of images: %d %d" % (len(ws_list), len(ns_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        iid_test_datasets.ShadowTestDataset(img_length, ws_list, ns_list),
+        iid_test_datasets.ShadowPairedDataset(img_length, ws_list, ns_list, 2),
         batch_size=16,
         num_workers=1,
         shuffle=False
