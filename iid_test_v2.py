@@ -198,8 +198,11 @@ class TesterClass():
 
         self.wdhr_metric_list = []
 
-        self.istd_psnr_list = []
-        self.istd_ssim_list = []
+        self.psnr_list_rgb = []
+        self.ssim_list_rgb = []
+
+        self.psnr_list_eq = []
+        self.ssim_list_eq = []
 
     def test_own_dataset(self, rgb_ws_tensor, rgb_ns_tensor, unlit_tensor, albedo_tensor, shading_tensor, shadow_tensor, opts):
         input = {"rgb": rgb_ws_tensor, "unlit": unlit_tensor, "albedo": albedo_tensor}
@@ -326,21 +329,24 @@ class TesterClass():
         self.visdom_reporter.plot_image(rgb_ns_eq, prefix + " NS (equation) Images - " + opts.version + str(opts.iteration))
         self.visdom_reporter.plot_image(shadow_matte, prefix + " Shadow Matte - " + opts.version + str(opts.iteration))
 
-        # psnr_rgb = np.round(kornia.metrics.psnr(rgb2ns_img, rgb_ns, max_val=1.0).item(), 4)
-        # ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb2ns_img, rgb_ns, 5).item(), 4)
-        # self.istd_psnr_list.append(psnr_rgb)
-        # self.istd_ssim_list.append(ssim_rgb)
+        psnr_eq = np.round(kornia.metrics.psnr(rgb_ns_eq, rgb_ns, max_val=1.0).item(), 4)
+        ssim_eq = np.round(1.0 - kornia.losses.ssim_loss(rgb_ns_eq, rgb_ns, 5).item(), 4)
+        self.psnr_list_eq.append(psnr_eq)
+        self.ssim_list_eq.append(ssim_eq)
 
-    def print_average_istd_performance(self, opts):
-        ave_psnr = np.round(np.mean(self.istd_psnr_list), 4)
-        ave_ssim = np.round(np.mean(self.istd_ssim_list), 4)
-        display_text = "ISTD Set - Versions: " + opts.version + "_" + str(opts.iteration) + \
-                       "<br> RGB Reconstruction PSNR: " + str(ave_psnr) + "<br> RGB Reconstruction SSIM: " + str(ave_ssim)
+    def print_ave_shadow_performance(self, prefix, opts):
+        ave_psnr_rgb = np.round(np.mean(self.psnr_list_rgb), 4)
+        ave_ssim_rgb = np.round(np.mean(self.ssim_list_rgb), 4)
+        ave_psnr_eq = np.round(np.mean(self.psnr_list_eq), 4)
+        ave_ssim_eq = np.round(np.mean(self.ssim_list_eq), 4)
+        display_text = prefix + " - Versions: " + opts.version + "_" + str(opts.iteration) + \
+                       "<br> EQ Reconstruction PSNR: " + str(ave_psnr_eq) + "<br> EQ Reconstruction SSIM: " + str(ave_ssim_eq) + \
+                       "<br> RGB Reconstruction PSNR: " + str(ave_psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ave_ssim_rgb)
 
         self.visdom_reporter.plot_text(display_text)
 
-        self.istd_psnr_list.clear()
-        self.istd_ssim_list.clear()
+        self.psnr_list_rgb.clear()
+        self.ssim_list_rgb.clear()
 
     def test_iiw(self, file_name, rgb_tensor, opts):
         input = {"rgb": rgb_tensor}
