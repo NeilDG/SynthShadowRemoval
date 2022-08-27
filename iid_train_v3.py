@@ -78,6 +78,8 @@ def update_config(opts):
         constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows/"
         constants.albedo_dir = "C:/Datasets/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "C:/Datasets/SynthWeather Dataset 8/unlit/"
+        constants.ws_istd ="C:/Datasets/ISTD_Dataset/test/test_A/*.png"
+        constants.ns_istd = "C:/Datasets/ISTD_Dataset/test/test_C/*.png"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers)
     else:
@@ -138,12 +140,9 @@ def main(argv):
 
     batch_size = sc_instance.get_batch_size_from_mode(mode, network_config)
 
-    ws_istd_path = "E:/ISTD_Dataset/test/test_A/*.png"
-    ns_istd_path = "E:/ISTD_Dataset/test/test_C/*.png"
-
-    train_loader = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, ws_istd_path, ns_istd_path, patch_size, batch_size, network_config["istd_mix"], opts)
+    train_loader = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, constants.ws_istd, constants.ns_istd, patch_size, batch_size, network_config["istd_mix"], opts)
     test_loader_train = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
-    test_loader_istd = dataset_loader.load_shadow_test_dataset(ws_istd_path, ns_istd_path, opts)
+    test_loader_istd = dataset_loader.load_shadow_test_dataset(constants.ws_istd, constants.ns_istd, opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
 
     iteration = 0
