@@ -142,8 +142,6 @@ def main(argv):
 
     dataset_tester = TesterClass(albedo_t, shading_t, shadow_t)
 
-    network_config = sc_instance.interpret_network_config_from_version(opts.version)
-
     # style_enabled = network_config["style_transferred"]
     style_enabled = 1
     if (style_enabled == 1):

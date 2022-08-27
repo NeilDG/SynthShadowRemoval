@@ -312,25 +312,24 @@ class TesterClass():
         # rgb2ns_img, rgb2shadow = self.shadow_t.test(input)
         # rgb2ns_eq = self.iid_op.remove_rgb_shadow(rgb_tensor_ws, rgb2shadow, False)
 
-        rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, rgb_ns_eq = self.iid_op.decompose_shadow(rgb_ws, rgb_ns)
+        rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit = self.iid_op.decompose_shadow(rgb_ws, rgb_ns)
 
         # normalize everything
         rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
         rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
         shadow_matte = tensor_utils.normalize_to_01(shadow_matte)
         rgb_ws_relit = tensor_utils.normalize_to_01(rgb_ws_relit)
-        rgb_ns_eq = tensor_utils.normalize_to_01(rgb_ns_eq)
+
+        rgb2ns_eq = self.iid_op.remove_shadow(rgb_ws, rgb_ws_relit, shadow_matte)
 
         self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + opts.version + str(opts.iteration))
         self.visdom_reporter.plot_image(rgb_ws_relit, prefix + " Relit Images - " + opts.version + str(opts.iteration))
-        # self.visdom_reporter.plot_image(rgb2ns_eq, prefix + " NS-Like (Equation) Images - " + opts.version + str(opts.iteration))
-        # self.visdom_reporter.plot_image(rgb2ns_img, prefix + " NS-Like (Generated) Images - " + opts.version + str(opts.iteration))
         self.visdom_reporter.plot_image(rgb_ns, prefix + " NS Images - " + opts.version + str(opts.iteration))
-        self.visdom_reporter.plot_image(rgb_ns_eq, prefix + " NS (equation) Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb2ns_eq, prefix + " NS (equation) Images - " + opts.version + str(opts.iteration))
         self.visdom_reporter.plot_image(shadow_matte, prefix + " Shadow Matte - " + opts.version + str(opts.iteration))
 
-        psnr_eq = np.round(kornia.metrics.psnr(rgb_ns_eq, rgb_ns, max_val=1.0).item(), 4)
-        ssim_eq = np.round(1.0 - kornia.losses.ssim_loss(rgb_ns_eq, rgb_ns, 5).item(), 4)
+        psnr_eq = np.round(kornia.metrics.psnr(rgb2ns_eq, rgb_ns, max_val=1.0).item(), 4)
+        ssim_eq = np.round(1.0 - kornia.losses.ssim_loss(rgb2ns_eq, rgb_ns, 5).item(), 4)
         self.psnr_list_eq.append(psnr_eq)
         self.ssim_list_eq.append(ssim_eq)
 

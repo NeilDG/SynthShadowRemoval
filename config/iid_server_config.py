@@ -70,6 +70,7 @@ class IIDServerConfig():
         network_config["unlit_version_name"] = "synth2unlit_v1.00_1.pt"
         network_config["da_version_name"] = "embedding_v5.00_5"
 
+        print("Version number: ", version)
         if (version == "v17.07" or version == "v14.07" or version == "v13.07" or version == "v12.07"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
