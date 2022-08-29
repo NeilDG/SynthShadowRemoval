@@ -201,8 +201,8 @@ class TesterClass():
         self.psnr_list_rgb = []
         self.ssim_list_rgb = []
 
-        self.psnr_list_eq = []
-        self.ssim_list_eq = []
+        self.psnr_list_sm = []
+        self.ssim_list_sm = []
 
     def test_own_dataset(self, rgb_ws_tensor, rgb_ns_tensor, unlit_tensor, albedo_tensor, shading_tensor, shadow_tensor, opts):
         input = {"rgb": rgb_ws_tensor, "unlit": unlit_tensor, "albedo": albedo_tensor}
@@ -324,18 +324,22 @@ class TesterClass():
         self.visdom_reporter.plot_image(rgb2sm, prefix + " Shadow Matte-Like - " + opts.version + str(opts.iteration))
         self.visdom_reporter.plot_image(shadow_matte, prefix + " Shadow Matte - " + opts.version + str(opts.iteration))
 
-        psnr_eq = np.round(kornia.metrics.psnr(rgb2ns, rgb_ns, max_val=1.0).item(), 4)
-        ssim_eq = np.round(1.0 - kornia.losses.ssim_loss(rgb2ns, rgb_ns, 5).item(), 4)
-        self.psnr_list_eq.append(psnr_eq)
-        self.ssim_list_eq.append(ssim_eq)
+        psnr_rgb = np.round(kornia.metrics.psnr(rgb2ns, rgb_ns, max_val=1.0).item(), 4)
+        ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb2ns, rgb_ns, 5).item(), 4)
+        psnr_sm = np.round(kornia.metrics.psnr(rgb2sm, shadow_matte, max_val=1.0).item(), 4)
+        ssim_sm = np.round(1.0 - kornia.losses.ssim_loss(rgb2sm, shadow_matte, 5).item(), 4)
+        self.psnr_list_rgb.append(psnr_rgb)
+        self.ssim_list_rgb.append(ssim_rgb)
+        self.psnr_list_sm.append(psnr_sm)
+        self.ssim_list_sm.append(ssim_sm)
 
     def print_ave_shadow_performance(self, prefix, opts):
         ave_psnr_rgb = np.round(np.mean(self.psnr_list_rgb), 4)
         ave_ssim_rgb = np.round(np.mean(self.ssim_list_rgb), 4)
-        ave_psnr_eq = np.round(np.mean(self.psnr_list_eq), 4)
-        ave_ssim_eq = np.round(np.mean(self.ssim_list_eq), 4)
+        ave_psnr_sm = np.round(np.mean(self.psnr_list_sm), 4)
+        ave_ssim_sm = np.round(np.mean(self.ssim_list_sm), 4)
         display_text = prefix + " - Versions: " + opts.version + "_" + str(opts.iteration) + \
-                       "<br> EQ Reconstruction PSNR: " + str(ave_psnr_eq) + "<br> EQ Reconstruction SSIM: " + str(ave_ssim_eq) + \
+                       "<br> SM Reconstruction PSNR: " + str(ave_psnr_sm) + "<br> SM Reconstruction SSIM: " + str(ave_ssim_sm) + \
                        "<br> RGB Reconstruction PSNR: " + str(ave_psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ave_ssim_rgb)
 
         self.visdom_reporter.plot_text(display_text)

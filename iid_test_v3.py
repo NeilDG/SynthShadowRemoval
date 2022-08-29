@@ -34,7 +34,6 @@ parser.add_option('--version', type=str, default="")
 parser.add_option('--iteration', type=int, default="1")
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
-parser.add_option('--test_mode', type=int, help="Test mode?", default=0)
 parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
 parser.add_option('--input_path', type=str)
 parser.add_option('--output_path', type=str)
@@ -174,7 +173,7 @@ def main(argv):
         rgb_ns_tensor = rgb_ns.to(device)
 
         dataset_tester.test_shadow(rgb_ws_tensor, rgb_ns_tensor, "ISTD", opts)
-        break
+        # break
 
     dataset_tester.print_ave_shadow_performance("ISTD", opts)
 
