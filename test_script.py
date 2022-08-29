@@ -12,8 +12,36 @@ def test_relighting():
     #           "--plot_enabled=1 --version=\"v15.10\" --iteration=9 "
     #           "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
-    os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 --test_mode=0 "
-              "--plot_enabled=1 --version=\"v17.10\" --iteration=1 "
+    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+    #           "--plot_enabled=1 --version=\"v17.10\" --iteration=1 "
+    #           "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
+    #
+    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+    #           "--plot_enabled=1 --version=\"v17.11\" --iteration=1 "
+    #           "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
+    #
+    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+    #           "--plot_enabled=1 --version=\"v17.10\" --iteration=2 "
+    #           "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
+    #
+    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+    #           "--plot_enabled=1 --version=\"v17.11\" --iteration=2 "
+    #           "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
+    #
+    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+    #           "--plot_enabled=1 --version=\"v17.10\" --iteration=3 "
+    #           "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
+    #
+    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+    #           "--plot_enabled=1 --version=\"v17.11\" --iteration=3 "
+    #           "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
+    #
+    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+    #           "--plot_enabled=1 --version=\"v17.10\" --iteration=4 "
+    #           "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
+
+    os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+              "--plot_enabled=1 --version=\"v17.11\" --iteration=4 "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
 def main():
