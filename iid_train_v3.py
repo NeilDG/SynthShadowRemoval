@@ -88,7 +88,7 @@ def update_config(opts):
         constants.rgb_dir_ws_styled = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
         constants.rgb_dir_ns_styled = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
         constants.rgb_dir_ws = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"
-        constants.rgb_dir_ns = "E:/SynthWeather Dataset 8/train_rgb_noshadows/"
+        constants.rgb_dir_ns = "E:/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
         constants.albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)
