@@ -142,7 +142,7 @@ def main(argv):
     dataset_tester = TesterClass(albedo_t, shading_t, shadow_t)
 
     # style_enabled = network_config["style_transferred"]
-    style_enabled = 1
+    style_enabled = 0
     if (style_enabled == 1):
         rgb_dir_ws = constants.rgb_dir_ws_styled
         rgb_dir_ns = constants.rgb_dir_ns_styled
