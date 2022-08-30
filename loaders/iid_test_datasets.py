@@ -128,11 +128,13 @@ class IIWDataset(CGIDataset):
     def __len__(self):
         return self.img_length
 
-class ShadowTestDataset(data.Dataset):
-    def __init__(self, img_length, img_list_a, img_list_b):
+class ShadowPairedDataset(data.Dataset):
+    def __init__(self, img_length, img_list_a, img_list_b, transform_config, patch_size = 0):
         self.img_length = img_length
         self.img_list_a = img_list_a
         self.img_list_b = img_list_b
+        self.transform_config = transform_config
+        self.patch_size = (patch_size, patch_size)
 
         self.initial_op = transforms.Compose([
             transforms.ToPILImage()])
@@ -156,6 +158,13 @@ class ShadowTestDataset(data.Dataset):
             rgb_ns = cv2.cvtColor(rgb_ns, cv2.COLOR_BGR2RGB)
             rgb_ns = self.initial_op(rgb_ns)
             rgb_ns = self.final_transform_op(rgb_ns)
+
+            if (self.transform_config == 1):
+                crop_indices = transforms.RandomCrop.get_params(rgb_ws, output_size=self.patch_size)
+                i, j, h, w = crop_indices
+
+                rgb_ws = transforms.functional.crop(rgb_ws, i, j, h, w)
+                rgb_ns = transforms.functional.crop(rgb_ns, i, j, h, w)
 
             # print("Loaded pairing: ", self.img_list_a[idx], self.img_list_b[idx])
 

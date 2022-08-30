@@ -32,8 +32,8 @@ class TrainerFactory():
         self.trainer_list["train_shading"] = ShadingTrainer(self.gpu_device, opts)
         self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device, opts)
 
-        self.initialize_da_network(self.network_config["da_version_name"])
-        self.initialize_unlit_network(self.network_config["unlit_version_name"])
+        # self.initialize_da_network(self.network_config["da_version_name"])
+        # self.initialize_unlit_network(self.network_config["unlit_version_name"])
         self.trainer_list["train_albedo_mask"].assign_embedder_decoder(self.embedder, self.decoder_fixed)
         self.trainer_list["train_albedo"].assign_embedder_decoder(self.embedder, self.decoder_fixed)
         self.trainer_list["train_shading"].assign_embedder_decoder(self.embedder, self.decoder_fixed)

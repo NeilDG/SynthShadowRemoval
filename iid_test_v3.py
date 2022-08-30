@@ -31,10 +31,9 @@ parser.add_option('--server_config', type=int, help="Is running on COARE?", defa
 parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:0")
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
 parser.add_option('--version', type=str, default="")
-parser.add_option('--iteration', type=int, help="Style version?", default="1")
+parser.add_option('--iteration', type=int, default="1")
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
-parser.add_option('--test_mode', type=int, help="Test mode?", default=0)
 parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
 parser.add_option('--input_path', type=str)
 parser.add_option('--output_path', type=str)
@@ -44,8 +43,8 @@ version_a ="v13.07"
 iteration_a = 8
 version_s = "v12.07"
 iteration_s = 15
-version_z = "v16.10"
-iteration_z = 9
+# version_z = "v16.10"
+# iteration_z = 10
 
 def update_config(opts):
     constants.server_config = opts.server_config
@@ -119,10 +118,8 @@ def main(argv):
     iid_server_config.IIDServerConfig.initialize(opts.version)
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
 
-    iid_op = iid_transforms.IIDTransform()
-
-    #hijack trainer factory creation via opts
-    # (vopts, args) = version_holder.parse_args(argv)
+    version_z = opts.version
+    iteration_z = opts.iteration
 
     opts.version = version_a
     opts.iteration = iteration_a
@@ -144,9 +141,8 @@ def main(argv):
 
     dataset_tester = TesterClass(albedo_t, shading_t, shadow_t)
 
-    network_config = sc_instance.interpret_network_config_from_version(opts.version)
     # style_enabled = network_config["style_transferred"]
-    style_enabled = 1
+    style_enabled = 0
     if (style_enabled == 1):
         rgb_dir_ws = constants.rgb_dir_ws_styled
         rgb_dir_ns = constants.rgb_dir_ns_styled
@@ -166,7 +162,7 @@ def main(argv):
         if (i % 16 == 0):
             break
 
-    dataset_tester.print_average_istd_performance(opts)
+    dataset_tester.print_ave_shadow_performance("Train Set", opts)
 
     # ISTD test dataset
     ws_path = "E:/ISTD_Dataset/test/test_A/*.png"
@@ -177,9 +173,9 @@ def main(argv):
         rgb_ns_tensor = rgb_ns.to(device)
 
         dataset_tester.test_shadow(rgb_ws_tensor, rgb_ns_tensor, "ISTD", opts)
-        break
+        # break
 
-    dataset_tester.print_average_istd_performance(opts)
+    dataset_tester.print_ave_shadow_performance("ISTD", opts)
 
     # cgi_rgb_dir = "E:/CGIntrinsics/images/*/*_mlt.png"
     # rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)

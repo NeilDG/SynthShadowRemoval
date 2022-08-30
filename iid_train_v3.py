@@ -42,7 +42,7 @@ def update_config(opts):
         print("Using COARE configuration. Workers: ", opts.num_workers)
         constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
         constants.rgb_dir_ws_styled = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.rgb_dir_ns_styled = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+        constants.rgb_dir_ns_styled = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
         constants.rgb_dir_ws = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb/*/*.png"
         constants.rgb_dir_ns = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows/"
         constants.albedo_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/albedo/"
@@ -52,7 +52,7 @@ def update_config(opts):
     elif (constants.server_config == 2):
         constants.num_workers = 6
         constants.rgb_dir_ws_styled = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.rgb_dir_ns_styled = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+        constants.rgb_dir_ns_styled = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
         constants.rgb_dir_ws = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb/*/*.png"
         constants.rgb_dir_ns = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows/"
         constants.albedo_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/albedo/"
@@ -73,18 +73,20 @@ def update_config(opts):
         opts.num_workers = 6
         constants.DATASET_PLACES_PATH = "C:/Datasets/Places Dataset/*.jpg"
         constants.rgb_dir_ws_styled = "C:/Datasets/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.rgb_dir_ns_styled = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+        constants.rgb_dir_ns_styled = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
         constants.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 8/train_rgb/*/*.png"
-        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows/"
+        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
         constants.albedo_dir = "C:/Datasets/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "C:/Datasets/SynthWeather Dataset 8/unlit/"
+        constants.ws_istd ="C:/Datasets/ISTD_Dataset/test/test_A/*.png"
+        constants.ns_istd = "C:/Datasets/ISTD_Dataset/test/test_C/*.png"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers)
     else:
         opts.num_workers = 12
         constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
         constants.rgb_dir_ws_styled = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.rgb_dir_ns_styled = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+        constants.rgb_dir_ns_styled = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
         constants.rgb_dir_ws = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"
         constants.rgb_dir_ns = "E:/SynthWeather Dataset 8/train_rgb_noshadows/"
         constants.albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
@@ -125,63 +127,73 @@ def main(argv):
 
     # for mode in (["train_albedo_mask", "train_albedo", "train_shading"]):
     # for mode in (["train_shadow", "train_albedo", "train_shading"]):
-    for mode in (["train_shadow"]):
-        patch_size = general_config[mode]["patch_size"]
-        style_enabled = network_config["style_transferred"]
 
-        if(style_enabled == 1):
-            rgb_dir_ws = constants.rgb_dir_ws_styled
-            rgb_dir_ns = constants.rgb_dir_ns_styled
-        else:
-            rgb_dir_ws = constants.rgb_dir_ws
-            rgb_dir_ns = constants.rgb_dir_ns
+    #Train shadow
+    mode = "train_shadow"
+    patch_size = general_config[mode]["patch_size"]
+    style_enabled = network_config["style_transferred"]
 
-        batch_size = sc_instance.get_batch_size_from_mode(mode, network_config)
-        train_loader = dataset_loader.load_iid_datasetv2_train(rgb_dir_ws, rgb_dir_ns, constants.unlit_dir, constants.albedo_dir, patch_size, batch_size, opts)
-        test_loader = dataset_loader.load_iid_datasetv2_test(rgb_dir_ws, rgb_dir_ns, constants.unlit_dir, constants.albedo_dir, 256, opts)
-        rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
+    if(style_enabled == 1):
+        rgb_dir_ws = constants.rgb_dir_ws_styled
+        rgb_dir_ns = constants.rgb_dir_ns_styled
+    else:
+        rgb_dir_ws = constants.rgb_dir_ws
+        rgb_dir_ns = constants.rgb_dir_ns
 
-        iteration = 0
-        start_epoch = sc_instance.get_last_epoch_from_mode(mode)
-        print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
-        for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
-            for i, (train_data, test_data, rw_data) in enumerate(zip(train_loader, test_loader, itertools.cycle(rw_loader))):
-                _, rgb_ws_batch, rgb_ns_batch, albedo_batch, unlit_batch = train_data
-                rgb_ws_tensor = rgb_ws_batch.to(device)
-                rgb_ns_tensor = rgb_ns_batch.to(device)
-                albedo_tensor = albedo_batch.to(device)
-                unlit_tensor = unlit_batch.to(device)
-                rgb_ws_tensor, rgb_ns_tensor, albedo_tensor, shading_tensor, shadow_tensor = iid_op(rgb_ws_tensor, rgb_ns_tensor, albedo_tensor)
+    batch_size = sc_instance.get_batch_size_from_mode(mode, network_config)
 
-                input_map = {"rgb": rgb_ws_tensor, "rgb_ns" : rgb_ns_tensor, "albedo": albedo_tensor, "unlit": unlit_tensor, "shading" : shading_tensor, "shadow" : shadow_tensor}
-                target_map = input_map
+    train_loader = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, constants.ws_istd, constants.ns_istd, patch_size, batch_size, network_config["istd_mix"], opts)
+    test_loader_train = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
+    test_loader_istd = dataset_loader.load_shadow_test_dataset(constants.ws_istd, constants.ns_istd, opts)
+    rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
 
-                tf.train(mode, epoch, iteration, input_map, target_map)
-                iteration = iteration + 1
+    iteration = 0
+    start_epoch = sc_instance.get_last_epoch_from_mode(mode)
+    print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
+    for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
+        for i, (_, rgb_ws_batch, rgb_ns_batch) in enumerate(train_loader, 0):
+            rgb_ws_tensor = rgb_ws_batch.to(device)
+            rgb_ns_tensor = rgb_ns_batch.to(device)
+            rgb_ws_tensor, rgb_ns_tensor, shadow_matte_tensor, _ = iid_op.decompose_shadow(rgb_ws_tensor, rgb_ns_tensor)
 
-                if(tf.is_stop_condition_met(mode)):
-                    break
+            input_map = {"rgb": rgb_ws_tensor, "rgb_ns" : rgb_ns_tensor, "shadow_matte" : shadow_matte_tensor}
+            target_map = input_map
 
-                if (i % 300 == 0):
+            tf.train(mode, epoch, iteration, input_map, target_map)
+            iteration = iteration + 1
+
+            if(tf.is_stop_condition_met(mode)):
+                break
+
+            if (i % 300 == 0):
+                tf.save(mode, epoch, iteration, True)
+
+                if(opts.plot_enabled == 1):
                     tf.visdom_plot(mode, iteration)
                     tf.visdom_visualize(mode, input_map, "Train")
 
-                    _, rgb_ws_batch, rgb_ns_batch, albedo_batch, unlit_batch = test_data
+                    _, rgb_ws_batch, rgb_ns_batch = next(itertools.cycle(test_loader_train))
                     rgb_ws_tensor = rgb_ws_batch.to(device)
                     rgb_ns_tensor = rgb_ns_batch.to(device)
-                    albedo_tensor = albedo_batch.to(device)
-                    unlit_tensor = unlit_batch.to(device)
+                    rgb_ws_tensor, rgb_ns_tensor, shadow_matte_tensor, _ = iid_op.decompose_shadow(rgb_ws_tensor, rgb_ns_tensor)
 
-                    rgb_ws_tensor, rgb_ns_tensor, albedo_tensor, shading_tensor, shadow_tensor = iid_op(rgb_ws_tensor, rgb_ns_tensor, albedo_tensor)
-                    input_map = {"rgb": rgb_ws_tensor, "albedo": albedo_tensor, "unlit": unlit_tensor, "shading" : shading_tensor, "shadow" : shadow_tensor}
-                    tf.visdom_visualize(mode, input_map, "Test")
+                    input_map = {"rgb": rgb_ws_tensor, "rgb_ns": rgb_ns_tensor, "shadow_matte": shadow_matte_tensor}
+                    tf.visdom_visualize(mode, input_map, "Test Synthetic")
 
-                    # _, rgb_ws_batch = rw_data
-                    # rgb_ws_tensor = rgb_ws_batch.to(device)
-                    # input_map = {"rgb": rgb_ws_tensor}
-                    # tf.visdom_infer(mode, input_map)
+                    _, rgb_ws_batch, rgb_ns_batch = next(itertools.cycle(test_loader_istd))
+                    rgb_ws_tensor = rgb_ws_batch.to(device)
+                    rgb_ns_tensor = rgb_ns_batch.to(device)
+                    rgb_ws_tensor, rgb_ns_tensor, shadow_matte_tensor, _ = iid_op.decompose_shadow(rgb_ws_tensor, rgb_ns_tensor)
 
-                    tf.save(mode, epoch, iteration, True)
+                    input_map = {"rgb": rgb_ws_tensor, "rgb_ns" : rgb_ns_tensor, "shadow_matte" : shadow_matte_tensor}
+                    tf.visdom_visualize(mode, input_map, "Test ISTD")
+
+                    _, rgb_ws_batch = next(itertools.cycle(rw_loader))
+                    rgb_ws_tensor = rgb_ws_batch.to(device)
+                    input_map = {"rgb": rgb_ws_tensor}
+                    tf.visdom_infer(mode, input_map)
+
+
 
             if (tf.is_stop_condition_met(mode)):
                 break
