@@ -68,8 +68,8 @@ class IIDServerConfig():
         STYLE_TRANSFER = "style_transferred"
         ISTD_MIX_KEY = "istd_mix"
 
-        network_config["unlit_version_name"] = "synth2unlit_v1.00_1.pt"
-        network_config["da_version_name"] = "embedding_v5.00_5"
+        # network_config["unlit_version_name"] = "synth2unlit_v1.00_1.pt"
+        # network_config["da_version_name"] = "embedding_v5.00_5"
 
         if (version == "v17.07" or version == "v16.07" or version == "v13.07" or version == "v12.07"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
