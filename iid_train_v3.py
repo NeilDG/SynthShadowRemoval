@@ -75,7 +75,7 @@ def update_config(opts):
         constants.rgb_dir_ws_styled = "C:/Datasets/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
         constants.rgb_dir_ns_styled = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
         constants.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 8/train_rgb/*/*.png"
-        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows/"
+        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
         constants.albedo_dir = "C:/Datasets/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "C:/Datasets/SynthWeather Dataset 8/unlit/"
         constants.ws_istd ="C:/Datasets/ISTD_Dataset/test/test_A/*.png"
