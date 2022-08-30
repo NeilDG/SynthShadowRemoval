@@ -34,10 +34,10 @@ class TrainerFactory():
 
         # self.initialize_da_network(self.network_config["da_version_name"])
         # self.initialize_unlit_network(self.network_config["unlit_version_name"])
-        self.trainer_list["train_albedo_mask"].assign_embedder_decoder(self.embedder, self.decoder_fixed)
-        self.trainer_list["train_albedo"].assign_embedder_decoder(self.embedder, self.decoder_fixed)
-        self.trainer_list["train_shading"].assign_embedder_decoder(self.embedder, self.decoder_fixed)
-        self.trainer_list["train_shadow"].assign_embedder_decoder(self.embedder, self.decoder_fixed)
+        # self.trainer_list["train_albedo_mask"].assign_embedder_decoder(self.embedder, self.decoder_fixed)
+        # self.trainer_list["train_albedo"].assign_embedder_decoder(self.embedder, self.decoder_fixed)
+        # self.trainer_list["train_shading"].assign_embedder_decoder(self.embedder, self.decoder_fixed)
+        # self.trainer_list["train_shadow"].assign_embedder_decoder(self.embedder, self.decoder_fixed)
 
     def get_all_trainers(self, opts):
         self.initialize_all_trainers(opts)

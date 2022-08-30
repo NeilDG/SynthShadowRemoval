@@ -39,10 +39,10 @@ parser.add_option('--input_path', type=str)
 parser.add_option('--output_path', type=str)
 parser.add_option('--img_size', type=int, default=(256, 256))
 
-version_a ="v13.07"
-iteration_a = 8
-version_s = "v12.07"
-iteration_s = 15
+# version_a ="v13.07"
+# iteration_a = 8
+# version_s = "v12.07"
+# iteration_s = 15
 # version_z = "v16.10"
 # iteration_z = 10
 
@@ -118,23 +118,23 @@ def main(argv):
     iid_server_config.IIDServerConfig.initialize(opts.version)
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
 
-    version_z = opts.version
-    iteration_z = opts.iteration
-
-    opts.version = version_a
-    opts.iteration = iteration_a
+    # version_z = opts.version
+    # iteration_z = opts.iteration
+    #
+    # opts.version = version_a
+    # opts.iteration = iteration_a
     sc_instance.update_version_config(opts.version)
     tf = trainer_factory.TrainerFactory(device, opts)
     albedo_t = tf.get_albedo_trainer()
 
-    opts.version = version_s
-    opts.iteration = iteration_s
+    # opts.version = version_s
+    # opts.iteration = iteration_s
     sc_instance.update_version_config(opts.version)
     tf = trainer_factory.TrainerFactory(device, opts)
     shading_t = tf.get_shading_trainer()
 
-    opts.version = version_z
-    opts.iteration = iteration_z
+    # opts.version = version_z
+    # opts.iteration = iteration_z
     sc_instance.update_version_config(opts.version)
     tf = trainer_factory.TrainerFactory(device, opts)
     shadow_t = tf.get_shadow_trainer()
@@ -173,7 +173,7 @@ def main(argv):
         rgb_ns_tensor = rgb_ns.to(device)
 
         dataset_tester.test_shadow(rgb_ws_tensor, rgb_ns_tensor, "ISTD", opts)
-        # break
+        break
 
     dataset_tester.print_ave_shadow_performance("ISTD", opts)
 
