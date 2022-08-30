@@ -100,6 +100,8 @@ def main(argv):
     print("=====================BEGIN============================")
     print("Server config? %d Has GPU available? %d Count: %d" % (constants.server_config, torch.cuda.is_available(), torch.cuda.device_count()))
     print("Torch CUDA version: %s" % torch.version.cuda)
+    
+    torch.multiprocessing.set_sharing_strategy('file_system')
 
     manualSeed = 0
     random.seed(manualSeed)
