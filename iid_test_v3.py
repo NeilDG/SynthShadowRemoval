@@ -173,7 +173,7 @@ def main(argv):
         rgb_ns_tensor = rgb_ns.to(device)
 
         dataset_tester.test_shadow(rgb_ws_tensor, rgb_ns_tensor, "ISTD", opts)
-        break
+        # break
 
     dataset_tester.print_ave_shadow_performance("ISTD", opts)
 
