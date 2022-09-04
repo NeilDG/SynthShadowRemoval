@@ -21,14 +21,14 @@ class IIDServerConfig():
                                     "train_albedo_mask": {"min_epochs": 3, "max_epochs" : 10, "patch_size": 256},
                                     "train_albedo": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64},
                                     "train_shading": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64},
-                                    "train_shadow": {"min_epochs": 20,"max_epochs" : 60, "patch_size": 64}}
+                                    "train_shadow": {"min_epochs": 10,"max_epochs" : 30, "patch_size": 128}}
         #debug
         if(constants.debug_run == 1):
             self.general_configs = {"train_style_transfer" : {"min_epochs" : 1, "max_epochs" : 5},
                                     "train_albedo_mask": {"min_epochs": 1, "max_epochs" : 2, "patch_size": 256},
                                    "train_albedo": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 64},
                                    "train_shading": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 64},
-                                    "train_shadow": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 64}}
+                                    "train_shadow": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 128}}
 
 
         self.version_config = {"version": version, "network_p_name": "rgb2mask", "network_a_name" : "rgb2albedo", "network_s_name" : "rgb2shading", "network_z_name" : "rgb2noshadow",
@@ -67,7 +67,7 @@ class IIDServerConfig():
         DA_ENABLED = "da_enabled"
         STYLE_TRANSFER = "style_transferred"
 
-        if (version == "v20.11"):  # Adain-GEN
+        if (version == "v21.11"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4
@@ -102,7 +102,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_S] = 128
                 network_config[BATCH_SIZE_KEY_Z] = 128
 
-        elif (version == "v20.12"):  # Adain-GEN
+        elif (version == "v21.12"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4
