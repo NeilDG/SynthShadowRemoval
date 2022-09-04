@@ -187,7 +187,7 @@ def load_shadow_train_dataset(ws_path, ns_path, ws_istd, ns_istd, patch_size, ba
     print("Length of images: %d %d" % (len(ws_list), len(ns_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        iid_test_datasets.ShadowPairedDataset(img_length, ws_list, ns_list, 1, patch_size),
+        iid_test_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 1, patch_size),
         batch_size=batch_size,
         num_workers=opts.num_workers,
         shuffle=False
@@ -203,7 +203,7 @@ def load_shadow_test_dataset(ws_path, ns_path, opts):
     print("Length of images: %d %d" % (len(ws_list), len(ns_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        iid_test_datasets.ShadowPairedDataset(img_length, ws_list, ns_list, 2),
+        iid_test_datasets.ShadowTestDataset(img_length, ws_list, ns_list, 2),
         batch_size=16,
         num_workers=1,
         shuffle=False

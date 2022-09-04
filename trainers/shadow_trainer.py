@@ -136,8 +136,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def train(self, epoch, iteration, input_map, target_map):
         input_rgb_tensor = input_map["rgb"]
         shadow_matte_tensor = target_map["shadow_matte"]
-        gamma_val = target_map["gamma_val"]
-        beta_val = target_map["beta_val"] #TODO: Check if normalization is needed
+        gamma_beta_val = target_map["gamma_beta_val"] #TODO: Check if normalization is needed
 
         with amp.autocast():
             if (self.da_enabled == 1):
@@ -147,8 +146,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
             #gamme-beta regressor
             self.optimizerGB.zero_grad()
-            print(np.shape(gamma_val), np.shape(beta_val))
-            l1_loss = self.l1_loss(self.GB_regressor(input_ws), torch.cat([gamma_val, beta_val], 1)) * 10.0
+            l1_loss = self.l1_loss(self.GB_regressor(input_ws), gamma_beta_val) * 10.0
             errGB = l1_loss
 
             self.fp16_scaler.scale(errGB).backward()
