@@ -34,7 +34,7 @@ class ShadowIterationTable():
 
         iteration = 10
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [100.0, 10.0, 0.0], is_bce=1)
-        
+
     def get_version(self, iteration):
         return self.iteration_table[str(iteration)].get_version()
 

@@ -154,9 +154,10 @@ def main(argv):
         for i, (_, rgb_ws_batch, rgb_ns_batch) in enumerate(train_loader, 0):
             rgb_ws_tensor = rgb_ws_batch.to(device)
             rgb_ns_tensor = rgb_ns_batch.to(device)
-            rgb_ws_tensor, rgb_ns_tensor, shadow_matte_tensor, _ = iid_op.decompose_shadow(rgb_ws_tensor, rgb_ns_tensor)
+            rgb_ws_tensor, rgb_ns_tensor, shadow_matte_tensor, _, gamma, beta = iid_op.decompose_shadow(rgb_ws_tensor, rgb_ns_tensor)
 
-            input_map = {"rgb": rgb_ws_tensor, "rgb_ns" : rgb_ns_tensor, "shadow_matte" : shadow_matte_tensor}
+            print(gamma, beta)
+            input_map = {"rgb": rgb_ws_tensor, "rgb_ns" : rgb_ns_tensor, "shadow_matte" : shadow_matte_tensor, "gamma_val": gamma, "beta_val": beta}
             target_map = input_map
 
             tf.train(mode, epoch, iteration, input_map, target_map)
