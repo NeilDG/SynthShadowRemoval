@@ -176,7 +176,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
-                network_config[BATCH_SIZE_KEY_Z] = 64
+                network_config[BATCH_SIZE_KEY_Z] = 72
 
         elif (version == "v19.12"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
