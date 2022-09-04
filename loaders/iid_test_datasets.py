@@ -198,11 +198,9 @@ class ShadowTestDataset(data.Dataset):
 
         self.final_transform_op = transforms.Compose([
             transforms.Resize(constants.TEST_IMAGE_SIZE),
-            transforms.ToTensor()
-            # transforms.Normalize((0.5,), (0.5,))
+            transforms.ToTensor(),
+            transforms.Normalize((0.5,), (0.5,))
         ])
-
-        self.shadow_op = iid_transforms.IIDTransform()
 
     def __getitem__(self, idx):
         file_name = self.img_list_a[idx].split("/")[-1].split(".png")[0]

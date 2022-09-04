@@ -135,7 +135,7 @@ class IIDTransform(nn.Module):
 
     def extract_relit(self, rgb_ws, gamma, beta):
         min = torch.min(rgb_ws)
-        max = torch.max(rgb_ws) * self.GAMMA
+        max = self.GAMMA
 
         relit_ws = (gamma * rgb_ws) + beta
         relit_ws = torch.clip(relit_ws, min, max)
