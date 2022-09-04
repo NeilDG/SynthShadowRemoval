@@ -21,7 +21,7 @@ class IIDServerConfig():
                                     "train_albedo_mask": {"min_epochs": 3, "max_epochs" : 10, "patch_size": 256},
                                     "train_albedo": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64},
                                     "train_shading": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64},
-                                    "train_shadow": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64}}
+                                    "train_shadow": {"min_epochs": 5,"max_epochs" : 20, "patch_size": 128}}
         #debug
         if(constants.debug_run == 1):
             self.general_configs = {"train_style_transfer" : {"min_epochs" : 1, "max_epochs" : 5},
@@ -71,7 +71,7 @@ class IIDServerConfig():
         # network_config["unlit_version_name"] = "synth2unlit_v1.00_1.pt"
         # network_config["da_version_name"] = "embedding_v5.00_5"
 
-        if (version == "v17.07" or version == "v16.07" or version == "v13.07" or version == "v12.07"):  # Adain-GEN
+        if (version == "v18.07" or version == "v17.07"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4
@@ -106,7 +106,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_S] = 128
                 network_config[BATCH_SIZE_KEY_Z] = 256
 
-        elif (version == "v17.10" or version == "v16.10" or version == "v13.10" or version == "v12.10"):  # Adain-GEN
+        elif (version == "v18.10" or version == "v17.10"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4
@@ -142,7 +142,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_S] = 128
                 network_config[BATCH_SIZE_KEY_Z] = 256
 
-        elif (version == "v17.11"):  # Adain-GEN
+        elif (version == "v19.11"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4
@@ -171,14 +171,14 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_P] = 8
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
-                network_config[BATCH_SIZE_KEY_Z] = 128
+                network_config[BATCH_SIZE_KEY_Z] = 32
             else:  # RTX 3090
                 network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
-                network_config[BATCH_SIZE_KEY_Z] = 256
+                network_config[BATCH_SIZE_KEY_Z] = 64
 
-        elif (version == "v17.12"):  # Adain-GEN
+        elif (version == "v19.12"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4
@@ -207,12 +207,12 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_P] = 8
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
-                network_config[BATCH_SIZE_KEY_Z] = 128
+                network_config[BATCH_SIZE_KEY_Z] = 32
             else:  # RTX 3090
                 network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
-                network_config[BATCH_SIZE_KEY_Z] = 256
+                network_config[BATCH_SIZE_KEY_Z] = 64
 
         return network_config
 

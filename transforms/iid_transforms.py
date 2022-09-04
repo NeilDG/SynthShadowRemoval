@@ -12,8 +12,10 @@ import torchvision.transforms as transforms
 
 
 class IIDTransform(nn.Module):
-    GAMMA = 0.95
-    BETA = 0.55
+    # GAMMA = 0.95
+    # BETA = 0.55
+    GAMMA = 1.25
+    BETA = 0.95
 
     def __init__(self):
         super(IIDTransform, self).__init__()
@@ -129,10 +131,8 @@ class IIDTransform(nn.Module):
         return shading_tensor
 
     def extract_relit(self, rgb_ws, gamma, beta):
-        # min = torch.min(rgb_ws)
-        # max = torch.max(rgb_ws)
-        min = 0.0
-        max = 1.0
+        min = torch.min(rgb_ws)
+        max = torch.max(rgb_ws) * gamma
 
         relit_ws = (gamma * rgb_ws) + beta
         relit_ws = torch.clip(relit_ws, min, max)

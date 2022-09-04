@@ -11,11 +11,7 @@ import kornia
 import torch
 import torch.nn.parallel
 import torch.utils.data
-import torchvision.utils
-import torchvision.utils as vutils
 import numpy as np
-from torchvision.transforms import transforms
-
 import iid_test_v2
 from config import iid_server_config
 from iid_test_v2 import TesterClass
@@ -39,10 +35,10 @@ parser.add_option('--input_path', type=str)
 parser.add_option('--output_path', type=str)
 parser.add_option('--img_size', type=int, default=(256, 256))
 
-version_a ="v13.07"
-iteration_a = 8
-version_s = "v12.07"
-iteration_s = 15
+# version_a ="v13.07"
+# iteration_a = 8
+# version_s = "v12.07"
+# iteration_s = 15
 # version_z = "v16.10"
 # iteration_z = 10
 
@@ -118,23 +114,23 @@ def main(argv):
     iid_server_config.IIDServerConfig.initialize(opts.version)
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
 
-    version_z = opts.version
-    iteration_z = opts.iteration
-
-    opts.version = version_a
-    opts.iteration = iteration_a
+    # version_z = opts.version
+    # iteration_z = opts.iteration
+    #
+    # opts.version = version_a
+    # opts.iteration = iteration_a
     sc_instance.update_version_config(opts.version)
     tf = trainer_factory.TrainerFactory(device, opts)
     albedo_t = tf.get_albedo_trainer()
 
-    opts.version = version_s
-    opts.iteration = iteration_s
+    # opts.version = version_s
+    # opts.iteration = iteration_s
     sc_instance.update_version_config(opts.version)
     tf = trainer_factory.TrainerFactory(device, opts)
     shading_t = tf.get_shading_trainer()
 
-    opts.version = version_z
-    opts.iteration = iteration_z
+    # opts.version = version_z
+    # opts.iteration = iteration_z
     sc_instance.update_version_config(opts.version)
     tf = trainer_factory.TrainerFactory(device, opts)
     shadow_t = tf.get_shadow_trainer()
@@ -142,7 +138,7 @@ def main(argv):
     dataset_tester = TesterClass(albedo_t, shading_t, shadow_t)
 
     # style_enabled = network_config["style_transferred"]
-    style_enabled = 0
+    style_enabled = 1
     if (style_enabled == 1):
         rgb_dir_ws = constants.rgb_dir_ws_styled
         rgb_dir_ns = constants.rgb_dir_ns_styled
