@@ -156,7 +156,6 @@ def main(argv):
             rgb_ns_tensor = rgb_ns_batch.to(device)
             rgb_ws_tensor, rgb_ns_tensor, shadow_matte_tensor, _, gamma, beta = iid_op.decompose_shadow(rgb_ws_tensor, rgb_ns_tensor)
 
-            print(gamma, beta)
             input_map = {"rgb": rgb_ws_tensor, "rgb_ns" : rgb_ns_tensor, "shadow_matte" : shadow_matte_tensor, "gamma_val": gamma, "beta_val": beta}
             target_map = input_map
 

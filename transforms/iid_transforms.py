@@ -46,9 +46,11 @@ class IIDTransform(nn.Module):
         return output_tensor.masked_fill_(masked_tensor, 0)
 
     def decompose_shadow(self, rgb_ws, rgb_ns):
-
-        gamma = self.GAMMA
-        beta = self.BETA #TODO: Randomize uniformly. Move gamma-beta calculation on dataset
+        #TODO: Randomize uniformly. Move gamma-beta calculation on dataset
+        gamma = torch.full_like(rgb_ws[:, 0, 0, 0], self.GAMMA)
+        beta = torch.full_like(rgb_ws[:, 0, 0, 0], self.BETA)
+        gamma = torch.unsqueeze(gamma, 1)
+        beta = torch.unsqueeze(beta, 1)
 
         shadow_matte = 1.0 - self.extract_shadow(rgb_ws, rgb_ns, True)
         rgb_ws = self.add_shadow(rgb_ns, shadow_matte, gamma, beta)
@@ -58,9 +60,6 @@ class IIDTransform(nn.Module):
         rgb_ns = self.transform_op(rgb_ns)
         shadow_matte = self.transform_op(shadow_matte)
         rgb_ws_relit = self.transform_op(rgb_ws_relit)
-
-        gamma = torch.tensor(gamma, dtype=torch.float)
-        beta = torch.tensor(beta, dtype = torch.float)
 
         return rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, gamma, beta
 
