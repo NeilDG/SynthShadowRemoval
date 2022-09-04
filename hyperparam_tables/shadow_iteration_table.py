@@ -5,35 +5,35 @@ class ShadowIterationTable():
         #initialize table
         self.iteration_table = {}
 
-        iteration = 1
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, [10.0, 1.0, 0.0], is_bce=0)
+        iteration = 11
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, [50.0, 0.0, 0.0], is_bce=0)
 
-        iteration = 2
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, [10.0, 1.0, 0.0], is_bce=1)
+        iteration = 12
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, [50.0, 0.0, 0.0], is_bce=1)
 
-        iteration = 3
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, [1.0, 10.0, 0.0], is_bce=0)
+        iteration = 13
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, [50.0, 1.0, 0.0], is_bce=0)
 
-        iteration = 4
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, [1.0, 10.0, 0.0], is_bce=1)
+        iteration = 14
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, [50.0, 1.0, 0.0], is_bce=1)
 
-        iteration = 5
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, [1.0, 1.0, 0.0], is_bce=0)
+        iteration = 15
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, [50.0, 10.0, 0.0], is_bce=0)
 
-        iteration = 6
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, [1.0, 1.0, 0.0], is_bce=1)
+        iteration = 16
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, [50.0, 10.0, 0.0], is_bce=1)
 
-        iteration = 7
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, [10.0, 1.0, 1.0], is_bce=0)
+        iteration = 17
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, [50.0, 1.0, 1.0], is_bce=0)
 
-        iteration = 8
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, [10.0, 1.0, 1.0], is_bce=1)
+        iteration = 18
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, [50.0, 1.0, 1.0], is_bce=1)
 
-        iteration = 9
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, [100.0, 10.0, 0.0], is_bce=0)
+        iteration = 19
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, [50.0, 10.0, 1.0], is_bce=0)
 
-        iteration = 10
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, [100.0, 10.0, 0.0], is_bce=1)
+        iteration = 20
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, [50.0, 10.0, 1.0], is_bce=1)
 
     def get_version(self, iteration):
         return self.iteration_table[str(iteration)].get_version()
