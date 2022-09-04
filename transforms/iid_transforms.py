@@ -47,20 +47,23 @@ class IIDTransform(nn.Module):
 
     def decompose_shadow(self, rgb_ws, rgb_ns):
 
+        gamma = self.GAMMA
+        beta = self.BETA #TODO: Randomize uniformly
+
         shadow_matte = 1.0 - self.extract_shadow(rgb_ws, rgb_ns, True)
-        rgb_ws = self.add_shadow(rgb_ns, shadow_matte, self.GAMMA, self.BETA)
-        rgb_ws_relit = self.extract_relit(rgb_ws, self.GAMMA, self.BETA)
+        rgb_ws = self.add_shadow(rgb_ns, shadow_matte, gamma, beta)
+        rgb_ws_relit = self.extract_relit(rgb_ws, gamma, beta)
 
         rgb_ws = self.transform_op(rgb_ws)
         rgb_ns = self.transform_op(rgb_ns)
         shadow_matte = self.transform_op(shadow_matte)
         rgb_ws_relit = self.transform_op(rgb_ws_relit)
 
-        return rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit
+        return rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, gamma, beta
 
     def forward(self, rgb_ws, rgb_ns, albedo_tensor):
         #extract shadows
-        rgb_ws, rgb_ns, shadow_matte, _ = self.decompose_shadow(rgb_ws, rgb_ns)
+        rgb_ws, rgb_ns, shadow_matte, _, _, _ = self.decompose_shadow(rgb_ws, rgb_ns)
 
         albedo_refined, shading_refined = self.decompose(rgb_ns, albedo_tensor, True)
         # rgb_recon = self.produce_rgb(albedo_refined, shading_refined, shadow_matte, False)

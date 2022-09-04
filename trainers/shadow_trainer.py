@@ -58,6 +58,9 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.schedulerG_shading = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG_shading, patience=100000 / self.batch_size, threshold=0.00005)
         self.schedulerD_shading = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD_shading, patience=100000 / self.batch_size, threshold=0.00005)
 
+        self.optimizerGB = torch.optim.Adam(itertools.chain(self.GB_regressor.parameters()), lr=self.g_lr)
+        self.schedulerGB = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerGB, patience=100000 / self.batch_size, threshold=0.00005)
+
         self.NETWORK_VERSION = sc_instance.get_version_config("network_z_name", self.iteration)
         self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
         self.load_saved_state()
@@ -65,6 +68,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def initialize_shadow_network(self, net_config, num_blocks, input_nc):
         network_creator = abstract_iid_trainer.NetworkCreator(self.gpu_device)
         self.G_SM_predictor, self.D_SM_discriminator = network_creator.initialize_shadow_network(net_config, num_blocks, input_nc)
+
+        self.GB_regressor = cycle_gan.Discriminator(3, 2).to(self.gpu_device)
 
     def adversarial_loss(self, pred, target):
         if (self.use_bce == 0):
@@ -128,6 +133,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def train(self, epoch, iteration, input_map, target_map):
         input_rgb_tensor = input_map["rgb"]
         shadow_matte_tensor = target_map["shadow_matte"]
+        gamma_val = target_map["gamma_val"]
+        beta_val = target_map["beta_val"] #TODO: Check if normalization is needed
 
         with amp.autocast():
             if (self.da_enabled == 1):
@@ -135,9 +142,18 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             else:
                 input_ws = input_rgb_tensor
 
-            self.optimizerD_shading.zero_grad()
+            #gamme-beta regressor
+            self.optimizerGB.zero_grad()
+            l1_loss = self.l1_loss(self.GB_regressor(input_ws), torch.cat([gamma_val, beta_val], 1)) * 10.0
+            errGB = l1_loss
+
+            self.fp16_scaler.scale(errGB).backward()
+            self.fp16_scaler.step(self.optimizerGB)
+            self.schedulerGB.step(errGB)
+            self.fp16_scaler.update()
 
             # shadow matte discriminator
+            self.optimizerD_shading.zero_grad()
             self.D_SM_discriminator.train()
             output = self.G_SM_predictor(input_ws)
             prediction = self.D_SM_discriminator(output)
@@ -153,9 +169,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 self.fp16_scaler.step(self.optimizerD_shading)
                 self.schedulerD_shading.step(errD)
 
-            self.optimizerG_shading.zero_grad()
-
             #shadow matte generator
+            self.optimizerG_shading.zero_grad()
             self.G_SM_predictor.train()
             rgb2sm = self.G_SM_predictor(input_ws)
             SM_likeness_loss = self.l1_loss(rgb2sm, shadow_matte_tensor) * self.it_table.get_l1_weight(self.iteration)
@@ -204,8 +219,9 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
             rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
             input_ws = tensor_utils.normalize_to_01(input_ws)
+            gamma_pred, beta_bred = torch.split(self.GB_regressor(input_ws), [1, 1])
 
-            rgb2relit = self.iid_op.extract_relit(input_ws, self.iid_op.GAMMA, self.iid_op.BETA)
+            rgb2relit = self.iid_op.extract_relit(input_ws, gamma_pred, beta_bred)
             rgb2ns = self.iid_op.remove_shadow(input_ws, rgb2relit, rgb2sm)
 
         return rgb2ns, rgb2sm
