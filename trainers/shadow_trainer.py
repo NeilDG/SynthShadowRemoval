@@ -235,8 +235,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def visdom_visualize(self, input_map, label="Train"):
         input_rgb_tensor = input_map["rgb"]
-        shadow_matte_tensor = input_map["shadow_matte"]
-        rgb2ns, rgb2sm, _ = self.test(input_map)
+        rgb2ns, rgb2sm, rgb2relit = self.test(input_map)
         input_ns = input_map["rgb_ns"]
 
         # input_rgb_tensor = tensor_utils.normalize_to_01(input_rgb_tensor)
@@ -252,8 +251,16 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + self.NETWORK_VERSION + str(self.iteration))
 
+        self.visdom_reporter.plot_image(rgb2relit, str(label) + " RGB Relit-Like images - " + self.NETWORK_VERSION + str(self.iteration))
+        if("rgb_relit" in input_map):
+            rgb_ws_relit = input_map["rgb_relit"]
+            self.visdom_reporter.plot_image(rgb_ws_relit, str(label) + " RGB Relit images - " + self.NETWORK_VERSION + str(self.iteration))
+
         self.visdom_reporter.plot_image(rgb2sm, str(label) + " Shadow-Like images - " + self.NETWORK_VERSION + str(self.iteration))
-        self.visdom_reporter.plot_image(shadow_matte_tensor, str(label) + " Shadow images - " + self.NETWORK_VERSION + str(self.iteration))
+        if ("shadow_matte" in input_map):
+            shadow_matte_tensor = input_map["shadow_matte"]
+            shadow_matte_tensor = tensor_utils.normalize_to_01(shadow_matte_tensor)
+            self.visdom_reporter.plot_image(shadow_matte_tensor, str(label) + " Shadow images - " + self.NETWORK_VERSION + str(self.iteration))
 
         self.visdom_reporter.plot_image(rgb2ns, str(label) + " RGB-NS (Equation) Images - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(input_ns, str(label) + " RGB No Shadow Images - " + self.NETWORK_VERSION + str(self.iteration))

@@ -140,13 +140,9 @@ class ShadowTrainDataset(data.Dataset):
         self.patch_size = (patch_size, patch_size)
 
         self.initial_op = transforms.Compose([
-            transforms.ToPILImage()])
-
-        self.final_transform_op = transforms.Compose([
+            transforms.ToPILImage(),
             transforms.Resize(constants.TEST_IMAGE_SIZE),
-            transforms.ToTensor()
-            # transforms.Normalize((0.5,), (0.5,))
-        ])
+            transforms.ToTensor()])
 
         self.shadow_op = iid_transforms.IIDTransform()
 
@@ -157,12 +153,10 @@ class ShadowTrainDataset(data.Dataset):
             rgb_ws = cv2.imread(self.img_list_a[idx])
             rgb_ws = cv2.cvtColor(rgb_ws, cv2.COLOR_BGR2RGB)
             rgb_ws = self.initial_op(rgb_ws)
-            rgb_ws = self.final_transform_op(rgb_ws)
 
             rgb_ns = cv2.imread(self.img_list_b[idx])
             rgb_ns = cv2.cvtColor(rgb_ns, cv2.COLOR_BGR2RGB)
             rgb_ns = self.initial_op(rgb_ns)
-            rgb_ns = self.final_transform_op(rgb_ns)
 
             if (self.transform_config == 1):
                 crop_indices = transforms.RandomCrop.get_params(rgb_ws, output_size=self.patch_size)
