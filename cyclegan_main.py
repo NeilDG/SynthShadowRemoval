@@ -68,13 +68,13 @@ def update_config(opts):
     elif (constants.server_config == 4):
         opts.num_workers = 6
         constants.imgx_dir = "C:/Datasets/Places Dataset/*.jpg"
-        constants.imgy_dir = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
+        constants.imgy_dir = "C:/Datasets/SynthWeather Dataset 9/rgb/*/*.png"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers, " ", opts.version)
     else:
         opts.num_workers = 12
         constants.imgx_dir = "E:/Places Dataset/*.jpg"
-        constants.imgy_dir = "E:/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
+        constants.imgy_dir = "E:/SynthWeather Dataset 9/rgb/*/*.png"
         # constants.imgy_dir = "E:/SynthWeather Dataset 8/albedo/*.png"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers, " ", opts.version)
 
@@ -119,7 +119,7 @@ def main(argv):
             gt.train(epoch, iteration, imgx_tensor, imgy_tensor, iteration)
             iteration = iteration + 1
 
-            if (i % 32 == 0):
+            if (i % 256 == 0):
                 print("Iteration:", iteration)
 
             if((i * network_config["img_per_iter"]) % (network_config["batch_size"] * 3) == 0): #every X batches
