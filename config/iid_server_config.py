@@ -159,6 +159,17 @@ class IIDServerConfig():
             network_config[PATCH_SIZE_KEY] = 32
             network_config[BATCH_SIZE_KEY] = 1024
             network_config[IMG_PER_ITER] = 16
+
+            if (constants.server_config == 1):  # COARE
+                network_config[IMG_PER_ITER] = 32
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[IMG_PER_ITER] = 64
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[IMG_PER_ITER] = 24
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[IMG_PER_ITER] = 16
+            else:  # RTX 3090
+                network_config[IMG_PER_ITER] = 32
         else:
             print("Network config not found for ", version)
 

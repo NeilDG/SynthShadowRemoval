@@ -47,23 +47,23 @@ def update_config(opts):
         opts.num_workers = 6
         print("Using COARE configuration. Workers: ", opts.num_workers, " ", opts.version)
         constants.imgx_dir = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
-        constants.imgy_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
+        constants.imgy_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 9/rgb/*/*.png"
         constants.imgx_dir_test = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
-        constants.imgy_dir_test = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
+        constants.imgy_dir_test = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 9/rgb/*/*.png"
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
         opts.num_workers = 12
         print("Using CCS configuration. Workers: ", opts.num_workers, " ", opts.version)
         constants.imgx_dir = "/home/jupyter-neil.delgallego/Places Dataset/*.jpg"
-        constants.imgy_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
+        constants.imgy_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 9/rgb/*/*.png"
 
     # GCLOUD
     elif (constants.server_config == 3):
         opts.num_workers = 8
         print("Using GCloud configuration. Workers: ", opts.num_workers, " ", opts.version)
         constants.imgx_dir = "/home/neil_delgallego/Places Dataset/*.jpg"
-        constants.imgy_dir = "/home/neil_delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
+        constants.imgy_dir = "/home/neil_delgallego/SynthWeather Dataset 9/rgb/*/*.png"
 
     elif (constants.server_config == 4):
         opts.num_workers = 6
