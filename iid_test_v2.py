@@ -308,6 +308,8 @@ class TesterClass():
         self.visdom_reporter.plot_text(display_text)
 
     def test_shadow(self, rgb_ws, rgb_ns, prefix, opts):
+        rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
+        rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
         rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, _, _ = self.iid_op.decompose_shadow(rgb_ws, rgb_ns)
 
         input_map = {"rgb": rgb_ws}

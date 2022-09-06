@@ -14,8 +14,12 @@ import torchvision.transforms as transforms
 class IIDTransform(nn.Module):
     # GAMMA = 0.95
     # BETA = 0.55
-    GAMMA = 1.25
-    BETA = 0.95
+    # GAMMA = 1.25
+    # BETA = 0.95
+    MIN_GAMMA = 1.35
+    MIN_BETA = 0.45
+    MAX_GAMMA = 2.25
+    MAX_BETA = 2.05
 
     def __init__(self):
         super(IIDTransform, self).__init__()
@@ -47,8 +51,8 @@ class IIDTransform(nn.Module):
 
     def decompose_shadow(self, rgb_ws, rgb_ns):
         #TODO: Randomize uniformly. Move gamma-beta calculation on dataset
-        gamma = torch.tensor(self.GAMMA, dtype=torch.float)
-        beta = torch.tensor(self.BETA, dtype=torch.float)
+        gamma = torch.tensor(np.random.uniform(self.MIN_GAMMA, self.MAX_GAMMA), dtype=torch.float)
+        beta = torch.tensor(np.random.uniform(self.MIN_BETA, self.MAX_BETA), dtype=torch.float)
 
         shadow_matte = 1.0 - self.extract_shadow(rgb_ws, rgb_ns, True)
         rgb_ws = self.add_shadow(rgb_ns, shadow_matte, gamma, beta)
@@ -135,7 +139,7 @@ class IIDTransform(nn.Module):
 
     def extract_relit(self, rgb_ws, gamma, beta):
         min = torch.min(rgb_ws)
-        max = self.GAMMA
+        max = torch.tensor(self.MAX_GAMMA)
 
         relit_ws = (gamma * rgb_ws) + beta
         relit_ws = torch.clip(relit_ws, min, max)
