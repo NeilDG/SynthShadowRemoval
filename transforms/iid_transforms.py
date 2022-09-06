@@ -18,8 +18,8 @@ class IIDTransform(nn.Module):
     # BETA = 0.95
     MIN_GAMMA = 1.35
     MIN_BETA = 0.45
-    MAX_GAMMA = 2.25
-    MAX_BETA = 2.05
+    MAX_GAMMA = 1.75
+    MAX_BETA = 1.55
 
     def __init__(self):
         super(IIDTransform, self).__init__()
