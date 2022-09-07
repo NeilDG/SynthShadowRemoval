@@ -19,8 +19,8 @@ module load cuda/10.1_cudnn-7.6.5
 
 source activate NeilGAN_V2
 
-srun python iid_train_v2.py \
---version="v15.10" --iteration=$ITERATION \
+srun python iid_train_v3.py \
+--version="v22.11" --iteration=$ITERATION \
 --server_config=1 --plot_enabled=0 --img_to_load=-1
 
 conda deactivate
