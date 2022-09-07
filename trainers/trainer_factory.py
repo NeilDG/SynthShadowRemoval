@@ -27,7 +27,6 @@ class TrainerFactory():
         self.server_config = sc_instance.get_general_configs()
         self.network_config = sc_instance.interpret_network_config_from_version(opts.version)
 
-        self.trainer_list["train_albedo_mask"] = AlbedoMaskTrainer(self.gpu_device, opts)
         self.trainer_list["train_albedo"] = AlbedoTrainer(self.gpu_device, opts)
         self.trainer_list["train_shading"] = ShadingTrainer(self.gpu_device, opts)
         self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device, opts)
@@ -41,7 +40,7 @@ class TrainerFactory():
 
     def get_all_trainers(self, opts):
         self.initialize_all_trainers(opts)
-        return self.trainer_list["train_albedo_mask"], self.trainer_list["train_albedo"], self.trainer_list["train_shading"], self.trainer_list["train_shadow"]
+        return self.trainer_list["train_albedo"], self.trainer_list["train_shading"], self.trainer_list["train_shadow"]
 
     def get_albedo_trainer(self):
         if("train_albedo" in self.trainer_list):
