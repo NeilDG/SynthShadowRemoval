@@ -7,9 +7,9 @@ def test_relighting():
               "--plot_enabled=1 --version=\"v21.11\" --iteration=1 "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
-    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-    #           "--plot_enabled=1 --version=\"v21.11\" --iteration=2 "
-    #           "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
+    os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+              "--plot_enabled=1 --version=\"v21.11\" --iteration=2 "
+              "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
 def main():
     # os.system("python \"processing/dataset_creator.py\"")

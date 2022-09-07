@@ -3,16 +3,13 @@
 import os
 def train_relighting():
     os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-              "--plot_enabled=0 --version=\"v21.11\" --iteration=1")
+              "--plot_enabled=0 --version=\"v21.11\" --iteration=5")
 
     os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-              "--plot_enabled=0 --version=\"v21.11\" --iteration=2")
+              "--plot_enabled=0 --version=\"v21.11\" --iteration=3")
 
-    # os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-    #           "--plot_enabled=0 --version=\"v21.11\" --iteration=3")
-    #
-    # os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-    #           "--plot_enabled=0 --version=\"v21.11\" --iteration=4")
+    os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
+              "--plot_enabled=0 --version=\"v21.11\" --iteration=4")
 
 
 def train_domain_adaptation():
@@ -57,7 +54,7 @@ def train_unlit():
 def main():
     # train_unlit()
     # train_domain_adaptation()
-    # train_relighting()
+    train_relighting()
     # train_embedding()
     # os.system("shutdown /s /t 1")
 
