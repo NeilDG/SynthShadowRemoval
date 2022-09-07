@@ -77,6 +77,7 @@ class Generator(nn.Module):
                  use_cbam = False, norm = "batch"):
         super(Generator, self).__init__()
 
+        print("Set CycleGAN norm to: ", norm)
         # Initial convolution block       
         model = [   nn.ReflectionPad2d(2),
                     nn.Conv2d(input_nc, 64, 8),

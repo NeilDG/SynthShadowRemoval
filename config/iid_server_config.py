@@ -146,20 +146,74 @@ class IIDServerConfig():
         BATCH_SIZE_KEY = "batch_size"
         PATCH_SIZE_KEY = "patch_size"
         IMG_PER_ITER = "img_per_iter"
+        NORM_MODE_KEY = "norm_mode"
 
-        if(version == "v6.03"): #AdainGEN
+        if(version == "v7.03"): #AdainGEN
             network_config[NETWORK_CONFIG_NUM] = 3
             network_config[NUM_BLOCKS_KEY] = 4
             network_config[PATCH_SIZE_KEY] = 32
             network_config[BATCH_SIZE_KEY] = 512
             network_config[IMG_PER_ITER] = 8
-        elif(version == "v6.04"): #Unet
+        elif(version == "v7.04"): #Unet
             network_config[NETWORK_CONFIG_NUM] = 2
             network_config[NUM_BLOCKS_KEY] = 0
             network_config[PATCH_SIZE_KEY] = 32
             network_config[BATCH_SIZE_KEY] = 1024
             network_config[IMG_PER_ITER] = 16
+            network_config[NORM_MODE_KEY] = "batch"
 
+            if (constants.server_config == 1):  # COARE
+                network_config[IMG_PER_ITER] = 32
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[IMG_PER_ITER] = 48
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[IMG_PER_ITER] = 24
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[IMG_PER_ITER] = 16
+            else:  # RTX 3090
+                network_config[IMG_PER_ITER] = 32
+        elif (version == "v7.05"):  # Unet
+            network_config[NETWORK_CONFIG_NUM] = 2
+            network_config[NUM_BLOCKS_KEY] = 0
+            network_config[PATCH_SIZE_KEY] = 32
+            network_config[BATCH_SIZE_KEY] = 1024
+            network_config[IMG_PER_ITER] = 16
+            network_config[NORM_MODE_KEY] = "instance"
+
+            if (constants.server_config == 1):  # COARE
+                network_config[IMG_PER_ITER] = 32
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[IMG_PER_ITER] = 48
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[IMG_PER_ITER] = 24
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[IMG_PER_ITER] = 16
+            else:  # RTX 3090
+                network_config[IMG_PER_ITER] = 32
+        elif (version == "v7.06"):  # Cycle-GAN
+            network_config[NETWORK_CONFIG_NUM] = 1
+            network_config[NUM_BLOCKS_KEY] = 0
+            network_config[PATCH_SIZE_KEY] = 32
+            network_config[BATCH_SIZE_KEY] = 1024
+            network_config[IMG_PER_ITER] = 16
+            network_config[NORM_MODE_KEY] = "batch"
+            if (constants.server_config == 1):  # COARE
+                network_config[IMG_PER_ITER] = 32
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[IMG_PER_ITER] = 48
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[IMG_PER_ITER] = 24
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[IMG_PER_ITER] = 16
+            else:  # RTX 3090
+                network_config[IMG_PER_ITER] = 32
+        elif (version == "v7.07"):  # Cycle-GAN
+            network_config[NETWORK_CONFIG_NUM] = 1
+            network_config[NUM_BLOCKS_KEY] = 0
+            network_config[PATCH_SIZE_KEY] = 32
+            network_config[BATCH_SIZE_KEY] = 1024
+            network_config[IMG_PER_ITER] = 16
+            network_config[NORM_MODE_KEY] = "instance"
             if (constants.server_config == 1):  # COARE
                 network_config[IMG_PER_ITER] = 32
             elif (constants.server_config == 2):  # CCS JUPYTER
