@@ -47,8 +47,8 @@ def update_config(opts):
         constants.rgb_dir_ns = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows/"
         constants.albedo_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/unlit/"
-        constants.ws_istd = constants.rgb_dir_ws
-        constants.ns_istd = constants.rgb_dir_ns
+        constants.ws_istd = constants.rgb_dir_ws_styled
+        constants.ns_istd = constants.rgb_dir_ns_styled
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
