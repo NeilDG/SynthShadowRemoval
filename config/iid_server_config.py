@@ -280,13 +280,13 @@ class IIDServerConfig():
             network_config[NETWORK_CONFIG_NUM] = 2
             network_config[NUM_BLOCKS_KEY] = 0
             network_config[PATCH_SIZE_KEY] = 32
-            network_config[BATCH_SIZE_KEY] = 32
+            network_config[BATCH_SIZE_KEY] = 64
             network_config[NORM_MODE_KEY] = "instance"
 
             if (constants.server_config == 1):  # COARE
                 network_config[IMG_PER_ITER] = 32
             elif (constants.server_config == 2):  # CCS JUPYTER
-                network_config[IMG_PER_ITER] = 48
+                network_config[IMG_PER_ITER] = 64
             elif (constants.server_config == 3):  # GCLOUD
                 network_config[IMG_PER_ITER] = 24
             elif (constants.server_config == 4):  # RTX 2080Ti
