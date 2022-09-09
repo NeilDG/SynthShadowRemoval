@@ -286,7 +286,7 @@ class IIDServerConfig():
             if (constants.server_config == 1):  # COARE
                 network_config[IMG_PER_ITER] = 32
             elif (constants.server_config == 2):  # CCS JUPYTER
-                network_config[IMG_PER_ITER] = 64
+                network_config[IMG_PER_ITER] = 56
             elif (constants.server_config == 3):  # GCLOUD
                 network_config[IMG_PER_ITER] = 24
             elif (constants.server_config == 4):  # RTX 2080Ti
