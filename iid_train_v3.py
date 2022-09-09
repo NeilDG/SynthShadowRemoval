@@ -116,10 +116,11 @@ def main(argv):
 
     plot_utils.VisdomReporter.initialize()
 
-    iid_server_config.IIDServerConfig.initialize(opts.version)
+    constants.network_version = opts.version
+    iid_server_config.IIDServerConfig.initialize()
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
     general_config = sc_instance.get_general_configs()
-    network_config = sc_instance.interpret_network_config_from_version(opts.version)
+    network_config = sc_instance.interpret_network_config_from_version()
     print("General config:", general_config)
     print("Network config: ", network_config)
 

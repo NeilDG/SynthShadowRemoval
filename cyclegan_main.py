@@ -119,10 +119,8 @@ def main(argv):
             gt.train(epoch, iteration, imgx_tensor, imgy_tensor, iteration)
             iteration = iteration + 1
 
-            if (i % 256 == 0):
-                print("Iteration:", iteration)
-
             if((i * network_config["img_per_iter"]) % (network_config["batch_size"] * 3) == 0): #every X batches
+                print("Iteration:", iteration)
                 gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
 
                 gt.save_states(epoch, iteration, False)
