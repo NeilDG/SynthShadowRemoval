@@ -103,7 +103,7 @@ class CycleGANTrainer:
         self.iteration = opts.iteration
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         general_config = sc_instance.get_general_configs()
-        network_config = sc_instance.interpret_style_transfer_config_from_version(opts.version)
+        network_config = sc_instance.interpret_style_transfer_config_from_version()
 
         net_config = network_config["net_config"]
         num_blocks = network_config["num_blocks"]

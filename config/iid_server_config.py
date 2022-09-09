@@ -190,7 +190,7 @@ class IIDServerConfig():
 
         return network_config
 
-    def interpret_style_transfer_config_from_version(self, version):
+    def interpret_style_transfer_config_from_version(self):
         network_config = {}
         NETWORK_CONFIG_NUM = "net_config"
         NUM_BLOCKS_KEY = "num_blocks"
@@ -199,13 +199,13 @@ class IIDServerConfig():
         IMG_PER_ITER = "img_per_iter"
         NORM_MODE_KEY = "norm_mode"
 
-        if(version == "v7.03"): #AdainGEN
+        if(constants.network_version == "v7.03"): #AdainGEN
             network_config[NETWORK_CONFIG_NUM] = 3
             network_config[NUM_BLOCKS_KEY] = 4
             network_config[PATCH_SIZE_KEY] = 32
             network_config[BATCH_SIZE_KEY] = 512
             network_config[IMG_PER_ITER] = 8
-        elif(version == "v7.04"): #Unet
+        elif(constants.network_version == "v7.04"): #Unet
             network_config[NETWORK_CONFIG_NUM] = 2
             network_config[NUM_BLOCKS_KEY] = 0
             network_config[PATCH_SIZE_KEY] = 32
@@ -223,7 +223,7 @@ class IIDServerConfig():
                 network_config[IMG_PER_ITER] = 16
             else:  # RTX 3090
                 network_config[IMG_PER_ITER] = 32
-        elif (version == "v7.05"):  # Unet
+        elif (constants.network_version == "v7.05"):  # Unet
             network_config[NETWORK_CONFIG_NUM] = 2
             network_config[NUM_BLOCKS_KEY] = 0
             network_config[PATCH_SIZE_KEY] = 32
@@ -241,7 +241,7 @@ class IIDServerConfig():
                 network_config[IMG_PER_ITER] = 16
             else:  # RTX 3090
                 network_config[IMG_PER_ITER] = 32
-        elif (version == "v7.06"):  # Cycle-GAN
+        elif (constants.network_version == "v7.06"):  # Cycle-GAN
             network_config[NETWORK_CONFIG_NUM] = 1
             network_config[NUM_BLOCKS_KEY] = 0
             network_config[PATCH_SIZE_KEY] = 32
@@ -258,7 +258,7 @@ class IIDServerConfig():
                 network_config[IMG_PER_ITER] = 16
             else:  # RTX 3090
                 network_config[IMG_PER_ITER] = 32
-        elif (version == "v7.07"):  # Cycle-GAN
+        elif (constants.network_version == "v7.07"):  # Cycle-GAN
             network_config[NETWORK_CONFIG_NUM] = 1
             network_config[NUM_BLOCKS_KEY] = 0
             network_config[PATCH_SIZE_KEY] = 32
@@ -276,7 +276,7 @@ class IIDServerConfig():
             else:  # RTX 3090
                 network_config[IMG_PER_ITER] = 16
 
-        elif (version == "v7.08"):  # Unet
+        elif (constants.network_version == "v7.08"):  # Unet
             network_config[NETWORK_CONFIG_NUM] = 2
             network_config[NUM_BLOCKS_KEY] = 0
             network_config[PATCH_SIZE_KEY] = 32
@@ -294,7 +294,7 @@ class IIDServerConfig():
             else:  # RTX 3090
                 network_config[IMG_PER_ITER] = 32
 
-        elif (version == "v7.09"):  # Cycle-GAN
+        elif (constants.network_version == "v7.09"):  # Cycle-GAN
             network_config[NETWORK_CONFIG_NUM] = 1
             network_config[NUM_BLOCKS_KEY] = 0
             network_config[PATCH_SIZE_KEY] = 32
@@ -311,7 +311,7 @@ class IIDServerConfig():
             else:  # RTX 3090
                 network_config[IMG_PER_ITER] = 16
         else:
-            print("Network config not found for ", version)
+            print("Network config not found for ", constants.network_version)
 
         return network_config
 

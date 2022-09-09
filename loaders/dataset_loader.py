@@ -236,7 +236,7 @@ def load_gta_dataset(rgb_dir, albedo_dir, opts):
 
 def load_da_dataset_train(imgx_dir, imgy_dir, opts):
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
-    network_config = sc_instance.interpret_style_transfer_config_from_version(opts.version)
+    network_config = sc_instance.interpret_style_transfer_config_from_version()
 
     imgx_list = glob.glob(imgx_dir)
     imgy_list = glob.glob(imgy_dir)
@@ -303,7 +303,7 @@ def load_unlit_dataset_test(styled_dir, unlit_dir, opts):
 
 def load_da_dataset_test(imgx_dir, imgy_dir, opts):
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
-    network_config = sc_instance.interpret_style_transfer_config_from_version(opts.version)
+    network_config = sc_instance.interpret_style_transfer_config_from_version()
 
     imgx_list = glob.glob(imgx_dir)
     imgy_list = glob.glob(imgy_dir)

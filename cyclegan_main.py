@@ -94,10 +94,11 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    iid_server_config.IIDServerConfig.initialize(opts.version)
+    constants.network_version = opts.version
+    iid_server_config.IIDServerConfig.initialize()
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
     general_config = sc_instance.get_general_configs()
-    network_config = sc_instance.interpret_style_transfer_config_from_version(opts.version)
+    network_config = sc_instance.interpret_style_transfer_config_from_version()
 
     gt = cyclegan_trainer.CycleGANTrainer(device, opts)
     iteration = 0
@@ -119,7 +120,7 @@ def main(argv):
             gt.train(epoch, iteration, imgx_tensor, imgy_tensor, iteration)
             iteration = iteration + 1
 
-            if((i * network_config["img_per_iter"]) % (network_config["batch_size"] * 3) == 0): #every X batches
+            if((i * network_config["img_per_iter"]) % (network_config["batch_size"] * 300) == 0): #every X batches
                 print("Iteration:", iteration)
                 gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
 
