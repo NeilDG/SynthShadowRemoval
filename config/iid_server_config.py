@@ -4,37 +4,39 @@ class IIDServerConfig():
     _sharedInstance = None
 
     @staticmethod
-    def initialize(version):
+    def initialize():
         if(IIDServerConfig._sharedInstance == None):
-            IIDServerConfig._sharedInstance = IIDServerConfig(version)
+            IIDServerConfig._sharedInstance = IIDServerConfig()
 
     @staticmethod
     def getInstance():
         return IIDServerConfig._sharedInstance
 
-    def __init__(self, version):
+    def __init__(self):
         self.epoch_map = {"train_style_transfer" : 0, "train_albedo_mask" : 0, "train_albedo" : 0, "train_shading" : 0, "train_shadow" : 0}
 
         # COARE, CCS CLOUD, GCLOUD, RTX 2080TI, RTX 3090
         if(constants.server_config <= 5):
             self.general_configs = {"train_style_transfer" : {"min_epochs" : 5, "max_epochs" : 25},
+                                    "train_albedo_mask": {"min_epochs": 3, "max_epochs" : 10, "patch_size": 256},
                                     "train_albedo": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64},
                                     "train_shading": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64},
                                     "train_shadow": {"min_epochs": 10,"max_epochs" : 30, "patch_size": 64}}
         #debug
         if(constants.debug_run == 1):
             self.general_configs = {"train_style_transfer" : {"min_epochs" : 1, "max_epochs" : 5},
+                                    "train_albedo_mask": {"min_epochs": 1, "max_epochs" : 2, "patch_size": 256},
                                    "train_albedo": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 64},
                                    "train_shading": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 64},
                                     "train_shadow": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 64}}
 
 
-        self.version_config = {"version": version, "network_p_name": "rgb2mask", "network_a_name" : "rgb2albedo", "network_s_name" : "rgb2shading", "network_z_name" : "rgb2noshadow",
+        self.version_config = {"version": constants.network_version, "network_p_name": "rgb2mask", "network_a_name" : "rgb2albedo", "network_s_name" : "rgb2shading", "network_z_name" : "rgb2noshadow",
                                "style_transfer_name": "synth2rgb"}
 
 
-    def update_version_config(self, version):
-        self.version_config = {"version": version, "network_p_name": "rgb2mask", "network_a_name": "rgb2albedo", "network_s_name": "rgb2shading", "network_z_name": "rgb2noshadow",
+    def update_version_config(self):
+        self.version_config = {"version": constants.network_version, "network_p_name": "rgb2mask", "network_a_name": "rgb2albedo", "network_s_name": "rgb2shading", "network_z_name": "rgb2noshadow",
                                "style_transfer_name": "synth2rgb"}
 
     def get_general_configs(self):
@@ -52,7 +54,7 @@ class IIDServerConfig():
     def get_last_epoch_from_mode(self, mode):
         return self.epoch_map[mode]
 
-    def interpret_network_config_from_version(self, version): #interprets a given version name + iteration, to its corresponding network config. Ex: v.9.00.XX = U-Net config
+    def interpret_network_config_from_version(self): #interprets a given version name + iteration, to its corresponding network config. Ex: v.9.00.XX = U-Net config
         network_config = {}
         NETWORK_CONFIG_NUM = "net_config"
         NC_KEY = "nc"
@@ -64,76 +66,127 @@ class IIDServerConfig():
         ALBEDO_MODE_KEY = "albedo_mode"
         DA_ENABLED = "da_enabled"
         STYLE_TRANSFER = "style_transferred"
+        MIN_GAMMA = "min_gamma"
+        MAX_GAMMA = "max_gamma"
+        MIN_BETA = "min_beta"
+        MAX_BETA = "max_beta"
 
-        if (version == "v22.11"):  # Adain-GEN
+        if (constants.network_version == "v22.11"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4
             network_config[ALBEDO_MODE_KEY] = 1
             network_config[DA_ENABLED] = 0
             network_config[STYLE_TRANSFER] = 1
+            network_config[MIN_GAMMA] = 1.35
+            network_config[MIN_BETA] = 0.45
+            network_config[MAX_GAMMA] = 1.75
+            network_config[MAX_BETA] = 1.55
 
             # configure batch sizes
             if (constants.server_config == 1):  # COARE
-                network_config[BATCH_SIZE_KEY_P] = 256
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
-                network_config[BATCH_SIZE_KEY_Z] = 256
+                network_config[BATCH_SIZE_KEY_P] = 16
+                network_config[BATCH_SIZE_KEY_A] = 128
+                network_config[BATCH_SIZE_KEY_S] = 128
+                network_config[BATCH_SIZE_KEY_Z] = 16
             elif (constants.server_config == 2):  # CCS JUPYTER
-                network_config[BATCH_SIZE_KEY_P] = 256
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
+                network_config[BATCH_SIZE_KEY_P] = 24
+                network_config[BATCH_SIZE_KEY_A] = 192
+                network_config[BATCH_SIZE_KEY_S] = 192
                 network_config[BATCH_SIZE_KEY_Z] = 256
             elif (constants.server_config == 3):  # GCLOUD
-                network_config[BATCH_SIZE_KEY_P] = 256
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
+                network_config[BATCH_SIZE_KEY_P] = 16
+                network_config[BATCH_SIZE_KEY_A] = 128
+                network_config[BATCH_SIZE_KEY_S] = 128
                 network_config[BATCH_SIZE_KEY_Z] = 256
             elif (constants.server_config == 4):  # RTX 2080Ti
-                network_config[BATCH_SIZE_KEY_P] = 256
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
-                network_config[BATCH_SIZE_KEY_Z] = 256
+                network_config[BATCH_SIZE_KEY_P] = 8
+                network_config[BATCH_SIZE_KEY_A] = 128
+                network_config[BATCH_SIZE_KEY_S] = 128
+                network_config[BATCH_SIZE_KEY_Z] = 64
             else:  # RTX 3090
-                network_config[BATCH_SIZE_KEY_P] = 256
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
-                network_config[BATCH_SIZE_KEY_Z] = 256
+                network_config[BATCH_SIZE_KEY_P] = 16
+                network_config[BATCH_SIZE_KEY_A] = 128
+                network_config[BATCH_SIZE_KEY_S] = 128
+                network_config[BATCH_SIZE_KEY_Z] = 64
 
-        elif (version == "v22.12"):  # Adain-GEN
+        elif (constants.network_version == "v22.12"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4
             network_config[ALBEDO_MODE_KEY] = 1
             network_config[DA_ENABLED] = 0
             network_config[STYLE_TRANSFER] = 0
+            network_config[MIN_GAMMA] = 1.35
+            network_config[MIN_BETA] = 0.45
+            network_config[MAX_GAMMA] = 1.75
+            network_config[MAX_BETA] = 1.55
 
             # configure batch sizes
             if (constants.server_config == 1):  # COARE
-                network_config[BATCH_SIZE_KEY_P] = 256
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
-                network_config[BATCH_SIZE_KEY_Z] = 256
+                network_config[BATCH_SIZE_KEY_P] = 16
+                network_config[BATCH_SIZE_KEY_A] = 128
+                network_config[BATCH_SIZE_KEY_S] = 128
+                network_config[BATCH_SIZE_KEY_Z] = 16
             elif (constants.server_config == 2):  # CCS JUPYTER
-                network_config[BATCH_SIZE_KEY_P] = 256
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
+                network_config[BATCH_SIZE_KEY_P] = 24
+                network_config[BATCH_SIZE_KEY_A] = 192
+                network_config[BATCH_SIZE_KEY_S] = 192
                 network_config[BATCH_SIZE_KEY_Z] = 256
             elif (constants.server_config == 3):  # GCLOUD
-                network_config[BATCH_SIZE_KEY_P] = 256
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
+                network_config[BATCH_SIZE_KEY_P] = 16
+                network_config[BATCH_SIZE_KEY_A] = 128
+                network_config[BATCH_SIZE_KEY_S] = 128
                 network_config[BATCH_SIZE_KEY_Z] = 256
             elif (constants.server_config == 4):  # RTX 2080Ti
-                network_config[BATCH_SIZE_KEY_P] = 256
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
-                network_config[BATCH_SIZE_KEY_Z] = 256
+                network_config[BATCH_SIZE_KEY_P] = 8
+                network_config[BATCH_SIZE_KEY_A] = 128
+                network_config[BATCH_SIZE_KEY_S] = 128
+                network_config[BATCH_SIZE_KEY_Z] = 64
             else:  # RTX 3090
-                network_config[BATCH_SIZE_KEY_P] = 256
-                network_config[BATCH_SIZE_KEY_A] = 256
-                network_config[BATCH_SIZE_KEY_S] = 256
+                network_config[BATCH_SIZE_KEY_P] = 16
+                network_config[BATCH_SIZE_KEY_A] = 128
+                network_config[BATCH_SIZE_KEY_S] = 128
+                network_config[BATCH_SIZE_KEY_Z] = 64
+
+        elif (constants.network_version == "v24.11"):  # Adain-GEN
+            network_config[NETWORK_CONFIG_NUM] = 4
+            network_config[NC_KEY] = 3
+            network_config[NUM_BLOCKS_KEY] = 4
+            network_config[ALBEDO_MODE_KEY] = 1
+            network_config[DA_ENABLED] = 0
+            network_config[STYLE_TRANSFER] = 1
+            network_config[MIN_GAMMA] = 1.35
+            network_config[MIN_BETA] = 0.45
+            network_config[MAX_GAMMA] = 3.0625
+            network_config[MAX_BETA] = 2.7125
+
+            # configure batch sizes
+            if (constants.server_config == 1):  # COARE
+                network_config[BATCH_SIZE_KEY_P] = 16
+                network_config[BATCH_SIZE_KEY_A] = 128
+                network_config[BATCH_SIZE_KEY_S] = 128
+                network_config[BATCH_SIZE_KEY_Z] = 16
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[BATCH_SIZE_KEY_P] = 24
+                network_config[BATCH_SIZE_KEY_A] = 192
+                network_config[BATCH_SIZE_KEY_S] = 192
                 network_config[BATCH_SIZE_KEY_Z] = 256
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[BATCH_SIZE_KEY_P] = 16
+                network_config[BATCH_SIZE_KEY_A] = 128
+                network_config[BATCH_SIZE_KEY_S] = 128
+                network_config[BATCH_SIZE_KEY_Z] = 256
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[BATCH_SIZE_KEY_P] = 8
+                network_config[BATCH_SIZE_KEY_A] = 128
+                network_config[BATCH_SIZE_KEY_S] = 128
+                network_config[BATCH_SIZE_KEY_Z] = 64
+            else:  # RTX 3090
+                network_config[BATCH_SIZE_KEY_P] = 16
+                network_config[BATCH_SIZE_KEY_A] = 128
+                network_config[BATCH_SIZE_KEY_S] = 128
+                network_config[BATCH_SIZE_KEY_Z] = 64
 
         return network_config
 
@@ -144,20 +197,74 @@ class IIDServerConfig():
         BATCH_SIZE_KEY = "batch_size"
         PATCH_SIZE_KEY = "patch_size"
         IMG_PER_ITER = "img_per_iter"
+        NORM_MODE_KEY = "norm_mode"
 
-        if(version == "v6.03"): #AdainGEN
+        if(version == "v7.03"): #AdainGEN
             network_config[NETWORK_CONFIG_NUM] = 3
             network_config[NUM_BLOCKS_KEY] = 4
             network_config[PATCH_SIZE_KEY] = 32
             network_config[BATCH_SIZE_KEY] = 512
             network_config[IMG_PER_ITER] = 8
-        elif(version == "v6.04"): #Unet
+        elif(version == "v7.04"): #Unet
             network_config[NETWORK_CONFIG_NUM] = 2
             network_config[NUM_BLOCKS_KEY] = 0
             network_config[PATCH_SIZE_KEY] = 32
             network_config[BATCH_SIZE_KEY] = 1024
             network_config[IMG_PER_ITER] = 16
+            network_config[NORM_MODE_KEY] = "batch"
 
+            if (constants.server_config == 1):  # COARE
+                network_config[IMG_PER_ITER] = 32
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[IMG_PER_ITER] = 48
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[IMG_PER_ITER] = 24
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[IMG_PER_ITER] = 16
+            else:  # RTX 3090
+                network_config[IMG_PER_ITER] = 32
+        elif (version == "v7.05"):  # Unet
+            network_config[NETWORK_CONFIG_NUM] = 2
+            network_config[NUM_BLOCKS_KEY] = 0
+            network_config[PATCH_SIZE_KEY] = 32
+            network_config[BATCH_SIZE_KEY] = 1024
+            network_config[IMG_PER_ITER] = 16
+            network_config[NORM_MODE_KEY] = "instance"
+
+            if (constants.server_config == 1):  # COARE
+                network_config[IMG_PER_ITER] = 32
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[IMG_PER_ITER] = 48
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[IMG_PER_ITER] = 24
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[IMG_PER_ITER] = 16
+            else:  # RTX 3090
+                network_config[IMG_PER_ITER] = 32
+        elif (version == "v7.06"):  # Cycle-GAN
+            network_config[NETWORK_CONFIG_NUM] = 1
+            network_config[NUM_BLOCKS_KEY] = 0
+            network_config[PATCH_SIZE_KEY] = 32
+            network_config[BATCH_SIZE_KEY] = 1024
+            network_config[IMG_PER_ITER] = 16
+            network_config[NORM_MODE_KEY] = "batch"
+            if (constants.server_config == 1):  # COARE
+                network_config[IMG_PER_ITER] = 32
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[IMG_PER_ITER] = 48
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[IMG_PER_ITER] = 24
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[IMG_PER_ITER] = 16
+            else:  # RTX 3090
+                network_config[IMG_PER_ITER] = 32
+        elif (version == "v7.07"):  # Cycle-GAN
+            network_config[NETWORK_CONFIG_NUM] = 1
+            network_config[NUM_BLOCKS_KEY] = 0
+            network_config[PATCH_SIZE_KEY] = 32
+            network_config[BATCH_SIZE_KEY] = 1024
+            network_config[IMG_PER_ITER] = 16
+            network_config[NORM_MODE_KEY] = "instance"
             if (constants.server_config == 1):  # COARE
                 network_config[IMG_PER_ITER] = 32
             elif (constants.server_config == 2):  # CCS JUPYTER
