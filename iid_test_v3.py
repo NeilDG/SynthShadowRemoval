@@ -162,17 +162,17 @@ def main(argv):
     dataset_tester.print_ave_shadow_performance("Train Set", opts)
 
     # ISTD test dataset
-    # ws_path = "E:/ISTD_Dataset/test/test_A/*.png"
-    # ns_path = "E:/ISTD_Dataset/test/test_C/*.png"
-    # shadow_loader = dataset_loader.load_shadow_test_dataset(ws_path, ns_path, opts)
-    # for i, (file_name, rgb_ws, rgb_ns) in enumerate(shadow_loader, 0):
-    #     rgb_ws_tensor = rgb_ws.to(device)
-    #     rgb_ns_tensor = rgb_ns.to(device)
-    #
-    #     dataset_tester.test_istd_shadow(rgb_ws_tensor, rgb_ns_tensor, opts)
-    #     # break
-    #
-    # dataset_tester.print_ave_shadow_performance("ISTD", opts)
+    ws_path = "E:/ISTD_Dataset/test/test_A/*.png"
+    ns_path = "E:/ISTD_Dataset/test/test_C/*.png"
+    shadow_loader = dataset_loader.load_shadow_test_dataset(ws_path, ns_path, opts)
+    for i, (file_name, rgb_ws, rgb_ns) in enumerate(shadow_loader, 0):
+        rgb_ws_tensor = rgb_ws.to(device)
+        rgb_ns_tensor = rgb_ns.to(device)
+
+        dataset_tester.test_istd_shadow(rgb_ws_tensor, rgb_ns_tensor, opts)
+        # break
+
+    dataset_tester.print_ave_shadow_performance("ISTD", opts)
 
     # cgi_rgb_dir = "E:/CGIntrinsics/images/*/*_mlt.png"
     # rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
