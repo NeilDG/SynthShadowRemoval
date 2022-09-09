@@ -105,3 +105,5 @@ ns_istd = "E:/ISTD_Dataset/test/test_C/*.png"
 imgx_dir = "E:/Places Dataset/*.jpg"
 # imgy_dir = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"
 imgy_dir = "E:/SynthWeather Dataset 8/albedo/*.png"
+
+network_version = "VXX.XX"

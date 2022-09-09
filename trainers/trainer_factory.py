@@ -25,7 +25,7 @@ class TrainerFactory():
     def initialize_all_trainers(self, opts):
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         self.server_config = sc_instance.get_general_configs()
-        self.network_config = sc_instance.interpret_network_config_from_version(opts.version)
+        self.network_config = sc_instance.interpret_network_config_from_version()
 
         self.trainer_list["train_albedo_mask"] = AlbedoMaskTrainer(self.gpu_device, opts)
         self.trainer_list["train_albedo"] = AlbedoTrainer(self.gpu_device, opts)

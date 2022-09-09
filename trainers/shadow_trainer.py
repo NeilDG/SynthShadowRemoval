@@ -42,7 +42,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.visdom_reporter = plot_utils.VisdomReporter.getInstance()
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         general_config = sc_instance.get_general_configs()
-        network_config = sc_instance.interpret_network_config_from_version(opts.version)
+        network_config = sc_instance.interpret_network_config_from_version()
 
         self.batch_size = network_config["batch_size_z"]
         self.da_enabled = network_config["da_enabled"]
@@ -146,7 +146,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
             #gamme-beta regressor
             self.optimizerGB.zero_grad()
-            l1_loss = self.l1_loss(self.GB_regressor(input_ws), gamma_beta_val) * 10.0
+            l1_loss = self.mse_loss(self.GB_regressor(input_ws), gamma_beta_val) * 10.0
             errGB = l1_loss
 
             self.fp16_scaler.scale(errGB).backward()
@@ -219,10 +219,10 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
             # print("Tensor properties. Min: ", torch.min(input_ws), " Max:", torch.max(input_ws))
             rgb2sm = self.G_SM_predictor(input_ws)
+            gamma_pred, beta_pred = torch.split(self.GB_regressor(input_ws), [1, 1], 1)
 
             rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
             input_ws = tensor_utils.normalize_to_01(input_ws)
-            gamma_pred, beta_pred = torch.split(self.GB_regressor(input_ws), [1, 1], 1)
 
             rgb2relit = self.iid_op.extract_relit_batch(input_ws, gamma_pred, beta_pred)
             # rgb2relit = self.iid_op.extract_relit_batch(input_ws, torch.full_like(gamma_pred, self.iid_op.GAMMA), torch.full_like(beta_pred, self.iid_op.BETA))

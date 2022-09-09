@@ -370,7 +370,7 @@ def produce_color_images(INPUT_PATH, SAVE_PATH, CHECKPT_NAME, net_config, argv):
         color_transfer_gan = cycle_gan.Generator(n_residual_blocks=6, has_dropout=False).to(device)
     elif (net_config == 2):
         print("Using U-Net GAN")
-        color_transfer_gan = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=2).to(device)
+        color_transfer_gan = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=0).to(device)
     elif (net_config == 3):
         print("Using SynthDehazing CycleGAN")
         # color_transfer_gan = cycle_gan.SynthDehazingGenerator(downsampling_blocks=2, n_residual_blocks=10, has_dropout=False).to(device)
@@ -612,7 +612,7 @@ def main(argv):
     # base_path = "E:/SynthWeather Dataset 8/train_rgb_noshadows/"
     # output_base_path = "E:/SynthWeather Dataset 8/train_rgb_styled/"
     # output_base_path = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
-    output_base_path = "E:/SynthWeather Dataset 9/rgb_styled/"
+    output_base_path = "E:/SynthWeather Dataset 9/temp/"
     try:
         os.mkdir(output_base_path)
     except OSError as error:
@@ -623,8 +623,8 @@ def main(argv):
     for dir in dirlist:
         input_path = base_path + dir + "/*.png"
         output_path = output_base_path + dir + "/"
-        # produce_color_images(input_path, output_path, "synth2rgb_v5.00_12.pt", 2, argv)
-        produce_color_images(input_path, output_path, "color_transfer_v1.11_2.pth", 3, argv)
+        produce_color_images(input_path, output_path, "synth2rgb_v6.04_14.pt", 2, argv)
+        # produce_color_images(input_path, output_path, "color_transfer_v1.11_2.pth", 3, argv)
 
     # create_patches(argv)
 
