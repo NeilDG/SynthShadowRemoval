@@ -276,11 +276,11 @@ class IIDServerConfig():
             else:  # RTX 3090
                 network_config[IMG_PER_ITER] = 16
 
-        elif (constants.network_version == "v7.08"):  # Unet
+        elif (constants.network_version == "v7.10"):  # Unet
             network_config[NETWORK_CONFIG_NUM] = 2
             network_config[NUM_BLOCKS_KEY] = 0
             network_config[PATCH_SIZE_KEY] = 32
-            network_config[BATCH_SIZE_KEY] = 64
+            network_config[BATCH_SIZE_KEY] = 256
             network_config[NORM_MODE_KEY] = "instance"
 
             if (constants.server_config == 1):  # COARE
