@@ -71,7 +71,7 @@ class IIDServerConfig():
         MIN_BETA = "min_beta"
         MAX_BETA = "max_beta"
 
-        if (constants.network_version == "v21.11"):  # Adain-GEN
+        if (constants.network_version == "v25.11"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4
@@ -80,8 +80,8 @@ class IIDServerConfig():
             network_config[STYLE_TRANSFER] = 1
             network_config[MIN_GAMMA] = 1.35
             network_config[MIN_BETA] = 0.45
-            network_config[MAX_GAMMA] = 1.75
-            network_config[MAX_BETA] = 1.55
+            network_config[MAX_GAMMA] = 1.35
+            network_config[MAX_BETA] = 0.45
 
             # configure batch sizes
             if (constants.server_config == 1):  # COARE
@@ -110,7 +110,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_S] = 128
                 network_config[BATCH_SIZE_KEY_Z] = 64
 
-        elif (constants.network_version == "v21.12"):  # Adain-GEN
+        elif (constants.network_version == "v25.12"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4
@@ -149,7 +149,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_S] = 128
                 network_config[BATCH_SIZE_KEY_Z] = 64
 
-        elif (constants.network_version == "v24.11"):  # Adain-GEN
+        elif (constants.network_version == "v26.11"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4

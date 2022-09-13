@@ -2,7 +2,7 @@ from config import iid_server_config
 from trainers import abstract_iid_trainer, early_stopper
 import kornia
 from model.modules import image_pool
-from model import vanilla_cycle_gan as cycle_gan
+from model import vanilla_cycle_gan as cycle_gan, custom_models
 import constants
 import torch
 import torch.cuda.amp as amp
@@ -35,6 +35,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.bce_loss = nn.BCEWithLogitsLoss()
 
         self.D_SM_pool = image_pool.ImagePool(50)
+        self.D_relit_pool = image_pool.ImagePool(50)
 
         self.iid_op = iid_transforms.IIDTransform().to(self.gpu_device)
         self.fp16_scaler = amp.GradScaler()  # for automatic mixed precision
@@ -58,8 +59,10 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.schedulerG_shading = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG_shading, patience=100000 / self.batch_size, threshold=0.00005)
         self.schedulerD_shading = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD_shading, patience=100000 / self.batch_size, threshold=0.00005)
 
-        self.optimizerGB = torch.optim.Adam(itertools.chain(self.GB_regressor.parameters()), lr=self.g_lr)
-        self.schedulerGB = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerGB, patience=100000 / self.batch_size, threshold=0.00005)
+        self.optimizerG_relit = torch.optim.Adam(itertools.chain(self.G_relit.parameters()), lr=self.g_lr)
+        self.optimizerD_relit = torch.optim.Adam(itertools.chain(self.D_relit.parameters()), lr=self.g_lr)
+        self.schedulerG_relit = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG_relit, patience=100000 / self.batch_size, threshold=0.00005)
+        self.schedulerD_relit = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD_relit, patience=100000 / self.batch_size, threshold=0.00005)
 
         self.NETWORK_VERSION = sc_instance.get_version_config("network_z_name", self.iteration)
         self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
@@ -67,9 +70,11 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def initialize_shadow_network(self, net_config, num_blocks, input_nc):
         network_creator = abstract_iid_trainer.NetworkCreator(self.gpu_device)
+
         self.G_SM_predictor, self.D_SM_discriminator = network_creator.initialize_shadow_network(net_config, num_blocks, input_nc)
 
-        self.GB_regressor = cycle_gan.Discriminator(3, 2).to(self.gpu_device)
+        self.G_relit = custom_models.RelitGenerator(input_nc, num_blocks).to(self.gpu_device)
+        self.D_relit = cycle_gan.Discriminator(input_nc, 1).to(self.gpu_device)
 
     def adversarial_loss(self, pred, target):
         if (self.use_bce == 0):
@@ -108,9 +113,26 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def initialize_dict(self):
         # what to store in visdom?
+        self.losses_dict_r = {}
+        self.losses_dict_r[constants.G_LOSS_KEY] = []
+        self.losses_dict_r[constants.D_OVERALL_LOSS_KEY] = []
+        self.losses_dict_r[constants.LIKENESS_LOSS_KEY] = []
+        self.losses_dict_r[constants.LPIP_LOSS_KEY] = []
+        self.losses_dict_r[constants.G_ADV_LOSS_KEY] = []
+        self.losses_dict_r[constants.D_A_FAKE_LOSS_KEY] = []
+        self.losses_dict_r[constants.D_A_REAL_LOSS_KEY] = []
+
+
+        self.caption_dict_r = {}
+        self.caption_dict_r[constants.G_LOSS_KEY] = "Shadow G loss per iteration"
+        self.caption_dict_r[constants.D_OVERALL_LOSS_KEY] = "D loss per iteration"
+        self.caption_dict_r[constants.LIKENESS_LOSS_KEY] = "L1 loss per iteration"
+        self.caption_dict_r[constants.LPIP_LOSS_KEY] = "LPIPS loss per iteration"
+        self.caption_dict_r[constants.G_ADV_LOSS_KEY] = "G adv loss per iteration"
+        self.caption_dict_r[constants.D_A_FAKE_LOSS_KEY] = "D fake loss per iteration"
+        self.caption_dict_r[constants.D_A_REAL_LOSS_KEY] = "D real loss per iteration"
+
         self.losses_dict_s = {}
-        self.GB_LOSS_KEY = "GB_LOSS_KEY"
-        self.losses_dict_s[self.GB_LOSS_KEY] = []
         self.losses_dict_s[constants.G_LOSS_KEY] = []
         self.losses_dict_s[constants.D_OVERALL_LOSS_KEY] = []
         self.losses_dict_s[constants.LIKENESS_LOSS_KEY] = []
@@ -122,7 +144,6 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.losses_dict_s[self.MASK_LOSS_KEY] = []
 
         self.caption_dict_s = {}
-        self.caption_dict_s[self.GB_LOSS_KEY] = "Gamma-beta loss per iteration"
         self.caption_dict_s[constants.G_LOSS_KEY] = "Shadow G loss per iteration"
         self.caption_dict_s[constants.D_OVERALL_LOSS_KEY] = "D loss per iteration"
         self.caption_dict_s[constants.LIKENESS_LOSS_KEY] = "L1 loss per iteration"
@@ -133,10 +154,55 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.caption_dict_s[self.MASK_LOSS_KEY] = "Mask loss per iteration"
 
 
+    def train_relit_generator(self, input_ws, relit_tensor):
+        # relit discriminator
+        self.optimizerD_relit.zero_grad()
+        self.D_relit.train()
+        output = self.G_relit(input_ws)
+        prediction = self.D_relit(output)
+        real_tensor = torch.ones_like(prediction)
+        fake_tensor = torch.zeros_like(prediction)
+        D_relit_real_loss = self.adversarial_loss(self.D_relit(relit_tensor), real_tensor) * self.adv_weight
+        D_relit_fake_loss = self.adversarial_loss(self.D_relit_pool.query(self.D_relit(output.detach())), fake_tensor) * self.adv_weight
+
+        errD = D_relit_fake_loss + D_relit_real_loss
+
+        self.fp16_scaler.scale(errD).backward()
+        if (self.fp16_scaler.scale(errD).item() > 0.0):
+            self.fp16_scaler.step(self.optimizerD_relit)
+            self.schedulerD_relit.step(errD)
+
+        # relit generator
+        self.optimizerG_relit.zero_grad()
+        self.G_relit.train()
+        relit_like = self.G_relit(input_ws)
+        R_likeness_loss = self.l1_loss(relit_like, relit_tensor) * self.it_table.get_l1_weight(self.iteration)
+        R_lpip_loss = self.lpip_loss(relit_like, relit_tensor) * self.it_table.get_lpip_weight(self.iteration)
+        prediction = self.D_relit(relit_like)
+        real_tensor = torch.ones_like(prediction)
+        R_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
+        errG = R_likeness_loss + R_lpip_loss + R_adv_loss
+
+        self.fp16_scaler.scale(errG).backward()
+        self.fp16_scaler.step(self.optimizerG_relit)
+        self.schedulerG_relit.step(errG)
+        self.fp16_scaler.update()
+
+        # what to put to losses dict for visdom reporting?
+        self.losses_dict_r[constants.G_LOSS_KEY].append(errG.item())
+        self.losses_dict_r[constants.D_OVERALL_LOSS_KEY].append(errD.item())
+        self.losses_dict_r[constants.LIKENESS_LOSS_KEY].append(R_likeness_loss.item())
+        self.losses_dict_r[constants.LPIP_LOSS_KEY].append(R_lpip_loss.item())
+        self.losses_dict_r[constants.G_ADV_LOSS_KEY].append(R_adv_loss.item())
+        self.losses_dict_r[constants.D_A_FAKE_LOSS_KEY].append(D_relit_fake_loss.item())
+        self.losses_dict_r[constants.D_A_REAL_LOSS_KEY].append(D_relit_real_loss.item())
+
     def train(self, epoch, iteration, input_map, target_map):
         input_rgb_tensor = input_map["rgb"]
         shadow_matte_tensor = target_map["shadow_matte"]
-        gamma_beta_val = target_map["gamma_beta_val"] #TODO: Check if normalization is needed
+        relit_tensor = input_map["rgb_relit"]
+
+        # gamma_beta_val = target_map["gamma_beta_val"] #TODO: Check if normalization is needed
 
         with amp.autocast():
             if (self.da_enabled == 1):
@@ -144,15 +210,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             else:
                 input_ws = input_rgb_tensor
 
-            #gamme-beta regressor
-            self.optimizerGB.zero_grad()
-            l1_loss = self.mse_loss(self.GB_regressor(input_ws), gamma_beta_val) * 10.0
-            errGB = l1_loss
-
-            self.fp16_scaler.scale(errGB).backward()
-            self.fp16_scaler.step(self.optimizerGB)
-            self.schedulerGB.step(errGB)
-            self.fp16_scaler.update()
+            self.train_relit_generator(input_ws, relit_tensor)
 
             # shadow matte discriminator
             self.optimizerD_shading.zero_grad()
@@ -189,8 +247,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             self.schedulerG_shading.step(errG)
             self.fp16_scaler.update()
 
-            # what to put to losses dict for visdom reporting?
-            self.losses_dict_s[self.GB_LOSS_KEY].append(errGB.item())
+
             self.losses_dict_s[constants.G_LOSS_KEY].append(errG.item())
             self.losses_dict_s[constants.D_OVERALL_LOSS_KEY].append(errD.item())
             self.losses_dict_s[constants.LIKENESS_LOSS_KEY].append(SM_likeness_loss.item())
@@ -217,21 +274,19 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             else:
                 input_ws = input_rgb_tensor
 
-            # print("Tensor properties. Min: ", torch.min(input_ws), " Max:", torch.max(input_ws))
+            rgb2relit = self.G_relit(input_ws)
             rgb2sm = self.G_SM_predictor(input_ws)
-            gamma_pred, beta_pred = torch.split(self.GB_regressor(input_ws), [1, 1], 1)
 
-            rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
+            rgb2relit = tensor_utils.normalize_to_01(rgb2relit) * 1.5
             input_ws = tensor_utils.normalize_to_01(input_ws)
 
-            rgb2relit = self.iid_op.extract_relit_batch(input_ws, gamma_pred, beta_pred)
-            # rgb2relit = self.iid_op.extract_relit_batch(input_ws, torch.full_like(gamma_pred, self.iid_op.GAMMA), torch.full_like(beta_pred, self.iid_op.BETA))
             rgb2ns = self.iid_op.remove_shadow(input_ws, rgb2relit, rgb2sm)
 
         return rgb2ns, rgb2sm, rgb2relit
 
     def visdom_plot(self, iteration):
-        self.visdom_reporter.plot_finegrain_loss("a2b_loss_a", iteration, self.losses_dict_s, self.caption_dict_s, self.NETWORK_CHECKPATH)
+        self.visdom_reporter.plot_finegrain_loss("a2b_loss_a", iteration, self.losses_dict_r, self.caption_dict_r, self.NETWORK_CHECKPATH)
+        self.visdom_reporter.plot_finegrain_loss("a2b_loss_b", iteration, self.losses_dict_s, self.caption_dict_s, self.NETWORK_CHECKPATH)
 
     def visdom_visualize(self, input_map, label="Train"):
         input_rgb_tensor = input_map["rgb"]
@@ -285,38 +340,48 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             self.stopper_method.update_last_metric(checkpoint[constants.LAST_METRIC_KEY])
             self.G_SM_predictor.load_state_dict(checkpoint[constants.GENERATOR_KEY + "NS"])
             self.D_SM_discriminator.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "NS"])
-            self.GB_regressor.load_state_dict(checkpoint[constants.GENERATOR_KEY + "GB"])
+            self.G_relit.load_state_dict(checkpoint[constants.GENERATOR_KEY + "GB"])
+            self.D_relit.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "GB"])
 
             self.optimizerG_shading.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "Z"])
             self.optimizerD_shading.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "Z"])
-            self.optimizerGB.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "GB"])
+            self.optimizerG_relit.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "GB"])
+            self.optimizerD_relit.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "GB"])
             self.schedulerG_shading.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler" + "Z"])
             self.schedulerD_shading.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler" + "Z"])
-            self.schedulerGB.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler" + "GB"])
+            self.schedulerG_relit.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler" + "GB"])
+            self.schedulerD_relit.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler" + "GB"])
 
     def save_states(self, epoch, iteration, is_temp:bool):
         save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
         netGNS_state_dict = self.G_SM_predictor.state_dict()
         netDNS_state_dict = self.D_SM_discriminator.state_dict()
-        netGB_state_dict = self.GB_regressor.state_dict()
+        netGB_state_dict = self.G_relit.state_dict()
+        netDB_state_dict = self.D_relit.state_dict()
 
         optimizerGshading_state_dict = self.optimizerG_shading.state_dict()
         optimizerDshading_state_dict = self.optimizerD_shading.state_dict()
-        optimizerGB_state_dict = self.optimizerGB.state_dict()
+        optimizerGB_state_dict = self.optimizerG_relit.state_dict()
+        optimizerDB_state_dict = self.optimizerD_relit.state_dict()
         schedulerGshading_state_dict = self.schedulerG_shading.state_dict()
         schedulerDshading_state_dict = self.schedulerD_shading.state_dict()
-        schedulerGB_state_dict = self.schedulerGB.state_dict()
+        schedulerGB_state_dict = self.schedulerG_relit.state_dict()
+        schedulerDB_state_dict = self.schedulerD_relit.state_dict()
 
         save_dict[constants.GENERATOR_KEY + "NS"] = netGNS_state_dict
         save_dict[constants.DISCRIMINATOR_KEY + "NS"] = netDNS_state_dict
         save_dict[constants.GENERATOR_KEY + "GB"] = netGB_state_dict
+        save_dict[constants.DISCRIMINATOR_KEY + "GB"] = netDB_state_dict
 
         save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "Z"] = optimizerGshading_state_dict
         save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "Z"] = optimizerDshading_state_dict
         save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "GB"] = optimizerGB_state_dict
+        save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "GB"] = optimizerDB_state_dict
+
         save_dict[constants.GENERATOR_KEY + "scheduler" + "Z"] = schedulerGshading_state_dict
         save_dict[constants.DISCRIMINATOR_KEY + "scheduler" + "Z"] = schedulerDshading_state_dict
         save_dict[constants.GENERATOR_KEY + "scheduler" + "GB"] = schedulerGB_state_dict
+        save_dict[constants.DISCRIMINATOR_KEY + "scheduler" + "GB"] = schedulerDB_state_dict
 
         if (is_temp):
             torch.save(save_dict, self.NETWORK_CHECKPATH + ".checkpt")
