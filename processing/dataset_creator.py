@@ -12,6 +12,8 @@ import torch
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+from torch import nn
+
 from utils import tensor_utils
 import torchvision.utils as torchutils
 from loaders import dataset_loader
@@ -370,13 +372,18 @@ def produce_color_images(INPUT_PATH, SAVE_PATH, CHECKPT_NAME, net_config, argv):
         color_transfer_gan = cycle_gan.Generator(n_residual_blocks=6, has_dropout=False).to(device)
     elif (net_config == 2):
         print("Using U-Net GAN")
-        color_transfer_gan = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=0).to(device)
+        color_transfer_gan = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=0, norm_layer=nn.InstanceNorm2d).to(device)
+    elif (net_config == 3):
+        print("Using SynthDehazing CycleGAN")
+        # color_transfer_gan = cycle_gan.SynthDehazingGenerator(downsampling_blocks=2, n_residual_blocks=10, has_dropout=False).to(device)
+        color_transfer_gan = cycle_gan.Generator(n_residual_blocks=10, has_dropout=False, norm="instance").to(device)
     else:
-        print("Using stable CycleGAN")
+        print("Using Stable CycleGAN")
+
         color_transfer_gan = cycle_gan.Generator(downsampling_blocks=2, n_residual_blocks=10, has_dropout=False).to(device)
 
     color_transfer_checkpt = torch.load(CHECKPT_ROOT + CHECKPT_NAME, map_location=device)
-    color_transfer_gan.load_state_dict(color_transfer_checkpt[constants.GENERATOR_KEY + "B"])
+    color_transfer_gan.load_state_dict(color_transfer_checkpt[constants.GENERATOR_KEY + "A"])
     color_transfer_gan.eval()
     print("Color transfer GAN model loaded.")
     print("===================================================")
@@ -603,11 +610,11 @@ def main(argv):
     # produce_color_images("E:/SynthWeather Dataset 6/azimuth/144deg/rgb/", "E:/SynthWeather Dataset 6/azimuth/144deg/rgb - styled/", "synth2rgb_v4.07_3.pt", 2, argv)
     # produce_color_images("E:/SynthWeather Dataset 6/no_shadows/*.png", "E:/SynthWeather Dataset 6/no_shadows_styled/", "synth2rgb_v4.07_3.pt", 2, argv)
 
-    base_path = "E:/SynthWeather Dataset 8/train_rgb/"
+    base_path = "E:/SynthWeather Dataset 9/rgb/"
     # base_path = "E:/SynthWeather Dataset 8/train_rgb_noshadows/"
     # output_base_path = "E:/SynthWeather Dataset 8/train_rgb_styled/"
     # output_base_path = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
-    output_base_path = "E:/SynthWeather Dataset 8/temp_styled/"
+    output_base_path = "E:/SynthWeather Dataset 9/temp/"
     try:
         os.mkdir(output_base_path)
     except OSError as error:
@@ -618,7 +625,8 @@ def main(argv):
     for dir in dirlist:
         input_path = base_path + dir + "/*.png"
         output_path = output_base_path + dir + "/"
-        produce_color_images(input_path, output_path, "synth2rgb_v5.00_12.pt", 2, argv)
+        produce_color_images(input_path, output_path, "synth2rgb_v7.08_9.pt", 2, argv)
+        # produce_color_images(input_path, output_path, "color_transfer_v1.11_2.pth", 3, argv)
 
     # create_patches(argv)
 

@@ -48,7 +48,10 @@ class ShadowIterationTable():
         return self.iteration_table[str(iteration)].get_weight(2)
 
     def is_bce_enabled(self, iteration):
-        return self.iteration_table[str(iteration)].is_bce_enabled()
+         return self.iteration_table[str(iteration)].is_bce_enabled()
+
+    def get_gammabeta_weight(self):
+        return 10.0
 
     def get_rgb_recon_weight(self):
         return 20.0

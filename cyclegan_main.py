@@ -47,34 +47,34 @@ def update_config(opts):
         opts.num_workers = 6
         print("Using COARE configuration. Workers: ", opts.num_workers, " ", opts.version)
         constants.imgx_dir = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
-        constants.imgy_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
+        constants.imgy_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 9/rgb/*/*.png"
         constants.imgx_dir_test = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
-        constants.imgy_dir_test = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
+        constants.imgy_dir_test = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 9/rgb/*/*.png"
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
         opts.num_workers = 12
         print("Using CCS configuration. Workers: ", opts.num_workers, " ", opts.version)
         constants.imgx_dir = "/home/jupyter-neil.delgallego/Places Dataset/*.jpg"
-        constants.imgy_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
+        constants.imgy_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 9/rgb/*/*.png"
 
     # GCLOUD
     elif (constants.server_config == 3):
         opts.num_workers = 8
         print("Using GCloud configuration. Workers: ", opts.num_workers, " ", opts.version)
         constants.imgx_dir = "/home/neil_delgallego/Places Dataset/*.jpg"
-        constants.imgy_dir = "/home/neil_delgallego/SynthWeather Dataset 6/azimuth/*/rgb/*.png"
+        constants.imgy_dir = "/home/neil_delgallego/SynthWeather Dataset 9/rgb/*/*.png"
 
     elif (constants.server_config == 4):
         opts.num_workers = 6
         constants.imgx_dir = "C:/Datasets/Places Dataset/*.jpg"
-        constants.imgy_dir = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
+        constants.imgy_dir = "C:/Datasets/SynthWeather Dataset 9/rgb/*/*.png"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers, " ", opts.version)
     else:
         opts.num_workers = 12
         constants.imgx_dir = "E:/Places Dataset/*.jpg"
-        constants.imgy_dir = "E:/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
+        constants.imgy_dir = "E:/SynthWeather Dataset 9/rgb/*/*.png"
         # constants.imgy_dir = "E:/SynthWeather Dataset 8/albedo/*.png"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers, " ", opts.version)
 
@@ -94,10 +94,11 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    iid_server_config.IIDServerConfig.initialize(opts.version)
+    constants.network_version = opts.version
+    iid_server_config.IIDServerConfig.initialize()
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
     general_config = sc_instance.get_general_configs()
-    network_config = sc_instance.interpret_style_transfer_config_from_version(opts.version)
+    network_config = sc_instance.interpret_style_transfer_config_from_version()
 
     gt = cyclegan_trainer.CycleGANTrainer(device, opts)
     iteration = 0
@@ -119,10 +120,8 @@ def main(argv):
             gt.train(epoch, iteration, imgx_tensor, imgy_tensor, iteration)
             iteration = iteration + 1
 
-            if (i % 32 == 0):
+            if((i * network_config["img_per_iter"]) % (network_config["batch_size"] * 5) == 0): #every X batches
                 print("Iteration:", iteration)
-
-            if((i * network_config["img_per_iter"]) % (network_config["batch_size"] * 3) == 0): #every X batches
                 gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
 
                 gt.save_states(epoch, iteration, False)

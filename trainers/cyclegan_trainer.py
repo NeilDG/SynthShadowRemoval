@@ -103,10 +103,11 @@ class CycleGANTrainer:
         self.iteration = opts.iteration
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         general_config = sc_instance.get_general_configs()
-        network_config = sc_instance.interpret_style_transfer_config_from_version(opts.version)
+        network_config = sc_instance.interpret_style_transfer_config_from_version()
 
         net_config = network_config["net_config"]
         num_blocks = network_config["num_blocks"]
+        norm_mode = network_config["norm_mode"]
         self.batch_size = network_config["batch_size"]
         self.img_per_iter = network_config["img_per_iter"]
 
@@ -120,13 +121,18 @@ class CycleGANTrainer:
         self.update_penalties(it_params.adv_weight, it_params.id_weight, it_params.l1_weight, it_params.lpip_weight, it_params.cycle_weight)
 
         if(net_config == 1):
-            print("Using CBAM Cycle GAN")
-            self.G_A = cycle_gan.Generator(n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
-            self.G_B = cycle_gan.Generator(n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
+            print("Using Cycle GAN")
+            self.G_A = cycle_gan.Generator(n_residual_blocks=num_blocks, has_dropout=False, norm=norm_mode).to(self.gpu_device)
+            self.G_B = cycle_gan.Generator(n_residual_blocks=num_blocks, has_dropout=False, norm=norm_mode).to(self.gpu_device)
         elif(net_config == 2):
-            print("Using U-Net GAN")
-            self.G_A = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
-            self.G_B = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
+            if(norm_mode == "instance"):
+                print("Using U-Net GAN - Instance Norm")
+                norm_layer = nn.InstanceNorm2d
+            else:
+                print("Using U-Net GAN - Batch Norm")
+                norm_layer = nn.BatchNorm2d
+            self.G_A = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks, norm_layer=norm_layer).to(self.gpu_device)
+            self.G_B = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks, norm_layer=norm_layer).to(self.gpu_device)
         else:
             print("Using AdainGEN")
             params = {'dim': 64,  # number of filters in the bottommost layer

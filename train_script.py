@@ -2,22 +2,22 @@
 
 import os
 def train_relighting():
+    # os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
+    #           "--plot_enabled=0 --version=\"v21.11\" --iteration=5")
+
     os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-              "--plot_enabled=0 --version=\"v19.11\" --iteration=6")
+              "--plot_enabled=1 --version=\"v26.11\" --iteration=15")
 
     # os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-    #           "--plot_enabled=0 --version=\"v19.12\" --iteration=4")
+    #           "--plot_enabled=0 --version=\"v26.11\" --iteration=13")
     #
     # os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-    #           "--plot_enabled=0 --version=\"v19.12\" --iteration=5")
-    #
-    # os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-    #           "--plot_enabled=0 --version=\"v19.12\" --iteration=6")
+    #           "--plot_enabled=0 --version=\"v26.11\" --iteration=14")
 
 
 def train_domain_adaptation():
-    os.system("python \"cyclegan_main.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-              "--plot_enabled=1 --g_lr=0.0002 --d_lr=0.0002 --version=\"v6.04\" --iteration=5")
+    os.system("python \"cyclegan_main.py\" --server_config=4 --img_to_load=-1 --debug_run=0 "
+              "--plot_enabled=1 --g_lr=0.0002 --d_lr=0.0002 --version=\"v7.04\" --iteration=5")
 
 def train_embedding():
     os.system("python \"embedding_main.py\" --server_config=5 --img_to_load=-1 --load_previous=1 --test_mode=0 --net_config=4 --num_blocks=4 "

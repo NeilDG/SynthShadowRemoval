@@ -44,32 +44,6 @@ def assemble_img_list(img_dir, opts, shuffle = False):
 
     return img_list
 
-def load_map_train_dataset(path_a, path_c, opts):
-    a_list = assemble_unpaired_data(path_a, opts.img_to_load)
-    print("Length of images: %d" % len(a_list))
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.MapDataset(a_list, path_c, 1, opts),
-        batch_size=opts.batch_size,
-        num_workers=opts.num_workers,
-        shuffle=True
-    )
-
-    return data_loader
-
-def load_map_test_dataset(path_a, path_c, opts):
-    a_list = assemble_unpaired_data(path_a, opts.img_to_load)
-    print("Length of images: %d" % len(a_list))
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.MapDataset(a_list, path_c, 2, opts),
-        batch_size=2,
-        num_workers=1,
-        shuffle=False
-    )
-
-    return data_loader
-
 def load_relighting_train_dataset(rgb_dir, albedo_dir, scene_root, opts):
     albedo_list = glob.glob(albedo_dir + "/*.png")
     scene_list = os.listdir(scene_root)
@@ -187,7 +161,7 @@ def load_shadow_train_dataset(ws_path, ns_path, ws_istd, ns_istd, patch_size, ba
     print("Length of images: %d %d" % (len(ws_list), len(ns_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        iid_test_datasets.ShadowPairedDataset(img_length, ws_list, ns_list, 1, patch_size),
+        iid_test_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 1, patch_size),
         batch_size=batch_size,
         num_workers=opts.num_workers,
         shuffle=False
@@ -203,7 +177,7 @@ def load_shadow_test_dataset(ws_path, ns_path, opts):
     print("Length of images: %d %d" % (len(ws_list), len(ns_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        iid_test_datasets.ShadowPairedDataset(img_length, ws_list, ns_list, 2),
+        iid_test_datasets.ShadowTestDataset(img_length, ws_list, ns_list, 2),
         batch_size=16,
         num_workers=1,
         shuffle=False
@@ -262,7 +236,7 @@ def load_gta_dataset(rgb_dir, albedo_dir, opts):
 
 def load_da_dataset_train(imgx_dir, imgy_dir, opts):
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
-    network_config = sc_instance.interpret_style_transfer_config_from_version(opts.version)
+    network_config = sc_instance.interpret_style_transfer_config_from_version()
 
     imgx_list = glob.glob(imgx_dir)
     imgy_list = glob.glob(imgy_dir)
@@ -329,7 +303,7 @@ def load_unlit_dataset_test(styled_dir, unlit_dir, opts):
 
 def load_da_dataset_test(imgx_dir, imgy_dir, opts):
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
-    network_config = sc_instance.interpret_style_transfer_config_from_version(opts.version)
+    network_config = sc_instance.interpret_style_transfer_config_from_version()
 
     imgx_list = glob.glob(imgx_dir)
     imgy_list = glob.glob(imgy_dir)

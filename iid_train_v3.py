@@ -114,16 +114,16 @@ def main(argv):
 
     plot_utils.VisdomReporter.initialize()
 
-    iid_server_config.IIDServerConfig.initialize(opts.version)
+    constants.network_version = opts.version
+    iid_server_config.IIDServerConfig.initialize()
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
     general_config = sc_instance.get_general_configs()
-    network_config = sc_instance.interpret_network_config_from_version(opts.version)
+    network_config = sc_instance.interpret_network_config_from_version()
     print("General config:", general_config)
     print("Network config: ", network_config)
 
     tf = trainer_factory.TrainerFactory(device, opts)
     tf.initialize_all_trainers(opts)
-    iid_op = iid_transforms.IIDTransform()
 
     # for mode in (["train_albedo_mask", "train_albedo", "train_shading"]):
     # for mode in (["train_shadow", "train_albedo", "train_shading"]):
@@ -142,7 +142,7 @@ def main(argv):
 
     batch_size = sc_instance.get_batch_size_from_mode(mode, network_config)
 
-    train_loader = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, constants.ws_istd, constants.ns_istd, patch_size, batch_size, network_config["istd_mix"], opts)
+    train_loader = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, constants.ws_istd, constants.ns_istd, patch_size, batch_size, False, opts)
     test_loader_train = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
     test_loader_istd = dataset_loader.load_shadow_test_dataset(constants.ws_istd, constants.ns_istd, opts)
     rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
@@ -151,12 +151,14 @@ def main(argv):
     start_epoch = sc_instance.get_last_epoch_from_mode(mode)
     print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
     for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
-        for i, (_, rgb_ws_batch, rgb_ns_batch) in enumerate(train_loader, 0):
-            rgb_ws_tensor = rgb_ws_batch.to(device)
-            rgb_ns_tensor = rgb_ns_batch.to(device)
-            rgb_ws_tensor, rgb_ns_tensor, shadow_matte_tensor, _ = iid_op.decompose_shadow(rgb_ws_tensor, rgb_ns_tensor)
+        for i, (_, rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, gamma_beta_val) in enumerate(train_loader, 0):
+            rgb_ws = rgb_ws.to(device)
+            rgb_ns = rgb_ns.to(device)
+            shadow_matte = shadow_matte.to(device)
+            rgb_ws_relit = rgb_ws_relit.to(device)
+            gamma_beta_val = gamma_beta_val.to(device)
 
-            input_map = {"rgb": rgb_ws_tensor, "rgb_ns" : rgb_ns_tensor, "shadow_matte" : shadow_matte_tensor}
+            input_map = {"rgb": rgb_ws, "rgb_ns" : rgb_ns, "rgb_relit" : rgb_ws_relit, "shadow_matte" : shadow_matte, "gamma_beta_val": gamma_beta_val}
             target_map = input_map
 
             tf.train(mode, epoch, iteration, input_map, target_map)
@@ -172,20 +174,19 @@ def main(argv):
                     tf.visdom_plot(mode, iteration)
                     tf.visdom_visualize(mode, input_map, "Train")
 
-                    _, rgb_ws_batch, rgb_ns_batch = next(itertools.cycle(test_loader_train))
-                    rgb_ws_tensor = rgb_ws_batch.to(device)
-                    rgb_ns_tensor = rgb_ns_batch.to(device)
-                    rgb_ws_tensor, rgb_ns_tensor, shadow_matte_tensor, _ = iid_op.decompose_shadow(rgb_ws_tensor, rgb_ns_tensor)
+                    _, rgb_ws, rgb_ns = next(itertools.cycle(test_loader_train))
+                    rgb_ws = rgb_ws.to(device)
+                    rgb_ns = rgb_ns.to(device)
 
-                    input_map = {"rgb": rgb_ws_tensor, "rgb_ns": rgb_ns_tensor, "shadow_matte": shadow_matte_tensor}
+                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
                     tf.visdom_visualize(mode, input_map, "Test Synthetic")
 
-                    _, rgb_ws_batch, rgb_ns_batch = next(itertools.cycle(test_loader_istd))
-                    rgb_ws_tensor = rgb_ws_batch.to(device)
-                    rgb_ns_tensor = rgb_ns_batch.to(device)
-                    rgb_ws_tensor, rgb_ns_tensor, shadow_matte_tensor, _ = iid_op.decompose_shadow(rgb_ws_tensor, rgb_ns_tensor)
+                    _, rgb_ws, rgb_ns = next(itertools.cycle(test_loader_istd))
+                    rgb_ws = rgb_ws.to(device)
+                    rgb_ns = rgb_ns.to(device)
+                    shadow_matte = shadow_matte.to(device)
 
-                    input_map = {"rgb": rgb_ws_tensor, "rgb_ns" : rgb_ns_tensor, "shadow_matte" : shadow_matte_tensor}
+                    input_map = {"rgb": rgb_ws, "rgb_ns" : rgb_ns}
                     tf.visdom_visualize(mode, input_map, "Test ISTD")
 
                     _, rgb_ws_batch = next(itertools.cycle(rw_loader))

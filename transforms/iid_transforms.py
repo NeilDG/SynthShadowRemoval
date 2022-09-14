@@ -10,17 +10,32 @@ import kornia
 import numpy as np
 import torchvision.transforms as transforms
 
+from config import iid_server_config
+
 
 class IIDTransform(nn.Module):
     # GAMMA = 0.95
     # BETA = 0.55
-    GAMMA = 1.25
-    BETA = 0.95
+    # GAMMA = 1.25
+    # BETA = 0.95
+    MIN_GAMMA = 1.35
+    MIN_BETA = 0.45
+    MAX_GAMMA = 1.75
+    MAX_BETA = 1.55
 
     def __init__(self):
         super(IIDTransform, self).__init__()
 
         self.transform_op = transforms.Normalize((0.5,), (0.5,))
+
+        sc_instance = iid_server_config.IIDServerConfig.getInstance()
+        network_config = sc_instance.interpret_network_config_from_version()
+
+        self.MIN_GAMMA = network_config["min_gamma"]
+        self.MIN_BETA = network_config["min_beta"]
+
+        self.MAX_GAMMA = network_config["max_gamma"]
+        self.MAX_BETA = network_config["max_beta"]
 
 
     def mask_fill_nonzeros(self, input_tensor):
@@ -46,32 +61,35 @@ class IIDTransform(nn.Module):
         return output_tensor.masked_fill_(masked_tensor, 0)
 
     def decompose_shadow(self, rgb_ws, rgb_ns):
+        gamma = torch.tensor(np.random.uniform(self.MIN_GAMMA, self.MAX_GAMMA), dtype=torch.float)
+        beta = torch.tensor(np.random.uniform(self.MIN_BETA, self.MAX_BETA), dtype=torch.float)
 
         shadow_matte = 1.0 - self.extract_shadow(rgb_ws, rgb_ns, True)
-        rgb_ws = self.add_shadow(rgb_ns, shadow_matte, self.GAMMA, self.BETA)
-        rgb_ws_relit = self.extract_relit(rgb_ws, self.GAMMA, self.BETA)
+        rgb_ws = self.add_shadow(rgb_ns, shadow_matte, gamma, beta)
+        rgb_ws_relit = self.extract_relit(rgb_ws, gamma, beta)
+        rgb_ns = self.remove_shadow(rgb_ws, rgb_ws_relit, shadow_matte)
 
         rgb_ws = self.transform_op(rgb_ws)
         rgb_ns = self.transform_op(rgb_ns)
         shadow_matte = self.transform_op(shadow_matte)
         rgb_ws_relit = self.transform_op(rgb_ws_relit)
 
-        return rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit
+        return rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, gamma, beta
 
-    def forward(self, rgb_ws, rgb_ns, albedo_tensor):
-        #extract shadows
-        rgb_ws, rgb_ns, shadow_matte, _ = self.decompose_shadow(rgb_ws, rgb_ns)
-
-        albedo_refined, shading_refined = self.decompose(rgb_ns, albedo_tensor, True)
-        # rgb_recon = self.produce_rgb(albedo_refined, shading_refined, shadow_matte, False)
-
-        # loss_op = nn.L1Loss()
-        # print("Difference between RGB vs Recon: ", loss_op(rgb_recon, rgb_ws).item())
-
-        albedo_refined = self.transform_op(albedo_refined)
-        shading_refined = self.transform_op(shading_refined)
-
-        return rgb_ws, rgb_ns, albedo_refined, shading_refined, shadow_matte #return original RGB
+    # def forward(self, rgb_ws, rgb_ns, albedo_tensor):
+    #     #extract shadows
+    #     rgb_ws, rgb_ns, shadow_matte, _, _, _ = self.decompose_shadow(rgb_ws, rgb_ns)
+    #
+    #     albedo_refined, shading_refined = self.decompose(rgb_ns, albedo_tensor, True)
+    #     # rgb_recon = self.produce_rgb(albedo_refined, shading_refined, shadow_matte, False)
+    #
+    #     # loss_op = nn.L1Loss()
+    #     # print("Difference between RGB vs Recon: ", loss_op(rgb_recon, rgb_ws).item())
+    #
+    #     albedo_refined = self.transform_op(albedo_refined)
+    #     shading_refined = self.transform_op(shading_refined)
+    #
+    #     return rgb_ws, rgb_ns, albedo_refined, shading_refined, shadow_matte #return original RGB
 
     def produce_rgb(self, albedo_tensor, shading_tensor, shadow_tensor, tozeroone = True):
         if(tozeroone):
@@ -132,10 +150,17 @@ class IIDTransform(nn.Module):
 
     def extract_relit(self, rgb_ws, gamma, beta):
         min = torch.min(rgb_ws)
-        max = torch.max(rgb_ws) * gamma
+        max = torch.tensor(self.MAX_GAMMA)
 
         relit_ws = (gamma * rgb_ws) + beta
         relit_ws = torch.clip(relit_ws, min, max)
+        return relit_ws
+
+    def extract_relit_batch(self, rgb_ws, gamma, beta):
+        relit_ws = torch.zeros_like(rgb_ws)
+        for i in range(np.shape(rgb_ws)[0]):
+            relit_ws[i] = self.extract_relit(rgb_ws[i], gamma[i], beta[i])
+
         return relit_ws
 
     def add_shadow(self, rgb_ns, shadow_matte, gamma, beta):

@@ -308,50 +308,84 @@ class TesterClass():
         self.visdom_reporter.plot_text(display_text)
 
     def test_shadow(self, rgb_ws, rgb_ns, prefix, opts):
-        rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit = self.iid_op.decompose_shadow(rgb_ws, rgb_ns)
+        rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
+        rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
+        # rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, _, _ = self.iid_op.decompose_shadow(rgb_ws, rgb_ns)
 
         input_map = {"rgb": rgb_ws}
-        rgb2ns, rgb2sm = self.shadow_t.test(input_map)
+        rgb2ns, rgb2sm, rgb2relit = self.shadow_t.test(input_map)
 
         # normalize everything
         rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
         rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
-        shadow_matte = tensor_utils.normalize_to_01(shadow_matte)
-        rgb_ws_relit = tensor_utils.normalize_to_01(rgb_ws_relit)
+        # shadow_matte = tensor_utils.normalize_to_01(shadow_matte)
+        # rgb_ws_relit = tensor_utils.normalize_to_01(rgb_ws_relit)
 
         self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + opts.version + str(opts.iteration))
-        self.visdom_reporter.plot_image(rgb_ws_relit, prefix + " Relit Images - " + opts.version + str(opts.iteration))
+        # self.visdom_reporter.plot_image(rgb_ws_relit, prefix + " Relit Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb2relit, prefix + " Relit-Like Images - " + opts.version + str(opts.iteration))
         self.visdom_reporter.plot_image(rgb_ns, prefix + " NS Images - " + opts.version + str(opts.iteration))
         self.visdom_reporter.plot_image(rgb2ns, prefix + " NS (equation) Images - " + opts.version + str(opts.iteration))
 
         self.visdom_reporter.plot_image(rgb2sm, prefix + " Shadow Matte-Like - " + opts.version + str(opts.iteration))
-        self.visdom_reporter.plot_image(shadow_matte, prefix + " Shadow Matte - " + opts.version + str(opts.iteration))
+        # self.visdom_reporter.plot_image(shadow_matte, prefix + " Shadow Matte - " + opts.version + str(opts.iteration))
 
         psnr_rgb = np.round(kornia.metrics.psnr(rgb2ns, rgb_ns, max_val=1.0).item(), 4)
         ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb2ns, rgb_ns, 5).item(), 4)
 
-        psnr_sm = np.round(kornia.metrics.psnr(rgb2sm, shadow_matte, max_val=1.0).item(), 4)
-        ssim_sm = np.round(1.0 - kornia.losses.ssim_loss(rgb2sm, shadow_matte, 5).item(), 4)
+        # psnr_sm = np.round(kornia.metrics.psnr(rgb2sm, shadow_matte, max_val=1.0).item(), 4)
+        # ssim_sm = np.round(1.0 - kornia.losses.ssim_loss(rgb2sm, shadow_matte, 5).item(), 4)
 
         mae = nn.L1Loss()
-        mae_sm = np.round(mae(rgb2sm, shadow_matte).cpu(), 4)
+        # mae_sm = np.round(mae(rgb2sm, shadow_matte).cpu(), 4)
         mae_rgb = np.round(mae(rgb2ns, rgb_ns).cpu(), 4)
 
         self.psnr_list_rgb.append(psnr_rgb)
         self.ssim_list_rgb.append(ssim_rgb)
         self.mae_list_rgb.append(mae_rgb)
 
-        self.psnr_list_sm.append(psnr_sm)
-        self.ssim_list_sm.append(ssim_sm)
-        self.mae_list_sm.append(mae_sm)
+        # self.psnr_list_sm.append(psnr_sm)
+        # self.ssim_list_sm.append(ssim_sm)
+        # self.mae_list_sm.append(mae_sm)
+
+    #for ISTD
+    def test_istd_shadow(self, rgb_ws, rgb_ns, opts):
+        # rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
+        # rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
+        # rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, _, _ = self.iid_op.decompose_shadow(rgb_ws, rgb_ns)
+
+        input_map = {"rgb": rgb_ws}
+        rgb2ns, rgb2sm, rgb2relit = self.shadow_t.test(input_map)
+
+        # normalize everything
+        rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
+        rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
+
+        self.visdom_reporter.plot_image(rgb_ws, "ISTD WS Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb_ns, "ISTD NS Images - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb2ns, "ISTD NS (equation) Images - " + opts.version + str(opts.iteration))
+
+        self.visdom_reporter.plot_image(rgb2sm, "ISTD Shadow Matte-Like - " + opts.version + str(opts.iteration))
+        self.visdom_reporter.plot_image(rgb2relit, "ISTD Relit-Like Images - " + opts.version + str(opts.iteration))
+
+        psnr_rgb = np.round(kornia.metrics.psnr(rgb2ns, rgb_ns, max_val=1.0).item(), 4)
+        ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb2ns, rgb_ns, 5).item(), 4)
+
+        mae = nn.L1Loss()
+        mae_rgb = np.round(mae(rgb2ns, rgb_ns).cpu(), 4)
+
+        self.psnr_list_rgb.append(psnr_rgb)
+        self.ssim_list_rgb.append(ssim_rgb)
+        self.mae_list_rgb.append(mae_rgb)
 
     def print_ave_shadow_performance(self, prefix, opts):
         ave_psnr_rgb = np.round(np.mean(self.psnr_list_rgb), 4)
         ave_ssim_rgb = np.round(np.mean(self.ssim_list_rgb), 4)
         ave_psnr_sm = np.round(np.mean(self.psnr_list_sm), 4)
         ave_ssim_sm = np.round(np.mean(self.ssim_list_sm), 4)
-        ave_mae_sm = np.round(np.mean(self.mae_list_sm), 4)
-        ave_mae_rgb = np.round(np.mean(self.mae_list_rgb), 4)
+
+        ave_mae_sm = np.round(np.mean(self.mae_list_sm) * 255.0, 4)
+        ave_mae_rgb = np.round(np.mean(self.mae_list_rgb) * 255.0, 4)
 
         display_text = prefix + " - Versions: " + opts.version + "_" + str(opts.iteration) + \
                        "<br> SM Reconstruction PSNR: " + str(ave_psnr_sm) + "<br> SM Reconstruction SSIM: " + str(ave_ssim_sm) + \

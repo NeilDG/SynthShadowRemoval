@@ -51,7 +51,7 @@ class ShadingTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.visdom_reporter = plot_utils.VisdomReporter.getInstance()
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         general_config = sc_instance.get_general_configs()
-        network_config = sc_instance.interpret_network_config_from_version(opts.version)
+        network_config = sc_instance.interpret_network_config_from_version()
         self.batch_size = network_config["batch_size_s"]
         self.da_enabled = network_config["da_enabled"]
 
