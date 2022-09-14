@@ -146,7 +146,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
             #gamme-beta regressor
             self.optimizerGB.zero_grad()
-            l1_loss = self.mse_loss(self.GB_regressor(input_ws), gamma_beta_val) * self.it_table.get_gammabeta_weight(self.iteration)
+            l1_loss = self.mse_loss(self.GB_regressor(input_ws), gamma_beta_val) * self.it_table.get_gammabeta_weight()
             errGB = l1_loss
 
             self.fp16_scaler.scale(errGB).backward()

@@ -5,34 +5,34 @@ class ShadowIterationTable():
         #initialize table
         self.iteration_table = {}
 
-        iteration = 11
+        iteration = 1
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [10.0, 1.0, 0.0], is_bce=0)
 
-        iteration = 12
+        iteration = 2
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [10.0, 1.0, 0.0], is_bce=1)
 
-        iteration = 13
+        iteration = 3
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [1.0, 10.0, 0.0], is_bce=0)
 
-        iteration = 14
+        iteration = 4
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [1.0, 10.0, 0.0], is_bce=1)
 
-        iteration = 15
+        iteration = 5
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [1.0, 1.0, 0.0], is_bce=0)
 
-        iteration = 16
+        iteration = 6
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [1.0, 1.0, 0.0], is_bce=1)
 
-        iteration = 17
+        iteration = 7
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [10.0, 1.0, 1.0], is_bce=0)
 
-        iteration = 18
+        iteration = 8
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [10.0, 1.0, 1.0], is_bce=1)
 
-        iteration = 19
+        iteration = 9
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [100.0, 10.0, 0.0], is_bce=0)
 
-        iteration = 20
+        iteration = 10
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [100.0, 10.0, 0.0], is_bce=1)
 
     def get_version(self, iteration):
@@ -48,13 +48,10 @@ class ShadowIterationTable():
         return self.iteration_table[str(iteration)].get_weight(2)
 
     def is_bce_enabled(self, iteration):
-        return self.iteration_table[str(iteration)].is_bce_enabled()
+         return self.iteration_table[str(iteration)].is_bce_enabled()
 
-    def get_gammabeta_weight(self, iteration):
-        if(iteration < 10):
-            return 100.0
-        else:
-            return 10.0
+    def get_gammabeta_weight(self):
+        return 10.0
 
     def get_rgb_recon_weight(self):
         return 20.0
