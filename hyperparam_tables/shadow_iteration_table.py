@@ -5,34 +5,34 @@ class ShadowIterationTable():
         #initialize table
         self.iteration_table = {}
 
-        iteration = 1
+        iteration = 11
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [10.0, 1.0, 0.0], is_bce=0)
 
-        iteration = 2
+        iteration = 12
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [10.0, 1.0, 0.0], is_bce=1)
 
-        iteration = 3
+        iteration = 13
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [1.0, 10.0, 0.0], is_bce=0)
 
-        iteration = 4
+        iteration = 14
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [1.0, 10.0, 0.0], is_bce=1)
 
-        iteration = 5
+        iteration = 15
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [1.0, 1.0, 0.0], is_bce=0)
 
-        iteration = 6
+        iteration = 16
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [1.0, 1.0, 0.0], is_bce=1)
 
-        iteration = 7
+        iteration = 17
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [10.0, 1.0, 1.0], is_bce=0)
 
-        iteration = 8
+        iteration = 18
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [10.0, 1.0, 1.0], is_bce=1)
 
-        iteration = 9
+        iteration = 19
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [100.0, 10.0, 0.0], is_bce=0)
 
-        iteration = 10
+        iteration = 20
         self.iteration_table[str(iteration)] = IterationParameters(iteration, [100.0, 10.0, 0.0], is_bce=1)
 
     def get_version(self, iteration):
@@ -49,6 +49,12 @@ class ShadowIterationTable():
 
     def is_bce_enabled(self, iteration):
         return self.iteration_table[str(iteration)].is_bce_enabled()
+
+    def get_gammabeta_weight(self, iteration):
+        if(iteration < 10):
+            return 100.0
+        else:
+            return 10.0
 
     def get_rgb_recon_weight(self):
         return 20.0

@@ -61,13 +61,13 @@ class IIDTransform(nn.Module):
         return output_tensor.masked_fill_(masked_tensor, 0)
 
     def decompose_shadow(self, rgb_ws, rgb_ns):
-        #TODO: Randomize uniformly. Move gamma-beta calculation on dataset
         gamma = torch.tensor(np.random.uniform(self.MIN_GAMMA, self.MAX_GAMMA), dtype=torch.float)
         beta = torch.tensor(np.random.uniform(self.MIN_BETA, self.MAX_BETA), dtype=torch.float)
 
         shadow_matte = 1.0 - self.extract_shadow(rgb_ws, rgb_ns, True)
         rgb_ws = self.add_shadow(rgb_ns, shadow_matte, gamma, beta)
         rgb_ws_relit = self.extract_relit(rgb_ws, gamma, beta)
+        rgb_ns = self.remove_shadow(rgb_ws, rgb_ws_relit, shadow_matte)
 
         rgb_ws = self.transform_op(rgb_ws)
         rgb_ns = self.transform_op(rgb_ns)
@@ -76,20 +76,20 @@ class IIDTransform(nn.Module):
 
         return rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, gamma, beta
 
-    def forward(self, rgb_ws, rgb_ns, albedo_tensor):
-        #extract shadows
-        rgb_ws, rgb_ns, shadow_matte, _, _, _ = self.decompose_shadow(rgb_ws, rgb_ns)
-
-        albedo_refined, shading_refined = self.decompose(rgb_ns, albedo_tensor, True)
-        # rgb_recon = self.produce_rgb(albedo_refined, shading_refined, shadow_matte, False)
-
-        # loss_op = nn.L1Loss()
-        # print("Difference between RGB vs Recon: ", loss_op(rgb_recon, rgb_ws).item())
-
-        albedo_refined = self.transform_op(albedo_refined)
-        shading_refined = self.transform_op(shading_refined)
-
-        return rgb_ws, rgb_ns, albedo_refined, shading_refined, shadow_matte #return original RGB
+    # def forward(self, rgb_ws, rgb_ns, albedo_tensor):
+    #     #extract shadows
+    #     rgb_ws, rgb_ns, shadow_matte, _, _, _ = self.decompose_shadow(rgb_ws, rgb_ns)
+    #
+    #     albedo_refined, shading_refined = self.decompose(rgb_ns, albedo_tensor, True)
+    #     # rgb_recon = self.produce_rgb(albedo_refined, shading_refined, shadow_matte, False)
+    #
+    #     # loss_op = nn.L1Loss()
+    #     # print("Difference between RGB vs Recon: ", loss_op(rgb_recon, rgb_ws).item())
+    #
+    #     albedo_refined = self.transform_op(albedo_refined)
+    #     shading_refined = self.transform_op(shading_refined)
+    #
+    #     return rgb_ws, rgb_ns, albedo_refined, shading_refined, shadow_matte #return original RGB
 
     def produce_rgb(self, albedo_tensor, shading_tensor, shadow_tensor, tozeroone = True):
         if(tozeroone):
