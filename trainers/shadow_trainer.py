@@ -144,15 +144,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             else:
                 input_ws = input_rgb_tensor
 
-            #gamme-beta regressor
-            self.optimizerGB.zero_grad()
-            l1_loss = self.mse_loss(self.GB_regressor(input_ws), gamma_beta_val) * self.it_table.get_gammabeta_weight(self.iteration)
-            errGB = l1_loss
-
-            self.fp16_scaler.scale(errGB).backward()
-            self.fp16_scaler.step(self.optimizerGB)
-            self.schedulerGB.step(errGB)
-            self.fp16_scaler.update()
+            self.train_regressor(input_ws, gamma_beta_val)
 
             # shadow matte discriminator
             self.optimizerD_shading.zero_grad()
@@ -190,7 +182,6 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             self.fp16_scaler.update()
 
             # what to put to losses dict for visdom reporting?
-            self.losses_dict_s[self.GB_LOSS_KEY].append(errGB.item())
             self.losses_dict_s[constants.G_LOSS_KEY].append(errG.item())
             self.losses_dict_s[constants.D_OVERALL_LOSS_KEY].append(errD.item())
             self.losses_dict_s[constants.LIKENESS_LOSS_KEY].append(SM_likeness_loss.item())
@@ -207,6 +198,19 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             if (self.stopper_method.has_reset()):
                 self.save_states(epoch, iteration, False)
 
+    def train_regressor(self, input_ws, gamma_beta_val):
+        # gamme-beta regressor
+        self.optimizerGB.zero_grad()
+        l1_loss = self.mse_loss(self.GB_regressor(input_ws), gamma_beta_val) * self.it_table.get_gammabeta_weight(self.iteration)
+        errGB = l1_loss
+
+        self.fp16_scaler.scale(errGB).backward()
+        self.fp16_scaler.step(self.optimizerGB)
+        self.schedulerGB.step(errGB)
+        self.fp16_scaler.update()
+
+        # what to put to losses dict for visdom reporting?
+        self.losses_dict_s[self.GB_LOSS_KEY].append(errGB.item())
 
     def test(self, input_map):
         with torch.no_grad():

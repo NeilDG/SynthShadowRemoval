@@ -67,7 +67,6 @@ class IIDTransform(nn.Module):
         shadow_matte = 1.0 - self.extract_shadow(rgb_ws, rgb_ns, True)
         rgb_ws = self.add_shadow(rgb_ns, shadow_matte, gamma, beta)
         rgb_ws_relit = self.extract_relit(rgb_ws, gamma, beta)
-        rgb_ns = self.remove_shadow(rgb_ws, rgb_ws_relit, shadow_matte)
 
         rgb_ws = self.transform_op(rgb_ws)
         rgb_ns = self.transform_op(rgb_ns)
@@ -176,11 +175,9 @@ class IIDTransform(nn.Module):
         rgb_ws = torch.clip(rgb_ws, min, max)
         return rgb_ws
 
-    def remove_shadow(self, rgb_ws, rgb_ws_relit, shadow_matte):
+    def remove_shadow(self, rgb_ws, rgb_ws_relit, shadow_matte, min = 0.0 , max = 1.0):
         # min = torch.min(rgb_ws)
         # max = torch.max(rgb_ws)
-        min = 0.0
-        max = 1.0
         upper_bound = max - min
 
         shadow_free = (rgb_ws * shadow_matte) + (rgb_ws_relit * (upper_bound - shadow_matte))

@@ -122,14 +122,15 @@ def main(argv):
     print("General config:", general_config)
     print("Network config: ", network_config)
 
-    tf = trainer_factory.TrainerFactory(device, opts)
-    tf.initialize_all_trainers(opts)
+    trainer_factory.TrainerFactory.initialize(device, opts)
+    tf = trainer_factory.TrainerFactory.getInstance()
 
     # for mode in (["train_albedo_mask", "train_albedo", "train_shading"]):
     # for mode in (["train_shadow", "train_albedo", "train_shading"]):
 
     #Train shadow
-    mode = "train_shadow"
+    # mode = "train_shadow"
+    mode = "train_refine_shadow"
     patch_size = general_config[mode]["patch_size"]
     style_enabled = network_config["style_transferred"]
 
@@ -184,7 +185,6 @@ def main(argv):
                     _, rgb_ws, rgb_ns = next(itertools.cycle(test_loader_istd))
                     rgb_ws = rgb_ws.to(device)
                     rgb_ns = rgb_ns.to(device)
-                    shadow_matte = shadow_matte.to(device)
 
                     input_map = {"rgb": rgb_ws, "rgb_ns" : rgb_ns}
                     tf.visdom_visualize(mode, input_map, "Test ISTD")

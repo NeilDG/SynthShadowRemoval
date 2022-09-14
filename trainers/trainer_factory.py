@@ -10,10 +10,22 @@ from trainers.albedo_mask_trainer import AlbedoMaskTrainer
 from trainers.albedo_trainer import AlbedoTrainer
 from trainers.shading_trainer import ShadingTrainer
 from trainers.shadow_trainer import ShadowTrainer
+from trainers.shadow_refine_trainer import ShadowRefineTrainer
 from transforms import iid_transforms
 import torch
 
 class TrainerFactory():
+    _sharedInstance = None
+
+    @staticmethod
+    def initialize(gpu_device, opts):
+        if (TrainerFactory._sharedInstance == None):
+            TrainerFactory._sharedInstance = TrainerFactory(gpu_device, opts)
+
+    @staticmethod
+    def getInstance():
+        return TrainerFactory._sharedInstance
+
     def __init__(self, gpu_device, opts):
         self.gpu_device = gpu_device
         self.g_lr = opts.g_lr
@@ -21,6 +33,8 @@ class TrainerFactory():
         self.opts = opts
         self.iid_op = iid_transforms.IIDTransform()
         self.trainer_list = {}
+
+        self.initialize_all_trainers(opts)
 
     def initialize_all_trainers(self, opts):
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
@@ -31,6 +45,7 @@ class TrainerFactory():
         self.trainer_list["train_albedo"] = AlbedoTrainer(self.gpu_device, opts)
         self.trainer_list["train_shading"] = ShadingTrainer(self.gpu_device, opts)
         self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device, opts)
+        self.trainer_list["train_refine_shadow"] = ShadowRefineTrainer(self.gpu_device, opts)
 
         # self.initialize_da_network(self.network_config["da_version_name"])
         # self.initialize_unlit_network(self.network_config["unlit_version_name"])
@@ -63,6 +78,13 @@ class TrainerFactory():
         else:
             self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device, self.opts)
             return self.trainer_list["train_shadow"]
+
+    def get_shadow_refine_trainer(self):
+        if ("train_refine_shadow" in self.trainer_list):
+            return self.trainer_list["train_refine_shadow"]
+        else:
+            self.trainer_list["train_refine_shadow"] = ShadowRefineTrainer(self.gpu_device, self.opts)
+            return self.trainer_list["train_refine_shadow"]
 
     def get_unlit_network(self):
         return self.G_unlit
