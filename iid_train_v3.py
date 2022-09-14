@@ -194,8 +194,6 @@ def main(argv):
                     input_map = {"rgb": rgb_ws_tensor}
                     tf.visdom_infer(mode, input_map)
 
-
-
             if (tf.is_stop_condition_met(mode)):
                 break
 
