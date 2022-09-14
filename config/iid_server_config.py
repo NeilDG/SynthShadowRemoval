@@ -88,7 +88,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
-                network_config[BATCH_SIZE_KEY_Z] = 16
+                network_config[BATCH_SIZE_KEY_Z] = 64
             elif (constants.server_config == 2):  # CCS JUPYTER
                 network_config[BATCH_SIZE_KEY_P] = 24
                 network_config[BATCH_SIZE_KEY_A] = 192
@@ -127,7 +127,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
-                network_config[BATCH_SIZE_KEY_Z] = 16
+                network_config[BATCH_SIZE_KEY_Z] = 64
             elif (constants.server_config == 2):  # CCS JUPYTER
                 network_config[BATCH_SIZE_KEY_P] = 24
                 network_config[BATCH_SIZE_KEY_A] = 192
