@@ -1,5 +1,4 @@
 import torchvision.transforms as transforms
-from torchvision.transforms import functional as transform_functional
 from config import iid_server_config
 from trainers import abstract_iid_trainer, early_stopper, trainer_factory
 import kornia
@@ -58,7 +57,7 @@ class ShadowRefineTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.stop_result = False
 
         self.initialize_dict()
-        self.initialize_shadow_network(network_config["net_config"], network_config["num_blocks"], network_config["nc"])
+        self.initialize_shadow_network(network_config["net_config"], network_config["num_blocks"], network_config["zr_nc"])
 
         self.optimizerG_refine = torch.optim.Adam(itertools.chain(self.G_refiner.parameters()), lr=self.g_lr)
         self.optimizerD_refine = torch.optim.Adam(itertools.chain(self.D_SM_discriminator.parameters()), lr=self.d_lr)
@@ -116,7 +115,9 @@ class ShadowRefineTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         # shadow_matte = tensor_utils.normalize_to_01(input_map["shadow_matte"])
         # input_refined = self.iid_op.remove_shadow(input_ws, rgb_ws_relit, shadow_matte, -1.0, 1.0)
         # input_refined = self.norm_op(input_refined)
-        input_refined = input_map["rgb"]
+        input_ws = input_map["rgb"]
+        shadow_matte_tensor = input_map["shadow_matte"]
+        input_refined = torch.cat([input_ws, shadow_matte_tensor], 1)
         output_ns = target_map["rgb_ns"]
 
         with amp.autocast():
@@ -174,11 +175,14 @@ class ShadowRefineTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             rgb_ws_relit = tensor_utils.normalize_to_01(rgb_ws_relit)
             shadow_matte = tensor_utils.normalize_to_01(shadow_matte)
 
-            input_refined = self.iid_op.remove_shadow(input_ws, rgb_ws_relit, shadow_matte)
-            input_refined = transform_functional.normalize(input_refined, [0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
+            input_ws = self.iid_op.remove_shadow(input_ws, rgb_ws_relit, shadow_matte)
+            input_ws = tensor_utils.normalize_for_gan(input_ws)
+            shadow_matte = tensor_utils.normalize_for_gan(shadow_matte)
+            input_refined = torch.cat([input_ws, shadow_matte], 1)
+
             ns_like = self.G_refiner(input_refined)
 
-            return input_refined, ns_like
+            return input_refined, ns_like, shadow_matte
 
     def visdom_plot(self, iteration):
         self.visdom_reporter.plot_finegrain_loss("a2b_loss_a", iteration, self.losses_dict_s, self.caption_dict_s, self.NETWORK_CHECKPATH)
@@ -186,13 +190,15 @@ class ShadowRefineTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def visdom_visualize(self, input_map, label="Train"):
         # input_ws = input_map["rgb"]
         input_ns = input_map["rgb_ns"]
-        input_ws, ns_like = self.test(input_map)
+        input_ws, ns_like, shadow_matte = self.test(input_map)
 
         input_ws = tensor_utils.normalize_to_01(input_ws)
         input_ns = tensor_utils.normalize_to_01(input_ns)
         ns_like = tensor_utils.normalize_to_01(ns_like)
+        shadow_matte = tensor_utils.normalize_to_01(shadow_matte)
 
         self.visdom_reporter.plot_image(input_ws, str(label) + " Input RGB Images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(shadow_matte, str(label) + " Input Shadow Matte Images - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(ns_like, str(label) + " RGB-NS (Refined) Images - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(input_ns, str(label) + " RGB NS Images - " + self.NETWORK_VERSION + str(self.iteration))
 

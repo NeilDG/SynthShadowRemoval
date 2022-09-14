@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 from skimage.metrics import structural_similarity
 import torchvision.transforms as transforms
 import constants
+from torchvision.transforms import functional as transform_functional
 
 # for attaching hooks on pretrained models
 class SaveFeatures(nn.Module):
@@ -86,6 +87,9 @@ def normalize(v):
 
 def normalize_to_01(input_tensor):
     return (input_tensor * 0.5) + 0.5
+
+def normalize_for_gan(input_tensor):
+    return transform_functional.normalize(input_tensor, [0.5,], [0.5,])
 
 # loads an image compatible with opencv
 def load_image(file_path):

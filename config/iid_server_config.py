@@ -114,6 +114,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_S] = 128
                 network_config[BATCH_SIZE_KEY_Z] = 64
                 network_config[BATCH_SIZE_KEY_ZR] = 64
+                network_config["zr_nc"] = 4
 
         return network_config
 
