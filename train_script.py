@@ -3,7 +3,7 @@
 import os
 def train_relighting():
     os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-              "--plot_enabled=1 --version=\"v27.02\" --iteration=5")
+              "--plot_enabled=0 --version=\"v27.02\" --iteration=5")
 
     os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
               "--plot_enabled=0 --version=\"v27.02\" --iteration=3")
@@ -55,7 +55,7 @@ def main():
     # train_domain_adaptation()
     train_relighting()
     # train_embedding()
-    # os.system("shutdown /s /t 1")
+    os.system("shutdown /s /t 1")
 
 
 if __name__ == "__main__":

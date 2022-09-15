@@ -13,7 +13,8 @@ from loaders import dataset_loader
 
 parser = OptionParser()
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
-parser.add_option('--ns_like_path', type=str, default = "./comparison/ISTD Dataset/SID_PAMI/*.png")
+# parser.add_option('--ns_like_path', type=str, default = "./comparison/ISTD Dataset/SID_PAMI/*.png")
+parser.add_option('--ns_like_path', type=str, default = "E:/ISTD_Dataset/test/test_A/*.png")
 parser.add_option('--ns_path', type=str, default = "E:/ISTD_Dataset/test/test_C/*.png")
 
 class PAMIDataset(data.Dataset):
