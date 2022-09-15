@@ -12,7 +12,6 @@ import torchvision.transforms as transforms
 
 from config import iid_server_config
 
-
 class IIDTransform(nn.Module):
     # GAMMA = 0.95
     # BETA = 0.55
