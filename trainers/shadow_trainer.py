@@ -62,7 +62,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.schedulerGB = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerGB, patience=100000 / self.batch_size, threshold=0.00005)
 
         self.NETWORK_VERSION = sc_instance.get_version_config("network_z_name", self.iteration)
-        self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
+        self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pth'
         self.load_saved_state()
 
     def initialize_shadow_network(self, net_config, num_blocks, input_nc):

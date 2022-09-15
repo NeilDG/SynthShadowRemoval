@@ -156,7 +156,7 @@ def main(argv):
             rgb_ns = rgb_ns.to(device)
             shadow_map = shadow_map.to(device)
 
-            input_map = {"rgb": rgb_ws, "rgb_ns" : rgb_ns, "shadow_matte" : shadow_map}
+            input_map = {"rgb": rgb_ws, "rgb_ns" : rgb_ns, "shadow_map" : shadow_map}
             target_map = input_map
 
             tf.train(mode, epoch, iteration, input_map, target_map)

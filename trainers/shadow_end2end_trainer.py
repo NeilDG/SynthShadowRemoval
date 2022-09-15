@@ -62,7 +62,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def initialize_shadow_network(self, net_config, num_blocks, input_nc):
         network_creator = abstract_iid_trainer.NetworkCreator(self.gpu_device)
-        self.G_SM_predictor, self.D_SM_discriminator = network_creator.initialize_shadow_network(net_config, num_blocks, input_nc) #shadow map (Shadow - Shadow-Free)
+        self.G_SM_predictor, self.D_SM_discriminator = network_creator.initialize_rgb_network(net_config, num_blocks, input_nc) #shadow map (Shadow - Shadow-Free)
 
     def adversarial_loss(self, pred, target):
         if (self.use_bce == 0):
@@ -174,7 +174,11 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         with torch.no_grad():
             input_ws = input_map["rgb"]
 
+            # if ("shadow_map" in input_map):
+            #     rgb2sm = input_map["shadow_map"]
+            # else:
             rgb2sm = self.G_SM_predictor(input_ws)
+
             rgb2ns = self.shadow_op.remove_rgb_shadow(input_ws, rgb2sm, True)
 
         return rgb2ns, rgb2sm
