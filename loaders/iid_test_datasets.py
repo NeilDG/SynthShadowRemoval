@@ -9,7 +9,7 @@ import constants
 import kornia
 from pathlib import Path
 
-from transforms import iid_transforms
+from transforms import shadow_map_transforms
 
 
 class CGIDataset(data.Dataset):
@@ -144,7 +144,8 @@ class ShadowTrainDataset(data.Dataset):
             transforms.Resize(constants.TEST_IMAGE_SIZE),
             transforms.ToTensor()])
 
-        self.shadow_op = iid_transforms.IIDTransform()
+        self.shadow_op = shadow_map_transforms.ShadowMapTransforms()
+        self.norm_op = transforms.Normalize((0.5, ), (0.5, ))
 
     def __getitem__(self, idx):
         file_name = self.img_list_a[idx].split("/")[-1].split(".png")[0]
@@ -165,10 +166,12 @@ class ShadowTrainDataset(data.Dataset):
                 rgb_ws = transforms.functional.crop(rgb_ws, i, j, h, w)
                 rgb_ns = transforms.functional.crop(rgb_ns, i, j, h, w)
 
-            rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, gamma, beta = self.shadow_op.decompose_shadow(rgb_ws, rgb_ns)
-            gamma = torch.unsqueeze(gamma, 0)
-            beta = torch.unsqueeze(beta, 0)
-            gamma_beta_val = torch.cat([gamma, beta])
+            shadow_map = self.shadow_op.extract_shadow(rgb_ws, rgb_ns, True)
+
+            rgb_ws = self.norm_op(rgb_ws)
+            rgb_ns = self.norm_op(rgb_ns)
+            shadow_map = self.norm_op(shadow_map)
+
             # print("Loaded pairing: ", self.img_list_a[idx], self.img_list_b[idx])
 
         except Exception as e:
@@ -176,11 +179,9 @@ class ShadowTrainDataset(data.Dataset):
             print("ERROR: ", e)
             rgb_ws = None
             rgb_ns = None
-            shadow_matte = None
-            rgb_ws_relit = None
-            gamma_beta_val = None
+            shadow_map = None
 
-        return file_name, rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, gamma_beta_val
+        return file_name, rgb_ws, rgb_ns, shadow_map
 
     def __len__(self):
         return self.img_length

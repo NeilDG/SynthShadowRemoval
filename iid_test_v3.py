@@ -120,15 +120,15 @@ def main(argv):
     #
     # opts.version = version_a
     # opts.iteration = iteration_a
-    sc_instance.update_version_config()
-    tf = trainer_factory.TrainerFactory(device, opts)
-    albedo_t = tf.get_albedo_trainer()
+    # sc_instance.update_version_config()
+    # tf = trainer_factory.TrainerFactory(device, opts)
+    # albedo_t = tf.get_albedo_trainer()
 
     # opts.version = version_s
     # opts.iteration = iteration_s
-    sc_instance.update_version_config()
-    tf = trainer_factory.TrainerFactory(device, opts)
-    shading_t = tf.get_shading_trainer()
+    # sc_instance.update_version_config()
+    # tf = trainer_factory.TrainerFactory(device, opts)
+    # shading_t = tf.get_shading_trainer()
 
     # opts.version = version_z
     # opts.iteration = iteration_z
@@ -136,7 +136,7 @@ def main(argv):
     tf = trainer_factory.TrainerFactory(device, opts)
     shadow_t = tf.get_shadow_trainer()
 
-    dataset_tester = TesterClass(albedo_t, shading_t, shadow_t)
+    dataset_tester = TesterClass(shadow_t)
 
     # style_enabled = network_config["style_transferred"]
     style_enabled = 1

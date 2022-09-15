@@ -9,8 +9,8 @@ from trainers import early_stopper
 from trainers.albedo_mask_trainer import AlbedoMaskTrainer
 from trainers.albedo_trainer import AlbedoTrainer
 from trainers.shading_trainer import ShadingTrainer
-from trainers.shadow_trainer import ShadowTrainer
-from transforms import iid_transforms
+# from trainers.shadow_trainer import ShadowTrainer
+from trainers.shadow_end2end_trainer import ShadowTrainer
 import torch
 
 class TrainerFactory():
@@ -19,7 +19,6 @@ class TrainerFactory():
         self.g_lr = opts.g_lr
         self.d_lr = opts.d_lr
         self.opts = opts
-        self.iid_op = iid_transforms.IIDTransform()
         self.trainer_list = {}
 
     def initialize_all_trainers(self, opts):
@@ -27,9 +26,9 @@ class TrainerFactory():
         self.server_config = sc_instance.get_general_configs()
         self.network_config = sc_instance.interpret_network_config_from_version()
 
-        self.trainer_list["train_albedo_mask"] = AlbedoMaskTrainer(self.gpu_device, opts)
-        self.trainer_list["train_albedo"] = AlbedoTrainer(self.gpu_device, opts)
-        self.trainer_list["train_shading"] = ShadingTrainer(self.gpu_device, opts)
+        # self.trainer_list["train_albedo_mask"] = AlbedoMaskTrainer(self.gpu_device, opts)
+        # self.trainer_list["train_albedo"] = AlbedoTrainer(self.gpu_device, opts)
+        # self.trainer_list["train_shading"] = ShadingTrainer(self.gpu_device, opts)
         self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device, opts)
 
         # self.initialize_da_network(self.network_config["da_version_name"])
@@ -43,19 +42,19 @@ class TrainerFactory():
         self.initialize_all_trainers(opts)
         return self.trainer_list["train_albedo_mask"], self.trainer_list["train_albedo"], self.trainer_list["train_shading"], self.trainer_list["train_shadow"]
 
-    def get_albedo_trainer(self):
-        if("train_albedo" in self.trainer_list):
-            return self.trainer_list["train_albedo"]
-        else:
-            self.trainer_list["train_albedo"] = AlbedoTrainer(self.gpu_device, self.opts)
-            return self.trainer_list["train_albedo"]
-
-    def get_shading_trainer(self):
-        if("train_shading" in self.trainer_list):
-            return self.trainer_list["train_shading"]
-        else:
-            self.trainer_list["train_shading"] = ShadingTrainer(self.gpu_device, self.opts)
-            return self.trainer_list["train_shading"]
+    # def get_albedo_trainer(self):
+    #     if("train_albedo" in self.trainer_list):
+    #         return self.trainer_list["train_albedo"]
+    #     else:
+    #         self.trainer_list["train_albedo"] = AlbedoTrainer(self.gpu_device, self.opts)
+    #         return self.trainer_list["train_albedo"]
+    #
+    # def get_shading_trainer(self):
+    #     if("train_shading" in self.trainer_list):
+    #         return self.trainer_list["train_shading"]
+    #     else:
+    #         self.trainer_list["train_shading"] = ShadingTrainer(self.gpu_device, self.opts)
+    #         return self.trainer_list["train_shading"]
 
     def get_shadow_trainer(self):
         if ("train_shadow" in self.trainer_list):

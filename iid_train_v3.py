@@ -151,14 +151,12 @@ def main(argv):
     start_epoch = sc_instance.get_last_epoch_from_mode(mode)
     print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
     for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
-        for i, (_, rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, gamma_beta_val) in enumerate(train_loader, 0):
+        for i, (_, rgb_ws, rgb_ns, shadow_map) in enumerate(train_loader, 0):
             rgb_ws = rgb_ws.to(device)
             rgb_ns = rgb_ns.to(device)
-            shadow_matte = shadow_matte.to(device)
-            rgb_ws_relit = rgb_ws_relit.to(device)
-            gamma_beta_val = gamma_beta_val.to(device)
+            shadow_map = shadow_map.to(device)
 
-            input_map = {"rgb": rgb_ws, "rgb_ns" : rgb_ns, "rgb_relit" : rgb_ws_relit, "shadow_matte" : shadow_matte, "gamma_beta_val": gamma_beta_val}
+            input_map = {"rgb": rgb_ws, "rgb_ns" : rgb_ns, "shadow_matte" : shadow_map}
             target_map = input_map
 
             tf.train(mode, epoch, iteration, input_map, target_map)
@@ -184,7 +182,6 @@ def main(argv):
                     _, rgb_ws, rgb_ns = next(itertools.cycle(test_loader_istd))
                     rgb_ws = rgb_ws.to(device)
                     rgb_ns = rgb_ns.to(device)
-                    shadow_matte = shadow_matte.to(device)
 
                     input_map = {"rgb": rgb_ws, "rgb_ns" : rgb_ns}
                     tf.visdom_visualize(mode, input_map, "Test ISTD")
