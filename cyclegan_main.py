@@ -100,6 +100,8 @@ def main(argv):
     general_config = sc_instance.get_general_configs()
     network_config = sc_instance.interpret_style_transfer_config_from_version()
 
+    print(network_config)
+
     gt = cyclegan_trainer.CycleGANTrainer(device, opts)
     iteration = 0
     start_epoch = sc_instance.get_last_epoch_from_mode("train_style_transfer")
