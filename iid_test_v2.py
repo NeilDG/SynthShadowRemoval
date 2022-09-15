@@ -308,8 +308,8 @@ class TesterClass():
         self.visdom_reporter.plot_text(display_text)
 
     def test_shadow(self, rgb_ws, rgb_ns, prefix, opts):
-        rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
-        rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
+        # rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
+        # rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
 
         input_map = {"rgb": rgb_ws}
         rgb2ns, rgb2sm = self.shadow_t.test(input_map)
@@ -341,7 +341,7 @@ class TesterClass():
         # rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, _, _ = self.iid_op.decompose_shadow(rgb_ws, rgb_ns)
 
         input_map = {"rgb": rgb_ws}
-        rgb2ns, rgb2sm, rgb2relit = self.shadow_t.test(input_map)
+        rgb2ns, rgb2sm = self.shadow_t.test(input_map)
 
         # normalize everything
         rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
@@ -352,7 +352,7 @@ class TesterClass():
         self.visdom_reporter.plot_image(rgb2ns, "ISTD NS (equation) Images - " + opts.version + str(opts.iteration))
 
         self.visdom_reporter.plot_image(rgb2sm, "ISTD Shadow Matte-Like - " + opts.version + str(opts.iteration))
-        self.visdom_reporter.plot_image(rgb2relit, "ISTD Relit-Like Images - " + opts.version + str(opts.iteration))
+        # self.visdom_reporter.plot_image(rgb2relit, "ISTD Relit-Like Images - " + opts.version + str(opts.iteration))
 
         psnr_rgb = np.round(kornia.metrics.psnr(rgb2ns, rgb_ns, max_val=1.0).item(), 4)
         ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb2ns, rgb_ns, 5).item(), 4)
