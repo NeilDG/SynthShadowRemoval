@@ -170,6 +170,9 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             if (self.stopper_method.has_reset()):
                 self.save_states(epoch, iteration, False)
 
+    def is_stop_condition_met(self):
+        return self.stop_result
+
     def test(self, input_map):
         with torch.no_grad():
             input_ws = input_map["rgb"]

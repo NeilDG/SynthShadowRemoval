@@ -66,7 +66,7 @@ class IIDServerConfig():
         ALBEDO_MODE_KEY = "albedo_mode"
         STYLE_TRANSFER = "style_transferred"
 
-        if (constants.network_version == "v29.01"):  # Adain-GEN
+        if (constants.network_version == "v28.01"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4
@@ -99,8 +99,9 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
                 network_config[BATCH_SIZE_KEY_Z] = 96
-        elif (constants.network_version == "v29.02"):  # Adain-GEN
-            network_config[NETWORK_CONFIG_NUM] = 5
+
+        elif (constants.network_version == "v29.01"):  # Adain-GEN
+            network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4
             network_config[ALBEDO_MODE_KEY] = 1
@@ -131,7 +132,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
-                network_config[BATCH_SIZE_KEY_Z] = 64
+                network_config[BATCH_SIZE_KEY_Z] = 96
 
         return network_config
 

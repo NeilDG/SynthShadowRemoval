@@ -67,10 +67,11 @@ class EarlyStopper():
             ave_D_loss = ave_D_loss / len(self.test_metric_list) * 1.0
             self.test_metric_list.clear()
 
-        if(self.last_metric < ave_D_loss):
-            self.stop_counter += 1
+        # if(self.last_metric < ave_D_loss):
+        #     self.stop_counter += 1
+        self.stop_counter += 1
 
-        elif(self.last_metric > ave_D_loss):
+        if(self.last_metric > ave_D_loss):
             self.last_metric = ave_D_loss
             self.stop_counter = 0
             print("Early stopping mechanism reset. Best metric is now ", self.last_metric.item())
