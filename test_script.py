@@ -4,11 +4,11 @@ import os
 
 def test_relighting():
     os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-              "--plot_enabled=1 --version=\"v26.11\" --iteration=5 "
+              "--plot_enabled=1 --version=\"v27.02\" --iteration=5 "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
     os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-              "--plot_enabled=1 --version=\"v26.11\" --iteration=3 "
+              "--plot_enabled=1 --version=\"v27.02\" --iteration=3 "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
 def main():
