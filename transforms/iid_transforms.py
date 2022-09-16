@@ -18,10 +18,9 @@ class IIDTransform(nn.Module):
     # BETA = 0.55
     # GAMMA = 1.25
     # BETA = 0.95
-    MIN_GAMMA = 1.35
-    MIN_BETA = 0.45
-    MAX_GAMMA = 1.75
-    MAX_BETA = 1.55
+    MIN_BETA = 0.0
+    MAX_BETA = 1.0
+    MAX_GAMMA = 1.0
 
     def __init__(self):
         super(IIDTransform, self).__init__()
@@ -31,11 +30,9 @@ class IIDTransform(nn.Module):
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         network_config = sc_instance.interpret_network_config_from_version()
 
-        self.MIN_GAMMA = network_config["min_gamma"]
         self.MIN_BETA = network_config["min_beta"]
-
-        self.MAX_GAMMA = network_config["max_gamma"]
         self.MAX_BETA = network_config["max_beta"]
+        self.MAX_GAMMA = network_config["max_gamma"]
 
 
     def mask_fill_nonzeros(self, input_tensor):
@@ -61,8 +58,8 @@ class IIDTransform(nn.Module):
         return output_tensor.masked_fill_(masked_tensor, 0)
 
     def decompose_shadow(self, rgb_ws, rgb_ns):
-        gamma = torch.tensor(np.random.uniform(self.MIN_GAMMA, self.MAX_GAMMA), dtype=torch.float)
         beta = torch.tensor(np.random.uniform(self.MIN_BETA, self.MAX_BETA), dtype=torch.float)
+        gamma = self.MAX_GAMMA - beta
 
         shadow_matte = 1.0 - self.extract_shadow(rgb_ws, rgb_ns, True)
         rgb_ws = self.add_shadow(rgb_ns, shadow_matte, gamma, beta)
@@ -149,8 +146,10 @@ class IIDTransform(nn.Module):
         return shading_tensor
 
     def extract_relit(self, rgb_ws, gamma, beta):
-        min = torch.min(rgb_ws)
-        max = torch.tensor(self.MAX_GAMMA)
+        # min = torch.min(rgb_ws)
+        # max = torch.tensor(self.MAX_GAMMA)
+        min = 0.0
+        max = 1.0
 
         relit_ws = (gamma * rgb_ws) + beta
         relit_ws = torch.clip(relit_ws, min, max)
