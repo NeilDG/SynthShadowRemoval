@@ -82,7 +82,7 @@ D_B_FAKE_LOSS_KEY = "d_fake_b"
 LAST_METRIC_KEY = "last_metric"
 
 plot_enabled = 1
-early_stop_threshold = 1000
+early_stop_threshold = 50
 min_epochs = 50
 num_epochs = 100
 
