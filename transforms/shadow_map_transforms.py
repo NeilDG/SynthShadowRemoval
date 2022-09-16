@@ -18,7 +18,7 @@ class ShadowMapTransforms():
     def __init__(self):
         super(ShadowMapTransforms, self).__init__()
 
-        self.MIN_SHADOW_INTENSITY = 0.25
+        self.MIN_SHADOW_INTENSITY = 0.5
         self.MAX_SHADOW_INTENSITY = 2.0
         self.shadow_intensity = 1.0
 
@@ -29,7 +29,7 @@ class ShadowMapTransforms():
 
         shadow_tensor = rgb_tensor_ns - rgb_tensor_ws
 
-        self.shadow_intensity = self.MIN_SHADOW_INTENSITY
+        self.shadow_intensity = np.random.uniform(self.MIN_SHADOW_INTENSITY, self.MAX_SHADOW_INTENSITY)
         shadow_tensor = shadow_tensor * self.shadow_intensity
         shadow_tensor = torch.clip(shadow_tensor, 0.0, 1.0)
 
