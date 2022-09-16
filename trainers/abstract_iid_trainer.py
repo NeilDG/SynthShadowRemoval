@@ -3,7 +3,7 @@ from abc import abstractmethod
 import torch
 
 import constants
-from model import embedding_network
+from model import embedding_network, densenet_gan
 from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
 from model import usi3d_gan
@@ -53,6 +53,8 @@ class NetworkCreator():
                       'n_res': num_blocks,                    # number of residual blocks in content encoder/decoder
                       'pad_type': 'reflect'}
             G_A = usi3d_gan.AdaINGen(input_dim=input_nc, output_dim=3, params=params).to(self.gpu_device)
+        elif(net_config == 5):
+            G_A = densenet_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=True).to(self.gpu_device)
         else:
             G_A = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 

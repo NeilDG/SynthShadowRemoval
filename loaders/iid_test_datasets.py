@@ -166,7 +166,7 @@ class ShadowTrainDataset(data.Dataset):
                 rgb_ws = transforms.functional.crop(rgb_ws, i, j, h, w)
                 rgb_ns = transforms.functional.crop(rgb_ns, i, j, h, w)
 
-            shadow_map = self.shadow_op.extract_shadow(rgb_ws, rgb_ns, False)
+            rgb_ws, rgb_ns, shadow_map = self.shadow_op.generate_shadow_map(rgb_ws, rgb_ns, False)
 
             rgb_ws = self.norm_op(rgb_ws)
             rgb_ns = self.norm_op(rgb_ns)
