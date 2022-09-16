@@ -4,15 +4,7 @@ import os
 
 def test_relighting():
     os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-              "--plot_enabled=1 --version=\"v27.01\" --iteration=6 "
-              "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
-
-    os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-              "--plot_enabled=1 --version=\"v27.01\" --iteration=7 "
-              "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
-
-    os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-              "--plot_enabled=1 --version=\"v27.01\" --iteration=8 "
+              "--plot_enabled=1 --version=\"v27.04\" --iteration=5 "
               "--input_path=\"E:/IID-TestDataset/GTA/input/\" --output_path=\"E:/IID-TestDataset/GTA/ours/\"")
 
     # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
