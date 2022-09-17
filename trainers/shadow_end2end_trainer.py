@@ -44,12 +44,13 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         network_config = sc_instance.interpret_network_config_from_version()
 
         self.batch_size = network_config["batch_size_z"]
+        self.sm_channel = network_config["sm_one_channel"]
 
         self.stopper_method = early_stopper.EarlyStopper(general_config["train_shadow"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, constants.early_stop_threshold, 99999.9)
         self.stop_result = False
 
         self.initialize_dict()
-        self.initialize_shadow_network(network_config["net_config"], network_config["num_blocks"], network_config["nc"])
+        self.initialize_shadow_network(self.sm_channel, network_config["net_config"], network_config["num_blocks"], network_config["nc"])
 
         self.optimizerG = torch.optim.Adam(itertools.chain(self.G_SM_predictor.parameters()), lr=self.g_lr)
         self.optimizerD = torch.optim.Adam(itertools.chain(self.D_SM_discriminator.parameters()), lr=self.d_lr)
@@ -60,10 +61,13 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
         self.load_saved_state()
 
-    def initialize_shadow_network(self, net_config, num_blocks, input_nc):
+    def initialize_shadow_network(self, sm_channel, net_config, num_blocks, input_nc):
         network_creator = abstract_iid_trainer.NetworkCreator(self.gpu_device)
-        self.G_SM_predictor, self.D_SM_discriminator = network_creator.initialize_rgb_network(net_config, num_blocks, input_nc) #shadow map (Shadow - Shadow-Free)
 
+        if(sm_channel == True):
+            self.G_SM_predictor, self.D_SM_discriminator = network_creator.initialize_shadow_network(net_config, num_blocks, input_nc) #shadow map (Shadow - Shadow-Free)
+        else:
+            self.G_SM_predictor, self.D_SM_discriminator = network_creator.initialize_rgb_network(net_config, num_blocks, input_nc)  # shadow map (Shadow - Shadow-Free)
     def adversarial_loss(self, pred, target):
         if (self.use_bce == 0):
             return self.mse_loss(pred, target)
@@ -177,10 +181,10 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         with torch.no_grad():
             input_ws = input_map["rgb"]
 
-            if ("shadow_map" in input_map):
-                rgb2sm = input_map["shadow_map"]
-            else:
-                rgb2sm = self.G_SM_predictor(input_ws)
+            # if ("shadow_map" in input_map):
+            #     rgb2sm = input_map["shadow_map"]
+            # else:
+            rgb2sm = self.G_SM_predictor(input_ws)
 
             rgb2ns = self.shadow_op.remove_rgb_shadow(input_ws, rgb2sm, True)
 

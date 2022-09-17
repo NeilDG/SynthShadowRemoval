@@ -9,6 +9,7 @@ import constants
 import kornia
 from pathlib import Path
 
+from config import iid_server_config
 from transforms import shadow_map_transforms
 
 
@@ -147,6 +148,10 @@ class ShadowTrainDataset(data.Dataset):
         self.shadow_op = shadow_map_transforms.ShadowMapTransforms()
         self.norm_op = transforms.Normalize((0.5, ), (0.5, ))
 
+        sc_instance = iid_server_config.IIDServerConfig.getInstance()
+        network_config = sc_instance.interpret_network_config_from_version()
+        self.sm_channel = network_config["sm_one_channel"]
+
     def __getitem__(self, idx):
         file_name = self.img_list_a[idx].split("/")[-1].split(".png")[0]
 
@@ -166,7 +171,7 @@ class ShadowTrainDataset(data.Dataset):
                 rgb_ws = transforms.functional.crop(rgb_ws, i, j, h, w)
                 rgb_ns = transforms.functional.crop(rgb_ns, i, j, h, w)
 
-            rgb_ws, rgb_ns, shadow_map = self.shadow_op.generate_shadow_map(rgb_ws, rgb_ns, False)
+            rgb_ws, rgb_ns, shadow_map = self.shadow_op.generate_shadow_map(rgb_ws, rgb_ns, self.sm_channel)
 
             rgb_ws = self.norm_op(rgb_ws)
             rgb_ns = self.norm_op(rgb_ns)
