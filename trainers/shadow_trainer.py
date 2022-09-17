@@ -45,7 +45,6 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         network_config = sc_instance.interpret_network_config_from_version()
 
         self.batch_size = network_config["batch_size_z"]
-        self.da_enabled = network_config["da_enabled"]
 
         self.stopper_method = early_stopper.EarlyStopper(general_config["train_shadow"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, constants.early_stop_threshold, 99999.9)
         self.stop_result = False
@@ -134,19 +133,15 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
 
     def train(self, epoch, iteration, input_map, target_map):
-        input_rgb_tensor = input_map["rgb"]
+        input_ws = input_map["rgb_ws"]
+        input_ws_refined = input_map["rgb_ws_refined"]
         shadow_matte_tensor = target_map["shadow_matte"]
         gamma_beta_val = target_map["gamma_beta_val"] #TODO: Check if normalization is needed
 
         with amp.autocast():
-            if (self.da_enabled == 1):
-                input_ws = self.reshape_input(input_rgb_tensor)
-            else:
-                input_ws = input_rgb_tensor
-
             #gamme-beta regressor
             self.optimizerGB.zero_grad()
-            l1_loss = self.mse_loss(self.GB_regressor(input_ws), gamma_beta_val) * self.it_table.get_gammabeta_weight()
+            l1_loss = self.mse_loss(self.GB_regressor(input_ws_refined), gamma_beta_val) * self.it_table.get_gammabeta_weight()
             errGB = l1_loss
 
             self.fp16_scaler.scale(errGB).backward()
@@ -210,12 +205,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def test(self, input_map):
         with torch.no_grad():
-            input_rgb_tensor = input_map["rgb"]
-
-            if (self.da_enabled == 1):
-                input_ws = self.reshape_input(input_rgb_tensor)
-            else:
-                input_ws = input_rgb_tensor
+            input_ws = input_map["rgb_ws"]
 
             # print("Tensor properties. Min: ", torch.min(input_ws), " Max:", torch.max(input_ws))
             rgb2sm = self.G_SM_predictor(input_ws)
@@ -234,7 +224,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.visdom_reporter.plot_finegrain_loss("a2b_loss_a", iteration, self.losses_dict_s, self.caption_dict_s, self.NETWORK_CHECKPATH)
 
     def visdom_visualize(self, input_map, label="Train"):
-        input_rgb_tensor = input_map["rgb"]
+        input_ws = input_map["rgb_ws"]
         rgb2ns, rgb2sm, rgb2relit = self.test(input_map)
         input_ns = input_map["rgb_ns"]
 
@@ -249,7 +239,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         input_ns = tensor_utils.normalize_to_01(input_ns)
 
-        self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(input_ws, str(label) + " Input RGB Images - " + self.NETWORK_VERSION + str(self.iteration))
 
         self.visdom_reporter.plot_image(rgb2relit, str(label) + " RGB Relit-Like images - " + self.NETWORK_VERSION + str(self.iteration))
         if("rgb_relit" in input_map):

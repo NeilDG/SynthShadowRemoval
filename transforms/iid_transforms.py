@@ -62,16 +62,16 @@ class IIDTransform(nn.Module):
         gamma = self.MAX_GAMMA - beta
 
         shadow_matte = 1.0 - self.extract_shadow(rgb_ws, rgb_ns, True)
-        rgb_ws = self.add_shadow(rgb_ns, shadow_matte, gamma, beta)
+        rgb_ws_refined = self.add_shadow(rgb_ns, shadow_matte, gamma, beta)
         rgb_ws_relit = self.extract_relit(rgb_ws, gamma, beta)
-        rgb_ns = self.remove_shadow(rgb_ws, rgb_ws_relit, shadow_matte)
+        rgb_ns_refined = self.remove_shadow(rgb_ws, rgb_ws_relit, shadow_matte)
 
-        rgb_ws = self.transform_op(rgb_ws)
-        rgb_ns = self.transform_op(rgb_ns)
+        rgb_ws_refined = self.transform_op(rgb_ws_refined)
+        rgb_ws_refined = self.transform_op(rgb_ns_refined)
         shadow_matte = self.transform_op(shadow_matte)
         rgb_ws_relit = self.transform_op(rgb_ws_relit)
 
-        return rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, gamma, beta
+        return rgb_ws, rgb_ns, rgb_ws_refined, rgb_ws_refined, shadow_matte, rgb_ws_relit, gamma, beta
 
     # def forward(self, rgb_ws, rgb_ns, albedo_tensor):
     #     #extract shadows

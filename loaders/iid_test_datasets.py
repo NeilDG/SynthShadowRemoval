@@ -165,7 +165,7 @@ class ShadowTrainDataset(data.Dataset):
                 rgb_ws = transforms.functional.crop(rgb_ws, i, j, h, w)
                 rgb_ns = transforms.functional.crop(rgb_ns, i, j, h, w)
 
-            rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, gamma, beta = self.shadow_op.decompose_shadow(rgb_ws, rgb_ns)
+            rgb_ws, rgb_ns, rgb_ws_refined, rgb_ns_refined, shadow_matte, rgb_ws_relit, gamma, beta = self.shadow_op.decompose_shadow(rgb_ws, rgb_ns)
             gamma = torch.unsqueeze(gamma, 0)
             beta = torch.unsqueeze(beta, 0)
             gamma_beta_val = torch.cat([gamma, beta])
@@ -176,11 +176,13 @@ class ShadowTrainDataset(data.Dataset):
             print("ERROR: ", e)
             rgb_ws = None
             rgb_ns = None
+            rgb_ws_refined = None
+            rgb_ns_refined = None
             shadow_matte = None
             rgb_ws_relit = None
             gamma_beta_val = None
 
-        return file_name, rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, gamma_beta_val
+        return file_name, rgb_ws, rgb_ns, rgb_ws_refined, rgb_ns_refined, shadow_matte, rgb_ws_relit, gamma_beta_val
 
     def __len__(self):
         return self.img_length
