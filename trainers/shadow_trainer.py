@@ -68,7 +68,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         network_creator = abstract_iid_trainer.NetworkCreator(self.gpu_device)
         self.G_SM_predictor, self.D_SM_discriminator = network_creator.initialize_shadow_network(net_config, num_blocks, input_nc)
 
-        self.GB_regressor = cycle_gan.FeatureDiscriminator(input_nc=3, output_nc=2, n_blocks=7, max_filter_size=4096, last_layer=nn.LeakyReLU).to(self.gpu_device)
+        self.GB_regressor = cycle_gan.FeatureDiscriminator(input_nc=3, output_nc=2, n_blocks=4, max_filter_size=4096, last_layer=nn.LeakyReLU).to(self.gpu_device)
 
     def adversarial_loss(self, pred, target):
         if (self.use_bce == 0):

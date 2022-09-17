@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J Z_1
+#SBATCH -J Z1
 #SBATCH --partition=gpu
 #SBATCH --qos=12c-1h_2gpu
 #SBATCH --cpus-per-task=6
@@ -20,7 +20,7 @@ module load cuda/10.1_cudnn-7.6.5
 source activate NeilGAN_V2
 
 srun python iid_train_v3.py \
---version="v27.02" --iteration=$ITERATION \
+--version="v27.08" --iteration=$ITERATION \
 --server_config=1 --plot_enabled=0 --img_to_load=-1
 
 conda deactivate

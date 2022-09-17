@@ -32,7 +32,7 @@ class SaveFeatures(nn.Module):
         self.features = output;
 
     def close(self):
-        self.hook.remove();
+        self.hook.remove()
 
 
 class CombineFeatures(nn.Module):
