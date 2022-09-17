@@ -186,7 +186,6 @@ def main(argv):
                     _, rgb_ws, rgb_ns = next(itertools.cycle(test_loader_istd))
                     rgb_ws = rgb_ws.to(device)
                     rgb_ns = rgb_ns.to(device)
-                    shadow_matte = shadow_matte.to(device)
 
                     input_map = {"rgb_ws": rgb_ws, "rgb_ns" : rgb_ns}
                     tf.visdom_visualize(mode, input_map, "Test ISTD")
