@@ -11,6 +11,7 @@ from trainers.albedo_trainer import AlbedoTrainer
 from trainers.shading_trainer import ShadingTrainer
 # from trainers.shadow_trainer import ShadowTrainer
 from trainers.shadow_end2end_trainer import ShadowTrainer
+from trainers.shadow_refinement_trainer import ShadowRefinementTrainer
 import torch
 
 class TrainerFactory():
@@ -30,6 +31,7 @@ class TrainerFactory():
         # self.trainer_list["train_albedo"] = AlbedoTrainer(self.gpu_device, opts)
         # self.trainer_list["train_shading"] = ShadingTrainer(self.gpu_device, opts)
         self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device, opts)
+        self.trainer_list["train_shadow_refine"] = ShadowRefinementTrainer(self.gpu_device, opts)
 
         # self.initialize_da_network(self.network_config["da_version_name"])
         # self.initialize_unlit_network(self.network_config["unlit_version_name"])
@@ -62,6 +64,13 @@ class TrainerFactory():
         else:
             self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device, self.opts)
             return self.trainer_list["train_shadow"]
+
+    def get_shadow_refine_trainer(self):
+        if("train_shadow_refine" in self.trainer_list):
+            return self.trainer_list["train_shadow_refine"]
+        else:
+            self.trainer_list["train_shadow_refine"] = ShadowRefinementTrainer(self.gpu_device, self.opts)
+            return self.trainer_list["train_shadow_refine"]
 
     def get_unlit_network(self):
         return self.G_unlit

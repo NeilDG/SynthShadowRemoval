@@ -13,7 +13,7 @@ class IIDServerConfig():
         return IIDServerConfig._sharedInstance
 
     def __init__(self):
-        self.epoch_map = {"train_style_transfer" : 0, "train_albedo_mask" : 0, "train_albedo" : 0, "train_shading" : 0, "train_shadow" : 0}
+        self.epoch_map = {"train_style_transfer" : 0, "train_albedo_mask" : 0, "train_albedo" : 0, "train_shading" : 0, "train_shadow" : 0, "train_shadow_refine" : 0}
 
         # COARE, CCS CLOUD, GCLOUD, RTX 2080TI, RTX 3090
         if(constants.server_config <= 5):
@@ -21,22 +21,24 @@ class IIDServerConfig():
                                     "train_albedo_mask": {"min_epochs": 3, "max_epochs" : 10, "patch_size": 256},
                                     "train_albedo": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64},
                                     "train_shading": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64},
-                                    "train_shadow": {"min_epochs": 10,"max_epochs" : 30, "patch_size": 128}}
+                                    "train_shadow": {"min_epochs": 10,"max_epochs" : 30, "patch_size": 128},
+                                    "train_shadow_refine": {"min_epochs": 10,"max_epochs" : 30, "patch_size": 128}}
         #debug
         if(constants.debug_run == 1):
             self.general_configs = {"train_style_transfer" : {"min_epochs" : 1, "max_epochs" : 5},
                                     "train_albedo_mask": {"min_epochs": 1, "max_epochs" : 2, "patch_size": 256},
                                    "train_albedo": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 64},
                                    "train_shading": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 64},
-                                    "train_shadow": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 128}}
+                                    "train_shadow": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 128},
+                                    "train_shadow_refine": {"min_epochs": 10,"max_epochs" : 30, "patch_size": 128}}
 
 
-        self.version_config = {"version": constants.network_version, "network_p_name": "rgb2mask", "network_a_name" : "rgb2albedo", "network_s_name" : "rgb2shading", "network_z_name" : "rgb2ns",
-                               "style_transfer_name": "synth2rgb"}
+        self.update_version_config()
 
 
     def update_version_config(self):
         self.version_config = {"version": constants.network_version, "network_p_name": "rgb2mask", "network_a_name": "rgb2albedo", "network_s_name": "rgb2shading", "network_z_name": "rgb2ns",
+                               "network_zr_name": "rgb2ns_refine",
                                "style_transfer_name": "synth2rgb"}
 
     def get_general_configs(self):
@@ -54,22 +56,25 @@ class IIDServerConfig():
     def get_last_epoch_from_mode(self, mode):
         return self.epoch_map[mode]
 
-    def interpret_network_config_from_version(self): #interprets a given version name + iteration, to its corresponding network config. Ex: v.9.00.XX = U-Net config
+    def interpret_network_config_from_version(self): #interprets a given version name + iteration, to its corresponding network config.
         network_config = {}
         NETWORK_CONFIG_NUM = "net_config"
         NC_KEY = "nc"
+        SHADOW_REFINE_NC_KEY = "shadowrefine_nc"
         NUM_BLOCKS_KEY = "num_blocks"
         BATCH_SIZE_KEY_P = "batch_size_p"
         BATCH_SIZE_KEY_A = "batch_size_a"
         BATCH_SIZE_KEY_S = "batch_size_s"
         BATCH_SIZE_KEY_Z = "batch_size_z"
+        BATCH_SIZE_KEY_ZR = "batch_size_zr"
         ALBEDO_MODE_KEY = "albedo_mode"
         STYLE_TRANSFER = "style_transferred"
         SHADOW_MAP_CHANNEL_KEY = "sm_one_channel"
 
-        if (constants.network_version == "v29.01"):  # Adain-GENd
+        if (constants.network_version == "v29.03"):  #Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
+            network_config[SHADOW_REFINE_NC_KEY] = 4
             network_config[NUM_BLOCKS_KEY] = 4
             network_config[ALBEDO_MODE_KEY] = 1
             network_config[STYLE_TRANSFER] = 1
@@ -81,30 +86,36 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
                 network_config[BATCH_SIZE_KEY_Z] = 64
+                network_config[BATCH_SIZE_KEY_ZR] = 64
             elif (constants.server_config == 2):  # CCS JUPYTER
                 network_config[BATCH_SIZE_KEY_P] = 24
                 network_config[BATCH_SIZE_KEY_A] = 192
                 network_config[BATCH_SIZE_KEY_S] = 192
                 network_config[BATCH_SIZE_KEY_Z] = 256
+                network_config[BATCH_SIZE_KEY_ZR] = 256
             elif (constants.server_config == 3):  # GCLOUD
                 network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
                 network_config[BATCH_SIZE_KEY_Z] = 256
+                network_config[BATCH_SIZE_KEY_ZR] = 256
             elif (constants.server_config == 4):  # RTX 2080Ti
                 network_config[BATCH_SIZE_KEY_P] = 8
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
                 network_config[BATCH_SIZE_KEY_Z] = 64
+                network_config[BATCH_SIZE_KEY_ZR] = 64
             else:  # RTX 3090
                 network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
                 network_config[BATCH_SIZE_KEY_Z] = 96
+                network_config[BATCH_SIZE_KEY_ZR] = 96
 
-        elif (constants.network_version == "v29.02"):  # Adain-GEN
+        elif (constants.network_version == "v29.04"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
+            network_config[SHADOW_REFINE_NC_KEY] = 4
             network_config[NUM_BLOCKS_KEY] = 4
             network_config[ALBEDO_MODE_KEY] = 1
             network_config[STYLE_TRANSFER] = 1
@@ -116,26 +127,31 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
                 network_config[BATCH_SIZE_KEY_Z] = 64
+                network_config[BATCH_SIZE_KEY_ZR] = 64
             elif (constants.server_config == 2):  # CCS JUPYTER
                 network_config[BATCH_SIZE_KEY_P] = 24
                 network_config[BATCH_SIZE_KEY_A] = 192
                 network_config[BATCH_SIZE_KEY_S] = 192
                 network_config[BATCH_SIZE_KEY_Z] = 256
+                network_config[BATCH_SIZE_KEY_ZR] = 256
             elif (constants.server_config == 3):  # GCLOUD
                 network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
                 network_config[BATCH_SIZE_KEY_Z] = 256
+                network_config[BATCH_SIZE_KEY_ZR] = 256
             elif (constants.server_config == 4):  # RTX 2080Ti
                 network_config[BATCH_SIZE_KEY_P] = 8
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
                 network_config[BATCH_SIZE_KEY_Z] = 64
+                network_config[BATCH_SIZE_KEY_ZR] = 64
             else:  # RTX 3090
                 network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
-                network_config[BATCH_SIZE_KEY_Z] = 96
+                network_config[BATCH_SIZE_KEY_Z] = 64
+                network_config[BATCH_SIZE_KEY_ZR] = 64
 
         return network_config
 
@@ -273,6 +289,8 @@ class IIDServerConfig():
             return network_config["batch_size_s"]
         elif(mode == "train_shadow"):
             return network_config["batch_size_z"]
+        elif(mode == "train_shadow_refine"):
+            return network_config["batch_size_zr"]
         else:
             print("Mode ", mode, " not recognized.")
             return -1
