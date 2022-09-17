@@ -67,7 +67,7 @@ class IIDServerConfig():
         STYLE_TRANSFER = "style_transferred"
         SHADOW_MAP_CHANNEL_KEY = "sm_one_channel"
 
-        if (constants.network_version == "v29.01"):  # Adain-GEN
+        if (constants.network_version == "v29.01"):  # Adain-GENd
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 4
