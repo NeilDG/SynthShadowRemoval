@@ -3,17 +3,8 @@
 import os
 
 def test_relighting():
-    os.system("python \"iid_test_v3.py\" --server_config=4 --img_to_load=-1 "
-              "--plot_enabled=1 --version=\"v29.01\" --iteration=5")
-
-    os.system("python \"iid_test_v3.py\" --server_config=4 --img_to_load=-1 "
-              "--plot_enabled=1 --version=\"v29.01\" --iteration=6")
-
-    os.system("python \"iid_test_v3.py\" --server_config=4 --img_to_load=-1 "
-              "--plot_enabled=1 --version=\"v29.01\" --iteration=7")
-
-    os.system("python \"iid_test_v3.py\" --server_config=4 --img_to_load=-1 "
-              "--plot_enabled=1 --version=\"v29.01\" --iteration=8")
+    os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+              "--plot_enabled=1 --version=\"v30.01\" --iteration=7")
 
 def main():
     # os.system("python \"processing/dataset_creator.py\"")

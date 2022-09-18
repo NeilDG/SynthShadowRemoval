@@ -143,6 +143,9 @@ class ShadowTrainDataset(data.Dataset):
         self.initial_op = transforms.Compose([
             transforms.ToPILImage(),
             transforms.Resize(constants.TEST_IMAGE_SIZE),
+            transforms.RandomHorizontalFlip(0.5),
+            transforms.RandomVerticalFlip(0.5),
+            transforms.ColorJitter(brightness=[0.5, 1.75], contrast=[0.5, 1.75]),
             transforms.ToTensor()])
 
         self.shadow_op = shadow_map_transforms.ShadowMapTransforms()
