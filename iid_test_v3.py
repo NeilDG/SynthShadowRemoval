@@ -135,8 +135,9 @@ def main(argv):
     sc_instance.update_version_config()
     tf = trainer_factory.TrainerFactory(device, opts)
     shadow_t = tf.get_shadow_trainer()
+    shadow_rt = tf.get_shadow_refine_trainer()
 
-    dataset_tester = TesterClass(shadow_t)
+    dataset_tester = TesterClass(shadow_t, shadow_rt)
 
     # style_enabled = network_config["style_transferred"]
     style_enabled = 1

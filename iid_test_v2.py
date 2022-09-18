@@ -186,7 +186,7 @@ def measure_performance(opts):
     visdom_reporter.plot_image(albedo_e_tensor, "Albedo Ours")
 
 class TesterClass():
-    def __init__(self, shadow_t):
+    def __init__(self, shadow_t, shadow_rt):
         print("Initiating")
         self.cgi_op = iid_transforms.CGITransform()
         self.iid_op = iid_transforms.IIDTransform()
@@ -196,6 +196,7 @@ class TesterClass():
         # self.albedo_t = albedo_t
         # self.shading_t = shading_t
         self.shadow_t = shadow_t
+        self.shadow_rt = shadow_rt
 
         self.wdhr_metric_list = []
 
@@ -313,6 +314,8 @@ class TesterClass():
 
         input_map = {"rgb": rgb_ws}
         rgb2ns, rgb2sm = self.shadow_t.test(input_map)
+        # input_map = {"rgb" : rgb_ws, "shadow_map": rgb2sm}
+        # rgb2ns = self.shadow_rt.test(input_map)
 
         # normalize everything
         rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
@@ -342,6 +345,8 @@ class TesterClass():
 
         input_map = {"rgb": rgb_ws}
         rgb2ns, rgb2sm = self.shadow_t.test(input_map)
+        # input_map = {"rgb": rgb_ws, "shadow_map": rgb2sm}
+        # rgb2ns = self.shadow_rt.test(input_map)
 
         # normalize everything
         rgb_ws = tensor_utils.normalize_to_01(rgb_ws)

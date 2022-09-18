@@ -71,7 +71,7 @@ class IIDServerConfig():
         STYLE_TRANSFER = "style_transferred"
         SHADOW_MAP_CHANNEL_KEY = "sm_one_channel"
 
-        if (constants.network_version == "v29.03"):  #Adain-GEN
+        if (constants.network_version == "v29.01"):  #Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[SHADOW_REFINE_NC_KEY] = 4
@@ -112,7 +112,7 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_Z] = 96
                 network_config[BATCH_SIZE_KEY_ZR] = 96
 
-        elif (constants.network_version == "v29.04"):  # Adain-GEN
+        elif (constants.network_version == "v29.02"):  # Adain-GEN
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NC_KEY] = 3
             network_config[SHADOW_REFINE_NC_KEY] = 4
