@@ -103,8 +103,8 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_P] = 8
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
-                network_config[BATCH_SIZE_KEY_Z] = 64
-                network_config[BATCH_SIZE_KEY_ZR] = 64
+                network_config[BATCH_SIZE_KEY_Z] = 32
+                network_config[BATCH_SIZE_KEY_ZR] = 32
             else:  # RTX 3090
                 network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
@@ -144,8 +144,8 @@ class IIDServerConfig():
                 network_config[BATCH_SIZE_KEY_P] = 8
                 network_config[BATCH_SIZE_KEY_A] = 128
                 network_config[BATCH_SIZE_KEY_S] = 128
-                network_config[BATCH_SIZE_KEY_Z] = 64
-                network_config[BATCH_SIZE_KEY_ZR] = 64
+                network_config[BATCH_SIZE_KEY_Z] = 32
+                network_config[BATCH_SIZE_KEY_ZR] = 32
             else:  # RTX 3090
                 network_config[BATCH_SIZE_KEY_P] = 16
                 network_config[BATCH_SIZE_KEY_A] = 128
