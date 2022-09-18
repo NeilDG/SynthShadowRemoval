@@ -3,13 +3,7 @@
 import os
 def train_relighting():
     os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-              "--plot_enabled=0 --version=\"v27.02\" --iteration=5")
-
-    os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-              "--plot_enabled=0 --version=\"v27.02\" --iteration=3")
-
-    os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-              "--plot_enabled=0 --version=\"v27.02\" --iteration=4")
+              "--plot_enabled=1 --version=\"v29.02\" --iteration=1")
 
 def train_domain_adaptation():
     os.system("python \"cyclegan_main.py\" --server_config=4 --img_to_load=-1 --debug_run=0 "

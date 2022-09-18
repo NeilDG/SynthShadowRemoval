@@ -12,7 +12,6 @@ import torchvision.transforms as transforms
 
 from config import iid_server_config
 
-
 class IIDTransform(nn.Module):
     # GAMMA = 0.95
     # BETA = 0.55
@@ -31,11 +30,11 @@ class IIDTransform(nn.Module):
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         network_config = sc_instance.interpret_network_config_from_version()
 
-        self.MIN_GAMMA = network_config["min_gamma"]
-        self.MIN_BETA = network_config["min_beta"]
-
-        self.MAX_GAMMA = network_config["max_gamma"]
-        self.MAX_BETA = network_config["max_beta"]
+        # self.MIN_GAMMA = network_config["min_gamma"]
+        # self.MIN_BETA = network_config["min_beta"]
+        # 
+        # self.MAX_GAMMA = network_config["max_gamma"]
+        # self.MAX_BETA = network_config["max_beta"]
 
 
     def mask_fill_nonzeros(self, input_tensor):

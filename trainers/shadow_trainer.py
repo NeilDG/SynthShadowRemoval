@@ -62,7 +62,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.schedulerGB = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerGB, patience=100000 / self.batch_size, threshold=0.00005)
 
         self.NETWORK_VERSION = sc_instance.get_version_config("network_z_name", self.iteration)
-        self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
+        self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pth'
         self.load_saved_state()
 
     def initialize_shadow_network(self, net_config, num_blocks, input_nc):
@@ -131,7 +131,6 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.caption_dict_s[constants.D_A_FAKE_LOSS_KEY] = "D fake loss per iteration"
         self.caption_dict_s[constants.D_A_REAL_LOSS_KEY] = "D real loss per iteration"
         self.caption_dict_s[self.MASK_LOSS_KEY] = "Mask loss per iteration"
-
 
     def train(self, epoch, iteration, input_map, target_map):
         input_rgb_tensor = input_map["rgb"]
