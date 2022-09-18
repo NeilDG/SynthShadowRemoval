@@ -19,7 +19,7 @@ class ShadowMapTransforms():
         super(ShadowMapTransforms, self).__init__()
 
         self.MIN_SHADOW_INTENSITY = 0.5
-        self.MAX_SHADOW_INTENSITY = 2.0
+        self.MAX_SHADOW_INTENSITY = 1.0
         self.shadow_intensity = 1.0
 
 
