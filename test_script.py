@@ -3,8 +3,29 @@
 import os
 
 def test_relighting():
+    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+    #           "--plot_enabled=1 --version=\"v30.02\" --iteration=1")
+    #
+    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+    #           "--plot_enabled=1 --version=\"v30.02\" --iteration=2")
+    #
+    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+    #           "--plot_enabled=1 --version=\"v30.02\" --iteration=3")
+    #
+    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+    #           "--plot_enabled=1 --version=\"v30.02\" --iteration=4")
+    #
+    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+    #           "--plot_enabled=1 --version=\"v30.02\" --iteration=5")
+    #
+    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+    #           "--plot_enabled=1 --version=\"v30.02\" --iteration=6")
+
     os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-              "--plot_enabled=1 --version=\"v30.01\" --iteration=6")
+              "--plot_enabled=1 --version=\"v30.02\" --iteration=7")
+
+    os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+              "--plot_enabled=1 --version=\"v30.02\" --iteration=8")
 
 
 def main():
