@@ -308,14 +308,16 @@ class TesterClass():
 
         self.visdom_reporter.plot_text(display_text)
 
-    def test_shadow(self, rgb_ws, rgb_ns, prefix, show_images, opts):
+    def test_shadow(self, rgb_ws, rgb_ns, prefix, refine_enabled, show_images, opts):
         # rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
         # rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
 
         input_map = {"rgb": rgb_ws}
         rgb2ns, rgb2sm = self.shadow_t.test(input_map)
-        # input_map = {"rgb" : rgb_ws, "shadow_map": rgb2sm}
-        # rgb2ns = self.shadow_rt.test(input_map)
+
+        if(refine_enabled):
+            input_map = {"rgb" : rgb_ws, "shadow_map": rgb2sm}
+            rgb2ns = self.shadow_rt.test(input_map)
 
         # normalize everything
         rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
@@ -339,15 +341,16 @@ class TesterClass():
         self.mae_list_rgb.append(mae_rgb)
 
     #for ISTD
-    def test_istd_shadow(self, rgb_ws, rgb_ns, show_images, opts):
+    def test_istd_shadow(self, rgb_ws, rgb_ns, refine_enabled, show_images, opts):
         # rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
         # rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
         # rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, _, _ = self.iid_op.decompose_shadow(rgb_ws, rgb_ns)
 
         input_map = {"rgb": rgb_ws}
         rgb2ns, rgb2sm = self.shadow_t.test(input_map)
-        # input_map = {"rgb": rgb_ws, "shadow_map": rgb2sm}
-        # rgb2ns = self.shadow_rt.test(input_map)
+        if (refine_enabled):
+            input_map = {"rgb": rgb_ws, "shadow_map": rgb2sm}
+            rgb2ns = self.shadow_rt.test(input_map)
 
         # normalize everything
         rgb_ws = tensor_utils.normalize_to_01(rgb_ws)

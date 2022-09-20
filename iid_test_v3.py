@@ -126,6 +126,8 @@ def main(argv):
     constants.network_version = opts.version
     iid_server_config.IIDServerConfig.initialize()
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
+    network_config = sc_instance.interpret_network_config_from_version()
+    refine_enabled = network_config["refine_enabled"]
 
     # version_z = opts.version
     # iteration_z = opts.iteration
@@ -168,7 +170,7 @@ def main(argv):
         rgb_ws_tensor = rgb_ws.to(device)
         rgb_ns_tensor = rgb_ns.to(device)
 
-        dataset_tester.test_shadow(rgb_ws_tensor, rgb_ns_tensor, "Train", True, opts)
+        dataset_tester.test_shadow(rgb_ws_tensor, rgb_ns_tensor, "Train",  refine_enabled, True, opts)
         if (i % 16 == 0):
             break
 
@@ -180,7 +182,7 @@ def main(argv):
         rgb_ws_tensor = rgb_ws.to(device)
         rgb_ns_tensor = rgb_ns.to(device)
 
-        dataset_tester.test_istd_shadow(rgb_ws_tensor, rgb_ns_tensor, True, opts)
+        dataset_tester.test_istd_shadow(rgb_ws_tensor, rgb_ns_tensor, refine_enabled, True, opts)
         # break
 
     dataset_tester.print_ave_shadow_performance("ISTD", opts)
