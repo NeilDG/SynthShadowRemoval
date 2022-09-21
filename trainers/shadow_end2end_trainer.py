@@ -175,7 +175,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 self.save_states(epoch, iteration, False)
 
     def is_stop_condition_met(self):
-        return self.stop_result
+        return self.stopper_method.did_stop_condition_met()
 
     def test(self, input_map):
         with torch.no_grad():
