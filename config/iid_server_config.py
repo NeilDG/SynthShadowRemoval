@@ -114,11 +114,13 @@ class IIDServerConfig():
 
         elif(constants.network_version =="v30.05"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = False
+            network_config[SHADOW_REFINE_NC_KEY] = 6
             network_config[MIX_TYPE_KEY] = 2
             network_config[REFINE_ENABLED_KEY] = True
 
         elif(constants.network_version == "v30.06"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = True
+            network_config[SHADOW_REFINE_NC_KEY] = 4
             network_config[MIX_TYPE_KEY] = 2
             network_config[REFINE_ENABLED_KEY] = True
 

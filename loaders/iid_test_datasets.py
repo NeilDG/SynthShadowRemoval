@@ -161,8 +161,10 @@ class ShadowTrainDataset(data.Dataset):
         try:
             rgb_ws = cv2.imread(self.img_list_a[idx])
             rgb_ws = cv2.cvtColor(rgb_ws, cv2.COLOR_BGR2RGB)
+            state = torch.get_rng_state()
             rgb_ws = self.initial_op(rgb_ws)
 
+            torch.set_rng_state(state)
             rgb_ns = cv2.imread(self.img_list_b[idx])
             rgb_ns = cv2.cvtColor(rgb_ns, cv2.COLOR_BGR2RGB)
             rgb_ns = self.initial_op(rgb_ns)
