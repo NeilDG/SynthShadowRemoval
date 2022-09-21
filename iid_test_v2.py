@@ -311,8 +311,8 @@ class TesterClass():
         # rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
         # rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
 
-        input_map = {"rgb": rgb_ws}
-        rgb2ns, rgb2sm = self.shadow_t.test(input_map)
+        input_map = {"rgb_ws": rgb_ws}
+        rgb2ns, rgb2sm, _ = self.shadow_t.test(input_map)
         # input_map = {"rgb" : rgb_ws, "shadow_map": rgb2sm}
         # rgb2ns = self.shadow_rt.test(input_map)
 
@@ -343,8 +343,8 @@ class TesterClass():
         # rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
         # rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, _, _ = self.iid_op.decompose_shadow(rgb_ws, rgb_ns)
 
-        input_map = {"rgb": rgb_ws}
-        rgb2ns, rgb2sm = self.shadow_t.test(input_map)
+        input_map = {"rgb_ws": rgb_ws}
+        rgb2ns, rgb2sm, _ = self.shadow_t.test(input_map)
         # input_map = {"rgb": rgb_ws, "shadow_map": rgb2sm}
         # rgb2ns = self.shadow_rt.test(input_map)
 
