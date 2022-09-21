@@ -68,6 +68,7 @@ class IIDServerConfig():
         SHADOW_MAP_CHANNEL_KEY = "sm_one_channel"
         MIX_TYPE_KEY = "mix_type"
         REFINE_ENABLED_KEY = "refine_enabled"
+        COLOR_JITTER_ENABLED_KEY = "jitter_enabled"
 
         #set defaults
         network_config[NETWORK_CONFIG_NUM] = 4
@@ -78,6 +79,7 @@ class IIDServerConfig():
         network_config[SHADOW_MAP_CHANNEL_KEY] = False
         network_config[MIX_TYPE_KEY] = 2
         network_config[REFINE_ENABLED_KEY] = False
+        network_config[COLOR_JITTER_ENABLED_KEY] = True
 
         # configure batch sizes
         if (constants.server_config == 1):  # COARE
@@ -99,6 +101,11 @@ class IIDServerConfig():
         if (constants.network_version == "v30.07"):  #Adain-GEN
             network_config[SHADOW_MAP_CHANNEL_KEY] = False
             network_config[MIX_TYPE_KEY] = 2
+
+        elif (constants.network_version == "v30.13"):  # Adain-GEN
+            network_config[SHADOW_MAP_CHANNEL_KEY] = False
+            network_config[MIX_TYPE_KEY] = 2
+            network_config[COLOR_JITTER_ENABLED_KEY] = False
 
         elif (constants.network_version == "v30.08"):  # Adain-GEN
             network_config[SHADOW_MAP_CHANNEL_KEY] = True

@@ -24,7 +24,7 @@ class ShadowMapTransforms():
         # max = torch.max(rgb_tensor_ws)
 
         shadow_tensor = rgb_tensor_ns - rgb_tensor_ws
-        shadow_tensor = torch.clip(shadow_tensor, 0.0, 1.0)
+        # shadow_tensor = torch.clip(shadow_tensor, 0.0, 1.0)
 
         if(one_channel == True):
             shadow_tensor = kornia.color.rgb_to_grayscale(shadow_tensor)
