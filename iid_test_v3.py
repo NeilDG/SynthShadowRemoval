@@ -155,7 +155,7 @@ def main(argv):
         rgb_ws_tensor = rgb_ws.to(device)
         rgb_ns_tensor = rgb_ns.to(device)
 
-        dataset_tester.test_shadow(rgb_ws_tensor, rgb_ns_tensor, "Train", opts)
+        dataset_tester.test_shadow(rgb_ws_tensor, rgb_ns_tensor, "Train", False, opts)
         if (i % 16 == 0):
             break
 
@@ -169,7 +169,7 @@ def main(argv):
         rgb_ws_tensor = rgb_ws.to(device)
         rgb_ns_tensor = rgb_ns.to(device)
 
-        dataset_tester.test_istd_shadow(rgb_ws_tensor, rgb_ns_tensor, opts)
+        dataset_tester.test_istd_shadow(rgb_ws_tensor, rgb_ns_tensor, False, opts)
         # break
 
     dataset_tester.print_ave_shadow_performance("ISTD", opts)
