@@ -85,6 +85,7 @@ class EarlyStopper():
 
     def has_reset(self):
         return (self.stop_counter == 0)
+
     def did_stop_condition_met(self):
         return self.stop_condition_met
 

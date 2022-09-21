@@ -53,7 +53,9 @@ def update_config(opts):
         print("Using COARE configuration. Workers: ", opts.num_workers)
         constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
         constants.rgb_dir_ws_styled = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.rgb_dir_ns_styled = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+        constants.rgb_dir_ns_styled = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
+        constants.rgb_dir_ws = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb/*/*.png"
+        constants.rgb_dir_ns = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows/"
         constants.albedo_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/unlit/"
 
@@ -61,7 +63,9 @@ def update_config(opts):
     elif (constants.server_config == 2):
         constants.num_workers = 6
         constants.rgb_dir_ws_styled = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.rgb_dir_ns_styled = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+        constants.rgb_dir_ns_styled = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
+        constants.rgb_dir_ws = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb/*/*.png"
+        constants.rgb_dir_ns = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows/"
         constants.albedo_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/unlit/"
         constants.DATASET_PLACES_PATH = constants.rgb_dir_ws_styled
@@ -78,9 +82,15 @@ def update_config(opts):
 
     elif (constants.server_config == 4):
         opts.num_workers = 6
-        constants.DATASET_PLACES_PATH = "D:/Datasets/Places Dataset/*.jpg"
-        constants.rgb_dir_ws_styled = "D:/Datasets/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.albedo_dir = "D:/Datasets/SynthWeather Dataset 8/albedo/"
+        constants.DATASET_PLACES_PATH = "C:/Datasets/Places Dataset/*.jpg"
+        constants.rgb_dir_ws_styled = "C:/Datasets/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.rgb_dir_ns_styled = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
+        constants.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 8/train_rgb/*/*.png"
+        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
+        constants.albedo_dir = "C:/Datasets/SynthWeather Dataset 8/albedo/"
+        constants.unlit_dir = "C:/Datasets/SynthWeather Dataset 8/unlit/"
+        constants.ws_istd = "C:/Datasets/ISTD_Dataset/test/test_A/*.png"
+        constants.ns_istd = "C:/Datasets/ISTD_Dataset/test/test_C/*.png"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers)
     else:
@@ -88,6 +98,8 @@ def update_config(opts):
         constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
         constants.rgb_dir_ws_styled = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
         constants.rgb_dir_ns_styled = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
+        constants.rgb_dir_ws = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"
+        constants.rgb_dir_ns = "E:/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
         constants.albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)
@@ -114,6 +126,8 @@ def main(argv):
     constants.network_version = opts.version
     iid_server_config.IIDServerConfig.initialize()
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
+    network_config = sc_instance.interpret_network_config_from_version()
+    refine_enabled = network_config["refine_enabled"]
 
     # version_z = opts.version
     # iteration_z = opts.iteration
@@ -156,21 +170,19 @@ def main(argv):
         rgb_ws_tensor = rgb_ws.to(device)
         rgb_ns_tensor = rgb_ns.to(device)
 
-        dataset_tester.test_shadow(rgb_ws_tensor, rgb_ns_tensor, "Train", opts)
+        dataset_tester.test_shadow(rgb_ws_tensor, rgb_ns_tensor, "Train",  refine_enabled, True, opts)
         if (i % 16 == 0):
             break
 
     dataset_tester.print_ave_shadow_performance("Train Set", opts)
 
     # ISTD test dataset
-    ws_path = "E:/ISTD_Dataset/test/test_A/*.png"
-    ns_path = "E:/ISTD_Dataset/test/test_C/*.png"
-    shadow_loader = dataset_loader.load_shadow_test_dataset(ws_path, ns_path, opts)
+    shadow_loader = dataset_loader.load_shadow_test_dataset(constants.ws_istd, constants.ns_istd, opts)
     for i, (file_name, rgb_ws, rgb_ns) in enumerate(shadow_loader, 0):
         rgb_ws_tensor = rgb_ws.to(device)
         rgb_ns_tensor = rgb_ns.to(device)
 
-        dataset_tester.test_istd_shadow(rgb_ws_tensor, rgb_ns_tensor, opts)
+        dataset_tester.test_istd_shadow(rgb_ws_tensor, rgb_ns_tensor, refine_enabled, True, opts)
         # break
 
     dataset_tester.print_ave_shadow_performance("ISTD", opts)
