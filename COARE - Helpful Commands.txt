@@ -10,11 +10,12 @@ cd scratch2/NeuralNets-GenerativeExperiment-3
 cd scratch2/NeuralNets-GenerativeExperiment-4
 cd scratch2/NeuralNets-GenerativeExperiment-5
 cd scratch2/NeuralNets-GenerativeExperiment-6
-cd scratch2/NeuralNets-GenerativeExperiment-V27.XX.XX
+cd scratch2/NeuralNets-GenerativeExperiment-V30.07.XX
 cd scratch2/Visdom
 unzip "SynthWeather Dataset 9.zip"
 
-git clone -b "workspace/V27.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "scratch2/NeuralNets-GenerativeExperiment-V27.XX.XX"
+scratch2/NeuralNets-GenerativeExperiment-V27.XX.XX
+git clone -b "workspace/30.07.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "scratch2/NeuralNets-GenerativeExperiment-V30.07.XX"
 
 //Execute job
 sbatch slurm_install.slurm
