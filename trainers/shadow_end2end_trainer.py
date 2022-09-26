@@ -201,6 +201,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.visdom_reporter.plot_image(rgb2sm, str(label) + " RGB2SM images - " + self.NETWORK_VERSION + str(self.iteration))
         if("shadow_map" in input_map):
             shadow_map_tensor = input_map["shadow_map"]
+            shadow_map_tensor = tensor_utils.normalize_to_01(shadow_map_tensor)
             self.visdom_reporter.plot_image(shadow_map_tensor, str(label) + " RGB Shadow Map images - " + self.NETWORK_VERSION + str(self.iteration))
 
         self.visdom_reporter.plot_image(rgb2ns, str(label) + " RGB (No Shadows-Like) images - " + self.NETWORK_VERSION + str(self.iteration))

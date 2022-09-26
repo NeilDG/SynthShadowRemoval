@@ -191,6 +191,7 @@ class ShadowTrainDataset(data.Dataset):
             rgb_ns = self.norm_op(rgb_ns)
             shadow_map = self.norm_op(shadow_map)
 
+            # print("Shadow map range: ", torch.min(shadow_map), torch.max(shadow_map))
             # print("Loaded pairing: ", self.img_list_a[idx], self.img_list_b[idx])
 
         except Exception as e:

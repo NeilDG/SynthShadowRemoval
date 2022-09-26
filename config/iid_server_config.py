@@ -77,9 +77,9 @@ class IIDServerConfig():
         network_config[SHADOW_REFINE_NC_KEY] = 4
         network_config[NUM_BLOCKS_KEY] = 4
         network_config[SHADOW_MAP_CHANNEL_KEY] = False
-        network_config[MIX_TYPE_KEY] = 2
+        network_config[MIX_TYPE_KEY] = 3
         network_config[REFINE_ENABLED_KEY] = False
-        network_config[COLOR_JITTER_ENABLED_KEY] = True
+        network_config[COLOR_JITTER_ENABLED_KEY] = False
 
         # configure batch sizes
         if (constants.server_config == 1):  # COARE
@@ -98,24 +98,19 @@ class IIDServerConfig():
             network_config[BATCH_SIZE_KEY_Z] = 96
             network_config[BATCH_SIZE_KEY_ZR] = 96
 
-        if (constants.network_version == "v30.07"):  #Adain-GEN
+        if (constants.network_version == "v30.07"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = False
             network_config[MIX_TYPE_KEY] = 2
 
-        elif (constants.network_version == "v30.13"):  # Adain-GEN
-            network_config[SHADOW_MAP_CHANNEL_KEY] = False
-            network_config[MIX_TYPE_KEY] = 2
-            network_config[COLOR_JITTER_ENABLED_KEY] = False
-
-        elif (constants.network_version == "v30.08"):  # Adain-GEN
+        elif (constants.network_version == "v30.08"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = True
             network_config[MIX_TYPE_KEY] = 2
 
-        elif (constants.network_version == "v30.09"):  # Adain-GEN
+        elif (constants.network_version == "v30.09"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = False
             network_config[MIX_TYPE_KEY] = 1
 
-        elif (constants.network_version == "v30.10"):  # Adain-GEN
+        elif (constants.network_version == "v30.10"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = True
             network_config[MIX_TYPE_KEY] = 1
 
@@ -130,6 +125,31 @@ class IIDServerConfig():
             network_config[SHADOW_REFINE_NC_KEY] = 4
             network_config[MIX_TYPE_KEY] = 2
             network_config[REFINE_ENABLED_KEY] = True
+
+        elif (constants.network_version == "v30.13"):
+            network_config[SHADOW_MAP_CHANNEL_KEY] = False
+            network_config[MIX_TYPE_KEY] = 2
+
+        elif (constants.network_version == "v30.14"):
+            network_config[SHADOW_MAP_CHANNEL_KEY] = False
+            network_config[SHADOW_REFINE_NC_KEY] = 6
+
+        elif (constants.network_version == "v30.16"):
+            network_config[SHADOW_MAP_CHANNEL_KEY] = False
+            network_config[SHADOW_REFINE_NC_KEY] = 6
+            network_config[NETWORK_CONFIG_NUM] = 5
+            network_config[NUM_BLOCKS_KEY] = 1
+            network_config[BATCH_SIZE_KEY_Z] = 256
+            network_config[BATCH_SIZE_KEY_ZR] = 256
+
+        elif (constants.network_version == "v30.17"):
+            network_config[SHADOW_MAP_CHANNEL_KEY] = True
+            network_config[SHADOW_REFINE_NC_KEY] = 4
+            network_config[NETWORK_CONFIG_NUM] = 5
+            network_config[NUM_BLOCKS_KEY] = 1
+            network_config[BATCH_SIZE_KEY_Z] = 256
+            network_config[BATCH_SIZE_KEY_ZR] = 256
+
 
         return network_config
 
