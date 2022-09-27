@@ -31,6 +31,7 @@ parser.add_option('--iteration', type=int, default="1")
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
+parser.add_option('--img_vis_enabled', type=int, default=1)
 parser.add_option('--input_path', type=str)
 parser.add_option('--output_path', type=str)
 parser.add_option('--img_size', type=int, default=(256, 256))
@@ -170,7 +171,7 @@ def main(argv):
         rgb_ws_tensor = rgb_ws.to(device)
         rgb_ns_tensor = rgb_ns.to(device)
 
-        dataset_tester.test_shadow(rgb_ws_tensor, rgb_ns_tensor, "Train",  refine_enabled, True, opts)
+        dataset_tester.test_shadow(rgb_ws_tensor, rgb_ns_tensor, "Train",  refine_enabled, opts.img_vis_enabled, opts)
         if (i % 16 == 0):
             break
 
@@ -182,7 +183,7 @@ def main(argv):
         rgb_ws_tensor = rgb_ws.to(device)
         rgb_ns_tensor = rgb_ns.to(device)
 
-        dataset_tester.test_istd_shadow(rgb_ws_tensor, rgb_ns_tensor, refine_enabled, True, opts)
+        dataset_tester.test_istd_shadow(rgb_ws_tensor, rgb_ns_tensor, refine_enabled, opts.img_vis_enabled, opts)
         # break
 
     dataset_tester.print_ave_shadow_performance("ISTD", opts)

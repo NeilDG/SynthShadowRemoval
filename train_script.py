@@ -2,11 +2,11 @@
 
 import os
 def train_relighting():
-    os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-              "--plot_enabled=0 --version=\"v30.14\" --iteration=1")
+    # os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
+    #           "--plot_enabled=0 --version=\"v30.14\" --iteration=1")
 
-    os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-              "--plot_enabled=0 --version=\"v30.16\" --iteration=1")
+    # os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
+    #           "--plot_enabled=0 --version=\"v30.16\" --iteration=1")
 
     os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
               "--plot_enabled=0 --version=\"v30.17\" --iteration=1")

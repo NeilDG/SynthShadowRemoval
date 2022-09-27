@@ -323,7 +323,7 @@ class TesterClass():
         rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
         rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
 
-        if(show_images):
+        if(show_images == 1):
             self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb_ns, prefix + " NS Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb2ns, prefix + " NS (equation) Images - " + opts.version + str(opts.iteration))
@@ -356,7 +356,7 @@ class TesterClass():
         rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
         rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
 
-        if(show_images):
+        if(show_images == 1):
             self.visdom_reporter.plot_image(rgb_ws, "ISTD WS Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb_ns, "ISTD NS Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb2ns, "ISTD NS (equation) Images - " + opts.version + str(opts.iteration))

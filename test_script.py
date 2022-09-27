@@ -4,10 +4,11 @@ import os
 
 def test_relighting():
     # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-    #           "--plot_enabled=1 --version=\"v30.14\" --iteration=1")
+    #           "--plot_enabled=1 --img_vis_enabled=1 --version=\"v30.14\" --iteration=1")
 
     os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-              "--plot_enabled=1 --version=\"v30.14\" --iteration=1")
+              "--plot_enabled=1 --img_vis_enabled=1 --version=\"v30.16\" --iteration=1")
+
 
 def main():
     # os.system("python \"processing/dataset_creator.py\"")

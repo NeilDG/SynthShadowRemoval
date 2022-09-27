@@ -55,7 +55,7 @@ class NetworkCreator():
             G_A = usi3d_gan.AdaINGen(input_dim=input_nc, output_dim=3, params=params).to(self.gpu_device)
         elif(net_config == 5):
             # G_A = densenet_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=True).to(self.gpu_device)
-            G_A = unet_gan.UnetGeneratorV3(input_nc=input_nc, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
+            G_A = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         else:
             G_A = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
@@ -105,7 +105,7 @@ class NetworkCreator():
                       'pad_type': 'reflect'}
             G_Z = usi3d_gan.AdaINGen(input_dim=input_nc, output_dim=1, params=params).to(self.gpu_device)
         elif(net_config == 5):
-            G_Z = unet_gan.UnetGeneratorV3(input_nc=input_nc, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
+            G_Z = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         else:
             G_Z = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 

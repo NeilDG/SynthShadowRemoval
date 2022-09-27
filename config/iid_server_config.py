@@ -144,6 +144,7 @@ class IIDServerConfig():
 
         elif (constants.network_version == "v30.17"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = True
+            network_config[NC_KEY] = 3
             network_config[SHADOW_REFINE_NC_KEY] = 4
             network_config[NETWORK_CONFIG_NUM] = 5
             network_config[NUM_BLOCKS_KEY] = 1
