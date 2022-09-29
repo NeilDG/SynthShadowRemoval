@@ -10,7 +10,7 @@ cd scratch2/NeuralNets-GenerativeExperiment-3
 cd scratch2/NeuralNets-GenerativeExperiment-4
 cd scratch2/NeuralNets-GenerativeExperiment-5
 cd scratch2/NeuralNets-GenerativeExperiment-6
-cd scratch2/NeuralNets-GenerativeExperiment-V30.07.XX
+cd scratch2/NeuralNets-GenerativeExperiment-V31.XX.XX
 cd scratch2/Visdom
 unzip "SynthWeather Dataset 9.zip"
 
@@ -69,9 +69,9 @@ export XDG_RUNTIME_DIR=/scratch1/scratch2/neil.delgallego/Visdom/
 saliksik.asti.dost.gov.ph:8097
 
 //CCS SERVER-JUPYTERHUB
-git clone -b "workspace/V21.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "NeuralNets-GenerativeExperiment-V21.XX.XX"
-git switch "workspace/V21.XX.XX"
-cd NeuralNets-GenerativeExperiment-V21.XX.XX
+git clone -b "workspace/V31.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "NeuralNets-GenerativeExperiment-V31.XX.XX"
+git switch "workspace/V31.XX.XX"
+cd NeuralNets-GenerativeExperiment-V31.XX.XX
 python "ccs1_main.py"
 python "ccs2_main.py"
 

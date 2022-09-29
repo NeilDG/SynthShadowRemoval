@@ -49,7 +49,7 @@ def main():
     # train_domain_adaptation()
     train_relighting()
     # train_embedding()
-    # os.system("shutdown /s /t 1")
+    os.system("shutdown /s /t 1")
 
 
 if __name__ == "__main__":
