@@ -151,6 +151,17 @@ class IIDServerConfig():
             network_config[BATCH_SIZE_KEY_Z] = 256
             network_config[BATCH_SIZE_KEY_ZR] = 256
 
+        elif(constants.network_version == "v30.18"):
+            network_config[SHADOW_MAP_CHANNEL_KEY] = False
+            network_config[SHADOW_REFINE_NC_KEY] = 6
+            network_config[NUM_BLOCKS_KEY] = 8
+            if (constants.server_config == 4):  # RTX 2080Ti
+                network_config[BATCH_SIZE_KEY_Z] = 32
+                network_config[BATCH_SIZE_KEY_ZR] = 32
+            else:  # RTX 3090
+                network_config[BATCH_SIZE_KEY_Z] = 64
+                network_config[BATCH_SIZE_KEY_ZR] = 64
+
 
         return network_config
 

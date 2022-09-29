@@ -152,8 +152,13 @@ def load_shadow_train_dataset(ws_path, ns_path, ws_istd, ns_istd, patch_size, ba
 
     if(mix_type == 1):
         print("Mixing ISTD and synthetic train datasets")
-        ws_list = ws_list + ws_istd_list
-        ns_list = ns_list + ns_istd_list
+        for i in range(0, 1):
+            ws_list += ws_list
+            ns_list += ns_list
+
+        for i in range(0, 5):
+            ws_list += ws_istd_list
+            ns_list += ns_istd_list
     elif(mix_type == 2):
         print("Using ISTD dataset only")
         # to be efficient in batch size + data loading, duplicate list
