@@ -59,7 +59,7 @@ def update_config(opts):
         constants.rgb_dir_ns = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/rgb_noshadows/*/*.png"
         constants.albedo_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/unlit/"
-        constants.DATASET_PLACES_PATH = constants.rgb_dir_ws_styled
+        constants.DATASET_PLACES_PATH = constants.rgb_dir_ws
         constants.ws_istd = constants.rgb_dir_ws
         constants.ns_istd = constants.rgb_dir_ns
 
