@@ -12,7 +12,7 @@ cd scratch2/NeuralNets-GenerativeExperiment-5
 cd scratch2/NeuralNets-GenerativeExperiment-6
 cd scratch2/NeuralNets-GenerativeExperiment-V31.XX.XX
 cd scratch2/Visdom
-unzip "SynthWeather Dataset 9.zip"
+unzip "scratch2/SynthWeather Dataset 10.zip"
 
 scratch2/NeuralNets-GenerativeExperiment-V27.XX.XX
 git clone -b "workspace/30.07.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "scratch2/NeuralNets-GenerativeExperiment-V30.07.XX"

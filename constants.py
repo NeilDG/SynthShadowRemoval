@@ -101,6 +101,9 @@ rgb_dir_ns_v2 = ""
 rgb_dir_ws_v3 = ""
 rgb_dir_ns_v3 = ""
 
+rgb_dir_ws_v4 = ""
+rgb_dir_ns_v4 = ""
+
 unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
 
 ws_istd = "E:/ISTD_Dataset/test/test_A/*.png"
