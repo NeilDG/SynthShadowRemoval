@@ -67,6 +67,7 @@ class IIDServerConfig():
         SHADOW_MAP_CHANNEL_KEY = "sm_one_channel"
         REFINE_ENABLED_KEY = "refine_enabled"
         COLOR_JITTER_ENABLED_KEY = "jitter_enabled"
+        SYNTH_DATASET_VERSION = "dataset_version"
 
         #set defaults
         network_config[NETWORK_CONFIG_NUM] = 4
@@ -76,6 +77,7 @@ class IIDServerConfig():
         network_config[SHADOW_MAP_CHANNEL_KEY] = False
         network_config[REFINE_ENABLED_KEY] = False
         network_config[COLOR_JITTER_ENABLED_KEY] = False
+        network_config[SYNTH_DATASET_VERSION] = "v2"
 
         # configure load sizes (GPU memory allocation of data)
         if (constants.server_config == 1):  # COARE
@@ -90,13 +92,21 @@ class IIDServerConfig():
             network_config[LOAD_SIZE_KEY_Z] = 64
 
         #configure batch size. NOTE: Batch size must be equal or larger than load size
-        network_config[BATCH_SIZE_KEY_Z] = 1024
+        network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
 
         if (constants.network_version == "v32.01"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = False
 
         elif (constants.network_version == "v32.02"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = True
+
+        elif (constants.network_version == "v33.01"):
+            network_config[SHADOW_MAP_CHANNEL_KEY] = False
+            network_config[SYNTH_DATASET_VERSION] = "v3"
+
+        elif (constants.network_version == "v33.02"):
+            network_config[SHADOW_MAP_CHANNEL_KEY] = True
+            network_config[SYNTH_DATASET_VERSION] = "v3"
 
         return network_config
 
