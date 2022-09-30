@@ -43,6 +43,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         general_config = sc_instance.get_general_configs()
         network_config = sc_instance.interpret_network_config_from_version()
 
+        self.load_size = network_config["load_size_z"]
         self.batch_size = network_config["batch_size_z"]
         self.sm_channel = network_config["sm_one_channel"]
 
@@ -54,8 +55,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         self.optimizerG = torch.optim.Adam(itertools.chain(self.G_SM_predictor.parameters()), lr=self.g_lr)
         self.optimizerD = torch.optim.Adam(itertools.chain(self.D_SM_discriminator.parameters()), lr=self.d_lr)
-        self.schedulerG = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG, patience=100000 / self.batch_size, threshold=0.00005)
-        self.schedulerD = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD, patience=100000 / self.batch_size, threshold=0.00005)
+        self.schedulerG = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG, patience=1000000 / self.load_size, threshold=0.00005)
+        self.schedulerD = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD, patience=1000000 / self.load_size, threshold=0.00005)
 
         self.NETWORK_VERSION = sc_instance.get_version_config("network_z_name", self.iteration)
         self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
@@ -120,6 +121,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def train(self, epoch, iteration, input_map, target_map):
         input_ws = input_map["rgb"]
         shadow_map_tensor = target_map["shadow_map"]
+        accum_batch_size = self.load_size * iteration
+        print("Accum batch size: ", accum_batch_size)
 
         with amp.autocast():
             # shadow map discriminator
@@ -135,7 +138,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             errD = D_SM_real_loss + D_SM_fake_loss
 
             self.fp16_scaler.scale(errD).backward()
-            if (self.fp16_scaler.scale(errD).item() > 0.0):
+            if (accum_batch_size % self.batch_size == 0):
                 self.fp16_scaler.step(self.optimizerD)
                 self.schedulerD.step(errD)
 
@@ -153,9 +156,10 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             errG = SM_likeness_loss + SM_lpip_loss + SM_masking_loss + SM_adv_loss
 
             self.fp16_scaler.scale(errG).backward()
-            self.fp16_scaler.step(self.optimizerG)
-            self.schedulerG.step(errG)
-            self.fp16_scaler.update()
+            if (accum_batch_size % self.batch_size == 0):
+                self.fp16_scaler.step(self.optimizerG)
+                self.schedulerG.step(errG)
+                self.fp16_scaler.update()
 
             # what to put to losses dict for visdom reporting?
             self.losses_dict_s[constants.G_LOSS_KEY].append(errG.item())

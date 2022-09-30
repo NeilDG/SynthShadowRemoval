@@ -90,7 +90,7 @@ class IIDServerConfig():
             network_config[LOAD_SIZE_KEY_Z] = 64
 
         #configure batch size. NOTE: Batch size must be equal or larger than load size
-        network_config[LOAD_SIZE_KEY_Z] = 1024
+        network_config[BATCH_SIZE_KEY_Z] = 1024
 
         if (constants.network_version == "v32.01"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = False
@@ -225,18 +225,4 @@ class IIDServerConfig():
 
         return network_config
 
-    def get_batch_size_from_mode(self, mode, network_config):
-        if(mode == "train_albedo_mask"): #mask
-            return network_config["batch_size_p"]
-        elif(mode == "train_albedo"): #albedo
-            return network_config["batch_size_a"]
-        elif(mode == "train_shading"):
-            return network_config["batch_size_s"]
-        elif(mode == "train_shadow"):
-            return network_config["batch_size_z"]
-        elif(mode == "train_shadow_refine"):
-            return network_config["batch_size_zr"]
-        else:
-            print("Mode ", mode, " not recognized.")
-            return -1
 

@@ -86,7 +86,7 @@ class PairedTrainer:
         self.bce_loss = nn.BCEWithLogitsLoss()
 
         self.num_blocks = opts.num_blocks
-        self.batch_size = opts.batch_size
+        self.batch_size = opts.load_size
         self.net_config = opts.net_config
 
         if(self.net_config == 1):

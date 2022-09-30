@@ -94,7 +94,7 @@ class DomainAdaptTrainer():
         it_params = DomainAdaptIterationTable().get_version(self.iteration)
         self.use_bce = it_params.is_bce
         num_blocks = it_params.num_blocks
-        self.batch_size = opts.batch_size
+        self.batch_size = opts.load_size
 
         self.lpips_loss = lpips.LPIPS(net='vgg').to(self.gpu_device)
         self.ssim_loss = ssim_loss.SSIM()

@@ -25,7 +25,7 @@ class EmbeddingTrainer:
         self.use_bce = opts.use_bce
 
         num_blocks = opts.num_blocks
-        self.batch_size = opts.batch_size
+        self.batch_size = opts.load_size
 
         self.use_lpips = opts.use_lpips
         self.lpips_loss = lpips.LPIPS(net='vgg').to(self.gpu_device)
