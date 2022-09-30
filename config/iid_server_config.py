@@ -62,8 +62,8 @@ class IIDServerConfig():
         NC_KEY = "nc"
         SHADOW_REFINE_NC_KEY = "shadowrefine_nc"
         NUM_BLOCKS_KEY = "num_blocks"
+        LOAD_SIZE_KEY_Z = "load_size_z"
         BATCH_SIZE_KEY_Z = "batch_size_z"
-        BATCH_SIZE_KEY_ZR = "batch_size_zr"
         SHADOW_MAP_CHANNEL_KEY = "sm_one_channel"
         REFINE_ENABLED_KEY = "refine_enabled"
         COLOR_JITTER_ENABLED_KEY = "jitter_enabled"
@@ -77,50 +77,26 @@ class IIDServerConfig():
         network_config[REFINE_ENABLED_KEY] = False
         network_config[COLOR_JITTER_ENABLED_KEY] = False
 
-        # configure batch sizes
+        # configure load sizes (GPU memory allocation of data)
         if (constants.server_config == 1):  # COARE
-            network_config[BATCH_SIZE_KEY_Z] = 64
-            network_config[BATCH_SIZE_KEY_ZR] = 64
+            network_config[LOAD_SIZE_KEY_Z] = 64
         elif (constants.server_config == 2):  # CCS JUPYTER
-            network_config[BATCH_SIZE_KEY_Z] = 128
-            network_config[BATCH_SIZE_KEY_ZR] = 128
+            network_config[LOAD_SIZE_KEY_Z] = 128
         elif (constants.server_config == 3):  # GCLOUD
-            network_config[BATCH_SIZE_KEY_Z] = 256
-            network_config[BATCH_SIZE_KEY_ZR] = 256
+            network_config[LOAD_SIZE_KEY_Z] = 256
         elif (constants.server_config == 4):  # RTX 2080Ti
-            network_config[BATCH_SIZE_KEY_Z] = 32
-            network_config[BATCH_SIZE_KEY_ZR] = 32
+            network_config[LOAD_SIZE_KEY_Z] = 32
         else:  # RTX 3090
-            network_config[BATCH_SIZE_KEY_Z] = 64
-            network_config[BATCH_SIZE_KEY_ZR] = 64
+            network_config[LOAD_SIZE_KEY_Z] = 64
 
-        if (constants.network_version == "v31.01"):
+        #configure batch size. NOTE: Batch size must be equal or larger than load size
+        network_config[LOAD_SIZE_KEY_Z] = 1024
+
+        if (constants.network_version == "v32.01"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = False
 
-        elif (constants.network_version == "v31.02"):
+        elif (constants.network_version == "v32.02"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = True
-
-        elif (constants.network_version == "v31.03"):
-            network_config[SHADOW_MAP_CHANNEL_KEY] = False
-            network_config[NUM_BLOCKS_KEY] = 8
-
-            if (constants.server_config == 4):  # RTX 2080Ti
-                network_config[BATCH_SIZE_KEY_Z] = 16
-                network_config[BATCH_SIZE_KEY_ZR] = 16
-            else:  # RTX 3090
-                network_config[BATCH_SIZE_KEY_Z] = 32
-                network_config[BATCH_SIZE_KEY_ZR] = 32
-
-        elif (constants.network_version == "v31.04"):
-            network_config[SHADOW_MAP_CHANNEL_KEY] = True
-            network_config[NUM_BLOCKS_KEY] = 8
-
-            if (constants.server_config == 4):  # RTX 2080Ti
-                network_config[BATCH_SIZE_KEY_Z] = 16
-                network_config[BATCH_SIZE_KEY_ZR] = 16
-            else:  # RTX 3090
-                network_config[BATCH_SIZE_KEY_Z] = 32
-                network_config[BATCH_SIZE_KEY_ZR] = 32
 
         return network_config
 
