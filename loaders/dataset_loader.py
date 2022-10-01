@@ -150,9 +150,9 @@ def load_shadow_train_dataset(ws_path, ns_path, ws_istd, ns_istd, patch_size, lo
     ns_istd_list = assemble_img_list(ns_istd, opts)
 
     print("Using synthetic train dataset")
-    for i in range(0, 3):
-        ws_list += ws_list
-        ns_list += ns_list
+    # for i in range(0, 3):
+    #     ws_list += ws_list
+    #     ns_list += ns_list
 
     img_length = len(ws_list)
     print("Length of images: %d %d" % (len(ws_list), len(ns_list)))

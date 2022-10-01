@@ -101,13 +101,15 @@ rgb_dir_ns_v2 = ""
 rgb_dir_ws_v3 = ""
 rgb_dir_ns_v3 = ""
 
-rgb_dir_ws_v4 = ""
-rgb_dir_ns_v4 = ""
+rgb_dir_ws_v5 = ""
+rgb_dir_ns_v5 = ""
 
 unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
 
 ws_istd = "E:/ISTD_Dataset/test/test_A/*.png"
 ns_istd = "E:/ISTD_Dataset/test/test_C/*.png"
+# ws_istd = "E:/ISTD_Dataset/train/train_A/*.png"
+# ns_istd = "E:/ISTD_Dataset/train/train_C/*.png"
 
 imgx_dir = "E:/Places Dataset/*.jpg"
 # imgy_dir = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"

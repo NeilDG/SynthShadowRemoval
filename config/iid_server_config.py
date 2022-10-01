@@ -108,13 +108,13 @@ class IIDServerConfig():
             network_config[SHADOW_MAP_CHANNEL_KEY] = True
             network_config[SYNTH_DATASET_VERSION] = "v3"
 
-        elif (constants.network_version == "v34.01"):
+        elif (constants.network_version == "v35.01"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = False
-            network_config[SYNTH_DATASET_VERSION] = "v4"
+            network_config[SYNTH_DATASET_VERSION] = "v5"
 
-        elif (constants.network_version == "v34.02"):
+        elif (constants.network_version == "v35.02"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = True
-            network_config[SYNTH_DATASET_VERSION] = "v4"
+            network_config[SYNTH_DATASET_VERSION] = "v5"
 
         return network_config
 
