@@ -21,8 +21,8 @@ class IIDServerConfig():
                                     "train_albedo_mask": {"min_epochs": 3, "max_epochs" : 10, "patch_size": 256},
                                     "train_albedo": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64},
                                     "train_shading": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64},
-                                    "train_shadow": {"min_epochs": 30 ,"max_epochs" : 60, "patch_size": 128},
-                                    "train_shadow_refine": {"min_epochs": 30,"max_epochs" : 60, "patch_size": 128}}
+                                    "train_shadow": {"min_epochs": 10 ,"max_epochs" : 60, "patch_size": 128},
+                                    "train_shadow_refine": {"min_epochs": 10,"max_epochs" : 60, "patch_size": 128}}
         #debug
         if(constants.debug_run == 1):
             self.general_configs = {"train_style_transfer" : {"min_epochs" : 1, "max_epochs" : 5},

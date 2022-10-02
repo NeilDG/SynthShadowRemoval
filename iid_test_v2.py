@@ -341,7 +341,7 @@ class TesterClass():
         self.mae_list_rgb.append(mae_rgb)
 
     #for ISTD
-    def test_istd_shadow(self, rgb_ws, rgb_ns, refine_enabled, show_images, opts):
+    def test_istd_shadow(self, file_name, rgb_ws, rgb_ns, refine_enabled, show_images, save_image_results, opts):
         # rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
         # rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
         # rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, _, _ = self.iid_op.decompose_shadow(rgb_ws, rgb_ns)
@@ -362,6 +362,14 @@ class TesterClass():
             self.visdom_reporter.plot_image(rgb2ns, "ISTD NS (equation) Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb2sm, "ISTD Shadow Matte-Like - " + opts.version + str(opts.iteration))
             # self.visdom_reporter.plot_image(rgb2relit, "ISTD Relit-Like Images - " + opts.version + str(opts.iteration))
+
+        if(save_image_results == 1):
+            path = "./comparison/ISTD Dataset/OURS/"
+            for i in range(0, np.size(file_name)):
+                impath = path + file_name[i] + ".png"
+                torchvision.utils.save_image(rgb2ns[i], impath)
+                print("Saving ISTD result as: ", file_name[i])
+
 
         psnr_rgb = np.round(kornia.metrics.psnr(rgb2ns, rgb_ns, max_val=1.0).item(), 4)
         ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb2ns, rgb_ns, 5).item(), 4)
