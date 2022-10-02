@@ -91,8 +91,8 @@ def update_config(opts):
         constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
         constants.rgb_dir_ws_styled = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
         constants.rgb_dir_ns_styled = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
-        constants.rgb_dir_ws = "E:/SynthWeather Dataset 10/rgb/*/*.png"
-        constants.rgb_dir_ns = "E:/SynthWeather Dataset 10/rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws = "E:/SynthWeather Dataset 10/v3/rgb/*/*.png"
+        constants.rgb_dir_ns = "E:/SynthWeather Dataset 10/v3/rgb_noshadows/*/*.png"
         constants.albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)

@@ -99,8 +99,8 @@ def update_config(opts):
         constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
         constants.rgb_dir_ws_styled = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
         constants.rgb_dir_ns_styled = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
-        constants.rgb_dir_ws = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"
-        constants.rgb_dir_ns = "E:/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws = "E:/SynthWeather Dataset 10/v3/rgb/*/*.png"
+        constants.rgb_dir_ns = "E:/SynthWeather Dataset 10/v3/rgb_noshadows/*/*.png"
         constants.albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)
@@ -154,14 +154,8 @@ def main(argv):
 
     dataset_tester = TesterClass(shadow_t, shadow_rt)
 
-    # style_enabled = network_config["style_transferred"]
-    style_enabled = 1
-    if (style_enabled == 1):
-        rgb_dir_ws = constants.rgb_dir_ws_styled
-        rgb_dir_ns = constants.rgb_dir_ns_styled
-    else:
-        rgb_dir_ws = constants.rgb_dir_ws
-        rgb_dir_ns = constants.rgb_dir_ns
+    rgb_dir_ws = constants.rgb_dir_ws
+    rgb_dir_ns = constants.rgb_dir_ns
 
     #SHADOW dataset test
     #Using train dataset
