@@ -116,6 +116,9 @@ class IIDServerConfig():
             network_config[SHADOW_MAP_CHANNEL_KEY] = True
             network_config[SYNTH_DATASET_VERSION] = "v5"
 
+        elif (constants.network_version == "v30.13"):
+            network_config[NUM_BLOCKS_KEY] = 4
+
         return network_config
 
     def interpret_style_transfer_config_from_version(self):

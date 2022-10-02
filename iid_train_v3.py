@@ -210,7 +210,6 @@ def main(argv):
     #Train shadow refine
     mode = "train_shadow_refine"
     patch_size = general_config[mode]["patch_size"]
-    style_enabled = network_config["style_transferred"]
     refine_enabled = network_config["refine_enabled"]
     mix_type = network_config["mix_type"]
 
@@ -219,12 +218,6 @@ def main(argv):
         return
 
     print("Refinement network training STARTED...")
-    if(style_enabled == 1):
-        rgb_dir_ws = constants.rgb_dir_ws_styled
-        rgb_dir_ns = constants.rgb_dir_ns_styled
-    else:
-        rgb_dir_ws = constants.rgb_dir_ws
-        rgb_dir_ns = constants.rgb_dir_ns
 
     batch_size = sc_instance.get_batch_size_from_mode(mode, network_config)
 
