@@ -75,8 +75,8 @@ def update_config(opts):
         constants.DATASET_PLACES_PATH = "C:/Datasets/Places Dataset/*.jpg"
         constants.rgb_dir_ws_styled = "C:/Datasets/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
         constants.rgb_dir_ns_styled = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
-        constants.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 10/rgb/*/*.png"
-        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 10/rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws_v5 = "C:/Datasets/SynthWeather Dataset 10/v5/rgb/*/*.png"
+        constants.rgb_dir_ns_v5 = "C:/Datasets/SynthWeather Dataset 10/v5/rgb_noshadows/*/*.png"
         constants.ws_istd ="C:/Datasets/ISTD_Dataset/test/test_A/*.png"
         constants.ns_istd = "C:/Datasets/ISTD_Dataset/test/test_C/*.png"
 
