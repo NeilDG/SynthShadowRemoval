@@ -77,7 +77,7 @@ class IIDServerConfig():
         network_config[SHADOW_MAP_CHANNEL_KEY] = False
         network_config[REFINE_ENABLED_KEY] = False
         network_config[COLOR_JITTER_ENABLED_KEY] = False
-        network_config[SYNTH_DATASET_VERSION] = "v2"
+        network_config[SYNTH_DATASET_VERSION] = "v7"
 
         # configure load sizes (GPU memory allocation of data)
         if (constants.server_config == 1):  # COARE
@@ -87,16 +87,51 @@ class IIDServerConfig():
         elif (constants.server_config == 3):  # GCLOUD
             network_config[LOAD_SIZE_KEY_Z] = 512
         elif (constants.server_config == 4):  # RTX 2080Ti
-            network_config[LOAD_SIZE_KEY_Z] = 64
+            network_config[LOAD_SIZE_KEY_Z] = 48
         else:  # RTX 3090
-            network_config[LOAD_SIZE_KEY_Z] = 128
+            network_config[LOAD_SIZE_KEY_Z] = 96
 
         #configure batch size. NOTE: Batch size must be equal or larger than load size
         network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
 
         if (constants.network_version == "v37.01"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = False
-            network_config[SYNTH_DATASET_VERSION] = "v7"
+        elif (constants.network_version == "v37.02"):
+            network_config[NUM_BLOCKS_KEY] = 8
+
+            # configure load sizes (GPU memory allocation of data)
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_Z] = 64
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_Z] = 128
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_Z] = 256
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_Z] = 32
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_Z] = 64
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
+
+        elif (constants.network_version == "v37.03"):
+            network_config[NETWORK_CONFIG_NUM] = 3
+            network_config[NUM_BLOCKS_KEY] = 8
+
+            # configure load sizes (GPU memory allocation of data)
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_Z] = 64
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_Z] = 128
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_Z] = 256
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_Z] = 32
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_Z] = 64
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
 
         return network_config
 
