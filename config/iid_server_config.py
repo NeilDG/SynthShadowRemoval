@@ -73,7 +73,7 @@ class IIDServerConfig():
         network_config[NETWORK_CONFIG_NUM] = 4
         network_config[NC_KEY] = 3
         network_config[SHADOW_REFINE_NC_KEY] = 4
-        network_config[NUM_BLOCKS_KEY] = 8
+        network_config[NUM_BLOCKS_KEY] = 4
         network_config[SHADOW_MAP_CHANNEL_KEY] = False
         network_config[REFINE_ENABLED_KEY] = False
         network_config[COLOR_JITTER_ENABLED_KEY] = False
@@ -81,44 +81,22 @@ class IIDServerConfig():
 
         # configure load sizes (GPU memory allocation of data)
         if (constants.server_config == 1):  # COARE
-            network_config[LOAD_SIZE_KEY_Z] = 64
-        elif (constants.server_config == 2):  # CCS JUPYTER
             network_config[LOAD_SIZE_KEY_Z] = 128
-        elif (constants.server_config == 3):  # GCLOUD
+        elif (constants.server_config == 2):  # CCS JUPYTER
             network_config[LOAD_SIZE_KEY_Z] = 256
+        elif (constants.server_config == 3):  # GCLOUD
+            network_config[LOAD_SIZE_KEY_Z] = 512
         elif (constants.server_config == 4):  # RTX 2080Ti
-            network_config[LOAD_SIZE_KEY_Z] = 32
-        else:  # RTX 3090
             network_config[LOAD_SIZE_KEY_Z] = 64
+        else:  # RTX 3090
+            network_config[LOAD_SIZE_KEY_Z] = 128
 
         #configure batch size. NOTE: Batch size must be equal or larger than load size
         network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
 
-        if (constants.network_version == "v32.01"):
+        if (constants.network_version == "v37.01"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = False
-
-        elif (constants.network_version == "v32.02"):
-            network_config[SHADOW_MAP_CHANNEL_KEY] = True
-
-        elif (constants.network_version == "v33.01"):
-            network_config[SHADOW_MAP_CHANNEL_KEY] = False
-            network_config[SYNTH_DATASET_VERSION] = "v3"
-
-        elif (constants.network_version == "v33.02"):
-            network_config[SHADOW_MAP_CHANNEL_KEY] = True
-            network_config[SYNTH_DATASET_VERSION] = "v3"
-
-        elif (constants.network_version == "v35.01"):
-            network_config[SHADOW_MAP_CHANNEL_KEY] = False
-            network_config[SYNTH_DATASET_VERSION] = "v5"
-
-        elif (constants.network_version == "v35.02"):
-            network_config[SHADOW_MAP_CHANNEL_KEY] = True
-            network_config[SYNTH_DATASET_VERSION] = "v5"
-
-        elif (constants.network_version == "v36.01"):
-            network_config[SHADOW_MAP_CHANNEL_KEY] = False
-            network_config[SYNTH_DATASET_VERSION] = "v6"
+            network_config[SYNTH_DATASET_VERSION] = "v7"
 
         return network_config
 

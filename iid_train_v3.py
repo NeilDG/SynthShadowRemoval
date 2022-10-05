@@ -41,22 +41,16 @@ def update_config(opts):
         opts.num_workers = 6
         print("Using COARE configuration. Workers: ", opts.num_workers)
         constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
-        constants.rgb_dir_ws_styled = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.rgb_dir_ns_styled = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
-        constants.rgb_dir_ws_v2 = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v2/rgb/*/*.png"
-        constants.rgb_dir_ns_v2 = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v2/rgb_noshadows/*/*.png"
-        constants.rgb_dir_ws_v3 = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v3/rgb/*/*.png"
-        constants.rgb_dir_ns_v3 = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v3/rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
+        constants.rgb_dir_ns = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
         constants.ws_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_A/*.png"
         constants.ns_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_C/*.png"
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
         constants.num_workers = 6
-        constants.rgb_dir_ws_styled = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.rgb_dir_ns_styled = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
-        constants.rgb_dir_ws = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/rgb/*/*.png"
-        constants.rgb_dir_ns = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
+        constants.rgb_dir_ns = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
         constants.DATASET_PLACES_PATH = constants.rgb_dir_ws
         constants.ws_istd = constants.rgb_dir_ws
         constants.ns_istd = constants.rgb_dir_ns
@@ -73,10 +67,8 @@ def update_config(opts):
     elif (constants.server_config == 4):
         opts.num_workers = 6
         constants.DATASET_PLACES_PATH = "C:/Datasets/Places Dataset/*.jpg"
-        constants.rgb_dir_ws_styled = "C:/Datasets/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.rgb_dir_ns_styled = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
-        constants.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 10/rgb/*/*.png"
-        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 10/rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
+        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
         constants.ws_istd ="C:/Datasets/ISTD_Dataset/test/test_A/*.png"
         constants.ns_istd = "C:/Datasets/ISTD_Dataset/test/test_C/*.png"
 
@@ -84,16 +76,8 @@ def update_config(opts):
     else:
         opts.num_workers = 12
         constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
-        constants.rgb_dir_ws_styled = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.rgb_dir_ns_styled = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
-        constants.rgb_dir_ws_v2 = "E:/SynthWeather Dataset 10/v2/rgb/*/*.png"
-        constants.rgb_dir_ns_v2 = "E:/SynthWeather Dataset 10/v2/rgb_noshadows/*/*.png"
-        constants.rgb_dir_ws_v3 = "E:/SynthWeather Dataset 10/v3/rgb/*/*.png"
-        constants.rgb_dir_ns_v3 = "E:/SynthWeather Dataset 10/v3/rgb_noshadows/*/*.png"
-        constants.rgb_dir_ws_v5 = "E:/SynthWeather Dataset 10/v5/rgb/*/*.png"
-        constants.rgb_dir_ns_v5 = "E:/SynthWeather Dataset 10/v5/rgb_noshadows/*/*.png"
-        constants.rgb_dir_ws_v6 = "E:/SynthWeather Dataset 10/v6/rgb/*/*.png"
-        constants.rgb_dir_ns_v6 = "E:/SynthWeather Dataset 10/v6/rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws = "E:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
+        constants.rgb_dir_ns = "E:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
         constants.albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)
@@ -138,23 +122,9 @@ def main(argv):
     patch_size = general_config[mode]["patch_size"]
     dataset_version = network_config["dataset_version"]
 
-    assert dataset_version == "v5" or dataset_version == "v6", "Cannot identify dataset version."
-
-    if(dataset_version == "v2"):
-        rgb_dir_ws = constants.rgb_dir_ws_v2
-        rgb_dir_ns = constants.rgb_dir_ns_v2
-    elif(dataset_version == "v3"):
-        rgb_dir_ws = constants.rgb_dir_ws_v3
-        rgb_dir_ns = constants.rgb_dir_ns_v3
-    elif(dataset_version == "v5"):
-        rgb_dir_ws = constants.rgb_dir_ws_v5
-        rgb_dir_ns = constants.rgb_dir_ns_v5
-    elif (dataset_version == "v6"):
-        rgb_dir_ws = constants.rgb_dir_ws_v6
-        rgb_dir_ns = constants.rgb_dir_ns_v6
-    else:
-        rgb_dir_ws = ""
-        rgb_dir_ns = ""
+    assert dataset_version == "v7", "Cannot identify dataset version."
+    rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version = dataset_version)
+    rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version = dataset_version)
 
     print("Dataset path: ", rgb_dir_ws, rgb_dir_ns)
 
