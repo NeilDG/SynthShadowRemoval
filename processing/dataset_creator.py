@@ -625,7 +625,7 @@ def main(argv):
     for dir in dirlist:
         input_path = base_path + dir + "/*.png"
         output_path = output_base_path + dir + "/"
-        produce_color_images(input_path, output_path, "synth2rgb_v7.10_16.pt", 2, argv)
+        produce_color_images(input_path, output_path, "synth2rgb_v7.10_2.pt", 2, argv)
         # produce_color_images(input_path, output_path, "color_transfer_v1.11_2.pth", 3, argv)
 
     # create_patches(argv)

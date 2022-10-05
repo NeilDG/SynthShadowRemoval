@@ -38,6 +38,15 @@ class UnetGeneratorV2(UnetGenerator):
     def forward(self, x):
         return super().forward(x) * torch.ones_like(x)
 
+class UnetGeneratorV3(UnetGenerator):
+    def __init__(self, input_nc, output_nc, num_downs, ngf=64,
+                 norm_layer=nn.BatchNorm2d, use_dropout=False, gpu_ids=[]):
+        UnetGenerator.__init__(self, input_nc, output_nc, num_downs, ngf, norm_layer, use_dropout, gpu_ids)
+
+
+    def forward(self, x):
+        return super().forward(x) * torch.ones_like(x) * 2.0
+
 
 # Defines the submodule with skip connection.
 # X -------------------identity---------------------- X

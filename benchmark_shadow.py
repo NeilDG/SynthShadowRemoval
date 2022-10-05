@@ -1,6 +1,7 @@
 import sys
 from optparse import OptionParser
 
+import kornia.losses
 import torch
 import cv2
 import numpy as np
@@ -13,8 +14,12 @@ from loaders import dataset_loader
 
 parser = OptionParser()
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
+# parser.add_option('--ns_like_path', type=str, default = "./comparison/ISTD Dataset/AAAI_2020+_ISTD/*.png")
+# parser.add_option('--ns_like_path', type=str, default = "./comparison/ISTD Dataset/AAAI_2020_ISTD/*.png")
+# parser.add_option('--ns_like_path', type=str, default = "./comparison/ISTD Dataset/BMNET_2022_ISTD/ISTD_Result/*.png")
 # parser.add_option('--ns_like_path', type=str, default = "./comparison/ISTD Dataset/SID_PAMI/*.png")
-parser.add_option('--ns_like_path', type=str, default = "E:/ISTD_Dataset/test/test_A/*.png")
+parser.add_option('--ns_like_path', type=str, default = "./comparison/ISTD Dataset/OURS/*.png")
+# parser.add_option('--ns_like_path', type=str, default = "E:/ISTD_Dataset/test/test_A/*.png")
 parser.add_option('--ns_path', type=str, default = "E:/ISTD_Dataset/test/test_C/*.png")
 
 class PAMIDataset(data.Dataset):
@@ -69,13 +74,18 @@ def main(argv):
 
     mae = nn.L1Loss()
     mae_list = []
+    psnr_list = []
     for i, (_, rgb_ns_like, rgb_ns) in enumerate(data_loader, 0):
         mae_error = mae(rgb_ns_like, rgb_ns)
         print("Batch: ", i, " MAE error: ", mae_error)
         mae_list.append(mae_error)
 
+        psnr_error = kornia.metrics.psnr(rgb_ns_like, rgb_ns, 1.0)
+        psnr_list.append(psnr_error)
+
     mean_mae = np.round(np.mean(mae_list) * 255.0, 4)
-    print("Mean MAE: ", mean_mae)
+    mean_psnr = np.round(np.mean(psnr_list), 4)
+    print(" Mean PSNR: ", mean_psnr, " Mean MAE: ", mean_mae)
 
 if __name__ == "__main__":
     main(sys.argv)

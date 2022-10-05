@@ -21,8 +21,8 @@ class IIDServerConfig():
                                     "train_albedo_mask": {"min_epochs": 3, "max_epochs" : 10, "patch_size": 256},
                                     "train_albedo": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64},
                                     "train_shading": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64},
-                                    "train_shadow": {"min_epochs": 60 ,"max_epochs" : 100, "patch_size": 128},
-                                    "train_shadow_refine": {"min_epochs": 60,"max_epochs" : 100, "patch_size": 128}}
+                                    "train_shadow": {"min_epochs": 10 ,"max_epochs" : 60, "patch_size": 128},
+                                    "train_shadow_refine": {"min_epochs": 10,"max_epochs" : 60, "patch_size": 128}}
         #debug
         if(constants.debug_run == 1):
             self.general_configs = {"train_style_transfer" : {"min_epochs" : 1, "max_epochs" : 5},
@@ -60,69 +60,65 @@ class IIDServerConfig():
         network_config = {}
         NETWORK_CONFIG_NUM = "net_config"
         NC_KEY = "nc"
-        STYLE_TRANSFER_KEY = "style_transferred"
         SHADOW_REFINE_NC_KEY = "shadowrefine_nc"
         NUM_BLOCKS_KEY = "num_blocks"
+        LOAD_SIZE_KEY_Z = "load_size_z"
         BATCH_SIZE_KEY_Z = "batch_size_z"
-        BATCH_SIZE_KEY_ZR = "batch_size_zr"
         SHADOW_MAP_CHANNEL_KEY = "sm_one_channel"
-        MIX_TYPE_KEY = "mix_type"
         REFINE_ENABLED_KEY = "refine_enabled"
+        COLOR_JITTER_ENABLED_KEY = "jitter_enabled"
+        SYNTH_DATASET_VERSION = "dataset_version"
 
         #set defaults
         network_config[NETWORK_CONFIG_NUM] = 4
         network_config[NC_KEY] = 3
-        network_config[STYLE_TRANSFER_KEY] = 1
         network_config[SHADOW_REFINE_NC_KEY] = 4
-        network_config[NUM_BLOCKS_KEY] = 4
+        network_config[NUM_BLOCKS_KEY] = 8
         network_config[SHADOW_MAP_CHANNEL_KEY] = False
-        network_config[MIX_TYPE_KEY] = 2
         network_config[REFINE_ENABLED_KEY] = False
+        network_config[COLOR_JITTER_ENABLED_KEY] = False
+        network_config[SYNTH_DATASET_VERSION] = "v2"
 
-        # configure batch sizes
+        # configure load sizes (GPU memory allocation of data)
         if (constants.server_config == 1):  # COARE
-            network_config[BATCH_SIZE_KEY_Z] = 64
-            network_config[BATCH_SIZE_KEY_ZR] = 64
+            network_config[LOAD_SIZE_KEY_Z] = 64
         elif (constants.server_config == 2):  # CCS JUPYTER
-            network_config[BATCH_SIZE_KEY_Z] = 256
-            network_config[BATCH_SIZE_KEY_ZR] = 256
+            network_config[LOAD_SIZE_KEY_Z] = 128
         elif (constants.server_config == 3):  # GCLOUD
-            network_config[BATCH_SIZE_KEY_Z] = 256
-            network_config[BATCH_SIZE_KEY_ZR] = 256
+            network_config[LOAD_SIZE_KEY_Z] = 256
         elif (constants.server_config == 4):  # RTX 2080Ti
-            network_config[BATCH_SIZE_KEY_Z] = 32
-            network_config[BATCH_SIZE_KEY_ZR] = 32
+            network_config[LOAD_SIZE_KEY_Z] = 32
         else:  # RTX 3090
-            network_config[BATCH_SIZE_KEY_Z] = 96
-            network_config[BATCH_SIZE_KEY_ZR] = 96
+            network_config[LOAD_SIZE_KEY_Z] = 64
 
-        if (constants.network_version == "v30.01"):  #Adain-GEN
+        #configure batch size. NOTE: Batch size must be equal or larger than load size
+        network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
+
+        if (constants.network_version == "v32.01"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = False
-            network_config[MIX_TYPE_KEY] = 2
 
-        elif (constants.network_version == "v30.02"):  # Adain-GEN
+        elif (constants.network_version == "v32.02"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = True
-            network_config[MIX_TYPE_KEY] = 2
 
-        elif (constants.network_version == "v30.03"):  # Adain-GEN
+        elif (constants.network_version == "v33.01"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = False
-            network_config[MIX_TYPE_KEY] = 1
+            network_config[SYNTH_DATASET_VERSION] = "v3"
 
-        elif (constants.network_version == "v30.04"):  # Adain-GEN
+        elif (constants.network_version == "v33.02"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = True
-            network_config[MIX_TYPE_KEY] = 1
+            network_config[SYNTH_DATASET_VERSION] = "v3"
 
-        elif(constants.network_version =="v30.05"):
+        elif (constants.network_version == "v35.01"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = False
-            network_config[SHADOW_REFINE_NC_KEY] = 6
-            network_config[MIX_TYPE_KEY] = 2
-            network_config[REFINE_ENABLED_KEY] = True
+            network_config[SYNTH_DATASET_VERSION] = "v5"
 
-        elif(constants.network_version == "v30.06"):
+        elif (constants.network_version == "v35.02"):
             network_config[SHADOW_MAP_CHANNEL_KEY] = True
-            network_config[SHADOW_REFINE_NC_KEY] = 4
-            network_config[MIX_TYPE_KEY] = 2
-            network_config[REFINE_ENABLED_KEY] = True
+            network_config[SYNTH_DATASET_VERSION] = "v5"
+
+        elif (constants.network_version == "v36.01"):
+            network_config[SHADOW_MAP_CHANNEL_KEY] = False
+            network_config[SYNTH_DATASET_VERSION] = "v6"
 
         return network_config
 
@@ -251,18 +247,4 @@ class IIDServerConfig():
 
         return network_config
 
-    def get_batch_size_from_mode(self, mode, network_config):
-        if(mode == "train_albedo_mask"): #mask
-            return network_config["batch_size_p"]
-        elif(mode == "train_albedo"): #albedo
-            return network_config["batch_size_a"]
-        elif(mode == "train_shading"):
-            return network_config["batch_size_s"]
-        elif(mode == "train_shadow"):
-            return network_config["batch_size_z"]
-        elif(mode == "train_shadow_refine"):
-            return network_config["batch_size_zr"]
-        else:
-            print("Mode ", mode, " not recognized.")
-            return -1
 

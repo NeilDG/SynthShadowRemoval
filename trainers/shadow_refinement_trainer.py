@@ -43,7 +43,7 @@ class ShadowRefinementTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         general_config = sc_instance.get_general_configs()
         network_config = sc_instance.interpret_network_config_from_version()
 
-        self.batch_size = network_config["batch_size_z"]
+        self.load_size = network_config["load_size_z"]
 
         self.stopper_method = early_stopper.EarlyStopper(general_config["train_shadow"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, constants.early_stop_threshold, 99999.9)
         self.stop_result = False
@@ -53,8 +53,8 @@ class ShadowRefinementTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         self.optimizerG = torch.optim.Adam(itertools.chain(self.G_refinement.parameters()), lr=self.g_lr)
         self.optimizerD = torch.optim.Adam(itertools.chain(self.D_refinement.parameters()), lr=self.d_lr)
-        self.schedulerG = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG, patience=100000 / self.batch_size, threshold=0.00005)
-        self.schedulerD = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD, patience=100000 / self.batch_size, threshold=0.00005)
+        self.schedulerG = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG, patience=100000 / self.load_size, threshold=0.00005)
+        self.schedulerD = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD, patience=100000 / self.load_size, threshold=0.00005)
 
         self.NETWORK_VERSION = sc_instance.get_version_config("network_zr_name", self.iteration)
         self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'

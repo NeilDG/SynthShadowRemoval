@@ -31,6 +31,7 @@ parser.add_option('--iteration', type=int, default="1")
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
+parser.add_option('--img_vis_enabled', type=int, default=1)
 parser.add_option('--input_path', type=str)
 parser.add_option('--output_path', type=str)
 parser.add_option('--img_size', type=int, default=(256, 256))
@@ -58,17 +59,21 @@ def update_config(opts):
         constants.rgb_dir_ns = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows/"
         constants.albedo_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/unlit/"
+        constants.ws_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_A/*.png"
+        constants.ns_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_C/*.png"
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
         constants.num_workers = 6
         constants.rgb_dir_ws_styled = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
         constants.rgb_dir_ns_styled = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
-        constants.rgb_dir_ws = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb/*/*.png"
-        constants.rgb_dir_ns = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows/"
+        constants.rgb_dir_ws = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/rgb/*/*.png"
+        constants.rgb_dir_ns = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/rgb_noshadows/*/*.png"
         constants.albedo_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/unlit/"
-        constants.DATASET_PLACES_PATH = constants.rgb_dir_ws_styled
+        constants.DATASET_PLACES_PATH = constants.rgb_dir_ws
+        constants.ws_istd = constants.rgb_dir_ws
+        constants.ns_istd = constants.rgb_dir_ns
 
         print("Using CCS configuration. Workers: ", opts.num_workers)
 
@@ -85,8 +90,8 @@ def update_config(opts):
         constants.DATASET_PLACES_PATH = "C:/Datasets/Places Dataset/*.jpg"
         constants.rgb_dir_ws_styled = "C:/Datasets/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
         constants.rgb_dir_ns_styled = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
-        constants.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 8/train_rgb/*/*.png"
-        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 10/rgb/*/*.png"
+        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 10/rgb_noshadows/*/*.png"
         constants.albedo_dir = "C:/Datasets/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "C:/Datasets/SynthWeather Dataset 8/unlit/"
         constants.ws_istd = "C:/Datasets/ISTD_Dataset/test/test_A/*.png"
@@ -98,8 +103,14 @@ def update_config(opts):
         constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
         constants.rgb_dir_ws_styled = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
         constants.rgb_dir_ns_styled = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
-        constants.rgb_dir_ws = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"
-        constants.rgb_dir_ns = "E:/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws_v2 = "E:/SynthWeather Dataset 10/v2/rgb/*/*.png"
+        constants.rgb_dir_ns_v2 = "E:/SynthWeather Dataset 10/v2/rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws_v3 = "E:/SynthWeather Dataset 10/v3/rgb/*/*.png"
+        constants.rgb_dir_ns_v3 = "E:/SynthWeather Dataset 10/v3/rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws_v5 = "E:/SynthWeather Dataset 10/v5/rgb/*/*.png"
+        constants.rgb_dir_ns_v5 = "E:/SynthWeather Dataset 10/v5/rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws_v6 = "E:/SynthWeather Dataset 10/v6/rgb/*/*.png"
+        constants.rgb_dir_ns_v6 = "E:/SynthWeather Dataset 10/v6/rgb_noshadows/*/*.png"
         constants.albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)
@@ -153,14 +164,25 @@ def main(argv):
 
     dataset_tester = TesterClass(shadow_t, shadow_rt)
 
-    # style_enabled = network_config["style_transferred"]
-    style_enabled = 1
-    if (style_enabled == 1):
-        rgb_dir_ws = constants.rgb_dir_ws_styled
-        rgb_dir_ns = constants.rgb_dir_ns_styled
+    dataset_version = network_config["dataset_version"]
+
+    assert dataset_version == "v5" or dataset_version == "v6", "Cannot identify dataset version."
+
+    if (dataset_version == "v2"):
+        rgb_dir_ws = constants.rgb_dir_ws_v2
+        rgb_dir_ns = constants.rgb_dir_ns_v2
+    elif (dataset_version == "v3"):
+        rgb_dir_ws = constants.rgb_dir_ws_v3
+        rgb_dir_ns = constants.rgb_dir_ns_v3
+    elif (dataset_version == "v5"):
+        rgb_dir_ws = constants.rgb_dir_ws_v5
+        rgb_dir_ns = constants.rgb_dir_ns_v5
+    elif (dataset_version == "v6"):
+        rgb_dir_ws = constants.rgb_dir_ws_v6
+        rgb_dir_ns = constants.rgb_dir_ns_v6
     else:
-        rgb_dir_ws = constants.rgb_dir_ws
-        rgb_dir_ns = constants.rgb_dir_ns
+        rgb_dir_ws = ""
+        rgb_dir_ns = ""
 
     #SHADOW dataset test
     #Using train dataset
@@ -170,7 +192,7 @@ def main(argv):
         rgb_ws_tensor = rgb_ws.to(device)
         rgb_ns_tensor = rgb_ns.to(device)
 
-        dataset_tester.test_shadow(rgb_ws_tensor, rgb_ns_tensor, "Train",  refine_enabled, True, opts)
+        dataset_tester.test_shadow(rgb_ws_tensor, rgb_ns_tensor, "Train",  refine_enabled, opts.img_vis_enabled, opts)
         if (i % 16 == 0):
             break
 
@@ -182,7 +204,7 @@ def main(argv):
         rgb_ws_tensor = rgb_ws.to(device)
         rgb_ns_tensor = rgb_ns.to(device)
 
-        dataset_tester.test_istd_shadow(rgb_ws_tensor, rgb_ns_tensor, refine_enabled, True, opts)
+        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, refine_enabled, opts.img_vis_enabled, 1, opts)
         # break
 
     dataset_tester.print_ave_shadow_performance("ISTD", opts)

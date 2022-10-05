@@ -95,12 +95,18 @@ albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
 rgb_dir_ws_styled = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
 rgb_dir_ns_styled = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
 
-rgb_dir_ws = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"
-rgb_dir_ns = "E:/SynthWeather Dataset 8/train_rgb_noshadows/*/*.png"
+rgb_dir_ws_v5 = ""
+rgb_dir_ns_v5 = ""
+
+rgb_dir_ws_v6 = ""
+rgb_dir_ns_v6 = ""
+
 unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
 
 ws_istd = "E:/ISTD_Dataset/test/test_A/*.png"
 ns_istd = "E:/ISTD_Dataset/test/test_C/*.png"
+# ws_istd = "E:/ISTD_Dataset/train/train_A/*.png"
+# ns_istd = "E:/ISTD_Dataset/train/train_C/*.png"
 
 imgx_dir = "E:/Places Dataset/*.jpg"
 # imgy_dir = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"

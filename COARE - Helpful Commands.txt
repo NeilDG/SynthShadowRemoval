@@ -10,11 +10,12 @@ cd scratch2/NeuralNets-GenerativeExperiment-3
 cd scratch2/NeuralNets-GenerativeExperiment-4
 cd scratch2/NeuralNets-GenerativeExperiment-5
 cd scratch2/NeuralNets-GenerativeExperiment-6
-cd scratch2/NeuralNets-GenerativeExperiment-V27.XX.XX
+cd scratch2/NeuralNets-GenerativeExperiment-V32.XX.XX
 cd scratch2/Visdom
-unzip "SynthWeather Dataset 9.zip"
+unzip "scratch2/SynthWeather Dataset 10.zip"
 
-git clone -b "workspace/V27.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "scratch2/NeuralNets-GenerativeExperiment-V27.XX.XX"
+scratch2/NeuralNets-GenerativeExperiment-V27.XX.XX
+git clone -b "workspace/V32.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "scratch2/NeuralNets-GenerativeExperiment-V32.XX.XX"
 
 //Execute job
 sbatch slurm_install.slurm
@@ -38,6 +39,12 @@ sbatch script_11.slurm
 sbatch script_12.slurm
 sbatch script_13.slurm
 sbatch script_14.slurm
+sbatch script_15.slurm
+sbatch script_16.slurm
+sbatch script_17.slurm
+sbatch script_18.slurm
+sbatch script_19.slurm
+sbatch script_20.slurm
 
 sbatch --dependency=afterany:275293 script_debug.slurm
 sbatch -w saliksik-gpu-06 slurm_install_gpu.slurm
@@ -68,9 +75,9 @@ export XDG_RUNTIME_DIR=/scratch1/scratch2/neil.delgallego/Visdom/
 saliksik.asti.dost.gov.ph:8097
 
 //CCS SERVER-JUPYTERHUB
-git clone -b "workspace/V21.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "NeuralNets-GenerativeExperiment-V21.XX.XX"
-git switch "workspace/V21.XX.XX"
-cd NeuralNets-GenerativeExperiment-V21.XX.XX
+git clone -b "workspace/V31.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "NeuralNets-GenerativeExperiment-V31.XX.XX"
+git switch "workspace/V31.XX.XX"
+cd NeuralNets-GenerativeExperiment-V31.XX.XX
 python "ccs1_main.py"
 python "ccs2_main.py"
 

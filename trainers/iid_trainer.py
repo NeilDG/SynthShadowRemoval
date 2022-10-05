@@ -52,7 +52,7 @@ class IIDTrainer:
         self.iid_op = iid_transforms.IIDTransform().to(self.gpu_device)
 
         num_blocks = opts.num_blocks
-        self.batch_size = opts.batch_size
+        self.batch_size = opts.load_size
         net_config = opts.net_config
         self.net_config = opts.net_config
         self.albedo_mode = opts.albedo_mode

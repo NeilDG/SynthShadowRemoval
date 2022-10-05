@@ -52,7 +52,7 @@ def load_relighting_train_dataset(rgb_dir, albedo_dir, scene_root, opts):
 
     data_loader = torch.utils.data.DataLoader(
         image_dataset.RelightDataset(len(albedo_list), rgb_dir, albedo_dir, scene_list, opts),
-        batch_size=opts.batch_size,
+        batch_size=opts.load_size,
         num_workers=opts.num_workers,
         shuffle=True
     )
@@ -142,32 +142,24 @@ def load_bell2014_dataset(r_dir, s_dir, patch_size, opts):
 
     return data_loader
 
-def load_shadow_train_dataset(ws_path, ns_path, ws_istd, ns_istd, patch_size, batch_size,
-                              mix_type, opts):
+def load_shadow_train_dataset(ws_path, ns_path, ws_istd, ns_istd, patch_size, load_size, opts):
     ws_list = assemble_img_list(ws_path, opts)
     ns_list = assemble_img_list(ns_path, opts)
 
     ws_istd_list = assemble_img_list(ws_istd, opts)
     ns_istd_list = assemble_img_list(ns_istd, opts)
 
-    if(mix_type == 1):
-        print("Mixing ISTD and synthetic train datasets")
-        ws_list = ws_list + ws_istd_list
-        ns_list = ns_list + ns_istd_list
-    elif(mix_type == 2):
-        print("Using ISTD dataset only")
-        ws_list = ws_istd_list
-        ns_list = ns_istd_list
-
-    else:
-        print("Using synthetic train dataset")
+    print("Using synthetic train dataset")
+    for i in range(0, 1):
+        ws_list += ws_list
+        ns_list += ns_list
 
     img_length = len(ws_list)
     print("Length of images: %d %d" % (len(ws_list), len(ns_list)))
 
     data_loader = torch.utils.data.DataLoader(
         iid_test_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 1, patch_size),
-        batch_size=batch_size,
+        batch_size=load_size,
         num_workers=opts.num_workers,
         shuffle=False
     )
@@ -280,7 +272,7 @@ def load_unlit_dataset_train(styled_dir, unlit_dir, opts):
 
     data_loader = torch.utils.data.DataLoader(
         image_dataset.UnlitDataset(len(styled_img_list), styled_img_list, unlit_dir, 1, opts),
-        batch_size=opts.batch_size,
+        batch_size=opts.load_size,
         num_workers=opts.num_workers,
         shuffle=False
     )
@@ -350,7 +342,7 @@ def load_ffa_dataset_train(imgx_dir, imgy_dir, opts):
 
     data_loader = torch.utils.data.DataLoader(
         image_dataset.GenericPairedDataset(imgx_list, imgy_list, 1, opts),
-        batch_size=opts.batch_size,
+        batch_size=opts.load_size,
         num_workers = opts.num_workers,
         shuffle=False,
         pin_memory=False
