@@ -109,6 +109,8 @@ def update_config(opts):
         constants.rgb_dir_ns_v3 = "E:/SynthWeather Dataset 10/v3/rgb_noshadows/*/*.png"
         constants.rgb_dir_ws_v5 = "E:/SynthWeather Dataset 10/v5/rgb/*/*.png"
         constants.rgb_dir_ns_v5 = "E:/SynthWeather Dataset 10/v5/rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws_v6 = "E:/SynthWeather Dataset 10/v6/rgb/*/*.png"
+        constants.rgb_dir_ns_v6 = "E:/SynthWeather Dataset 10/v6/rgb_noshadows/*/*.png"
         constants.albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)
@@ -164,7 +166,7 @@ def main(argv):
 
     dataset_version = network_config["dataset_version"]
 
-    assert dataset_version == "v2" or dataset_version == "v3" or dataset_version == "v5", "Cannot identify dataset version."
+    assert dataset_version == "v5" or dataset_version == "v6", "Cannot identify dataset version."
 
     if (dataset_version == "v2"):
         rgb_dir_ws = constants.rgb_dir_ws_v2
@@ -175,6 +177,9 @@ def main(argv):
     elif (dataset_version == "v5"):
         rgb_dir_ws = constants.rgb_dir_ws_v5
         rgb_dir_ns = constants.rgb_dir_ns_v5
+    elif (dataset_version == "v6"):
+        rgb_dir_ws = constants.rgb_dir_ws_v6
+        rgb_dir_ns = constants.rgb_dir_ns_v6
     else:
         rgb_dir_ws = ""
         rgb_dir_ns = ""

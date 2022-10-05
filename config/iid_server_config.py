@@ -132,6 +132,9 @@ class IIDServerConfig():
             else:  # RTX 3090
                 network_config[LOAD_SIZE_KEY_Z] = 256
 
+        elif (constants.network_version == "v36.01"):
+            network_config[SHADOW_MAP_CHANNEL_KEY] = False
+            network_config[SYNTH_DATASET_VERSION] = "v6"
 
         return network_config
 

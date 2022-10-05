@@ -92,6 +92,8 @@ def update_config(opts):
         constants.rgb_dir_ns_v3 = "E:/SynthWeather Dataset 10/v3/rgb_noshadows/*/*.png"
         constants.rgb_dir_ws_v5 = "E:/SynthWeather Dataset 10/v5/rgb/*/*.png"
         constants.rgb_dir_ns_v5 = "E:/SynthWeather Dataset 10/v5/rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws_v6 = "E:/SynthWeather Dataset 10/v6/rgb/*/*.png"
+        constants.rgb_dir_ns_v6 = "E:/SynthWeather Dataset 10/v6/rgb_noshadows/*/*.png"
         constants.albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)
@@ -136,7 +138,7 @@ def main(argv):
     patch_size = general_config[mode]["patch_size"]
     dataset_version = network_config["dataset_version"]
 
-    assert dataset_version == "v2" or dataset_version == "v3" or dataset_version == "v5", "Cannot identify dataset version."
+    assert dataset_version == "v5" or dataset_version == "v6", "Cannot identify dataset version."
 
     if(dataset_version == "v2"):
         rgb_dir_ws = constants.rgb_dir_ws_v2
@@ -147,6 +149,9 @@ def main(argv):
     elif(dataset_version == "v5"):
         rgb_dir_ws = constants.rgb_dir_ws_v5
         rgb_dir_ns = constants.rgb_dir_ns_v5
+    elif (dataset_version == "v6"):
+        rgb_dir_ws = constants.rgb_dir_ws_v6
+        rgb_dir_ns = constants.rgb_dir_ns_v6
     else:
         rgb_dir_ws = ""
         rgb_dir_ns = ""
@@ -208,75 +213,75 @@ def main(argv):
                 break
 
     #Train shadow refine
-    mode = "train_shadow_refine"
-    patch_size = general_config[mode]["patch_size"]
-    refine_enabled = network_config["refine_enabled"]
-    mix_type = network_config["mix_type"]
-
-    if(refine_enabled == False):
-        print("Refinement network training DISABLED. Stopping.")
-        return
-
-    print("Refinement network training STARTED...")
-
-    batch_size = sc_instance.get_batch_size_from_mode(mode, network_config)
-
-    train_loader = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, constants.ws_istd, constants.ns_istd, patch_size, batch_size, mix_type, opts)
-    test_loader_train = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
-    test_loader_istd = dataset_loader.load_shadow_test_dataset(constants.ws_istd, constants.ns_istd, opts)
-    rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
-
-    iteration = 0
-    start_epoch = sc_instance.get_last_epoch_from_mode(mode)
-    print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
-    for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
-        for i, (_, rgb_ws, rgb_ns, shadow_map) in enumerate(train_loader, 0):
-            rgb_ws = rgb_ws.to(device)
-            rgb_ns = rgb_ns.to(device)
-            shadow_map = shadow_map.to(device)
-
-            input_map = {"rgb": rgb_ws, "rgb_ns" : rgb_ns, "shadow_map" : shadow_map}
-            target_map = input_map
-
-            tf.train(mode, epoch, iteration, input_map, target_map)
-            iteration = iteration + 1
-
-            if(tf.is_stop_condition_met(mode)):
-                break
-
-            if (i % 300 == 0):
-                tf.save(mode, epoch, iteration, True)
-
-                if(opts.plot_enabled == 1):
-                    tf.visdom_plot(mode, iteration)
-                    tf.visdom_visualize(mode, input_map, "Train")
-
-                    _, rgb_ws, rgb_ns = next(itertools.cycle(test_loader_train))
-                    rgb_ws = rgb_ws.to(device)
-                    rgb_ns = rgb_ns.to(device)
-
-                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
-                    shadow_t = tf.get_shadow_trainer()
-                    _, rgb2sm = shadow_t.test(input_map)
-                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_map": rgb2sm}
-                    tf.visdom_visualize(mode, input_map, "Test Synthetic")
-
-                    _, rgb_ws, rgb_ns = next(itertools.cycle(test_loader_istd))
-                    rgb_ws = rgb_ws.to(device)
-                    rgb_ns = rgb_ns.to(device)
-
-                    input_map = {"rgb": rgb_ws, "rgb_ns" : rgb_ns}
-                    _, rgb2sm = shadow_t.test(input_map)
-                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_map": rgb2sm}
-                    tf.visdom_visualize(mode, input_map, "Test ISTD")
-
-                    _, rgb_ws_batch = next(itertools.cycle(rw_loader))
-                    rgb_ws_tensor = rgb_ws_batch.to(device)
-                    input_map = {"rgb": rgb_ws_tensor}
-                    tf.visdom_infer(mode, input_map)
-
-            if (tf.is_stop_condition_met(mode)):
-                break
+    # mode = "train_shadow_refine"
+    # patch_size = general_config[mode]["patch_size"]
+    # refine_enabled = network_config["refine_enabled"]
+    # mix_type = network_config["mix_type"]
+    #
+    # if(refine_enabled == False):
+    #     print("Refinement network training DISABLED. Stopping.")
+    #     return
+    #
+    # print("Refinement network training STARTED...")
+    #
+    # batch_size = sc_instance.get_batch_size_from_mode(mode, network_config)
+    #
+    # train_loader = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, constants.ws_istd, constants.ns_istd, patch_size, batch_size, mix_type, opts)
+    # test_loader_train = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
+    # test_loader_istd = dataset_loader.load_shadow_test_dataset(constants.ws_istd, constants.ns_istd, opts)
+    # rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
+    #
+    # iteration = 0
+    # start_epoch = sc_instance.get_last_epoch_from_mode(mode)
+    # print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
+    # for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
+    #     for i, (_, rgb_ws, rgb_ns, shadow_map) in enumerate(train_loader, 0):
+    #         rgb_ws = rgb_ws.to(device)
+    #         rgb_ns = rgb_ns.to(device)
+    #         shadow_map = shadow_map.to(device)
+    #
+    #         input_map = {"rgb": rgb_ws, "rgb_ns" : rgb_ns, "shadow_map" : shadow_map}
+    #         target_map = input_map
+    #
+    #         tf.train(mode, epoch, iteration, input_map, target_map)
+    #         iteration = iteration + 1
+    #
+    #         if(tf.is_stop_condition_met(mode)):
+    #             break
+    #
+    #         if (i % 300 == 0):
+    #             tf.save(mode, epoch, iteration, True)
+    #
+    #             if(opts.plot_enabled == 1):
+    #                 tf.visdom_plot(mode, iteration)
+    #                 tf.visdom_visualize(mode, input_map, "Train")
+    #
+    #                 _, rgb_ws, rgb_ns = next(itertools.cycle(test_loader_train))
+    #                 rgb_ws = rgb_ws.to(device)
+    #                 rgb_ns = rgb_ns.to(device)
+    #
+    #                 input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
+    #                 shadow_t = tf.get_shadow_trainer()
+    #                 _, rgb2sm = shadow_t.test(input_map)
+    #                 input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_map": rgb2sm}
+    #                 tf.visdom_visualize(mode, input_map, "Test Synthetic")
+    #
+    #                 _, rgb_ws, rgb_ns = next(itertools.cycle(test_loader_istd))
+    #                 rgb_ws = rgb_ws.to(device)
+    #                 rgb_ns = rgb_ns.to(device)
+    #
+    #                 input_map = {"rgb": rgb_ws, "rgb_ns" : rgb_ns}
+    #                 _, rgb2sm = shadow_t.test(input_map)
+    #                 input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_map": rgb2sm}
+    #                 tf.visdom_visualize(mode, input_map, "Test ISTD")
+    #
+    #                 _, rgb_ws_batch = next(itertools.cycle(rw_loader))
+    #                 rgb_ws_tensor = rgb_ws_batch.to(device)
+    #                 input_map = {"rgb": rgb_ws_tensor}
+    #                 tf.visdom_infer(mode, input_map)
+    #
+    #         if (tf.is_stop_condition_met(mode)):
+    #             break
 
 
 if __name__ == "__main__":
