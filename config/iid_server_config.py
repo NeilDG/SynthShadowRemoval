@@ -116,8 +116,22 @@ class IIDServerConfig():
             network_config[SHADOW_MAP_CHANNEL_KEY] = True
             network_config[SYNTH_DATASET_VERSION] = "v5"
 
-        elif (constants.network_version == "v30.13"):
-            network_config[NUM_BLOCKS_KEY] = 4
+        elif (constants.network_version == "v35.03"):
+            network_config[SHADOW_MAP_CHANNEL_KEY] = False
+            network_config[SYNTH_DATASET_VERSION] = "v5"
+            network_config[NETWORK_CONFIG_NUM] = 2
+            network_config[NUM_BLOCKS_KEY] = 1
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_Z] = 128
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_Z] = 256
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_Z] = 512
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_Z] = 128
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_Z] = 256
+
 
         return network_config
 
