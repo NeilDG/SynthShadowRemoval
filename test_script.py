@@ -4,10 +4,10 @@ import os
 
 def test_relighting():
     os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-              "--plot_enabled=1 --img_vis_enabled=1 --version=\"v37.03\" --iteration=6")
-
-    os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-              "--plot_enabled=1 --img_vis_enabled=1 --version=\"v37.03\" --iteration=1")
+              "--plot_enabled=1 --img_vis_enabled=1 --version=\"v40.01\" --iteration=6")
+    #
+    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+    #           "--plot_enabled=1 --img_vis_enabled=1 --version=\"v39.03\" --iteration=1")
     #
     # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
     #           "--plot_enabled=1 --img_vis_enabled=1 --version=\"v37.01\" --iteration=2")
