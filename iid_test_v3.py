@@ -166,18 +166,9 @@ def main(argv):
 
     dataset_version = network_config["dataset_version"]
 
-    assert dataset_version == "v5" or dataset_version == "v6", "Cannot identify dataset version."
+    # assert dataset_version == "v5" or dataset_version == "v6", "Cannot identify dataset version."
 
-    if (dataset_version == "v2"):
-        rgb_dir_ws = constants.rgb_dir_ws_v2
-        rgb_dir_ns = constants.rgb_dir_ns_v2
-    elif (dataset_version == "v3"):
-        rgb_dir_ws = constants.rgb_dir_ws_v3
-        rgb_dir_ns = constants.rgb_dir_ns_v3
-    elif (dataset_version == "v5"):
-        rgb_dir_ws = constants.rgb_dir_ws_v5
-        rgb_dir_ns = constants.rgb_dir_ns_v5
-    elif (dataset_version == "v6"):
+    if (dataset_version == "v6"):
         rgb_dir_ws = constants.rgb_dir_ws_v6
         rgb_dir_ns = constants.rgb_dir_ns_v6
     else:
