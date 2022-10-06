@@ -308,7 +308,7 @@ class TesterClass():
 
         self.visdom_reporter.plot_text(display_text)
 
-    def test_shadow(self, rgb_ws, rgb_ns, prefix, refine_enabled, show_images, opts):
+    def test_shadow(self, rgb_ws, rgb_ns, shadow_map, prefix, refine_enabled, show_images, opts):
         # rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
         # rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
 

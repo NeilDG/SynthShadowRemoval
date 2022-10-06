@@ -3,10 +3,10 @@
 import os
 def train_relighting():
     os.system("python \"iid_train_v3.py\" --server_config=4 --img_to_load=-1 --debug_run=0 "
-              "--plot_enabled=0 --version=\"v37.03\" --iteration=6")
+              "--plot_enabled=0 --version=\"v38.03\" --iteration=6")
 
     os.system("python \"iid_train_v3.py\" --server_config=4 --img_to_load=-1 --debug_run=0 "
-              "--plot_enabled=0 --version=\"v37.03\" --iteration=1")
+              "--plot_enabled=0 --version=\"v38.03\" --iteration=1")
 
 def train_domain_adaptation():
     os.system("python \"cyclegan_main.py\" --server_config=4 --img_to_load=-1 --debug_run=0 "
