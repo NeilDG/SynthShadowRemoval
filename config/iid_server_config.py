@@ -21,8 +21,8 @@ class IIDServerConfig():
                                     "train_albedo_mask": {"min_epochs": 3, "max_epochs" : 10, "patch_size": 256},
                                     "train_albedo": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64},
                                     "train_shading": {"min_epochs": 10,"max_epochs" : 40, "patch_size": 64},
-                                    "train_shadow": {"min_epochs": 10 ,"max_epochs" : 60, "patch_size": 64},
-                                    "train_shadow_refine": {"min_epochs": 10,"max_epochs" : 60, "patch_size": 64}}
+                                    "train_shadow": {"min_epochs": 30 ,"max_epochs" : 80, "patch_size": 64},
+                                    "train_shadow_refine": {"min_epochs": 30,"max_epochs" : 80, "patch_size": 64}}
         #debug
         if(constants.debug_run == 1):
             self.general_configs = {"train_style_transfer" : {"min_epochs" : 1, "max_epochs" : 5},
@@ -131,15 +131,15 @@ class IIDServerConfig():
 
             # configure load sizes (GPU memory allocation of data)
             if (constants.server_config == 1):  # COARE
-                network_config[LOAD_SIZE_KEY_Z] = 64
-            elif (constants.server_config == 2):  # CCS JUPYTER
-                network_config[LOAD_SIZE_KEY_Z] = 128
-            elif (constants.server_config == 3):  # GCLOUD
                 network_config[LOAD_SIZE_KEY_Z] = 256
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_Z] = 512
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_Z] = 1024
             elif (constants.server_config == 4):  # RTX 2080Ti
-                network_config[LOAD_SIZE_KEY_Z] = 32
+                network_config[LOAD_SIZE_KEY_Z] = 128
             else:  # RTX 3090
-                network_config[LOAD_SIZE_KEY_Z] = 64
+                network_config[LOAD_SIZE_KEY_Z] = 256
 
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
