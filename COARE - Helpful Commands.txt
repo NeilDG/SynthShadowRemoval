@@ -86,6 +86,8 @@ zip -r "checkpoints.zip" "rgb2albedo_v9.01_7.pt" "rgb2albedo_v9.01_8.pt" "rgb2al
 "rgb2shading_v9.01_7.pt" "rgb2shading_v9.01_8.pt" "rgb2shading_v9.01_9.pt" "rgb2shading_v9.01_10.pt" "rgb2shading_v9.01_11.pt" "rgb2shading_v9.01_12.pt" "rgb2shading_v9.01_13.pt" "rgb2shading_v9.01_14.pt"
 
 zip -r "NeuralNets-CCS.zip" "./NeuralNets-GenerativeExperiment-V9.XX.XX" -x "./NeuralNets-GenerativeExperiment-V9.XX.XX/checkpoint/*"
+unzip "rgb_noshadows.zip" -d "SynthWeather Dataset 10/v8/"
+scp "E:/SynthWeather Dataset 10/v8/rgb.zip" https://ccscloud.dlsu.edu.ph:8080/user/neil.delgallego/tree
 
 //GCLOUD
 cd NeuralNets-GenerativeExperiment
@@ -95,3 +97,4 @@ python "gcloud_main.py"
 
 screen -S "VISDOM_PROCESS"
 screen -R "VISDOM_PROCESS"
+
