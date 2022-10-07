@@ -312,6 +312,7 @@ class TesterClass():
         # rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
         # rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
 
+        # input_map = {"rgb": rgb_ws, "shadow_map" : shadow_map}
         input_map = {"rgb": rgb_ws}
         rgb2ns, rgb2sm = self.shadow_t.test(input_map)
 
