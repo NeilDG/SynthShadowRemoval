@@ -179,16 +179,16 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 self.save_states(epoch, iteration, False)
 
     def is_stop_condition_met(self):
-        return self.stopper_method.did_stop_condition_met()
+        return self.stop_result
 
     def test(self, input_map):
         with torch.no_grad():
             input_ws = input_map["rgb"]
 
-            # if ("shadow_map" in input_map):
-            #     rgb2sm = input_map["shadow_map"]
-            # else:
-            rgb2sm = self.G_SM_predictor(input_ws)
+            if ("shadow_map" in input_map):
+                rgb2sm = input_map["shadow_map"]
+            else:
+                rgb2sm = self.G_SM_predictor(input_ws)
             rgb2ns = self.shadow_op.remove_rgb_shadow(input_ws, rgb2sm, True)
 
         return rgb2ns, rgb2sm

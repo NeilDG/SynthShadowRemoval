@@ -308,10 +308,11 @@ class TesterClass():
 
         self.visdom_reporter.plot_text(display_text)
 
-    def test_shadow(self, rgb_ws, rgb_ns, prefix, refine_enabled, show_images, opts):
+    def test_shadow(self, rgb_ws, rgb_ns, shadow_map, prefix, refine_enabled, show_images, opts):
         # rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
         # rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
 
+        # input_map = {"rgb": rgb_ws, "shadow_map" : shadow_map}
         input_map = {"rgb": rgb_ws}
         rgb2ns, rgb2sm = self.shadow_t.test(input_map)
 
