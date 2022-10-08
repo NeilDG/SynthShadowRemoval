@@ -86,8 +86,8 @@ zip -r "checkpoints.zip" "rgb2albedo_v9.01_7.pt" "rgb2albedo_v9.01_8.pt" "rgb2al
 "rgb2shading_v9.01_7.pt" "rgb2shading_v9.01_8.pt" "rgb2shading_v9.01_9.pt" "rgb2shading_v9.01_10.pt" "rgb2shading_v9.01_11.pt" "rgb2shading_v9.01_12.pt" "rgb2shading_v9.01_13.pt" "rgb2shading_v9.01_14.pt"
 
 zip -r "NeuralNets-CCS.zip" "./NeuralNets-GenerativeExperiment-V9.XX.XX" -x "./NeuralNets-GenerativeExperiment-V9.XX.XX/checkpoint/*"
-zip -F "rgb.zip" --out "rgb_fixed.zip"
-unzip "rgb_fixed.zip" -d "SynthWeather Dataset 10/v8/"
+zip -F "rgb_noshadows.zip" --out "rgb_noshadows_fixed.zip"
+unzip "rgb_noshadows_fixed.zip" -d "SynthWeather Dataset 10/v8/"
 
 mv "SynthWeather Dataset 10/v8/v8/" "SynthWeather Dataset 10/v8/"
 
