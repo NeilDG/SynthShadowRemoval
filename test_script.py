@@ -4,7 +4,7 @@ import os
 
 def test_relighting():
     os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-              "--plot_enabled=1 --img_vis_enabled=1 --version=\"v43.01\" --iteration=6")
+              "--plot_enabled=1 --img_vis_enabled=1 --version=\"v45.01\" --iteration=1")
 
 
 def main():

@@ -51,9 +51,9 @@ def update_config(opts):
         constants.num_workers = 6
         constants.rgb_dir_ws = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
         constants.rgb_dir_ns = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
-        constants.DATASET_PLACES_PATH = constants.rgb_dir_ws
-        constants.ws_istd = constants.rgb_dir_ws
-        constants.ns_istd = constants.rgb_dir_ns
+        constants.DATASET_PLACES_PATH = "/home/jupyter-neil.delgallego/Places Dataset/*.jpg"
+        constants.ws_istd = constants.DATASET_PLACES_PATH
+        constants.ns_istd = constants.DATASET_PLACES_PATH
 
         print("Using CCS configuration. Workers: ", opts.num_workers)
 
@@ -122,7 +122,7 @@ def main(argv):
     patch_size = general_config[mode]["patch_size"]
     dataset_version = network_config["dataset_version"]
 
-    assert dataset_version == "v8" or dataset_version == "v13", "Cannot identify dataset version."
+    assert dataset_version == "v8" or dataset_version == "v14", "Cannot identify dataset version."
     rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version = dataset_version)
     rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version = dataset_version)
 
