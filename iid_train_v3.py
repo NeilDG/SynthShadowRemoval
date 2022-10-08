@@ -122,7 +122,7 @@ def main(argv):
     patch_size = general_config[mode]["patch_size"]
     dataset_version = network_config["dataset_version"]
 
-    assert dataset_version == "v8" or dataset_version == "v13", "Cannot identify dataset version."
+    assert dataset_version == "v8" or dataset_version == "v14", "Cannot identify dataset version."
     rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version = dataset_version)
     rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version = dataset_version)
 
