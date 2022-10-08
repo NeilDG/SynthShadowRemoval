@@ -109,7 +109,7 @@ class CycleGANTrainer:
         num_blocks = network_config["num_blocks"]
         norm_mode = network_config["norm_mode"]
         self.batch_size = network_config["batch_size"]
-        self.img_per_iter = network_config["img_per_iter"]
+        self.load_size = network_config["load_size"]
 
         it_params = DomainAdaptIterationTable().get_version(self.iteration)
         self.disc_mode = it_params.disc_mode
@@ -261,8 +261,8 @@ class CycleGANTrainer:
     def train(self, epoch, iteration, tensor_x, tensor_y, img_batch):
         with amp.autocast():
             # print("Current batch: ", img_batch)
-            tensor_x = self.transform_op(tensor_x).detach()
-            tensor_y = self.transform_op(tensor_y).detach()
+            # tensor_x = self.transform_op(tensor_x).detach()
+            # tensor_y = self.transform_op(tensor_y).detach()
 
             # optimize D-----------------------
             y_like = self.G_A(tensor_x)
@@ -324,7 +324,7 @@ class CycleGANTrainer:
             errG = A_identity_loss + B_identity_loss + A_likeness_loss + B_likeness_loss + A_lpip_loss + B_lpip_loss + A_adv_loss + B_adv_loss + A_cycle_loss + B_cycle_loss
             self.fp16_scaler.scale(errG).backward()
 
-            if((img_batch * self.img_per_iter) % self.batch_size == 0):
+            if((img_batch * self.load_size) % self.batch_size == 0):
                 self.schedulerG.step(errG)
                 self.fp16_scaler.step(self.optimizerG)
                 self.fp16_scaler.update()
@@ -363,9 +363,9 @@ class CycleGANTrainer:
 
     def visdom_visualize(self, tensor_x, tensor_y, label="Train"):
         with torch.no_grad():
-            if(label == "Train"):
-                tensor_x = self.transform_op(tensor_x).detach()
-                tensor_y = self.transform_op(tensor_y).detach()
+            # if(label == "Train"):
+            #     tensor_x = self.transform_op(tensor_x).detach()
+            #     tensor_y = self.transform_op(tensor_y).detach()
 
             x2y = self.G_A(tensor_x)
             y2x = self.G_B(tensor_y)

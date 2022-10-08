@@ -143,16 +143,19 @@ def load_bell2014_dataset(r_dir, s_dir, patch_size, opts):
     return data_loader
 
 def load_shadow_train_dataset(ws_path, ns_path, ws_istd, ns_istd, patch_size, load_size, opts):
-    ws_list = assemble_img_list(ws_path, opts)
-    ns_list = assemble_img_list(ns_path, opts)
+    # ws_list = assemble_img_list(ws_path, opts)
+    # ns_list = assemble_img_list(ns_path, opts)
+
+    ws_list = []
+    ns_list = []
 
     ws_istd_list = assemble_img_list(ws_istd, opts)
     ns_istd_list = assemble_img_list(ns_istd, opts)
 
     print("Using synthetic train dataset + ISTD dataset")
-    for i in range(0, 1):
-        ws_list += ws_list
-        ns_list += ns_list
+    # for i in range(0, 1):
+    #     ws_list += ws_list
+    #     ns_list += ns_list
 
     for i in range(0, 10):
         ws_list += ws_istd_list
@@ -256,11 +259,9 @@ def load_da_dataset_train(imgx_dir, imgy_dir, opts):
 
     data_loader = torch.utils.data.DataLoader(
         image_dataset.GenericPairedDataset(imgx_list, imgy_list, 1, network_config["patch_size"]),
-        batch_size=network_config["img_per_iter"],
+        batch_size=network_config["load_size"],
         num_workers = opts.num_workers,
         shuffle=False,
-        pin_memory=True
-
     )
 
     return data_loader

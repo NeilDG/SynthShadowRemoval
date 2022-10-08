@@ -74,8 +74,7 @@ def update_config(opts):
     else:
         opts.num_workers = 12
         constants.imgx_dir = "E:/Places Dataset/*.jpg"
-        constants.imgy_dir = "E:/SynthWeather Dataset 9/rgb/*/*.png"
-        # constants.imgy_dir = "E:/SynthWeather Dataset 8/albedo/*.png"
+        constants.imgy_dir = "E:/SynthWeather Dataset 10/synth_city/*/*/*.png"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers, " ", opts.version)
 
 def main(argv):
@@ -117,10 +116,16 @@ def main(argv):
             imgx_tensor = imgx_batch.to(device)
             imgy_tensor = imgy_batch.to(device)
 
+            imgx_ind = torch.randperm(len(imgx_tensor)) #shuffle both tensors constantly to ensure no pairing is learned.
+            imgy_ind = torch.randperm(len(imgy_tensor))
+
+            imgx_tensor = imgx_tensor[imgx_ind]
+            imgy_tensor = imgy_tensor[imgy_ind]
+
             gt.train(epoch, iteration, imgx_tensor, imgy_tensor, iteration)
             iteration = iteration + 1
 
-            if((i * network_config["img_per_iter"]) % (network_config["batch_size"] * 5) == 0): #every X batches
+            if((i * network_config["load_size"]) % (network_config["batch_size"] * 100) == 0): #every X batches
                 print("Iteration:", iteration)
                 gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
 

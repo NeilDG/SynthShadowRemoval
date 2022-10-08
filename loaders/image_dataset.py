@@ -1,4 +1,6 @@
 import os.path
+import random
+
 import torch
 import cv2
 import numpy as np
@@ -114,22 +116,22 @@ class GenericPairedDataset(data.Dataset):
         self.patch_size = (patch_size, patch_size)
 
         if(transform_config == 1):
-            # self.transform_op = transforms.Compose([
-            #     transforms.ToPILImage(),
-            #     transforms.Resize((256, 256)),
-            #     transforms.RandomCrop(self.patch_size),
-            #     transforms.RandomVerticalFlip(),
-            #     transforms.RandomHorizontalFlip(),
-            #     transforms.ToTensor(),
-            #     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-            # ])
-
             self.transform_op = transforms.Compose([
                 transforms.ToPILImage(),
                 transforms.Resize((256, 256)),
+                transforms.RandomCrop(self.patch_size),
+                transforms.RandomVerticalFlip(),
+                transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
             ])
+
+            # self.transform_op = transforms.Compose([
+            #     transforms.ToPILImage(),
+            #     transforms.Resize((256, 256)),
+            #     transforms.ToTensor(),
+            #     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+            # ])
 
         else:
             self.transform_op = transforms.Compose([
