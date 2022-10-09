@@ -25,12 +25,16 @@ class CycleGANTransform(nn.Module):
         # self.stride_choices = [4, 8, 12, 16, 24, 32]
 
 
-    def extract_patch_tensors(self, x):
+    def extract_patch_tensors(self, x, num_patches= -1):
         patch_extract_op = kornia.contrib.ExtractTensorPatches(window_size=self.patch_size, stride=self.patch_size)
         out_tensor = patch_extract_op(x)
         out_tensor = torch.flatten(out_tensor, 0, 1)
-        out_tensor_size = len(out_tensor)
-        indices = torch.randperm(out_tensor_size)
+
+        if(num_patches == -1):
+            out_tensor_size = len(out_tensor)
+            indices = torch.randperm(out_tensor_size)
+        else:
+            indices = torch.randperm(num_patches)
 
         return out_tensor[indices]
 
@@ -38,5 +42,6 @@ class CycleGANTransform(nn.Module):
         # stride = np.random.choice(self.stride_choices)
 
         out_tensor = self.transform_op(x)
+        out_tensor = self.extract_patch_tensors(x)
         # print("Shape: ", np.shape(out_tensor))
         return out_tensor

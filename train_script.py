@@ -7,7 +7,7 @@ def train_relighting():
 
 def train_domain_adaptation():
     os.system("python \"cyclegan_main.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
-              "--plot_enabled=0 --g_lr=0.0002 --d_lr=0.0002 --version=\"v8.05\" --iteration=2")
+              "--plot_enabled=1 --g_lr=0.0002 --d_lr=0.0002 --version=\"v8.03\" --iteration=2")
 
 def train_embedding():
     os.system("python \"embedding_main.py\" --server_config=5 --img_to_load=-1 --load_previous=1 --test_mode=0 --net_config=4 --num_blocks=4 "

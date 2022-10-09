@@ -122,10 +122,11 @@ def main(argv):
             imgx_tensor = imgx_tensor[imgx_ind]
             imgy_tensor = imgy_tensor[imgy_ind]
 
-            gt.train(epoch, iteration, imgx_tensor, imgy_tensor, iteration)
+            gt.train(epoch, iteration, imgx_tensor, imgy_tensor, i)
             iteration = iteration + 1
 
-            if((i * network_config["load_size"]) % (network_config["batch_size"] * 100) == 0): #every X batches
+            accum_batch_size = np.shape(imgx_tensor)[0] * (i + 1)
+            if(accum_batch_size % (network_config["batch_size"] * 5) == 0): #every X batches
                 print("Iteration:", iteration)
                 gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
 
