@@ -3,6 +3,7 @@ from abc import abstractmethod
 import torch
 
 import constants
+from config import iid_server_config
 from model import embedding_network, densenet_gan
 from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
@@ -52,7 +53,9 @@ class NetworkCreator():
                       'n_downsample': 2,             # number of downsampling layers in content encoder
                       'n_res': num_blocks,                    # number of residual blocks in content encoder/decoder
                       'pad_type': 'reflect'}
-            G_A = usi3d_gan.AdaINGen(input_dim=input_nc, output_dim=3, params=params).to(self.gpu_device)
+            sc_instance = iid_server_config.IIDServerConfig.getInstance()
+            network_config = sc_instance.interpret_network_config_from_version()
+            G_A = usi3d_gan.AdaINGen(input_dim=input_nc, output_dim=3, params=params, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
         elif(net_config == 5):
             # G_A = densenet_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=True).to(self.gpu_device)
             G_A = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=3, num_downs=num_blocks).to(self.gpu_device)

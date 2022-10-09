@@ -122,7 +122,7 @@ def main(argv):
     patch_size = general_config[mode]["patch_size"]
     dataset_version = network_config["dataset_version"]
 
-    assert dataset_version == "v8" or dataset_version == "v14", "Cannot identify dataset version."
+    assert dataset_version == "v8" or dataset_version == "v15", "Cannot identify dataset version."
     rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version = dataset_version)
     rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version = dataset_version)
 
@@ -179,8 +179,8 @@ def main(argv):
                     input_map = {"rgb": rgb_ws_tensor}
                     tf.visdom_infer(mode, input_map)
 
-            if (tf.is_stop_condition_met(mode)):
-                break
+        if (tf.is_stop_condition_met(mode)):
+            break
 
     #Train shadow refine
     # mode = "train_shadow_refine"

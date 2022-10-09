@@ -22,16 +22,11 @@ class ShadowMapTransforms():
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         network_config = sc_instance.interpret_network_config_from_version()
 
-        self.min_amplify = network_config["amplify_ws"][0]
-        self.max_amplify = network_config["amplify_ws"][1]
-
 
     def generate_shadow_map(self, rgb_tensor_ws, rgb_tensor_ns, one_channel = True):
         # min = torch.min(rgb_tensor_ws)
         # max = torch.max(rgb_tensor_ws)
 
-        rgb_tensor_ws = rgb_tensor_ws * random.uniform(self.min_amplify, self.max_amplify)
-        rgb_tensor_ws = torch.clip(rgb_tensor_ws, 0.0, 1.0)
         shadow_tensor = rgb_tensor_ns - rgb_tensor_ws
         # shadow_tensor = torch.clip(shadow_tensor, 0.0, 1.0)
 
@@ -49,5 +44,5 @@ class ShadowMapTransforms():
             shadow_tensor = tensor_utils.normalize_to_01(shadow_tensor)
 
         rgb_recon = rgb_tensor_ws + shadow_tensor
-        # rgb_recon = torch.clip(rgb_recon, 0.0, 1.0)
+        rgb_recon = torch.clip(rgb_recon, 0.0, 1.0)
         return rgb_recon

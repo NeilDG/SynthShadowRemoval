@@ -143,23 +143,16 @@ def load_bell2014_dataset(r_dir, s_dir, patch_size, opts):
     return data_loader
 
 def load_shadow_train_dataset(ws_path, ns_path, ws_istd, ns_istd, patch_size, load_size, opts):
-    # ws_list = assemble_img_list(ws_path, opts)
-    # ns_list = assemble_img_list(ns_path, opts)
-
-    ws_list = []
-    ns_list = []
+    ws_list = assemble_img_list(ws_path, opts)
+    ns_list = assemble_img_list(ns_path, opts)
 
     ws_istd_list = assemble_img_list(ws_istd, opts)
     ns_istd_list = assemble_img_list(ns_istd, opts)
 
-    print("Using synthetic train dataset + ISTD dataset")
-    # for i in range(0, 1):
-    #     ws_list += ws_list
-    #     ns_list += ns_list
-
-    for i in range(0, 10):
-        ws_list += ws_istd_list
-        ns_list += ns_istd_list
+    print("Using synthetic train dataset")
+    for i in range(0, 1):
+        ws_list += ws_list
+        ns_list += ns_list
 
     img_length = len(ws_list)
     print("Length of images: %d %d" % (len(ws_list), len(ns_list)))
