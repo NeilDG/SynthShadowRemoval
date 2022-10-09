@@ -125,7 +125,7 @@ def main(argv):
             gt.train(epoch, iteration, imgx_tensor, imgy_tensor, i)
             iteration = iteration + 1
 
-            if(iteration % 100 == 0):
+            if(iteration % 50 == 0):
                 print("Iteration:", iteration)
                 gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
 
