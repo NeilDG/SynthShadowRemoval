@@ -264,7 +264,7 @@ class CycleGANTrainer:
             tensor_y = self.transform_op(tensor_y).detach()
 
             accum_batch_size = np.shape(tensor_x)[0] * (batch + 1)
-            print("Current tensor size: ", np.shape(tensor_x), np.shape(tensor_y), " Accum batch size: ", accum_batch_size)
+            # print("Current tensor size: ", np.shape(tensor_x), np.shape(tensor_y), " Accum batch size: ", accum_batch_size)
 
 
             # optimize D-----------------------

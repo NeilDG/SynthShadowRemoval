@@ -125,8 +125,7 @@ def main(argv):
             gt.train(epoch, iteration, imgx_tensor, imgy_tensor, i)
             iteration = iteration + 1
 
-            accum_batch_size = np.shape(imgx_tensor)[0] * (i + 1)
-            if(accum_batch_size % (network_config["batch_size"] * 5) == 0): #every X batches
+            if(iteration % 100 == 0):
                 print("Iteration:", iteration)
                 gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
 
