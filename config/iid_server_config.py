@@ -176,7 +176,7 @@ class IIDServerConfig():
             network_config[LOAD_SIZE_KEY] = 16
 
         # configure batch size. NOTE: Batch size must be equal or larger than load size
-        network_config[BATCH_SIZE_KEY] = 4096
+        network_config[BATCH_SIZE_KEY] = 256
         network_config[NORM_MODE_KEY] = "batch"
 
         if(constants.network_version == "v8.03"): #AdainGEN
