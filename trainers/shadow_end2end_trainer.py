@@ -45,13 +45,13 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         self.load_size = network_config["load_size_z"]
         self.batch_size = network_config["batch_size_z"]
-        self.sm_channel = network_config["sm_one_channel"]
+        self.is_end2end = network_config["is_end2end"]
 
         self.stopper_method = early_stopper.EarlyStopper(general_config["train_shadow"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, constants.early_stop_threshold, 99999.9)
         self.stop_result = False
 
         self.initialize_dict()
-        self.initialize_shadow_network(self.sm_channel, network_config["net_config"], network_config["num_blocks"], network_config["nc"])
+        self.initialize_shadow_network(network_config["net_config"], network_config["num_blocks"], network_config["nc"])
 
         self.optimizerG = torch.optim.Adam(itertools.chain(self.G_SM_predictor.parameters()), lr=self.g_lr, weight_decay=network_config["weight_decay"])
         self.optimizerD = torch.optim.Adam(itertools.chain(self.D_SM_discriminator.parameters()), lr=self.d_lr, weight_decay=network_config["weight_decay"])
@@ -62,13 +62,9 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
         self.load_saved_state()
 
-    def initialize_shadow_network(self, sm_channel, net_config, num_blocks, input_nc):
+    def initialize_shadow_network(self, net_config, num_blocks, input_nc):
         network_creator = abstract_iid_trainer.NetworkCreator(self.gpu_device)
-
-        if(sm_channel == True):
-            self.G_SM_predictor, self.D_SM_discriminator = network_creator.initialize_shadow_network(net_config, num_blocks, input_nc) #shadow map (Shadow - Shadow-Free)
-        else:
-            self.G_SM_predictor, self.D_SM_discriminator = network_creator.initialize_rgb_network(net_config, num_blocks, input_nc)  # shadow map (Shadow - Shadow-Free)
+        self.G_SM_predictor, self.D_SM_discriminator = network_creator.initialize_rgb_network(net_config, num_blocks, input_nc)  # shadow map (Shadow - Shadow-Free)
     def adversarial_loss(self, pred, target):
         if (self.use_bce == 0):
             return self.mse_loss(pred, target)
@@ -120,7 +116,10 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def train(self, epoch, iteration, input_map, target_map):
         input_ws = input_map["rgb"]
-        shadow_map_tensor = target_map["shadow_map"]
+        if(self.is_end2end): #use RGB_NS if end2end training
+            target_tensor = target_map["rgb_ns"]
+        else:
+            target_tensor = target_map["shadow_map"]
         accum_batch_size = self.load_size * iteration
 
 
@@ -132,7 +131,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             prediction = self.D_SM_discriminator(output)
             real_tensor = torch.ones_like(prediction)
             fake_tensor = torch.zeros_like(prediction)
-            D_SM_real_loss = self.adversarial_loss(self.D_SM_discriminator(shadow_map_tensor), real_tensor) * self.adv_weight
+            D_SM_real_loss = self.adversarial_loss(self.D_SM_discriminator(target_tensor), real_tensor) * self.adv_weight
             D_SM_fake_loss = self.adversarial_loss(self.D_SM_pool.query(self.D_SM_discriminator(output.detach())), fake_tensor) * self.adv_weight
 
             errD = D_SM_real_loss + D_SM_fake_loss
@@ -146,9 +145,9 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             self.optimizerG.zero_grad()
             self.G_SM_predictor.train()
             rgb2sm = self.G_SM_predictor(input_ws)
-            SM_likeness_loss = self.l1_loss(rgb2sm, shadow_map_tensor) * self.it_table.get_l1_weight(self.iteration)
-            SM_lpip_loss = self.lpip_loss(rgb2sm, shadow_map_tensor) * self.it_table.get_lpip_weight(self.iteration)
-            SM_masking_loss = self.masking_loss(rgb2sm, shadow_map_tensor) * self.it_table.get_masking_weight(self.iteration)
+            SM_likeness_loss = self.l1_loss(rgb2sm, target_tensor) * self.it_table.get_l1_weight(self.iteration)
+            SM_lpip_loss = self.lpip_loss(rgb2sm, target_tensor) * self.it_table.get_lpip_weight(self.iteration)
+            SM_masking_loss = self.masking_loss(rgb2sm, target_tensor) * self.it_table.get_masking_weight(self.iteration)
             prediction = self.D_SM_discriminator(rgb2sm)
             real_tensor = torch.ones_like(prediction)
             SM_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
@@ -172,7 +171,11 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 self.losses_dict_s[self.MASK_LOSS_KEY].append(SM_masking_loss.item())
 
             rgb2ns, rgb2sm = self.test(input_map)
-            self.stopper_method.register_metric(rgb2sm, shadow_map_tensor, epoch)
+            if(self.is_end2end == True):
+                comparison = rgb2ns
+            else:
+                comparison = rgb2sm
+            self.stopper_method.register_metric(comparison, target_tensor, epoch)
             self.stop_result = self.stopper_method.test(epoch)
 
             if (self.stopper_method.has_reset()):
@@ -188,8 +191,13 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             # if ("shadow_map" in input_map):
             #     rgb2sm = input_map["shadow_map"]
             # else:
-            rgb2sm = self.G_SM_predictor(input_ws)
-            rgb2ns = self.shadow_op.remove_rgb_shadow(input_ws, rgb2sm, True)
+            if(self.is_end2end == False):
+                rgb2sm = self.G_SM_predictor(input_ws)
+                rgb2ns = self.shadow_op.remove_rgb_shadow(input_ws, rgb2sm, True)
+            else:
+                rgb2sm = None
+                rgb2ns = self.G_SM_predictor(input_ws)
+                rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
 
         return rgb2ns, rgb2sm
 
@@ -202,11 +210,12 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         self.visdom_reporter.plot_image(input_ws, str(label) + " RGB (With Shadows) Images - " + self.NETWORK_VERSION + str(self.iteration))
 
-        self.visdom_reporter.plot_image(rgb2sm, str(label) + " RGB2SM images - " + self.NETWORK_VERSION + str(self.iteration))
-        if("shadow_map" in input_map):
-            shadow_map_tensor = input_map["shadow_map"]
-            shadow_map_tensor = tensor_utils.normalize_to_01(shadow_map_tensor)
-            self.visdom_reporter.plot_image(shadow_map_tensor, str(label) + " RGB Shadow Map images - " + self.NETWORK_VERSION + str(self.iteration))
+        if(self.is_end2end == False):
+            self.visdom_reporter.plot_image(rgb2sm, str(label) + " RGB2SM images - " + self.NETWORK_VERSION + str(self.iteration))
+            if("shadow_map" in input_map):
+                shadow_map_tensor = input_map["shadow_map"]
+                shadow_map_tensor = tensor_utils.normalize_to_01(shadow_map_tensor)
+                self.visdom_reporter.plot_image(shadow_map_tensor, str(label) + " RGB Shadow Map images - " + self.NETWORK_VERSION + str(self.iteration))
 
         self.visdom_reporter.plot_image(rgb2ns, str(label) + " RGB (No Shadows-Like) images - " + self.NETWORK_VERSION + str(self.iteration))
         if("rgb_ns" in input_map):

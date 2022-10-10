@@ -117,7 +117,7 @@ def main(argv):
     iid_server_config.IIDServerConfig.initialize()
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
     network_config = sc_instance.interpret_network_config_from_version()
-    refine_enabled = network_config["refine_enabled"]
+    refine_enabled = False
 
     # version_z = opts.version
     # iteration_z = opts.iteration
@@ -145,7 +145,7 @@ def main(argv):
 
     dataset_version = network_config["dataset_version"]
 
-    assert dataset_version == "v12" or dataset_version == "v15", "Cannot identify dataset version."
+    assert dataset_version == "v8" or dataset_version == "v15", "Cannot identify dataset version."
     rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
     rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
 

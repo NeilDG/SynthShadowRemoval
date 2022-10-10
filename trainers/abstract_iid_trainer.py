@@ -4,7 +4,7 @@ import torch
 
 import constants
 from config import iid_server_config
-from model import embedding_network, densenet_gan
+from model import embedding_network, densenet_gan, ffa_gan
 from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
 from model import usi3d_gan
@@ -38,6 +38,8 @@ class NetworkCreator():
         return G_A, D_A
 
     def initialize_rgb_network(self, net_config, num_blocks, input_nc):
+        sc_instance = iid_server_config.IIDServerConfig.getInstance()
+        network_config = sc_instance.interpret_network_config_from_version()
         if (net_config == 1):
             G_A = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
         elif (net_config == 2):
@@ -53,12 +55,9 @@ class NetworkCreator():
                       'n_downsample': 2,             # number of downsampling layers in content encoder
                       'n_res': num_blocks,                    # number of residual blocks in content encoder/decoder
                       'pad_type': 'reflect'}
-            sc_instance = iid_server_config.IIDServerConfig.getInstance()
-            network_config = sc_instance.interpret_network_config_from_version()
             G_A = usi3d_gan.AdaINGen(input_dim=input_nc, output_dim=3, params=params, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
         elif(net_config == 5):
-            # G_A = densenet_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=True).to(self.gpu_device)
-            G_A = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
+            G_A = ffa_gan.FFA(input_nc, num_blocks, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
         else:
             G_A = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
