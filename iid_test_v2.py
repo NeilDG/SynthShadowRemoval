@@ -186,7 +186,7 @@ def measure_performance(opts):
     visdom_reporter.plot_image(albedo_e_tensor, "Albedo Ours")
 
 class TesterClass():
-    def __init__(self, shadow_t, shadow_rt):
+    def __init__(self, shadow_p, shadow_t, shadow_rt):
         print("Initiating")
         self.cgi_op = iid_transforms.CGITransform()
         self.iid_op = iid_transforms.IIDTransform()
@@ -195,6 +195,7 @@ class TesterClass():
         # self.mask_t = mask_t
         # self.albedo_t = albedo_t
         # self.shading_t = shading_t
+        self.shadow_p = shadow_p
         self.shadow_t = shadow_t
         self.shadow_rt = shadow_rt
 
@@ -308,12 +309,15 @@ class TesterClass():
 
         self.visdom_reporter.plot_text(display_text)
 
-    def test_shadow(self, rgb_ws, rgb_ns, shadow_map, prefix, refine_enabled, show_images, opts):
+    def test_shadow(self, rgb_ws, rgb_ns, shadow_map, shadow_mask, prefix, refine_enabled, show_images, opts):
         # rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
         # rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
 
-        # input_map = {"rgb": rgb_ws, "shadow_map" : shadow_map}
         input_map = {"rgb": rgb_ws}
+        rgb2mask = self.shadow_p.test(input_map)
+
+        input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_map": shadow_map, "shadow_mask": shadow_mask}
+        # input_map = {"rgb": rgb_ws, "shadow_mask": rgb2mask}
         rgb2ns, rgb2sm = self.shadow_t.test(input_map)
 
         if(refine_enabled):
@@ -349,6 +353,9 @@ class TesterClass():
         # rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, _, _ = self.iid_op.decompose_shadow(rgb_ws, rgb_ns)
 
         input_map = {"rgb": rgb_ws}
+        rgb2mask = self.shadow_p.test(input_map)
+
+        input_map = {"rgb": rgb_ws, "shadow_mask": rgb2mask}
         rgb2ns, rgb2sm = self.shadow_t.test(input_map)
         if (refine_enabled):
             input_map = {"rgb": rgb_ws, "shadow_map": rgb2sm}

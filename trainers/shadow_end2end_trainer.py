@@ -55,8 +55,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         self.optimizerG = torch.optim.Adam(itertools.chain(self.G_SM_predictor.parameters()), lr=self.g_lr, weight_decay=network_config["weight_decay"])
         self.optimizerD = torch.optim.Adam(itertools.chain(self.D_SM_discriminator.parameters()), lr=self.d_lr, weight_decay=network_config["weight_decay"])
-        self.schedulerG = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG, patience=1000000 / self.load_size, threshold=0.00005)
-        self.schedulerD = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD, patience=1000000 / self.load_size, threshold=0.00005)
+        self.schedulerG = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG, patience=1000000 / self.batch_size, threshold=0.00005)
+        self.schedulerD = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD, patience=1000000 / self.batch_size, threshold=0.00005)
 
         self.NETWORK_VERSION = sc_instance.get_version_config("network_z_name", self.iteration)
         self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
@@ -116,10 +116,17 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def train(self, epoch, iteration, input_map, target_map):
         input_ws = input_map["rgb"]
+        mask_tensor = target_map["shadow_mask"]
+
         if(self.is_end2end): #use RGB_NS if end2end training
             target_tensor = target_map["rgb_ns"]
         else:
             target_tensor = target_map["shadow_map"]
+
+        # target only the shadow regions
+        input_ws = input_ws * mask_tensor
+        target_tensor = target_tensor * mask_tensor
+
         accum_batch_size = self.load_size * iteration
 
 
@@ -187,6 +194,12 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def test(self, input_map):
         with torch.no_grad():
             input_ws = input_map["rgb"]
+            mask_tensor = input_map["shadow_mask"]
+
+            # target only the shadow regions
+            input_ws_inv = input_ws * (1.0 - mask_tensor)
+            input_ws = input_ws * mask_tensor
+
 
             # if ("shadow_map" in input_map):
             #     rgb2sm = input_map["shadow_map"]
@@ -196,7 +209,12 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 rgb2ns = self.shadow_op.remove_rgb_shadow(input_ws, rgb2sm, True)
             else:
                 rgb2sm = None
+                # if("rgb_ns" in input_map):
+                #     rgb2ns = input_map["rgb_ns"] * mask_tensor
+                # else:
                 rgb2ns = self.G_SM_predictor(input_ws)
+
+                rgb2ns = rgb2ns + input_ws_inv
                 rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
 
         return rgb2ns, rgb2sm
@@ -206,9 +224,11 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def visdom_visualize(self, input_map, label="Train"):
         input_ws = input_map["rgb"]
+        mask_tensor = input_map["shadow_mask"]
         rgb2ns, rgb2sm = self.test(input_map)
 
         self.visdom_reporter.plot_image(input_ws, str(label) + " RGB (With Shadows) Images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(mask_tensor, str(label) + " Shadow Region Images - " + self.NETWORK_VERSION + str(self.iteration))
 
         if(self.is_end2end == False):
             self.visdom_reporter.plot_image(rgb2sm, str(label) + " RGB2SM images - " + self.NETWORK_VERSION + str(self.iteration))

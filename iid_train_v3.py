@@ -82,51 +82,22 @@ def update_config(opts):
         constants.unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)
 
-def main(argv):
-    (opts, args) = parser.parse_args(argv)
-    update_config(opts)
-    print(opts)
-    print("=====================BEGIN============================")
-    print("Server config? %d Has GPU available? %d Count: %d" % (constants.server_config, torch.cuda.is_available(), torch.cuda.device_count()))
-    print("Torch CUDA version: %s" % torch.version.cuda)
-    
-    torch.multiprocessing.set_sharing_strategy('file_system')
-
-    manualSeed = 0
-    random.seed(manualSeed)
-    torch.manual_seed(manualSeed)
-    np.random.seed(manualSeed)
-    torch.multiprocessing.set_sharing_strategy('file_system')
-
-    device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
-    print("Device: %s" % device)
-
-    plot_utils.VisdomReporter.initialize()
-
-    constants.network_version = opts.version
-    iid_server_config.IIDServerConfig.initialize()
+def train_shadow(tf, device, opts):
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
     general_config = sc_instance.get_general_configs()
     network_config = sc_instance.interpret_network_config_from_version()
     print("General config:", general_config)
     print("Network config: ", network_config)
 
-    tf = trainer_factory.TrainerFactory(device, opts)
-    tf.initialize_all_trainers(opts)
-
-    # for mode in (["train_albedo_mask", "train_albedo", "train_shading"]):
-    # for mode in (["train_shadow", "train_albedo", "train_shading"]):
-
-    #Train shadow
     mode = "train_shadow"
     patch_size = general_config[mode]["patch_size"]
     dataset_version = network_config["dataset_version"]
 
     assert dataset_version == "v8" or dataset_version == "v15", "Cannot identify dataset version."
-    rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version = dataset_version)
-    rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version = dataset_version)
+    rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
+    rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
 
-    print("Dataset path: ", rgb_dir_ws, rgb_dir_ns)
+    print("SHADOW MAP TRAIN... Dataset path: ", rgb_dir_ws, rgb_dir_ns)
 
     load_size = network_config["load_size_z"]
 
@@ -139,12 +110,90 @@ def main(argv):
     start_epoch = sc_instance.get_last_epoch_from_mode(mode)
     print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
     for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
-        for i, (_, rgb_ws, rgb_ns, shadow_map) in enumerate(train_loader, 0):
+        for i, (_, rgb_ws, rgb_ns, shadow_map, shadow_mask) in enumerate(train_loader, 0):
             rgb_ws = rgb_ws.to(device)
             rgb_ns = rgb_ns.to(device)
             shadow_map = shadow_map.to(device)
+            shadow_mask = shadow_mask.to(device)
 
-            input_map = {"rgb": rgb_ws, "rgb_ns" : rgb_ns, "shadow_map": shadow_map}
+            input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_map": shadow_map, "shadow_mask": shadow_mask}
+            target_map = input_map
+
+            tf.train(mode, epoch, iteration, input_map, target_map)
+            iteration = iteration + 1
+
+            if (tf.is_stop_condition_met(mode)):
+                break
+
+            if (i % 300 == 0):
+                tf.save(mode, epoch, iteration, True)
+
+                if (opts.plot_enabled == 1):
+                    tf.visdom_plot(mode, iteration)
+                    tf.visdom_visualize(mode, input_map, "Train")
+
+                    _, rgb_ws, rgb_ns = next(itertools.cycle(test_loader_train))
+                    rgb_ws = rgb_ws.to(device)
+                    rgb_ns = rgb_ns.to(device)
+
+                    shadow_p = tf.get_shadow_mask_trainer()
+                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
+                    rgb2mask = shadow_p.test(input_map)
+
+                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_mask" : rgb2mask}
+                    tf.visdom_visualize(mode, input_map, "Test Synthetic")
+
+                    _, rgb_ws, rgb_ns = next(itertools.cycle(test_loader_istd))
+                    rgb_ws = rgb_ws.to(device)
+                    rgb_ns = rgb_ns.to(device)
+
+                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
+                    rgb2mask = shadow_p.test(input_map)
+
+                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_mask" : rgb2mask}
+                    tf.visdom_visualize(mode, input_map, "Test ISTD")
+
+                    _, rgb_ws_batch = next(itertools.cycle(rw_loader))
+                    rgb_ws_tensor = rgb_ws_batch.to(device)
+                    input_map = {"rgb": rgb_ws_tensor}
+                    tf.visdom_infer(mode, input_map)
+
+        if (tf.is_stop_condition_met(mode)):
+            break
+
+def train_shadow_mask(tf, device, opts):
+    sc_instance = iid_server_config.IIDServerConfig.getInstance()
+    general_config = sc_instance.get_general_configs()
+    network_config = sc_instance.interpret_network_config_from_version()
+    print("General config:", general_config)
+    print("Network config: ", network_config)
+
+    mode = "train_shadow_mask"
+    patch_size = general_config[mode]["patch_size"]
+    dataset_version = network_config["dataset_version"]
+
+    assert dataset_version == "v8" or dataset_version == "v15", "Cannot identify dataset version."
+    rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
+    rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
+
+    print("SHADOW MASK TRAIN.... Dataset path: ", rgb_dir_ws, rgb_dir_ns)
+
+    load_size = network_config["load_size_p"]
+
+    train_loader = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, constants.ws_istd, constants.ns_istd, patch_size, load_size, opts)
+    test_loader_train = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
+    test_loader_istd = dataset_loader.load_shadow_test_dataset(constants.ws_istd, constants.ns_istd, opts)
+    rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
+
+    iteration = 0
+    start_epoch = sc_instance.get_last_epoch_from_mode(mode)
+    print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
+    for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
+        for i, (_, rgb_ws, _, _, shadow_mask) in enumerate(train_loader, 0):
+            rgb_ws = rgb_ws.to(device)
+            shadow_mask = shadow_mask.to(device)
+
+            input_map = {"rgb": rgb_ws, "shadow_mask": shadow_mask}
             target_map = input_map
 
             tf.train(mode, epoch, iteration, input_map, target_map)
@@ -181,6 +230,36 @@ def main(argv):
 
         if (tf.is_stop_condition_met(mode)):
             break
+
+def main(argv):
+    (opts, args) = parser.parse_args(argv)
+    update_config(opts)
+    print(opts)
+    print("=====================BEGIN============================")
+    print("Server config? %d Has GPU available? %d Count: %d" % (constants.server_config, torch.cuda.is_available(), torch.cuda.device_count()))
+    print("Torch CUDA version: %s" % torch.version.cuda)
+    
+    torch.multiprocessing.set_sharing_strategy('file_system')
+
+    manualSeed = 0
+    random.seed(manualSeed)
+    torch.manual_seed(manualSeed)
+    np.random.seed(manualSeed)
+    torch.multiprocessing.set_sharing_strategy('file_system')
+
+    device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
+    print("Device: %s" % device)
+
+    plot_utils.VisdomReporter.initialize()
+
+    constants.network_version = opts.version
+    iid_server_config.IIDServerConfig.initialize()
+
+    tf = trainer_factory.TrainerFactory(device, opts)
+    tf.initialize_all_trainers(opts)
+
+    # train_shadow_mask(tf, device, opts)
+    train_shadow(tf, device, opts)
 
     #Train shadow refine
     # mode = "train_shadow_refine"

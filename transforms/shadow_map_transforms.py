@@ -24,19 +24,15 @@ class ShadowMapTransforms():
 
 
     def generate_shadow_map(self, rgb_tensor_ws, rgb_tensor_ns, one_channel = True):
-        # min = torch.min(rgb_tensor_ws)
-        # max = torch.max(rgb_tensor_ws)
-
         shadow_tensor = rgb_tensor_ns - rgb_tensor_ws
-        # shadow_tensor = torch.clip(shadow_tensor, 0.0, 1.0)
 
-        # rgb_ws_refined = rgb_tensor_ns - shadow_tensor
-        # rgb_ns_refined = rgb_tensor_ws + shadow_tensor
+        shadow_gray = kornia.color.rgb_to_grayscale(shadow_tensor)
+        shadow_mask = (shadow_gray != 0.0).float()
 
         if(one_channel == True):
             shadow_tensor = kornia.color.rgb_to_grayscale(shadow_tensor)
 
-        return rgb_tensor_ws, rgb_tensor_ns, shadow_tensor
+        return rgb_tensor_ws, rgb_tensor_ns, shadow_tensor, shadow_mask
 
     def remove_rgb_shadow(self, rgb_tensor_ws, shadow_tensor, tozeroone=True):
         if (tozeroone):

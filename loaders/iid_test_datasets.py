@@ -183,7 +183,7 @@ class ShadowTrainDataset(data.Dataset):
                 rgb_ws = transforms.functional.crop(rgb_ws, i, j, h, w)
                 rgb_ns = transforms.functional.crop(rgb_ns, i, j, h, w)
 
-            rgb_ws, rgb_ns, shadow_map = self.shadow_op.generate_shadow_map(rgb_ws, rgb_ns, False)
+            rgb_ws, rgb_ns, shadow_map, shadow_mask = self.shadow_op.generate_shadow_map(rgb_ws, rgb_ns, False)
 
             rgb_ws = self.norm_op(rgb_ws)
             rgb_ns = self.norm_op(rgb_ns)
@@ -198,8 +198,9 @@ class ShadowTrainDataset(data.Dataset):
             rgb_ws = None
             rgb_ns = None
             shadow_map = None
+            shadow_mask = None
 
-        return file_name, rgb_ws, rgb_ns, shadow_map
+        return file_name, rgb_ws, rgb_ns, shadow_map, shadow_mask
 
     def __len__(self):
         return self.img_length
