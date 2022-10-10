@@ -330,6 +330,7 @@ class TesterClass():
 
         if(show_images == 1):
             self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + opts.version + str(opts.iteration))
+            self.visdom_reporter.plot_image(rgb2mask, "WS Shadow Region Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb_ns, prefix + " NS Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb2ns, prefix + " NS (equation) Images - " + opts.version + str(opts.iteration))
 
@@ -355,18 +356,25 @@ class TesterClass():
         input_map = {"rgb": rgb_ws}
         rgb2mask = self.shadow_p.test(input_map)
 
+        # COMMENT OUT FOR DEBUGGING GROUND-TRUTH
+        # shadow_tensor = rgb_ns - rgb_ws
+        # shadow_gray = kornia.color.rgb_to_grayscale(shadow_tensor)
+        # rgb2mask = (shadow_gray > 0.0).float()
+
         input_map = {"rgb": rgb_ws, "shadow_mask": rgb2mask}
         rgb2ns, rgb2sm = self.shadow_t.test(input_map)
+
         if (refine_enabled):
             input_map = {"rgb": rgb_ws, "shadow_map": rgb2sm}
             rgb2ns = self.shadow_rt.test(input_map)
 
         # normalize everything
-        rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
-        rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
+        # rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
+        # rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
 
         if(show_images == 1):
             self.visdom_reporter.plot_image(rgb_ws, "ISTD WS Images - " + opts.version + str(opts.iteration))
+            self.visdom_reporter.plot_image(rgb2mask, "ISTD Shadow Region Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb_ns, "ISTD NS Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb2ns, "ISTD NS (equation) Images - " + opts.version + str(opts.iteration))
             if (rgb2sm != None):

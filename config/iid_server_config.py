@@ -18,7 +18,7 @@ class IIDServerConfig():
         # COARE, CCS CLOUD, GCLOUD, RTX 2080TI, RTX 3090
         if(constants.server_config <= 5):
             self.general_configs = {"train_style_transfer" : {"min_epochs" : 5, "max_epochs" : 25},
-                                    "train_shadow_mask": {"min_epochs": 3, "max_epochs" : 10, "patch_size": 128},
+                                    "train_shadow_mask": {"min_epochs": 10, "max_epochs" : 30, "patch_size": 128},
                                     "train_shadow": {"min_epochs": 30 ,"max_epochs" : 80, "patch_size": 128},
                                     "train_shadow_refine": {"min_epochs": 30,"max_epochs" : 80, "patch_size": 128}}
         #debug

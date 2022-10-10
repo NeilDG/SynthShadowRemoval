@@ -213,7 +213,6 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 #     rgb2ns = input_map["rgb_ns"] * mask_tensor
                 # else:
                 rgb2ns = self.G_SM_predictor(input_ws)
-
                 rgb2ns = rgb2ns + input_ws_inv
                 rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
 
