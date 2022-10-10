@@ -214,6 +214,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 # else:
                 rgb2ns = self.G_SM_predictor(input_ws)
                 rgb2ns = rgb2ns + input_ws_inv
+                rgb2ns = torch.clip(rgb2ns, torch.min(input_ws), torch.max(input_ws))
                 rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
 
         return rgb2ns, rgb2sm

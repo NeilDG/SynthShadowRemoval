@@ -129,7 +129,7 @@ class ShadowMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 print("No existing checkpoint file found. Creating new network: ", self.NETWORK_CHECKPATH)
 
         if (checkpoint != None):
-            iid_server_config.IIDServerConfig.getInstance().store_epoch_from_checkpt("train_albedo_mask", checkpoint["epoch"])
+            iid_server_config.IIDServerConfig.getInstance().store_epoch_from_checkpt("train_shadow_mask", checkpoint["epoch"])
             self.stopper_method.update_last_metric(checkpoint[constants.LAST_METRIC_KEY])
             self.G_P.load_state_dict(checkpoint[constants.GENERATOR_KEY + "P"])
             self.optimizerP.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "P"])
