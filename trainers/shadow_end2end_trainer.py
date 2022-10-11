@@ -1,3 +1,5 @@
+import torchvision.transforms.functional
+
 from config import iid_server_config
 from trainers import abstract_iid_trainer, early_stopper
 import kornia
@@ -197,7 +199,6 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             mask_tensor = input_map["shadow_mask"]
 
             # target only the shadow regions
-            input_ws_inv = input_ws * (1.0 - mask_tensor)
             input_ws = input_ws * mask_tensor
 
 
@@ -209,13 +210,17 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 rgb2ns = self.shadow_op.remove_rgb_shadow(input_ws, rgb2sm, True)
             else:
                 rgb2sm = None
-                # if("rgb_ns" in input_map):
-                #     rgb2ns = input_map["rgb_ns"] * mask_tensor
-                # else:
-                rgb2ns = self.G_SM_predictor(input_ws)
+                if("rgb_ns" in input_map):
+                    rgb2ns = input_map["rgb_ns"] * mask_tensor
+                else:
+                    rgb2ns = self.G_SM_predictor(input_ws)
+
+                input_ws_inv = input_map["rgb"] * torchvision.transforms.functional.invert(mask_tensor)
                 rgb2ns = rgb2ns + input_ws_inv
-                rgb2ns = torch.clip(rgb2ns, torch.min(input_ws), torch.max(input_ws))
+
                 rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
+                rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
+
 
         return rgb2ns, rgb2sm
 

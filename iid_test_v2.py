@@ -19,6 +19,7 @@ import constants
 from utils import plot_utils, tensor_utils
 from trainers import trainer_factory
 from custom_losses import whdr
+import torchvision.transforms.functional
 
 parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
@@ -316,8 +317,8 @@ class TesterClass():
         input_map = {"rgb": rgb_ws}
         rgb2mask = self.shadow_p.test(input_map)
 
-        input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_map": shadow_map, "shadow_mask": shadow_mask}
-        # input_map = {"rgb": rgb_ws, "shadow_mask": rgb2mask}
+        # input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_map": shadow_map, "shadow_mask": shadow_mask}
+        input_map = {"rgb": rgb_ws, "shadow_mask": rgb2mask}
         rgb2ns, rgb2sm = self.shadow_t.test(input_map)
 
         if(refine_enabled):
@@ -348,29 +349,38 @@ class TesterClass():
         self.mae_list_rgb.append(mae_rgb)
 
     #for ISTD
-    def test_istd_shadow(self, file_name, rgb_ws, rgb_ns, refine_enabled, show_images, save_image_results, opts):
-        # rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
-        # rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
-        # rgb_ws, rgb_ns, shadow_matte, rgb_ws_relit, _, _ = self.iid_op.decompose_shadow(rgb_ws, rgb_ns)
+    def test_istd_shadow(self, file_name, rgb_ws, rgb_ns, shadow_mask, show_images, save_image_results, debug_policy, opts):
+        ### NOTE: ISTD-NS (No Shadows) image already has a different lighting!!! This isn't reported in the dataset. Use ISTD-NS as the unmasked region to avoid bias in results.
+        ### MAE discrepancy vs ISTD-WS is at 11.055!
 
-        input_map = {"rgb": rgb_ws}
-        rgb2mask = self.shadow_p.test(input_map)
+        if(debug_policy == 1): #test shadow removal
+            # input_map = {"rgb": rgb_ns, "rgb_ns" : rgb_ns,  "shadow_mask": shadow_mask}
+            input_map = {"rgb": rgb_ns, "shadow_mask": shadow_mask}
+            rgb2mask = shadow_mask
+            rgb2ns, rgb2sm = self.shadow_t.test(input_map)
 
-        # COMMENT OUT FOR DEBUGGING GROUND-TRUTH
-        # shadow_tensor = rgb_ns - rgb_ws
-        # shadow_gray = kornia.color.rgb_to_grayscale(shadow_tensor)
-        # rgb2mask = (shadow_gray > 0.0).float()
+        elif(debug_policy == 2): #test shadow mask
+            input_map = {"rgb": rgb_ws}
+            rgb2mask = self.shadow_p.test(input_map)
 
-        input_map = {"rgb": rgb_ws, "shadow_mask": rgb2mask}
-        rgb2ns, rgb2sm = self.shadow_t.test(input_map)
+            input_ws_inv = input_map["rgb"] * torchvision.transforms.functional.invert(shadow_mask)
+            rgb2ns = rgb_ns * rgb2mask
+            rgb2ns = rgb2ns + input_ws_inv
 
-        if (refine_enabled):
-            input_map = {"rgb": rgb_ws, "shadow_map": rgb2sm}
-            rgb2ns = self.shadow_rt.test(input_map)
+            rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
+            rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
+            rgb2sm = None
+
+        else:
+            input_map = {"rgb": rgb_ws}
+            rgb2mask = self.shadow_p.test(input_map)
+
+            input_map = {"rgb": rgb_ns, "shadow_mask": rgb2mask}
+            rgb2ns, rgb2sm = self.shadow_t.test(input_map)
 
         # normalize everything
-        # rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
-        # rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
+        rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
+        rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
 
         if(show_images == 1):
             self.visdom_reporter.plot_image(rgb_ws, "ISTD WS Images - " + opts.version + str(opts.iteration))

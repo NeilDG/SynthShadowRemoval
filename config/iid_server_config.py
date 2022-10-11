@@ -18,7 +18,7 @@ class IIDServerConfig():
         # COARE, CCS CLOUD, GCLOUD, RTX 2080TI, RTX 3090
         if(constants.server_config <= 5):
             self.general_configs = {"train_style_transfer" : {"min_epochs" : 5, "max_epochs" : 25},
-                                    "train_shadow_mask": {"min_epochs": 10, "max_epochs" : 30, "patch_size": 128},
+                                    "train_shadow_mask": {"min_epochs": 3, "max_epochs" : 10, "patch_size": 128},
                                     "train_shadow": {"min_epochs": 30 ,"max_epochs" : 80, "patch_size": 128},
                                     "train_shadow_refine": {"min_epochs": 30,"max_epochs" : 80, "patch_size": 128}}
         #debug
@@ -112,6 +112,29 @@ class IIDServerConfig():
         if (constants.network_version == "v50.01"):
             network_config[WEIGHT_DECAY_KEY] = 0.0
             network_config[DROPOUT_KEY] = False
+            network_config[END2END_KEY] = True
+
+            network_config[NETWORK_CONFIG_NUM] = 5
+            network_config[NUM_BLOCKS_KEY] = 3
+
+            # configure load sizes (GPU memory allocation of data)
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_Z] = 64
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_Z] = 96
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_Z] = 16
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_Z] = 32
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_Z] = 64
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
+
+        if(constants.network_version == "v50.02"):
+            network_config[WEIGHT_DECAY_KEY] = 0.01
+            network_config[DROPOUT_KEY] = True
             network_config[END2END_KEY] = True
 
             network_config[NETWORK_CONFIG_NUM] = 5

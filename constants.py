@@ -102,6 +102,7 @@ unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
 
 ws_istd = "E:/ISTD_Dataset/test/test_A/*.png"
 ns_istd = "E:/ISTD_Dataset/test/test_C/*.png"
+mask_istd = "E:/ISTD_Dataset/test/test_B/*.png"
 # ws_istd = "E:/ISTD_Dataset/train/train_A/*.png"
 # ns_istd = "E:/ISTD_Dataset/train/train_C/*.png"
 

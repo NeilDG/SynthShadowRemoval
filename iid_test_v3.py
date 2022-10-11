@@ -169,12 +169,13 @@ def main(argv):
     dataset_tester.print_ave_shadow_performance("Train Set", opts)
 
     # ISTD test dataset
-    shadow_loader = dataset_loader.load_shadow_test_dataset(constants.ws_istd, constants.ns_istd, opts)
-    for i, (file_name, rgb_ws, rgb_ns) in enumerate(shadow_loader, 0):
+    shadow_loader = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, 8, opts)
+    for i, (file_name, rgb_ws, rgb_ns, shadow_mask) in enumerate(shadow_loader, 0):
         rgb_ws_tensor = rgb_ws.to(device)
         rgb_ns_tensor = rgb_ns.to(device)
+        shadow_mask = shadow_mask.to(device)
 
-        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, refine_enabled, opts.img_vis_enabled, 1, opts)
+        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_mask, opts.img_vis_enabled, 1, 0,  opts)
         # break
 
     dataset_tester.print_ave_shadow_performance("ISTD", opts)
