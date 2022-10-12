@@ -179,12 +179,14 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_SM_real_loss.item())
                 self.losses_dict_s[self.MASK_LOSS_KEY].append(SM_masking_loss.item())
 
-            rgb2ns, rgb2sm = self.test(input_map)
+            rgb2ns, rgb2sm = self.test_istd(input_map)
             if(self.is_end2end == True):
                 comparison = rgb2ns
             else:
                 comparison = rgb2sm
-            self.stopper_method.register_metric(comparison, target_tensor, epoch)
+
+            istd_ns_test = input_map["rgb_ws_istd"]
+            self.stopper_method.register_metric(comparison, istd_ns_test, epoch)
             self.stop_result = self.stopper_method.test(epoch)
 
             if (self.stopper_method.has_reset()):
@@ -192,6 +194,13 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def is_stop_condition_met(self):
         return self.stop_result
+
+    def test_istd(self, input_map):
+        print("Testing on ISTD dataset.")
+        input_map_new = {"rgb" : input_map["rgb_ws_istd"],
+                         "rgb_ws_inv" : input_map["rgb_ws_inv"],
+                         "shadow_mask" : input_map["shadow_mask"]}
+        return self.test(input_map_new)
 
     def test(self, input_map):
         with torch.no_grad():

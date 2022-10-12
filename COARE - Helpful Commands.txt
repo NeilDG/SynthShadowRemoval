@@ -10,7 +10,7 @@ cd scratch2/NeuralNets-GenerativeExperiment-3
 cd scratch2/NeuralNets-GenerativeExperiment-4
 cd scratch2/NeuralNets-GenerativeExperiment-5
 cd scratch2/NeuralNets-GenerativeExperiment-6
-cd scratch2/NeuralNets-GenerativeExperiment-V32.XX.XX
+cd scratch2/NeuralNets-GenerativeExperiment-V50.XX.XX
 cd scratch2/Visdom
 unzip "scratch2/SynthWeather Dataset 10.zip"
 
