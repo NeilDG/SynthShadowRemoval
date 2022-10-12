@@ -197,6 +197,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         with torch.no_grad():
             input_ws = input_map["rgb"]
             mask_tensor = input_map["shadow_mask"]
+            input_ws_inv = input_map["rgb_ws_inv"] * torchvision.transforms.functional.invert(mask_tensor)
 
             # target only the shadow regions
             input_ws = input_ws * mask_tensor
@@ -209,17 +210,16 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 rgb2sm = self.G_SM_predictor(input_ws)
                 rgb2ns = self.shadow_op.remove_rgb_shadow(input_ws, rgb2sm, True)
             else:
-                rgb2sm = None
-                if("rgb_ns" in input_map):
-                    rgb2ns = input_map["rgb_ns"] * mask_tensor
-                else:
-                    rgb2ns = self.G_SM_predictor(input_ws)
-
-                input_ws_inv = input_map["rgb"] * torchvision.transforms.functional.invert(mask_tensor)
+                # if("rgb_ns" in input_map):
+                #     rgb2ns = input_map["rgb_ns"] * mask_tensor
+                # else:
+                rgb2ns = self.G_SM_predictor(input_ws)
                 rgb2ns = rgb2ns + input_ws_inv
 
                 rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
                 rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
+
+                rgb2sm = None
 
 
         return rgb2ns, rgb2sm

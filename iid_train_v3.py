@@ -93,7 +93,7 @@ def train_shadow(tf, device, opts):
     patch_size = general_config[mode]["patch_size"]
     dataset_version = network_config["dataset_version"]
 
-    assert dataset_version == "v8" or dataset_version == "v15", "Cannot identify dataset version."
+    assert dataset_version == "v8" or dataset_version == "v15" or dataset_version == "v16", "Cannot identify dataset version."
     rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
     rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
 
@@ -116,7 +116,7 @@ def train_shadow(tf, device, opts):
             shadow_map = shadow_map.to(device)
             shadow_mask = shadow_mask.to(device)
 
-            input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_map": shadow_map, "shadow_mask": shadow_mask}
+            input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_map": shadow_map, "shadow_mask": shadow_mask}
             target_map = input_map
 
             tf.train(mode, epoch, iteration, input_map, target_map)
@@ -172,7 +172,7 @@ def train_shadow_mask(tf, device, opts):
     patch_size = general_config[mode]["patch_size"]
     dataset_version = network_config["dataset_version"]
 
-    assert dataset_version == "v8" or dataset_version == "v15", "Cannot identify dataset version."
+    assert dataset_version == "v8" or dataset_version == "v15" or dataset_version == "v16", "Cannot identify dataset version."
     rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
     rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
 
@@ -193,7 +193,7 @@ def train_shadow_mask(tf, device, opts):
             rgb_ws = rgb_ws.to(device)
             shadow_mask = shadow_mask.to(device)
 
-            input_map = {"rgb": rgb_ws, "shadow_mask": shadow_mask}
+            input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "shadow_mask": shadow_mask}
             target_map = input_map
 
             tf.train(mode, epoch, iteration, input_map, target_map)

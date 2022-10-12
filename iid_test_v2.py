@@ -318,7 +318,7 @@ class TesterClass():
         rgb2mask = self.shadow_p.test(input_map)
 
         # input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_map": shadow_map, "shadow_mask": shadow_mask}
-        input_map = {"rgb": rgb_ws, "shadow_mask": rgb2mask}
+        input_map = {"rgb": rgb_ws, "rgb_ws_inv": rgb_ws, "shadow_mask": rgb2mask}
         rgb2ns, rgb2sm = self.shadow_t.test(input_map)
 
         if(refine_enabled):
@@ -375,7 +375,7 @@ class TesterClass():
             input_map = {"rgb": rgb_ws}
             rgb2mask = self.shadow_p.test(input_map)
 
-            input_map = {"rgb": rgb_ns, "shadow_mask": rgb2mask}
+            input_map = {"rgb": rgb_ws, "rgb_ws_inv": rgb_ws, "shadow_mask": rgb2mask}
             rgb2ns, rgb2sm = self.shadow_t.test(input_map)
 
         # normalize everything
