@@ -33,7 +33,7 @@ class ShadowMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.fp16_scaler = amp.GradScaler()  # for automatic mixed precision
 
         min_epochs = general_config["train_shadow_mask"]["min_epochs"]
-        self.stopper_method = early_stopper.EarlyStopper(min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, self.batch_size * 25, 99999.9)
+        self.stopper_method = early_stopper.EarlyStopper(min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, 250, 99999.9)
         self.stop_result = False
 
         self.initialize_parsing_network(network_config["nc"])
