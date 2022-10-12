@@ -177,7 +177,7 @@ def load_istd_dataset(ws_path, ns_path, mask_path, load_size, opts):
     data_loader = torch.utils.data.DataLoader(
         iid_test_datasets.ShadowISTDDataset(img_length, ws_istd_list, ns_istd_list, mask_istd_list, 1),
         batch_size=load_size,
-        num_workers=opts.num_workers,
+        num_workers=1,
         shuffle=False
     )
 

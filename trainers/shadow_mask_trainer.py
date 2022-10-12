@@ -33,7 +33,7 @@ class ShadowMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.fp16_scaler = amp.GradScaler()  # for automatic mixed precision
 
         min_epochs = general_config["train_shadow_mask"]["min_epochs"]
-        self.stopper_method = early_stopper.EarlyStopper(min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, constants.early_stop_threshold, 99999.9)
+        self.stopper_method = early_stopper.EarlyStopper(min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, self.batch_size * 25, 99999.9)
         self.stop_result = False
 
         self.initialize_parsing_network(network_config["nc"])
@@ -59,6 +59,7 @@ class ShadowMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def train(self, epoch, iteration, input_map, target_map):
         input_rgb_tensor = input_map["rgb"]
         mask_tensor = target_map["shadow_mask"]
+        mask_tensor_test = target_map["mask_istd"]
         accum_batch_size = self.load_size * iteration
 
         with amp.autocast():
@@ -80,11 +81,16 @@ class ShadowMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 # what to put to losses dict for visdom reporting?
                 self.losses_dict_p[constants.LIKENESS_LOSS_KEY].append(mask_loss.item())
 
-                self.stopper_method.register_metric(self.test(input_map), mask_tensor, epoch)
+                self.stopper_method.register_metric(self.test_istd(input_map), mask_tensor_test, epoch)
                 self.stop_result = self.stopper_method.test(epoch)
 
         if(self.stopper_method.has_reset()):
             self.save_states(epoch, iteration, False)
+
+    def test_istd(self, input_map):
+        # print("Testing on ISTD dataset.")
+        input_map_new = {"rgb" : input_map["rgb_ws_istd"]}
+        return self.test(input_map_new)
 
     def is_stop_condition_met(self):
         return self.stop_result
