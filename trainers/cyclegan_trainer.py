@@ -109,7 +109,7 @@ class CycleGANTrainer:
         num_blocks = network_config["num_blocks"]
         norm_mode = network_config["norm_mode"]
         self.batch_size = network_config["batch_size"]
-        self.img_per_iter = network_config["img_per_iter"]
+        self.load_size = network_config["load_size"]
 
         it_params = DomainAdaptIterationTable().get_version(self.iteration)
         self.disc_mode = it_params.disc_mode
@@ -258,11 +258,14 @@ class CycleGANTrainer:
     #     self.input_y = None
     #     self.accumulated_size = 0
 
-    def train(self, epoch, iteration, tensor_x, tensor_y, img_batch):
+    def train(self, epoch, iteration, tensor_x, tensor_y, batch):
         with amp.autocast():
-            # print("Current batch: ", img_batch)
             tensor_x = self.transform_op(tensor_x).detach()
             tensor_y = self.transform_op(tensor_y).detach()
+
+            accum_batch_size = np.shape(tensor_x)[0] * (batch + 1)
+            # print("Current tensor size: ", np.shape(tensor_x), np.shape(tensor_y), " Accum batch size: ", accum_batch_size)
+
 
             # optimize D-----------------------
             y_like = self.G_A(tensor_x)
@@ -288,7 +291,7 @@ class CycleGANTrainer:
 
             errD = D_A_real_loss + D_A_fake_loss + D_B_real_loss + D_B_fake_loss
             self.fp16_scaler.scale(errD).backward()
-            if (self.fp16_scaler.scale(errD).item() > 0.0 and img_batch % self.batch_size == 0):
+            if (self.fp16_scaler.scale(errD).item() > 0.0 and accum_batch_size % self.batch_size == 0):
                 self.schedulerD.step(errD)
                 self.fp16_scaler.step(self.optimizerD)
 
@@ -324,7 +327,7 @@ class CycleGANTrainer:
             errG = A_identity_loss + B_identity_loss + A_likeness_loss + B_likeness_loss + A_lpip_loss + B_lpip_loss + A_adv_loss + B_adv_loss + A_cycle_loss + B_cycle_loss
             self.fp16_scaler.scale(errG).backward()
 
-            if((img_batch * self.img_per_iter) % self.batch_size == 0):
+            if(accum_batch_size % self.batch_size == 0):
                 self.schedulerG.step(errG)
                 self.fp16_scaler.step(self.optimizerG)
                 self.fp16_scaler.update()

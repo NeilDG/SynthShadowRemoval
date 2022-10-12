@@ -49,7 +49,7 @@ class ShadowRefinementTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.stop_result = False
 
         self.initialize_dict()
-        self.initialize_shadow_network(network_config["net_config"], network_config["num_blocks"], network_config["shadowrefine_nc"])
+        self.initialize_shadow_network(network_config["net_config"], network_config["num_blocks"], network_config["nc"])
 
         self.optimizerG = torch.optim.Adam(itertools.chain(self.G_refinement.parameters()), lr=self.g_lr)
         self.optimizerD = torch.optim.Adam(itertools.chain(self.D_refinement.parameters()), lr=self.d_lr)

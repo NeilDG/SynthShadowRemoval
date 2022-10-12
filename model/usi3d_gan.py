@@ -93,9 +93,23 @@ class MsImageDis(nn.Module):
 # Generator
 ##################################################################################
 
+class AdainGlobalConfig:
+    _sharedInstance = None
+    GLOBAL_USE_DROPOUT = False
+
+    @staticmethod
+    def initialize():
+        if (AdainGlobalConfig._sharedInstance == None):
+            AdainGlobalConfig._sharedInstance = AdainGlobalConfig()
+
+    @staticmethod
+    def getInstance():
+        return AdainGlobalConfig._sharedInstance
+
+
 class AdaINGen(nn.Module):
     # AdaIN auto-encoder architecture
-    def __init__(self, input_dim, output_dim, params):
+    def __init__(self, input_dim, output_dim, params, use_dropout = False):
         super(AdaINGen, self).__init__()
         dim = params['dim']
         style_dim = params['style_dim']
@@ -104,6 +118,8 @@ class AdaINGen(nn.Module):
         activ = params['activ']
         pad_type = params['pad_type']
         mlp_dim = params['mlp_dim']
+        AdainGlobalConfig.initialize()
+        AdainGlobalConfig.getInstance().GLOBAL_USE_DROPOUT = use_dropout
 
         # style encoder
         self.enc_style = StyleEncoder(4, input_dim, dim, style_dim, norm='none', activ=activ, pad_type=pad_type)
@@ -316,6 +332,11 @@ class ResBlock(nn.Module):
         model = []
         model += [Conv2dBlock(dim, dim, 3, 1, 1, norm=norm, activation=activation, pad_type=pad_type)]
         model += [Conv2dBlock(dim, dim, 3, 1, 1, norm=norm, activation='none', pad_type=pad_type)]
+
+        if (AdainGlobalConfig.getInstance().GLOBAL_USE_DROPOUT == True):
+            print("Using dropout in ADAINGEN")
+            model += [nn.Dropout2d(p=0.4)]
+
         self.model = nn.Sequential(*model)
 
     def forward(self, x):

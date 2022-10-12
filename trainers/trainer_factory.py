@@ -6,7 +6,7 @@ from model import ffa_gan as ffa
 from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
 from trainers import early_stopper
-from trainers.albedo_mask_trainer import AlbedoMaskTrainer
+from trainers.shadow_mask_trainer import ShadowMaskTrainer
 from trainers.albedo_trainer import AlbedoTrainer
 from trainers.shading_trainer import ShadingTrainer
 # from trainers.shadow_trainer import ShadowTrainer
@@ -30,6 +30,7 @@ class TrainerFactory():
         # self.trainer_list["train_albedo_mask"] = AlbedoMaskTrainer(self.gpu_device, opts)
         # self.trainer_list["train_albedo"] = AlbedoTrainer(self.gpu_device, opts)
         # self.trainer_list["train_shading"] = ShadingTrainer(self.gpu_device, opts)
+        self.trainer_list["train_shadow_mask"] = ShadowMaskTrainer(self.gpu_device, opts)
         self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device, opts)
         self.trainer_list["train_shadow_refine"] = ShadowRefinementTrainer(self.gpu_device, opts)
 
@@ -57,6 +58,13 @@ class TrainerFactory():
     #     else:
     #         self.trainer_list["train_shading"] = ShadingTrainer(self.gpu_device, self.opts)
     #         return self.trainer_list["train_shading"]
+
+    def get_shadow_mask_trainer(self):
+        if ("train_shadow_mask" in self.trainer_list):
+            return self.trainer_list["train_shadow_mask"]
+        else:
+            self.trainer_list["train_shadow_mask"] = ShadowMaskTrainer(self.gpu_device, self.opts)
+            return self.trainer_list["train_shadow_mask"]
 
     def get_shadow_trainer(self):
         if ("train_shadow" in self.trainer_list):

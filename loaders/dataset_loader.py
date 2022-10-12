@@ -149,14 +149,10 @@ def load_shadow_train_dataset(ws_path, ns_path, ws_istd, ns_istd, patch_size, lo
     ws_istd_list = assemble_img_list(ws_istd, opts)
     ns_istd_list = assemble_img_list(ns_istd, opts)
 
-    print("Using synthetic train dataset + ISTD dataset")
+    print("Using synthetic train dataset")
     for i in range(0, 1):
         ws_list += ws_list
         ns_list += ns_list
-
-    for i in range(0, 10):
-        ws_list += ws_istd_list
-        ns_list += ns_istd_list
 
     img_length = len(ws_list)
     print("Length of images: %d %d" % (len(ws_list), len(ns_list)))
@@ -165,6 +161,23 @@ def load_shadow_train_dataset(ws_path, ns_path, ws_istd, ns_istd, patch_size, lo
         iid_test_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 1, patch_size),
         batch_size=load_size,
         num_workers=opts.num_workers,
+        shuffle=False
+    )
+
+    return data_loader
+
+def load_istd_dataset(ws_path, ns_path, mask_path, load_size, opts):
+    ws_istd_list = assemble_img_list(ws_path, opts)
+    ns_istd_list = assemble_img_list(ns_path, opts)
+    mask_istd_list = assemble_img_list(mask_path, opts)
+
+    img_length = len(ws_istd_list)
+    print("Length of images: %d %d %d" % (len(ws_istd_list), len(ns_istd_list), len(mask_istd_list)))
+
+    data_loader = torch.utils.data.DataLoader(
+        iid_test_datasets.ShadowISTDDataset(img_length, ws_istd_list, ns_istd_list, mask_istd_list, 1),
+        batch_size=load_size,
+        num_workers=1,
         shuffle=False
     )
 
@@ -256,11 +269,9 @@ def load_da_dataset_train(imgx_dir, imgy_dir, opts):
 
     data_loader = torch.utils.data.DataLoader(
         image_dataset.GenericPairedDataset(imgx_list, imgy_list, 1, network_config["patch_size"]),
-        batch_size=network_config["img_per_iter"],
+        batch_size=network_config["load_size"],
         num_workers = opts.num_workers,
         shuffle=False,
-        pin_memory=True
-
     )
 
     return data_loader

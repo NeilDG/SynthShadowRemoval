@@ -22,26 +22,17 @@ class ShadowMapTransforms():
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         network_config = sc_instance.interpret_network_config_from_version()
 
-        self.min_amplify = network_config["amplify_ws"][0]
-        self.max_amplify = network_config["amplify_ws"][1]
-
 
     def generate_shadow_map(self, rgb_tensor_ws, rgb_tensor_ns, one_channel = True):
-        # min = torch.min(rgb_tensor_ws)
-        # max = torch.max(rgb_tensor_ws)
-
-        rgb_tensor_ws = rgb_tensor_ws * random.uniform(self.min_amplify, self.max_amplify)
-        rgb_tensor_ws = torch.clip(rgb_tensor_ws, 0.0, 1.0)
         shadow_tensor = rgb_tensor_ns - rgb_tensor_ws
-        # shadow_tensor = torch.clip(shadow_tensor, 0.0, 1.0)
 
-        # rgb_ws_refined = rgb_tensor_ns - shadow_tensor
-        # rgb_ns_refined = rgb_tensor_ws + shadow_tensor
+        shadow_gray = kornia.color.rgb_to_grayscale(shadow_tensor)
+        shadow_mask = (shadow_gray != 0.0).float()
 
         if(one_channel == True):
             shadow_tensor = kornia.color.rgb_to_grayscale(shadow_tensor)
 
-        return rgb_tensor_ws, rgb_tensor_ns, shadow_tensor
+        return rgb_tensor_ws, rgb_tensor_ns, shadow_tensor, shadow_mask
 
     def remove_rgb_shadow(self, rgb_tensor_ws, shadow_tensor, tozeroone=True):
         if (tozeroone):
@@ -49,5 +40,5 @@ class ShadowMapTransforms():
             shadow_tensor = tensor_utils.normalize_to_01(shadow_tensor)
 
         rgb_recon = rgb_tensor_ws + shadow_tensor
-        # rgb_recon = torch.clip(rgb_recon, 0.0, 1.0)
+        rgb_recon = torch.clip(rgb_recon, 0.0, 1.0)
         return rgb_recon

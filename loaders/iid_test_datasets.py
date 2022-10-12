@@ -145,24 +145,22 @@ class ShadowTrainDataset(data.Dataset):
 
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         network_config = sc_instance.interpret_network_config_from_version()
-        self.sm_channel = network_config["sm_one_channel"]
-        self.jitter_enabled = network_config["jitter_enabled"]
 
-        if(self.jitter_enabled):
-            self.initial_op = transforms.Compose([
-                transforms.ToPILImage(),
-                transforms.Resize(constants.TEST_IMAGE_SIZE),
-                transforms.RandomHorizontalFlip(0.5),
-                transforms.RandomVerticalFlip(0.5),
-                transforms.ColorJitter(brightness=[0.5, 1.75], contrast=[0.5, 1.75]),
-                transforms.ToTensor()])
-        else:
-            self.initial_op = transforms.Compose([
-                transforms.ToPILImage(),
-                transforms.Resize(constants.TEST_IMAGE_SIZE),
-                transforms.RandomHorizontalFlip(0.5),
-                transforms.RandomVerticalFlip(0.5),
-                transforms.ToTensor()])
+        # if(self.jitter_enabled):
+        #     self.initial_op = transforms.Compose([
+        #         transforms.ToPILImage(),
+        #         transforms.Resize(constants.TEST_IMAGE_SIZE),
+        #         transforms.RandomHorizontalFlip(0.5),
+        #         transforms.RandomVerticalFlip(0.5),
+        #         transforms.ColorJitter(brightness=[0.5, 1.75], contrast=[0.5, 1.75]),
+        #         transforms.ToTensor()])
+        # else:
+        self.initial_op = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize(constants.TEST_IMAGE_SIZE),
+            transforms.RandomHorizontalFlip(0.5),
+            transforms.RandomVerticalFlip(0.5),
+            transforms.ToTensor()])
 
     def __getitem__(self, idx):
         file_name = self.img_list_a[idx].split("/")[-1].split(".png")[0]
@@ -185,7 +183,7 @@ class ShadowTrainDataset(data.Dataset):
                 rgb_ws = transforms.functional.crop(rgb_ws, i, j, h, w)
                 rgb_ns = transforms.functional.crop(rgb_ns, i, j, h, w)
 
-            rgb_ws, rgb_ns, shadow_map = self.shadow_op.generate_shadow_map(rgb_ws, rgb_ns, self.sm_channel)
+            rgb_ws, rgb_ns, shadow_map, shadow_mask = self.shadow_op.generate_shadow_map(rgb_ws, rgb_ns, False)
 
             rgb_ws = self.norm_op(rgb_ws)
             rgb_ns = self.norm_op(rgb_ns)
@@ -200,8 +198,62 @@ class ShadowTrainDataset(data.Dataset):
             rgb_ws = None
             rgb_ns = None
             shadow_map = None
+            shadow_mask = None
 
-        return file_name, rgb_ws, rgb_ns, shadow_map
+        return file_name, rgb_ws, rgb_ns, shadow_map, shadow_mask
+
+    def __len__(self):
+        return self.img_length
+
+class ShadowISTDDataset(data.Dataset):
+    def __init__(self, img_length, img_list_a, img_list_b, img_list_c, transform_config):
+        self.img_length = img_length
+        self.img_list_a = img_list_a
+        self.img_list_b = img_list_b
+        self.img_list_c = img_list_c
+        self.transform_config = transform_config
+
+        self.shadow_op = shadow_map_transforms.ShadowMapTransforms()
+        self.norm_op = transforms.Normalize((0.5, ), (0.5, ))
+
+        self.initial_op = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize(constants.TEST_IMAGE_SIZE),
+            transforms.ToTensor()])
+
+    def __getitem__(self, idx):
+        file_name = self.img_list_a[idx].split("/")[-1].split(".png")[0]
+
+        try:
+            rgb_ws = cv2.imread(self.img_list_a[idx])
+            rgb_ws = cv2.cvtColor(rgb_ws, cv2.COLOR_BGR2RGB)
+            state = torch.get_rng_state()
+            rgb_ws = self.initial_op(rgb_ws)
+
+            torch.set_rng_state(state)
+            rgb_ns = cv2.imread(self.img_list_b[idx])
+            rgb_ns = cv2.cvtColor(rgb_ns, cv2.COLOR_BGR2RGB)
+            rgb_ns = self.initial_op(rgb_ns)
+
+            torch.set_rng_state(state)
+            shadow_mask = cv2.imread(self.img_list_c[idx])
+            shadow_mask = cv2.cvtColor(shadow_mask, cv2.COLOR_BGR2GRAY)
+            shadow_mask = self.initial_op(shadow_mask)
+
+            rgb_ws = self.norm_op(rgb_ws)
+            rgb_ns = self.norm_op(rgb_ns)
+
+            # print("Shadow map range: ", torch.min(shadow_map), torch.max(shadow_map))
+            # print("Loaded pairing: ", self.img_list_a[idx], self.img_list_b[idx])
+
+        except Exception as e:
+            print("Failed to load: ", self.img_list_a[idx], self.img_list_b[idx])
+            print("ERROR: ", e)
+            rgb_ws = None
+            rgb_ns = None
+            shadow_mask = None
+
+        return file_name, rgb_ws, rgb_ns, shadow_mask
 
     def __len__(self):
         return self.img_length

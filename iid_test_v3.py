@@ -117,7 +117,7 @@ def main(argv):
     iid_server_config.IIDServerConfig.initialize()
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
     network_config = sc_instance.interpret_network_config_from_version()
-    refine_enabled = network_config["refine_enabled"]
+    refine_enabled = False
 
     # version_z = opts.version
     # iteration_z = opts.iteration
@@ -138,14 +138,15 @@ def main(argv):
     # opts.iteration = iteration_z
     sc_instance.update_version_config()
     tf = trainer_factory.TrainerFactory(device, opts)
+    shadow_p = tf.get_shadow_mask_trainer()
     shadow_t = tf.get_shadow_trainer()
     shadow_rt = tf.get_shadow_refine_trainer()
 
-    dataset_tester = TesterClass(shadow_t, shadow_rt)
+    dataset_tester = TesterClass(shadow_p, shadow_t, shadow_rt)
 
     dataset_version = network_config["dataset_version"]
 
-    assert dataset_version == "v12" or dataset_version == "v14", "Cannot identify dataset version."
+    assert dataset_version == "v8" or dataset_version == "v15" or dataset_version == "v16", "Cannot identify dataset version."
     rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
     rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
 
@@ -155,24 +156,26 @@ def main(argv):
     #Using train dataset
     print(rgb_dir_ws, rgb_dir_ns)
     shadow_loader = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, constants.ws_istd, constants.ns_istd, 256, 8, opts)
-    for i, (file_name, rgb_ws, rgb_ns, shadow_map) in enumerate(shadow_loader, 0):
-        rgb_ws_tensor = rgb_ws.to(device)
-        rgb_ns_tensor = rgb_ns.to(device)
+    for i, (file_name, rgb_ws, rgb_ns, shadow_map, shadow_mask) in enumerate(shadow_loader, 0):
+        rgb_ws = rgb_ws.to(device)
+        rgb_ns = rgb_ns.to(device)
         shadow_map = shadow_map.to(device)
+        shadow_mask = shadow_mask.to(device)
 
-        dataset_tester.test_shadow(rgb_ws_tensor, rgb_ns_tensor, shadow_map, "Train",  refine_enabled, opts.img_vis_enabled, opts)
+        dataset_tester.test_shadow(rgb_ws, rgb_ns, shadow_map, shadow_mask, "Train",  refine_enabled, opts.img_vis_enabled, opts)
         if (i % 16 == 0):
             break
 
     dataset_tester.print_ave_shadow_performance("Train Set", opts)
 
     # ISTD test dataset
-    shadow_loader = dataset_loader.load_shadow_test_dataset(constants.ws_istd, constants.ns_istd, opts)
-    for i, (file_name, rgb_ws, rgb_ns) in enumerate(shadow_loader, 0):
+    shadow_loader = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, 8, opts)
+    for i, (file_name, rgb_ws, rgb_ns, shadow_mask) in enumerate(shadow_loader, 0):
         rgb_ws_tensor = rgb_ws.to(device)
         rgb_ns_tensor = rgb_ns.to(device)
+        shadow_mask = shadow_mask.to(device)
 
-        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, refine_enabled, opts.img_vis_enabled, 1, opts)
+        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_mask, opts.img_vis_enabled, 1, 0,  opts)
         # break
 
     dataset_tester.print_ave_shadow_performance("ISTD", opts)

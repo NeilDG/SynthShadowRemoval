@@ -40,7 +40,7 @@ class CALayer(nn.Module):
 
 
 class Block(nn.Module):
-    def __init__(self, conv, dim, kernel_size, ):
+    def __init__(self, conv, dim, kernel_size):
         super(Block, self).__init__()
         self.conv1 = conv(dim, dim, kernel_size, bias=True)
         self.act1 = nn.ReLU(inplace=True)
@@ -48,12 +48,18 @@ class Block(nn.Module):
         self.calayer = CALayer(dim)
         self.palayer = PALayer(dim)
 
+        if (FFAGlobalConfig.getInstance().GLOBAL_USE_DROPOUT == True):
+            self.dropout = nn.Dropout2d(p=0.4)
+            print("FFA Net using Dropout")
+
     def forward(self, x):
         res = self.act1(self.conv1(x))
         res = res + x
         res = self.conv2(res)
         res = self.calayer(res)
         res = self.palayer(res)
+        if(FFAGlobalConfig.getInstance().GLOBAL_USE_DROPOUT == True):
+            res = self.dropout(res)
         res += x
         return res
 
@@ -81,9 +87,26 @@ class FFAWithBackbone(nn.Module):
         ffa_input = self.backbone(x1)
         return self.ffa_proper(ffa_input)
 
+class FFAGlobalConfig:
+    _sharedInstance = None
+    GLOBAL_USE_DROPOUT = False
+
+    @staticmethod
+    def initialize():
+        if (FFAGlobalConfig._sharedInstance == None):
+            FFAGlobalConfig._sharedInstance = FFAGlobalConfig()
+
+    @staticmethod
+    def getInstance():
+        return FFAGlobalConfig._sharedInstance
+
 class FFA(nn.Module):
-    def __init__(self, gps, blocks, conv=default_conv):
+    def __init__(self, gps, blocks, use_dropout=False, conv=default_conv):
         super(FFA, self).__init__()
+        FFAGlobalConfig.initialize()
+        FFAGlobalConfig.getInstance().GLOBAL_USE_DROPOUT = use_dropout
+        print("USE DROPOUT? ", FFAGlobalConfig.getInstance().GLOBAL_USE_DROPOUT)
+
         self.gps = gps
         self.dim = 64
         kernel_size = 3
@@ -108,9 +131,9 @@ class FFA(nn.Module):
         self.pre = nn.Sequential(*pre_process)
         self.post = nn.Sequential(*post_precess)
 
-    def forward(self, x1):
+    def forward(self, input):
         #print("X1 shape: ", np.shape(x1))
-        x = self.pre(x1)
+        x = self.pre(input)
         res1 = self.g1(x)
         res2 = self.g2(res1)
         res3 = self.g3(res2)
@@ -119,7 +142,8 @@ class FFA(nn.Module):
         out = w[:, 0, ::] * res1 + w[:, 1, ::] * res2 + w[:, 2, ::] * res3
         out = self.palayer(out)
         x = self.post(out)
-        return x + x1
+        # return x
+        return x + input
 
 class FFASpecial(nn.Module):
     def __init__(self, blocks, conv=default_conv):

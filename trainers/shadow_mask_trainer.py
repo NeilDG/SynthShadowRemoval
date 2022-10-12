@@ -9,7 +9,7 @@ import torch.nn as nn
 from transforms import iid_transforms
 from utils import plot_utils
 
-class AlbedoMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
+class ShadowMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def __init__(self, gpu_device, opts):
         super().__init__(gpu_device, opts)
@@ -25,14 +25,15 @@ class AlbedoMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         general_config = sc_instance.get_general_configs()
         network_config = sc_instance.interpret_network_config_from_version()
+
+        self.load_size = network_config["load_size_p"]
         self.batch_size = network_config["batch_size_p"]
-        self.da_enabled = network_config["da_enabled"]
 
         self.iid_op = iid_transforms.IIDTransform().to(self.gpu_device)
         self.fp16_scaler = amp.GradScaler()  # for automatic mixed precision
 
-        min_epochs = general_config["train_albedo_mask"]["min_epochs"]
-        self.stopper_method = early_stopper.EarlyStopper(min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, constants.early_stop_threshold, 99999.9)
+        min_epochs = general_config["train_shadow_mask"]["min_epochs"]
+        self.stopper_method = early_stopper.EarlyStopper(min_epochs, early_stopper.EarlyStopperMethod.L1_TYPE, 250, 99999.9)
         self.stop_result = False
 
         self.initialize_parsing_network(network_config["nc"])
@@ -57,14 +58,12 @@ class AlbedoMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def train(self, epoch, iteration, input_map, target_map):
         input_rgb_tensor = input_map["rgb"]
-        albedo_tensor = target_map["albedo"]
-        mask_tensor = self.iid_op.create_sky_reflection_masks(albedo_tensor)
+        mask_tensor = target_map["shadow_mask"]
+        mask_tensor_test = target_map["mask_istd"]
+        accum_batch_size = self.load_size * iteration
 
         with amp.autocast():
-            if (self.da_enabled == 1):
-                input = self.reshape_input(input_rgb_tensor)
-            else:
-                input = input_rgb_tensor
+            input = input_rgb_tensor
 
             mask_tensor_inv = 1 - mask_tensor
             output = torch.cat([mask_tensor, mask_tensor_inv], 1)
@@ -74,18 +73,24 @@ class AlbedoMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             # print("Shapes: ", np.shape(self.G_P(input)), np.shape(output))
             mask_loss = self.bce_loss(self.G_P(input), output)
             self.fp16_scaler.scale(mask_loss).backward()
-            self.fp16_scaler.step(self.optimizerP)
-            self.schedulerP.step(mask_loss)
-            self.fp16_scaler.update()
+            if (accum_batch_size % self.batch_size == 0):
+                self.fp16_scaler.step(self.optimizerP)
+                self.schedulerP.step(mask_loss)
+                self.fp16_scaler.update()
 
-            # what to put to losses dict for visdom reporting?
-            self.losses_dict_p[constants.LIKENESS_LOSS_KEY].append(mask_loss.item())
+                # what to put to losses dict for visdom reporting?
+                self.losses_dict_p[constants.LIKENESS_LOSS_KEY].append(mask_loss.item())
 
-        self.stopper_method.register_metric(self.test(input_map), mask_tensor, epoch)
-        self.stop_result = self.stopper_method.test(epoch)
+                self.stopper_method.register_metric(self.test_istd(input_map), mask_tensor_test, epoch)
+                self.stop_result = self.stopper_method.test(epoch)
 
         if(self.stopper_method.has_reset()):
             self.save_states(epoch, iteration, False)
+
+    def test_istd(self, input_map):
+        # print("Testing on ISTD dataset.")
+        input_map_new = {"rgb" : input_map["rgb_ws_istd"]}
+        return self.test(input_map_new)
 
     def is_stop_condition_met(self):
         return self.stop_result
@@ -93,10 +98,7 @@ class AlbedoMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def test(self, input_map):
         with torch.no_grad():
             input_rgb_tensor = input_map["rgb"]
-            if (self.da_enabled == 1):
-                input = self.reshape_input(input_rgb_tensor)
-            else:
-                input = input_rgb_tensor
+            input = input_rgb_tensor
 
             rgb2mask = self.G_P(input)
             rgb2mask = torch.round(rgb2mask)[:, 0, :, :]
@@ -109,25 +111,14 @@ class AlbedoMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def visdom_visualize(self, input_map, label="Train"):
         with torch.no_grad():
             input_rgb_tensor = input_map["rgb"]
-            albedo_tensor = input_map["albedo"]
-            mask_tensor = self.iid_op.create_sky_reflection_masks(albedo_tensor)
-            embedding_rep = self.get_feature_rep(input_rgb_tensor)
-
-            self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + self.NETWORK_VERSION + str(self.iteration))
-            self.visdom_reporter.plot_image(embedding_rep, str(label) + " Embedding Maps - " + self.NETWORK_VERSION + str(self.iteration))
-
-            self.visdom_reporter.plot_image(self.test(input_map), str(label) + " Albedo-Mask-Like - " + self.NETWORK_VERSION + str(self.iteration))
-            self.visdom_reporter.plot_image(mask_tensor, str(label) + " Albedo Masks - " + self.NETWORK_VERSION + str(self.iteration))
-
-    def visdom_infer(self, input_map):
-        with torch.no_grad():
-            input_rgb_tensor = input_map["rgb"]
-            embedding_rep = self.get_feature_rep(input_rgb_tensor)
             rgb2mask = self.test(input_map)
 
-            self.visdom_reporter.plot_image(input_rgb_tensor, "Real World images - " + self.NETWORK_VERSION + str(self.iteration))
-            self.visdom_reporter.plot_image(embedding_rep, "Real World Embeddings - " + self.NETWORK_VERSION + str(self.iteration))
-            self.visdom_reporter.plot_image(rgb2mask, "Real-World Albedo-Mask-Like - " + self.NETWORK_VERSION + str(self.iteration))
+            self.visdom_reporter.plot_image(input_rgb_tensor, str(label) + " Input RGB Images - " + self.NETWORK_VERSION + str(self.iteration))
+            self.visdom_reporter.plot_image(rgb2mask, str(label) + " Shadow-Mask-Like - " + self.NETWORK_VERSION + str(self.iteration))
+
+            if("shadow_mask" in input_map):
+                mask_tensor = input_map["shadow_mask"]
+                self.visdom_reporter.plot_image(mask_tensor, str(label) + " Shadow Masks - " + self.NETWORK_VERSION + str(self.iteration))
 
     def load_saved_state(self):
         try:
@@ -144,7 +135,7 @@ class AlbedoMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 print("No existing checkpoint file found. Creating new network: ", self.NETWORK_CHECKPATH)
 
         if (checkpoint != None):
-            iid_server_config.IIDServerConfig.getInstance().store_epoch_from_checkpt("train_albedo_mask", checkpoint["epoch"])
+            iid_server_config.IIDServerConfig.getInstance().store_epoch_from_checkpt("train_shadow_mask", checkpoint["epoch"])
             self.stopper_method.update_last_metric(checkpoint[constants.LAST_METRIC_KEY])
             self.G_P.load_state_dict(checkpoint[constants.GENERATOR_KEY + "P"])
             self.optimizerP.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "P"])
