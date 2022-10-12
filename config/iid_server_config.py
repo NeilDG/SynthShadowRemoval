@@ -19,13 +19,13 @@ class IIDServerConfig():
         if(constants.server_config <= 5):
             self.general_configs = {"train_style_transfer" : {"min_epochs" : 5, "max_epochs" : 25},
                                     "train_shadow_mask": {"min_epochs": 2, "max_epochs" : 15, "patch_size": 128},
-                                    "train_shadow": {"min_epochs": 30 ,"max_epochs" : 80, "patch_size": 128},
+                                    "train_shadow": {"min_epochs": 10 ,"max_epochs" : 80, "patch_size": 128},
                                     "train_shadow_refine": {"min_epochs": 30,"max_epochs" : 80, "patch_size": 128}}
         #debug
         if(constants.debug_run == 1):
             self.general_configs = {"train_style_transfer" : {"min_epochs" : 1, "max_epochs" : 5},
-                                    "train_shadow_mask": {"min_epochs": 1, "max_epochs" : 2, "patch_size": 128},
-                                    "train_shadow": {"min_epochs": 1,"max_epochs" : 2, "patch_size": 128},
+                                    "train_shadow_mask": {"min_epochs": 1, "max_epochs" : 15, "patch_size": 128},
+                                    "train_shadow": {"min_epochs": 1,"max_epochs" : 40, "patch_size": 128},
                                     "train_shadow_refine": {"min_epochs": 10,"max_epochs" : 30, "patch_size": 128}}
 
 

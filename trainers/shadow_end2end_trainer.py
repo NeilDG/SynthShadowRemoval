@@ -185,7 +185,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             else:
                 comparison = rgb2sm
 
-            istd_ns_test = input_map["rgb_ws_istd"]
+            istd_ns_test = input_map["rgb_ns_istd"]
             self.stopper_method.register_metric(comparison, istd_ns_test, epoch)
             self.stop_result = self.stopper_method.test(epoch)
 
@@ -196,10 +196,10 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         return self.stop_result
 
     def test_istd(self, input_map):
-        print("Testing on ISTD dataset.")
+        # print("Testing on ISTD dataset.")
         input_map_new = {"rgb" : input_map["rgb_ws_istd"],
-                         "rgb_ws_inv" : input_map["rgb_ws_inv"],
-                         "shadow_mask" : input_map["shadow_mask"]}
+                         "rgb_ws_inv" : input_map["rgb_ws_istd"],
+                         "shadow_mask" : input_map["mask_istd"]}
         return self.test(input_map_new)
 
     def test(self, input_map):
