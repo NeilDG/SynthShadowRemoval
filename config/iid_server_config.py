@@ -102,7 +102,7 @@ class IIDServerConfig():
         elif (constants.server_config == 3):  # GCLOUD
             network_config[LOAD_SIZE_KEY_P] = 96
         elif (constants.server_config == 4):  # RTX 2080Ti
-            network_config[LOAD_SIZE_KEY_P] = 32
+            network_config[LOAD_SIZE_KEY_P] = 48
         else:  # RTX 3090
             network_config[LOAD_SIZE_KEY_P] = 96
 
