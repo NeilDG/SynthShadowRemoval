@@ -114,16 +114,17 @@ def train_shadow(tf, device, opts):
     print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
     for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
         for i, (train_data, test_data) in enumerate(zip(train_loader, itertools.cycle(test_loader_istd))):
-            _, rgb_ws, rgb_ns, _, shadow_mask = train_data
+            _, rgb_ws, rgb_ns, shadow_map, shadow_mask = train_data
             rgb_ws = rgb_ws.to(device)
             rgb_ns = rgb_ns.to(device)
+            shadow_map = shadow_map.to(device)
             shadow_mask = shadow_mask.to(device)
 
             _, rgb_ws_istd, _, mask_istd = test_data
             rgb_ws_istd = rgb_ws_istd.to(device)
             mask_istd = mask_istd.to(device)
 
-            input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_mask": shadow_mask,
+            input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_map" : shadow_map, "shadow_mask": shadow_mask,
                          "rgb_ws_istd" : rgb_ws_istd, "rgb_ns_istd" : rgb_ws_istd, "mask_istd" : mask_istd}
             target_map = input_map
 
@@ -140,16 +141,17 @@ def train_shadow(tf, device, opts):
                     tf.visdom_plot(mode, iteration)
                     tf.visdom_visualize(mode, input_map, "Train")
 
-                    _, rgb_ws, rgb_ns = next(itertools.cycle(test_loader_train))
-                    rgb_ws = rgb_ws.to(device)
-                    rgb_ns = rgb_ns.to(device)
-
-                    shadow_p = tf.get_shadow_mask_trainer()
-                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
-                    rgb2mask = shadow_p.test(input_map)
-
-                    input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_mask" : rgb2mask}
-                    tf.visdom_visualize(mode, input_map, "Test Synthetic")
+                    # Temporarily disable visualization of test synth data.
+                    # _, rgb_ws, rgb_ns = next(itertools.cycle(test_loader_train))
+                    # rgb_ws = rgb_ws.to(device)
+                    # rgb_ns = rgb_ns.to(device)
+                    #
+                    # shadow_p = tf.get_shadow_mask_trainer()
+                    # input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
+                    # rgb2mask = shadow_p.test(input_map)
+                    #
+                    # input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_map" : shadow_map, "shadow_mask" : rgb2mask}
+                    # tf.visdom_visualize(mode, input_map, "Test Synthetic")
 
                     _, rgb_ws, rgb_ns, mask_istd = next(itertools.cycle(test_loader_istd))
                     rgb_ws = rgb_ws.to(device)
@@ -261,7 +263,7 @@ def main(argv):
     tf = trainer_factory.TrainerFactory(device, opts)
     tf.initialize_all_trainers(opts)
 
-    train_shadow_mask(tf, device, opts)
+    # train_shadow_mask(tf, device, opts)
     train_shadow(tf, device, opts)
 
     #Train shadow refine

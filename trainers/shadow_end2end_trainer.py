@@ -47,8 +47,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         self.load_size = network_config["load_size_z"]
         self.batch_size = network_config["batch_size_z"]
-        self.is_end2end = network_config["is_end2end"]
-        self.mask_enabled = network_config["mask_enabled"]
+        self.train_mode = network_config["train_mode"]
 
         self.stopper_method = early_stopper.EarlyStopper(general_config["train_shadow"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, 1500, 99999.9)
         self.stop_result = False
@@ -68,6 +67,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def initialize_shadow_network(self, net_config, num_blocks, input_nc):
         network_creator = abstract_iid_trainer.NetworkCreator(self.gpu_device)
         self.G_SM_predictor, self.D_SM_discriminator = network_creator.initialize_rgb_network(net_config, num_blocks, input_nc)  # shadow map (Shadow - Shadow-Free)
+
     def adversarial_loss(self, pred, target):
         if (self.use_bce == 0):
             return self.mse_loss(pred, target)
@@ -121,17 +121,19 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         input_ws = input_map["rgb"]
         mask_tensor = target_map["shadow_mask"]
 
-        if(self.is_end2end): #use RGB_NS if end2end training
+        if(self.train_mode == 0):
             target_tensor = target_map["rgb_ns"]
-        else:
-            target_tensor = target_map["shadow_map"]
-
-        # target only the shadow regions
-        if(self.mask_enabled):
+        elif(self.train_mode == 1):
+            target_tensor = target_map["rgb_ns"]
             input_ws = input_ws * mask_tensor
             target_tensor = target_tensor * mask_tensor
-        else:
-            input_ws = torch.cat([input_ws, mask_tensor], 1)
+        elif(self.train_mode == 2):
+            target_tensor = target_map["shadow_map"]
+        elif(self.train_mode == 3):
+            # input_ws = torch.cat([input_ws, mask_tensor], 1)
+            target_tensor = target_map["rgb_ns"]
+
+        assert self.train_mode <= 3, "Could not identify train mode."
 
         accum_batch_size = self.load_size * iteration
 
@@ -183,14 +185,9 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_SM_real_loss.item())
                 self.losses_dict_s[self.MASK_LOSS_KEY].append(SM_masking_loss.item())
 
-            rgb2ns, rgb2sm = self.test_istd(input_map)
-            if(self.is_end2end == True):
-                comparison = rgb2ns
-            else:
-                comparison = rgb2sm
-
+            rgb2ns, _ = self.test_istd(input_map)
             istd_ns_test = input_map["rgb_ns_istd"]
-            self.stopper_method.register_metric(comparison, istd_ns_test, epoch)
+            self.stopper_method.register_metric(rgb2ns, istd_ns_test, epoch)
             self.stop_result = self.stopper_method.test(epoch)
 
             if (self.stopper_method.has_reset()):
@@ -212,15 +209,18 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             mask_tensor = input_map["shadow_mask"]
             input_ws_inv = input_map["rgb_ws_inv"] * torchvision.transforms.functional.invert(mask_tensor)
 
-            # target only the shadow regions
-            if (self.mask_enabled):
+            if (self.train_mode == 1):
                 input_ws = input_ws * mask_tensor
-            else:
+            elif (self.train_mode == 3):
                 input_ws = torch.cat([input_ws, mask_tensor], 1)
 
-            if(self.is_end2end == False):
+            if(self.train_mode == 2):
+                # if("shadow_map" in input_map):
+                #     rgb2sm = input_map["shadow_map"]
+                # else:
                 rgb2sm = self.G_SM_predictor(input_ws)
-                rgb2ns = self.shadow_op.remove_rgb_shadow(input_ws, rgb2sm, True)
+                rgb2ns = self.shadow_op.remove_rgb_shadow(input_map["rgb"], rgb2sm, True)
+                rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
             else:
                 # if("rgb_ns" in input_map):
                 #     rgb2ns = input_map["rgb_ns"] * mask_tensor
@@ -245,14 +245,15 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         rgb2ns, rgb2sm = self.test(input_map)
 
         self.visdom_reporter.plot_image(input_ws, str(label) + " RGB (With Shadows) Images - " + self.NETWORK_VERSION + str(self.iteration))
-        self.visdom_reporter.plot_image(mask_tensor, str(label) + " Shadow Region Images - " + self.NETWORK_VERSION + str(self.iteration))
 
-        if(self.is_end2end == False):
+        if(self.train_mode == 2):
             self.visdom_reporter.plot_image(rgb2sm, str(label) + " RGB2SM images - " + self.NETWORK_VERSION + str(self.iteration))
             if("shadow_map" in input_map):
                 shadow_map_tensor = input_map["shadow_map"]
                 shadow_map_tensor = tensor_utils.normalize_to_01(shadow_map_tensor)
                 self.visdom_reporter.plot_image(shadow_map_tensor, str(label) + " RGB Shadow Map images - " + self.NETWORK_VERSION + str(self.iteration))
+        else:
+            self.visdom_reporter.plot_image(mask_tensor, str(label) + " Shadow Region Images - " + self.NETWORK_VERSION + str(self.iteration))
 
         self.visdom_reporter.plot_image(rgb2ns, str(label) + " RGB (No Shadows-Like) images - " + self.NETWORK_VERSION + str(self.iteration))
         if("rgb_ns" in input_map):
