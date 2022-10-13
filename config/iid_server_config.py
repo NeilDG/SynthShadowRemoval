@@ -19,7 +19,7 @@ class IIDServerConfig():
         if(constants.server_config <= 5):
             self.general_configs = {"train_style_transfer" : {"min_epochs" : 5, "max_epochs" : 25},
                                     "train_shadow_mask": {"min_epochs": 2, "max_epochs" : 15, "patch_size": 128},
-                                    "train_shadow": {"min_epochs": 10 ,"max_epochs" : 80, "patch_size": 128},
+                                    "train_shadow": {"min_epochs": 3 ,"max_epochs" : 80, "patch_size": 128},
                                     "train_shadow_refine": {"min_epochs": 30,"max_epochs" : 80, "patch_size": 128}}
         #debug
         if(constants.debug_run == 1):
@@ -98,13 +98,13 @@ class IIDServerConfig():
         if (constants.server_config == 1):  # COARE
             network_config[LOAD_SIZE_KEY_P] = 96
         elif (constants.server_config == 2):  # CCS JUPYTER
-            network_config[LOAD_SIZE_KEY_P] = 128
+            network_config[LOAD_SIZE_KEY_P] = 256
         elif (constants.server_config == 3):  # GCLOUD
             network_config[LOAD_SIZE_KEY_P] = 96
         elif (constants.server_config == 4):  # RTX 2080Ti
             network_config[LOAD_SIZE_KEY_P] = 48
         else:  # RTX 3090
-            network_config[LOAD_SIZE_KEY_P] = 96
+            network_config[LOAD_SIZE_KEY_P] = 160
 
         # configure batch size. NOTE: Batch size must be equal or larger than load size
         network_config[BATCH_SIZE_KEY_P] = network_config[LOAD_SIZE_KEY_P]
@@ -187,6 +187,54 @@ class IIDServerConfig():
 
         elif (constants.network_version == "v50.04"):
             network_config[SYNTH_DATASET_VERSION] = "v16"
+            network_config[WEIGHT_DECAY_KEY] = 0.01
+            network_config[DROPOUT_KEY] = True
+            network_config[END2END_KEY] = True
+
+            network_config[NETWORK_CONFIG_NUM] = 5
+            network_config[NUM_BLOCKS_KEY] = 3
+
+            # configure load sizes (GPU memory allocation of data)
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_Z] = 64
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_Z] = 96
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_Z] = 16
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_Z] = 32
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_Z] = 64
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
+
+        elif (constants.network_version == "v50.05"):
+            network_config[SYNTH_DATASET_VERSION] = "v8"
+            network_config[WEIGHT_DECAY_KEY] = 0.0
+            network_config[DROPOUT_KEY] = False
+            network_config[END2END_KEY] = True
+
+            network_config[NETWORK_CONFIG_NUM] = 5
+            network_config[NUM_BLOCKS_KEY] = 3
+
+            # configure load sizes (GPU memory allocation of data)
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_Z] = 64
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_Z] = 96
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_Z] = 16
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_Z] = 32
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_Z] = 64
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
+
+        elif (constants.network_version == "v50.06"):
+            network_config[SYNTH_DATASET_VERSION] = "v8"
             network_config[WEIGHT_DECAY_KEY] = 0.01
             network_config[DROPOUT_KEY] = True
             network_config[END2END_KEY] = True
