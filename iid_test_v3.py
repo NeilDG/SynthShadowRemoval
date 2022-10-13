@@ -162,7 +162,7 @@ def main(argv):
         shadow_map = shadow_map.to(device)
         shadow_mask = shadow_mask.to(device)
 
-        dataset_tester.test_shadow(rgb_ws, rgb_ns, shadow_map, shadow_mask, "Train",  refine_enabled, opts.img_vis_enabled, opts)
+        dataset_tester.test_shadow(rgb_ws, rgb_ns, shadow_map, shadow_mask, "Train", opts.img_vis_enabled, 1, opts)
         if (i % 16 == 0):
             break
 
@@ -175,7 +175,7 @@ def main(argv):
         rgb_ns_tensor = rgb_ns.to(device)
         shadow_mask = shadow_mask.to(device)
 
-        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_mask, opts.img_vis_enabled, 1, 0,  opts)
+        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_mask, opts.img_vis_enabled, 1, 1,  opts)
         # break
 
     dataset_tester.print_ave_shadow_performance("ISTD", opts)
