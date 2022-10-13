@@ -48,6 +48,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.load_size = network_config["load_size_z"]
         self.batch_size = network_config["batch_size_z"]
         self.is_end2end = network_config["is_end2end"]
+        self.mask_enabled = network_config["mask_enabled"]
 
         self.stopper_method = early_stopper.EarlyStopper(general_config["train_shadow"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, 1500, 99999.9)
         self.stop_result = False
@@ -126,8 +127,11 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             target_tensor = target_map["shadow_map"]
 
         # target only the shadow regions
-        input_ws = input_ws * mask_tensor
-        target_tensor = target_tensor * mask_tensor
+        if(self.mask_enabled):
+            input_ws = input_ws * mask_tensor
+            target_tensor = target_tensor * mask_tensor
+        else:
+            input_ws = torch.cat([input_ws, mask_tensor], 1)
 
         accum_batch_size = self.load_size * iteration
 
@@ -209,12 +213,11 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             input_ws_inv = input_map["rgb_ws_inv"] * torchvision.transforms.functional.invert(mask_tensor)
 
             # target only the shadow regions
-            input_ws = input_ws * mask_tensor
+            if (self.mask_enabled):
+                input_ws = input_ws * mask_tensor
+            else:
+                input_ws = torch.cat([input_ws, mask_tensor], 1)
 
-
-            # if ("shadow_map" in input_map):
-            #     rgb2sm = input_map["shadow_map"]
-            # else:
             if(self.is_end2end == False):
                 rgb2sm = self.G_SM_predictor(input_ws)
                 rgb2ns = self.shadow_op.remove_rgb_shadow(input_ws, rgb2sm, True)

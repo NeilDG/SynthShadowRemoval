@@ -97,7 +97,7 @@ def train_shadow(tf, device, opts):
     patch_size = general_config[mode]["patch_size"]
     dataset_version = network_config["dataset_version"]
 
-    assert dataset_version == "v8" or dataset_version == "v15" or dataset_version == "v16", "Cannot identify dataset version."
+    assert dataset_version == "v17", "Cannot identify dataset version."
     rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
     rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
 
@@ -151,14 +151,15 @@ def train_shadow(tf, device, opts):
                     input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_mask" : rgb2mask}
                     tf.visdom_visualize(mode, input_map, "Test Synthetic")
 
-                    _, rgb_ws, rgb_ns, _ = next(itertools.cycle(test_loader_istd))
+                    _, rgb_ws, rgb_ns, mask_istd = next(itertools.cycle(test_loader_istd))
                     rgb_ws = rgb_ws.to(device)
                     rgb_ns = rgb_ns.to(device)
+                    mask_istd = mask_istd.to(device)
 
                     input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
-                    rgb2mask = shadow_p.test(input_map)
+                    # rgb2mask = shadow_p.test(input_map)
 
-                    input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_mask" : rgb2mask}
+                    input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_mask" : mask_istd}
                     tf.visdom_visualize(mode, input_map, "Test ISTD")
 
         if (tf.is_stop_condition_met(mode)):
@@ -175,7 +176,7 @@ def train_shadow_mask(tf, device, opts):
     patch_size = general_config[mode]["patch_size"]
     dataset_version = network_config["dataset_version"]
 
-    assert dataset_version == "v8" or dataset_version == "v15" or dataset_version == "v16", "Cannot identify dataset version."
+    assert dataset_version == "v17", "Cannot identify dataset version."
     rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
     rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
 

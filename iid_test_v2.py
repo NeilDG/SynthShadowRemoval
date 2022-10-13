@@ -350,12 +350,12 @@ class TesterClass():
 
     #for ISTD
     def test_istd_shadow(self, file_name, rgb_ws, rgb_ns, shadow_mask, show_images, save_image_results, debug_policy, opts):
-        ### NOTE: ISTD-NS (No Shadows) image already has a different lighting!!! This isn't reported in the dataset. Use ISTD-NS as the unmasked region to avoid bias in results.
+        ### NOTE: ISTD-NS (No Shadows) image already has a different lighting!!! This isn't reported in the dataset. Consider using ISTD-NS as the unmasked region to avoid bias in results.
         ### MAE discrepancy vs ISTD-WS is at 11.055!
 
         if(debug_policy == 1): #test shadow removal
             # input_map = {"rgb": rgb_ns, "rgb_ns" : rgb_ns,  "shadow_mask": shadow_mask}
-            input_map = {"rgb": rgb_ns, "shadow_mask": shadow_mask}
+            input_map = {"rgb": rgb_ws, "rgb_ws_inv": rgb_ws, "shadow_mask": shadow_mask}
             rgb2mask = shadow_mask
             rgb2ns, rgb2sm = self.shadow_t.test(input_map)
 
