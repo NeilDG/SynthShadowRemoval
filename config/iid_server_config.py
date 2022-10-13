@@ -209,7 +209,7 @@ class IIDServerConfig():
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
 
-        elif (constants.network_version == "v50.05"):
+        elif (constants.network_version == "v50.06"):
             network_config[SYNTH_DATASET_VERSION] = "v8"
             network_config[WEIGHT_DECAY_KEY] = 0.0
             network_config[DROPOUT_KEY] = False
@@ -233,7 +233,7 @@ class IIDServerConfig():
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
 
-        elif (constants.network_version == "v50.06"):
+        elif (constants.network_version == "v50.07"):
             network_config[SYNTH_DATASET_VERSION] = "v8"
             network_config[WEIGHT_DECAY_KEY] = 0.01
             network_config[DROPOUT_KEY] = True
