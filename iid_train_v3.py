@@ -53,8 +53,9 @@ def update_config(opts):
         constants.rgb_dir_ws = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
         constants.rgb_dir_ns = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
         constants.DATASET_PLACES_PATH = "/home/jupyter-neil.delgallego/Places Dataset/*.jpg"
-        constants.ws_istd = constants.DATASET_PLACES_PATH
-        constants.ns_istd = constants.DATASET_PLACES_PATH
+        constants.ws_istd = "/home/jupyter-neil.delgallego/ISTD_Dataset/test/test_A/*.png"
+        constants.ns_istd = "/home/jupyter-neil.delgallego/ISTD_Dataset/test/test_C/*.png"
+        constants.mask_istd = "/home/jupyter-neil.delgallego/ISTD_Dataset/test/test_B/*.png"
 
         print("Using CCS configuration. Workers: ", opts.num_workers)
 
