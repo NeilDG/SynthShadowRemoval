@@ -49,7 +49,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.batch_size = network_config["batch_size_z"]
         self.is_end2end = network_config["is_end2end"]
 
-        self.stopper_method = early_stopper.EarlyStopper(general_config["train_shadow"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, constants.early_stop_threshold, 99999.9)
+        self.stopper_method = early_stopper.EarlyStopper(general_config["train_shadow"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, 1500, 99999.9)
         self.stop_result = False
 
         self.initialize_dict()
