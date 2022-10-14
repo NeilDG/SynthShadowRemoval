@@ -55,9 +55,6 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.initialize_dict()
         self.initialize_shadow_network(network_config["net_config"], network_config["num_blocks"], network_config["nc"])
 
-        #TODO: temporarily switch to SGD for observation
-        # self.optimizerG = torch.optim.SGD(itertools.chain(self.G_SM_predictor.parameters()), lr=self.g_lr, momentum=0.9, weight_decay=network_config["weight_decay"])
-        # self.optimizerD = torch.optim.SGD(itertools.chain(self.D_SM_discriminator.parameters()), lr=self.d_lr, momentum=0.9, weight_decay=network_config["weight_decay"])
         self.optimizerG = torch.optim.Adam(itertools.chain(self.G_SM_predictor.parameters()), lr=self.g_lr, weight_decay=network_config["weight_decay"])
         self.optimizerD = torch.optim.Adam(itertools.chain(self.D_SM_discriminator.parameters()), lr=self.d_lr, weight_decay=network_config["weight_decay"])
         self.schedulerG = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG, patience=1000000 / self.batch_size, threshold=0.00005)
