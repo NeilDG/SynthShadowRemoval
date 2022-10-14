@@ -123,6 +123,9 @@ class IIDServerConfig():
             network_config[NETWORK_CONFIG_NUM] = 4 #FFA-Net cannot handle >3 channels
             network_config[NUM_BLOCKS_KEY] = 3
 
+        elif (constants.network_version == "v53.01"):
+            network_config[SYNTH_DATASET_VERSION] = "v14"
+
 
         return network_config
 

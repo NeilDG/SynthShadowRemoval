@@ -146,7 +146,7 @@ def main(argv):
 
     dataset_version = network_config["dataset_version"]
 
-    assert dataset_version == "v17", "Cannot identify dataset version."
+    # assert dataset_version == "v17", "Cannot identify dataset version."
     rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
     rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
 
