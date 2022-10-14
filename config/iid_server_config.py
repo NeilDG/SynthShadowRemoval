@@ -64,6 +64,8 @@ class IIDServerConfig():
         SYNTH_DATASET_VERSION = "dataset_version"
         WEIGHT_DECAY_KEY = "weight_decay"
         DROPOUT_KEY = "use_dropout"
+        AUGMENT_KEY = "augment_mode"
+
         TRAIN_MODE_KEY = "train_mode" #0 = end2end, 1 = end2end with masking, 2 = by shadow map, 3 = end2end. mask + input concat
 
         #set defaults
@@ -74,6 +76,7 @@ class IIDServerConfig():
         network_config[WEIGHT_DECAY_KEY] = 0.0
         network_config[DROPOUT_KEY] = False
         network_config[TRAIN_MODE_KEY] = 1
+        network_config[AUGMENT_KEY] = "none"
 
         # configure load sizes (GPU memory allocation of data) #for 128
         if (constants.server_config == 1):  # COARE
@@ -125,6 +128,13 @@ class IIDServerConfig():
 
         elif (constants.network_version == "v53.01"):
             network_config[SYNTH_DATASET_VERSION] = "v14"
+
+        elif (constants.network_version == "v53.02"):
+            network_config[SYNTH_DATASET_VERSION] = "v14"
+            network_config[AUGMENT_KEY] = "augmix"
+            network_config[DROPOUT_KEY] = True
+            network_config[WEIGHT_DECAY_KEY] = 0.01
+
 
 
         return network_config

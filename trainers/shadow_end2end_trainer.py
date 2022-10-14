@@ -49,7 +49,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.batch_size = network_config["batch_size_z"]
         self.train_mode = network_config["train_mode"]
 
-        self.stopper_method = early_stopper.EarlyStopper(general_config["train_shadow"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, 1500, 99999.9)
+        self.stopper_method = early_stopper.EarlyStopper(general_config["train_shadow"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, 3000, 99999.9)
         self.stop_result = False
 
         self.initialize_dict()
@@ -116,6 +116,18 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.caption_dict_s[constants.D_A_FAKE_LOSS_KEY] = "D fake loss per iteration"
         self.caption_dict_s[constants.D_A_REAL_LOSS_KEY] = "D real loss per iteration"
         self.caption_dict_s[self.MASK_LOSS_KEY] = "Mask loss per iteration"
+
+        # what to store in visdom?
+        self.losses_dict_t = {}
+
+        self.TRAIN_LOSS_KEY = "TRAIN_LOSS_KEY"
+        self.losses_dict_t[self.TRAIN_LOSS_KEY] = []
+        self.TEST_LOSS_KEY = "TEST_LOSS_KEY"
+        self.losses_dict_t[self.TEST_LOSS_KEY] = []
+
+        self.caption_dict_t = {}
+        self.caption_dict_t[self.TRAIN_LOSS_KEY] = "Train L1 loss per iteration"
+        self.caption_dict_t[self.TEST_LOSS_KEY] = "Test L1 loss per iteration"
 
     def train(self, epoch, iteration, input_map, target_map):
         input_ws = input_map["rgb"]
@@ -185,13 +197,19 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_SM_real_loss.item())
                 self.losses_dict_s[self.MASK_LOSS_KEY].append(SM_masking_loss.item())
 
-            rgb2ns, _ = self.test_istd(input_map)
-            istd_ns_test = input_map["rgb_ns_istd"]
-            self.stopper_method.register_metric(rgb2ns, istd_ns_test, epoch)
-            self.stop_result = self.stopper_method.test(epoch)
+                #perform validation test and early stopping
+                rgb2ns_istd, _ = self.test_istd(input_map)
+                istd_ns_test = input_map["rgb_ns_istd"]
+                self.stopper_method.register_metric(rgb2ns_istd, istd_ns_test, epoch)
+                self.stop_result = self.stopper_method.test(epoch)
 
-            if (self.stopper_method.has_reset()):
-                self.save_states(epoch, iteration, False)
+                if (self.stopper_method.has_reset()):
+                    self.save_states(epoch, iteration, False)
+
+                #plot train-test loss
+                rgb2ns, _ = self.test(input_map)
+                self.losses_dict_t[self.TRAIN_LOSS_KEY].append(self.l1_loss(rgb2ns, target_tensor).item())
+                self.losses_dict_t[self.TEST_LOSS_KEY].append(self.l1_loss(rgb2ns_istd, istd_ns_test).item())
 
     def is_stop_condition_met(self):
         return self.stop_result
@@ -238,6 +256,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def visdom_plot(self, iteration):
         self.visdom_reporter.plot_finegrain_loss("a2b_loss_a", iteration, self.losses_dict_s, self.caption_dict_s, self.NETWORK_CHECKPATH)
+        self.visdom_reporter.plot_train_test_loss("train_test_loss", iteration, self.losses_dict_t, self.caption_dict_t, self.NETWORK_CHECKPATH)
 
     def visdom_visualize(self, input_map, label="Train"):
         input_ws = input_map["rgb"]
