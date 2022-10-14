@@ -55,6 +55,9 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.initialize_dict()
         self.initialize_shadow_network(network_config["net_config"], network_config["num_blocks"], network_config["nc"])
 
+        #TODO: temporarily switch to SGD for observation
+        # self.optimizerG = torch.optim.SGD(itertools.chain(self.G_SM_predictor.parameters()), lr=self.g_lr, momentum=0.9, weight_decay=network_config["weight_decay"])
+        # self.optimizerD = torch.optim.SGD(itertools.chain(self.D_SM_discriminator.parameters()), lr=self.d_lr, momentum=0.9, weight_decay=network_config["weight_decay"])
         self.optimizerG = torch.optim.Adam(itertools.chain(self.G_SM_predictor.parameters()), lr=self.g_lr, weight_decay=network_config["weight_decay"])
         self.optimizerD = torch.optim.Adam(itertools.chain(self.D_SM_discriminator.parameters()), lr=self.d_lr, weight_decay=network_config["weight_decay"])
         self.schedulerG = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG, patience=1000000 / self.batch_size, threshold=0.00005)
@@ -300,28 +303,28 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             self.G_SM_predictor.load_state_dict(checkpoint[constants.GENERATOR_KEY + "Z"])
             self.D_SM_discriminator.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "Z"])
 
-            self.optimizerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "Z"])
-            self.optimizerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "Z"])
-            self.schedulerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler" + "Z"])
-            self.schedulerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler" + "Z"])
+            # self.optimizerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "Z"])
+            # self.optimizerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "Z"])
+            # self.schedulerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler" + "Z"])
+            # self.schedulerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler" + "Z"])
 
     def save_states(self, epoch, iteration, is_temp:bool):
         save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
         netGNS_state_dict = self.G_SM_predictor.state_dict()
         netDNS_state_dict = self.D_SM_discriminator.state_dict()
 
-        optimizerGshading_state_dict = self.optimizerG.state_dict()
-        optimizerDshading_state_dict = self.optimizerD.state_dict()
-        schedulerGshading_state_dict = self.schedulerG.state_dict()
-        schedulerDshading_state_dict = self.schedulerD.state_dict()
+        # optimizerGshading_state_dict = self.optimizerG.state_dict()
+        # optimizerDshading_state_dict = self.optimizerD.state_dict()
+        # schedulerGshading_state_dict = self.schedulerG.state_dict()
+        # schedulerDshading_state_dict = self.schedulerD.state_dict()
 
         save_dict[constants.GENERATOR_KEY + "Z"] = netGNS_state_dict
         save_dict[constants.DISCRIMINATOR_KEY + "Z"] = netDNS_state_dict
 
-        save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "Z"] = optimizerGshading_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "Z"] = optimizerDshading_state_dict
-        save_dict[constants.GENERATOR_KEY + "scheduler" + "Z"] = schedulerGshading_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "scheduler" + "Z"] = schedulerDshading_state_dict
+        # save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "Z"] = optimizerGshading_state_dict
+        # save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "Z"] = optimizerDshading_state_dict
+        # save_dict[constants.GENERATOR_KEY + "scheduler" + "Z"] = schedulerGshading_state_dict
+        # save_dict[constants.DISCRIMINATOR_KEY + "scheduler" + "Z"] = schedulerDshading_state_dict
 
         if (is_temp):
             torch.save(save_dict, self.NETWORK_CHECKPATH + ".checkpt")

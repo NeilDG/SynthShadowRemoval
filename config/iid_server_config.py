@@ -135,6 +135,24 @@ class IIDServerConfig():
             network_config[DROPOUT_KEY] = True
             network_config[WEIGHT_DECAY_KEY] = 0.01
 
+        elif (constants.network_version == "v53.03"):
+            network_config[SYNTH_DATASET_VERSION] = "v14"
+            network_config[AUGMENT_KEY] = "augmix"
+            network_config[DROPOUT_KEY] = False
+            network_config[WEIGHT_DECAY_KEY] = 0.0
+
+        elif (constants.network_version == "v53.04"):
+            network_config[SYNTH_DATASET_VERSION] = "v14"
+            network_config[AUGMENT_KEY] = "trivial_augment_wide"
+            network_config[DROPOUT_KEY] = True
+            network_config[WEIGHT_DECAY_KEY] = 0.01
+
+        elif (constants.network_version == "v53.05"):
+            network_config[SYNTH_DATASET_VERSION] = "v14"
+            network_config[AUGMENT_KEY] = "trivial_augment_wide"
+            network_config[DROPOUT_KEY] = False
+            network_config[WEIGHT_DECAY_KEY] = 0.0
+
 
 
         return network_config

@@ -155,7 +155,7 @@ def main(argv):
     #SHADOW dataset test
     #Using train dataset
     print(rgb_dir_ws, rgb_dir_ns)
-    shadow_loader = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, constants.ws_istd, constants.ns_istd, 256, 8, opts)
+    shadow_loader = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, 256, opts)
     for i, (file_name, rgb_ws, rgb_ns, shadow_map, shadow_mask) in enumerate(shadow_loader, 0):
         rgb_ws = rgb_ws.to(device)
         rgb_ns = rgb_ns.to(device)
