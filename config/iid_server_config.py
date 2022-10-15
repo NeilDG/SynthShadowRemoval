@@ -19,7 +19,7 @@ class IIDServerConfig():
         if(constants.server_config <= 5):
             self.general_configs = {"train_style_transfer" : {"min_epochs" : 5, "max_epochs" : 25},
                                     "train_shadow_mask": {"min_epochs": 2, "max_epochs" : 15, "patch_size": 128},
-                                    "train_shadow": {"min_epochs": 3 ,"max_epochs" : 80, "patch_size": 128},
+                                    "train_shadow": {"min_epochs": 20 ,"max_epochs" : 80, "patch_size": 128},
                                     "train_shadow_refine": {"min_epochs": 30,"max_epochs" : 80, "patch_size": 128}}
         #debug
         if(constants.debug_run == 1):
@@ -197,8 +197,6 @@ class IIDServerConfig():
             network_config[WEIGHT_DECAY_KEY] = 0.01
             network_config[NUM_BLOCKS_KEY] = 6
             network_config[NETWORK_CONFIG_NUM] = 4
-            network_config[NUM_BLOCKS_KEY] = 6
-
 
             network_config[LOAD_SIZE_KEY_Z] = 48
             # configure batch size. NOTE: Batch size must be equal or larger than load size

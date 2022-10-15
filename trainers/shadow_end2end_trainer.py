@@ -144,6 +144,9 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         elif(self.train_mode == 3):
             input_ws = torch.cat([input_ws, mask_tensor], 1)
             target_tensor = target_map["rgb_ns"]
+        elif(self.train_mode == 4):
+            input_ws = torch.cat([input_ws, mask_tensor], 1)
+            target_tensor = target_map["shadow_map"]
 
         assert self.train_mode <= 3, "Could not identify train mode."
 
