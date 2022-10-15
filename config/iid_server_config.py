@@ -231,9 +231,12 @@ class IIDServerConfig():
             elif (constants.server_config == 3):  # GCLOUD
                 network_config[LOAD_SIZE_KEY_Z] = 16
             elif (constants.server_config == 4):  # RTX 2080Ti
-                network_config[LOAD_SIZE_KEY_Z] = 16
+                network_config[LOAD_SIZE_KEY_Z] = 32
             else:  # RTX 3090
                 network_config[LOAD_SIZE_KEY_Z] = 32
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
 
 
 
