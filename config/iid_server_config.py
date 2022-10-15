@@ -191,6 +191,7 @@ class IIDServerConfig():
 
         elif (constants.network_version == "v55.04"):
             network_config[SYNTH_DATASET_VERSION] = "v18"
+            network_config[TRAIN_MODE_KEY] = 2
             network_config[AUGMENT_KEY] = "trivial_augment_wide"
             # network_config[DROPOUT_KEY] = True
             network_config[WEIGHT_DECAY_KEY] = 0.01
