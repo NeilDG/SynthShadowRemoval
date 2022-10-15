@@ -177,6 +177,64 @@ class IIDServerConfig():
             network_config[DROPOUT_KEY] = False
             network_config[WEIGHT_DECAY_KEY] = 0.0
 
+        elif (constants.network_version == "v55.02"):
+            network_config[SYNTH_DATASET_VERSION] = "v18"
+            network_config[AUGMENT_KEY] = "augmix"
+            network_config[DROPOUT_KEY] = True
+            network_config[WEIGHT_DECAY_KEY] = 0.01
+
+        elif (constants.network_version == "v55.03"):
+            network_config[SYNTH_DATASET_VERSION] = "v18"
+            network_config[AUGMENT_KEY] = "augmix"
+            network_config[DROPOUT_KEY] = False
+            network_config[WEIGHT_DECAY_KEY] = 0.0
+
+        elif (constants.network_version == "v55.04"):
+            network_config[SYNTH_DATASET_VERSION] = "v18"
+            network_config[AUGMENT_KEY] = "trivial_augment_wide"
+            network_config[DROPOUT_KEY] = True
+            network_config[WEIGHT_DECAY_KEY] = 0.01
+            network_config[NUM_BLOCKS_KEY] = 6
+            network_config[NETWORK_CONFIG_NUM] = 4
+            network_config[NUM_BLOCKS_KEY] = 3
+
+        elif (constants.network_version == "v55.05"):
+            network_config[SYNTH_DATASET_VERSION] = "v18"
+            network_config[AUGMENT_KEY] = "trivial_augment_wide"
+            network_config[DROPOUT_KEY] = False
+            network_config[WEIGHT_DECAY_KEY] = 0.0
+            network_config[NETWORK_CONFIG_NUM] = 4
+            network_config[NUM_BLOCKS_KEY] = 3
+
+        elif (constants.network_version == "v56.04"):
+            network_config[SYNTH_DATASET_VERSION] = "v17"
+            network_config[AUGMENT_KEY] = "trivial_augment_wide"
+            network_config[DROPOUT_KEY] = True
+            network_config[WEIGHT_DECAY_KEY] = 0.01
+            network_config[NUM_BLOCKS_KEY] = 6
+            network_config[LOAD_SIZE_KEY_Z] = 32
+
+        elif (constants.network_version == "v56.06"):
+            network_config[SYNTH_DATASET_VERSION] = "v17"
+            network_config[AUGMENT_KEY] = "trivial_augment_wide"
+            network_config[DROPOUT_KEY] = True
+            network_config[WEIGHT_DECAY_KEY] = 0.01
+            network_config[NETWORK_CONFIG_NUM] = 4
+            network_config[NUM_BLOCKS_KEY] = 6
+            network_config[LOAD_SIZE_KEY_Z] = 32
+
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_Z] = 64
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_Z] = 96
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_Z] = 16
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_Z] = 16
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_Z] = 32
+
 
 
         return network_config

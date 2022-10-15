@@ -77,9 +77,10 @@ export XDG_RUNTIME_DIR=/scratch1/scratch2/neil.delgallego/Visdom/
 saliksik.asti.dost.gov.ph:8097
 
 //CCS SERVER-JUPYTERHUB
-git clone -b "workspace/V50.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "NeuralNets-GenerativeExperiment-V50.XX.XX"
+git clone -b "workspace/V51.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "NeuralNets-GenerativeExperiment-V51.XX.XX"
 git switch "workspace/V44.XX.XX"
-cd NeuralNets-GenerativeExperiment-V50.XX.XX
+cd NeuralNets-GenerativeExperiment-V51.XX.XX
+mkdir "NeuralNets-GenerativeExperiment-V51.XX.XX/checkpoint"
 python "ccs1_main.py"
 python "ccs2_main.py"
 

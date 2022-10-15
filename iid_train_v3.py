@@ -226,11 +226,12 @@ def train_shadow_mask(tf, device, opts):
                     input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
                     tf.visdom_visualize(mode, input_map, "Test Synthetic")
 
-                    _, rgb_ws, rgb_ns, _ = test_data
+                    _, rgb_ws, rgb_ns, mask_istd = test_data
                     rgb_ws = rgb_ws.to(device)
                     rgb_ns = rgb_ns.to(device)
+                    mask_istd = mask_istd.to(device)
 
-                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
+                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_mask" : mask_istd}
                     tf.visdom_visualize(mode, input_map, "Test ISTD")
 
         if (tf.is_stop_condition_met(mode)):
