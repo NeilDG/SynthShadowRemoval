@@ -120,12 +120,12 @@ def train_shadow(tf, device, opts):
             shadow_map = shadow_map.to(device)
             shadow_mask = shadow_mask.to(device)
 
-            _, rgb_ws_istd, _, mask_istd = test_data
+            _, rgb_ws_istd, rgb_ns_istd, _ = test_data
             rgb_ws_istd = rgb_ws_istd.to(device)
-            mask_istd = mask_istd.to(device)
+            rgb_ns_istd = rgb_ns_istd.to(device)
 
             input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_map" : shadow_map, "shadow_mask": shadow_mask,
-                         "rgb_ws_istd" : rgb_ws_istd, "rgb_ns_istd" : rgb_ws_istd, "mask_istd" : mask_istd}
+                         "rgb_ws_istd" : rgb_ws_istd, "rgb_ns_istd" : rgb_ns_istd}
             target_map = input_map
 
             tf.train(mode, epoch, iteration, input_map, target_map)
