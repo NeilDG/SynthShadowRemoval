@@ -260,7 +260,7 @@ def main(argv):
     tf = trainer_factory.TrainerFactory(device, opts)
     tf.initialize_all_trainers(opts)
 
-    train_shadow_mask(tf, device, opts)
+    # train_shadow_mask(tf, device, opts)
     train_shadow(tf, device, opts)
 
     #Train shadow refine
