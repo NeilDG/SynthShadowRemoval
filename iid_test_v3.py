@@ -139,11 +139,11 @@ def main(argv):
     # opts.iteration = iteration_z
     sc_instance.update_version_config()
     tf = trainer_factory.TrainerFactory(device, opts)
-    shadow_p = tf.get_shadow_mask_trainer()
+    # shadow_p = tf.get_shadow_mask_trainer()
     shadow_t = tf.get_shadow_trainer()
     shadow_rt = tf.get_shadow_refine_trainer()
 
-    dataset_tester = TesterClass(shadow_p, shadow_t, shadow_rt)
+    dataset_tester = TesterClass(None, shadow_t, shadow_rt)
 
     dataset_version = network_config["dataset_version"]
 
@@ -155,15 +155,19 @@ def main(argv):
 
     #SHADOW dataset test
     #Using train dataset
+    #TODO: PLACEHOLDER
+    rgb_dir_ws = "E:/ISTD_Dataset/test/test_A/*.png"
+    rgb_dir_ns = "E:/ISTD_Dataset/test/test_C/*.png"
+
     print(rgb_dir_ws, rgb_dir_ns)
     shadow_loader = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, 256, opts)
-    for i, (file_name, rgb_ws, rgb_ns, shadow_map, shadow_mask) in enumerate(shadow_loader, 0):
+    for i, (file_name, rgb_ws, rgb_ns, shadow_matte, gamma_beta) in enumerate(shadow_loader, 0):
         rgb_ws = rgb_ws.to(device)
         rgb_ns = rgb_ns.to(device)
-        shadow_map = shadow_map.to(device)
-        shadow_mask = shadow_mask.to(device)
+        shadow_matte = shadow_matte.to(device)
+        gamma_beta = gamma_beta.to(device)
 
-        dataset_tester.test_shadow(rgb_ws, rgb_ns, shadow_map, shadow_mask, "Train", opts.img_vis_enabled, 1, opts)
+        dataset_tester.test_shadow(rgb_ws, rgb_ns, shadow_matte, gamma_beta, "Train", opts.img_vis_enabled, opts)
         if (i % 16 == 0):
             break
 
@@ -176,7 +180,7 @@ def main(argv):
         rgb_ns_tensor = rgb_ns.to(device)
         shadow_mask = shadow_mask.to(device)
 
-        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_mask, opts.img_vis_enabled, 1, 1,  opts)
+        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_mask, opts.img_vis_enabled, 1, opts)
         # break
 
     dataset_tester.print_ave_shadow_performance("ISTD", opts)

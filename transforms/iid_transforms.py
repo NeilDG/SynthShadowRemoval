@@ -155,13 +155,6 @@ class IIDTransform(nn.Module):
         relit_ws = torch.clip(relit_ws, min, max)
         return relit_ws
 
-    def extract_relit_batch(self, rgb_ws, gamma, beta):
-        relit_ws = torch.zeros_like(rgb_ws)
-        for i in range(np.shape(rgb_ws)[0]):
-            relit_ws[i] = self.extract_relit(rgb_ws[i], gamma[i], beta[i])
-
-        return relit_ws
-
     def add_shadow(self, rgb_ns, shadow_matte, gamma, beta):
         # min = torch.min(rgb_ws)
         # max = torch.max(rgb_ws)

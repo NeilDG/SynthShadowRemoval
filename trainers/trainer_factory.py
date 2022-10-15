@@ -9,8 +9,8 @@ from trainers import early_stopper
 from trainers.shadow_mask_trainer import ShadowMaskTrainer
 from trainers.albedo_trainer import AlbedoTrainer
 from trainers.shading_trainer import ShadingTrainer
-# from trainers.shadow_trainer import ShadowTrainer
-from trainers.shadow_end2end_trainer import ShadowTrainer
+from trainers.shadow_trainer import ShadowTrainer
+# from trainers.shadow_end2end_trainer import ShadowTrainer
 from trainers.shadow_refinement_trainer import ShadowRefinementTrainer
 import torch
 
@@ -30,9 +30,9 @@ class TrainerFactory():
         # self.trainer_list["train_albedo_mask"] = AlbedoMaskTrainer(self.gpu_device, opts)
         # self.trainer_list["train_albedo"] = AlbedoTrainer(self.gpu_device, opts)
         # self.trainer_list["train_shading"] = ShadingTrainer(self.gpu_device, opts)
-        self.trainer_list["train_shadow_mask"] = ShadowMaskTrainer(self.gpu_device, opts)
+        # self.trainer_list["train_shadow_mask"] = ShadowMaskTrainer(self.gpu_device, opts)
         self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device, opts)
-        self.trainer_list["train_shadow_refine"] = ShadowRefinementTrainer(self.gpu_device, opts)
+        # self.trainer_list["train_shadow_refine"] = ShadowRefinementTrainer(self.gpu_device, opts)
 
         # self.initialize_da_network(self.network_config["da_version_name"])
         # self.initialize_unlit_network(self.network_config["unlit_version_name"])
@@ -59,12 +59,12 @@ class TrainerFactory():
     #         self.trainer_list["train_shading"] = ShadingTrainer(self.gpu_device, self.opts)
     #         return self.trainer_list["train_shading"]
 
-    def get_shadow_mask_trainer(self):
-        if ("train_shadow_mask" in self.trainer_list):
-            return self.trainer_list["train_shadow_mask"]
-        else:
-            self.trainer_list["train_shadow_mask"] = ShadowMaskTrainer(self.gpu_device, self.opts)
-            return self.trainer_list["train_shadow_mask"]
+    # def get_shadow_mask_trainer(self):
+    #     if ("train_shadow_mask" in self.trainer_list):
+    #         return self.trainer_list["train_shadow_mask"]
+    #     else:
+    #         self.trainer_list["train_shadow_mask"] = ShadowMaskTrainer(self.gpu_device, self.opts)
+    #         return self.trainer_list["train_shadow_mask"]
 
     def get_shadow_trainer(self):
         if ("train_shadow" in self.trainer_list):

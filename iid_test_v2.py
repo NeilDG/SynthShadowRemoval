@@ -310,46 +310,25 @@ class TesterClass():
 
         self.visdom_reporter.plot_text(display_text)
 
-    def test_shadow(self, rgb_ws, rgb_ns, shadow_map, shadow_mask, prefix, show_images, debug_policy, opts):
-        # rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
-        # rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
-
-        if (debug_policy == 1):  # test shadow removal
-            input_map = {"rgb": rgb_ws, "rgb_ws_inv": rgb_ws, "shadow_map" : shadow_map, "shadow_mask": shadow_mask}
-            rgb2mask = shadow_mask
-            rgb2ns, rgb2sm = self.shadow_t.test(input_map)
-
-        elif (debug_policy == 2):  # test shadow mask
-            input_map = {"rgb": rgb_ws}
-            rgb2mask = self.shadow_p.test(input_map)
-
-            input_ws_inv = input_map["rgb"] * torchvision.transforms.functional.invert(shadow_mask)
-            rgb2ns = rgb_ns * rgb2mask
-            rgb2ns = rgb2ns + input_ws_inv
-
-            rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
-            rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
-            rgb2sm = None
-
-        else:
-            input_map = {"rgb": rgb_ws}
-            rgb2mask = self.shadow_p.test(input_map)
-
-            input_map = {"rgb": rgb_ws, "rgb_ws_inv": rgb_ws, "shadow_mask": rgb2mask}
-            rgb2ns, rgb2sm = self.shadow_t.test(input_map)
+    def test_shadow(self, rgb_ws, rgb_ns, shadow_matte, gamma_beta_val, prefix, show_images, opts):
+        input_map = {"rgb_ws": rgb_ws, "shadow_matte" : shadow_matte, "gamma_beta_val" : gamma_beta_val}
+        rgb2ns, rgb2sm, _ = self.shadow_t.test(input_map)
+        # input_map = {"rgb" : rgb_ws, "shadow_map": rgb2sm}
+        # rgb2ns = self.shadow_rt.test(input_map)
 
         # normalize everything
         rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
         rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
+        shadow_matte = tensor_utils.normalize_to_01(shadow_matte)
 
         if(show_images == 1):
             self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + opts.version + str(opts.iteration))
-            self.visdom_reporter.plot_image(rgb2mask, "WS Shadow Region Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb_ns, prefix + " NS Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb2ns, prefix + " NS (equation) Images - " + opts.version + str(opts.iteration))
 
             if(rgb2sm != None):
                 self.visdom_reporter.plot_image(rgb2sm, prefix + " Shadow Matte-Like - " + opts.version + str(opts.iteration))
+            self.visdom_reporter.plot_image(shadow_matte, prefix + " Shadow Matte - " + opts.version + str(opts.iteration))
 
         psnr_rgb = np.round(kornia.metrics.psnr(rgb2ns, rgb_ns, max_val=1.0).item(), 4)
         ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb2ns, rgb_ns, 5).item(), 4)
@@ -362,34 +341,12 @@ class TesterClass():
         self.mae_list_rgb.append(mae_rgb)
 
     #for ISTD
-    def test_istd_shadow(self, file_name, rgb_ws, rgb_ns, shadow_mask, show_images, save_image_results, debug_policy, opts):
+    def test_istd_shadow(self, file_name, rgb_ws, rgb_ns, shadow_matte, show_images, save_image_results, opts):
         ### NOTE: ISTD-NS (No Shadows) image already has a different lighting!!! This isn't reported in the dataset. Consider using ISTD-NS as the unmasked region to avoid bias in results.
         ### MAE discrepancy vs ISTD-WS is at 11.055!
 
-        if (debug_policy == 1):  # test shadow removal
-            # input_map = {"rgb": rgb_ns, "rgb_ns" : rgb_ns,  "shadow_mask": shadow_mask}
-            input_map = {"rgb": rgb_ws, "rgb_ws_inv": rgb_ws, "shadow_mask": shadow_mask}
-            rgb2mask = shadow_mask
-            rgb2ns, rgb2sm = self.shadow_t.test(input_map)
-
-        elif (debug_policy == 2):  # test shadow mask
-            input_map = {"rgb": rgb_ws}
-            rgb2mask = self.shadow_p.test(input_map)
-
-            input_ws_inv = input_map["rgb"] * torchvision.transforms.functional.invert(shadow_mask)
-            rgb2ns = rgb_ns * rgb2mask
-            rgb2ns = rgb2ns + input_ws_inv
-
-            rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
-            rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
-            rgb2sm = None
-
-        else:
-            input_map = {"rgb": rgb_ws}
-            rgb2mask = self.shadow_p.test(input_map)
-
-            input_map = {"rgb": rgb_ws, "rgb_ws_inv": rgb_ws, "shadow_mask": rgb2mask}
-            rgb2ns, rgb2sm = self.shadow_t.test(input_map)
+        input_map = {"rgb_ws": rgb_ws}
+        rgb2ns, rgb2sm, _ = self.shadow_t.test(input_map)
 
         # normalize everything
         rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
@@ -397,19 +354,18 @@ class TesterClass():
 
         if(show_images == 1):
             self.visdom_reporter.plot_image(rgb_ws, "ISTD WS Images - " + opts.version + str(opts.iteration))
-            self.visdom_reporter.plot_image(rgb2mask, "ISTD Shadow Region Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb_ns, "ISTD NS Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb2ns, "ISTD NS (equation) Images - " + opts.version + str(opts.iteration))
             if (rgb2sm != None):
                 self.visdom_reporter.plot_image(rgb2sm, "ISTD Shadow Matte-Like - " + opts.version + str(opts.iteration))
-            # self.visdom_reporter.plot_image(rgb2relit, "ISTD Relit-Like Images - " + opts.version + str(opts.iteration))
+            self.visdom_reporter.plot_image(shadow_matte, "ISTD Shadow Matte - " + opts.version + str(opts.iteration))
 
         if(save_image_results == 1):
             path = "./comparison/ISTD Dataset/OURS/"
             for i in range(0, np.size(file_name)):
                 impath = path + file_name[i] + ".png"
                 torchvision.utils.save_image(rgb2ns[i], impath)
-                print("Saving ISTD result as: ", file_name[i])
+                # print("Saving ISTD result as: ", file_name[i])
 
 
         psnr_rgb = np.round(kornia.metrics.psnr(rgb2ns, rgb_ns, max_val=1.0).item(), 4)
