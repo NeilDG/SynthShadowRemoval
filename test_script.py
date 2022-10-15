@@ -4,22 +4,28 @@ import os
 
 def test_relighting():
     # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-    #           "--plot_enabled=1 --img_vis_enabled=1 --version=\"v48.05\" --iteration=1")
-
-    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-    #           "--plot_enabled=1 --img_vis_enabled=1 --version=\"v50.01\" --iteration=1")
+    #           "--plot_enabled=1 --img_vis_enabled=1 --version=\"v51.01\" --iteration=1")
     #
     # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-    #           "--plot_enabled=1 --img_vis_enabled=1 --version=\"v50.02\" --iteration=1")
+    #           "--plot_enabled=1 --img_vis_enabled=1 --version=\"v51.01\" --iteration=1")
+
+    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+    #           "--plot_enabled=1 --img_vis_enabled=1 --version=\"v51.01\" --iteration=1")
+    #
+    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+    #           "--plot_enabled=1 --img_vis_enabled=1 --version=\"v51.02\" --iteration=1")
+
+    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+    #           "--plot_enabled=1 --img_vis_enabled=1 --version=\"v51.03\" --iteration=1")
 
     os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-              "--plot_enabled=1 --img_vis_enabled=1 --version=\"v50.03\" --iteration=6")
+              "--plot_enabled=1 --img_vis_enabled=1 --version=\"v55.04\" --iteration=1")
 
     # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-    #           "--plot_enabled=1 --img_vis_enabled=1 --version=\"v50.03\" --iteration=1")
+    #           "--plot_enabled=1 --img_vis_enabled=1 --version=\"v56.04\" --iteration=1")
     #
     # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-    #           "--plot_enabled=1 --img_vis_enabled=1 --version=\"v50.04\" --iteration=1")
+    #           "--plot_enabled=1 --img_vis_enabled=1 --version=\"v56.05\" --iteration=1")
 
 def main():
     # os.system("python \"processing/dataset_creator.py\"")

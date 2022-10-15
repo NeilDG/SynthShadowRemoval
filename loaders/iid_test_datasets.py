@@ -146,21 +146,27 @@ class ShadowTrainDataset(data.Dataset):
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         network_config = sc_instance.interpret_network_config_from_version()
 
-        # if(self.jitter_enabled):
-        #     self.initial_op = transforms.Compose([
-        #         transforms.ToPILImage(),
-        #         transforms.Resize(constants.TEST_IMAGE_SIZE),
-        #         transforms.RandomHorizontalFlip(0.5),
-        #         transforms.RandomVerticalFlip(0.5),
-        #         transforms.ColorJitter(brightness=[0.5, 1.75], contrast=[0.5, 1.75]),
-        #         transforms.ToTensor()])
-        # else:
-        self.initial_op = transforms.Compose([
-            transforms.ToPILImage(),
-            transforms.Resize(constants.TEST_IMAGE_SIZE),
-            transforms.RandomHorizontalFlip(0.5),
-            transforms.RandomVerticalFlip(0.5),
-            transforms.ToTensor()])
+        if (network_config["augment_mode"] == "augmix" and self.transform_config == 1):
+            self.initial_op = transforms.Compose([
+                transforms.ToPILImage(),
+                transforms.Resize(constants.TEST_IMAGE_SIZE),
+                transforms.RandomHorizontalFlip(0.5),
+                transforms.RandomVerticalFlip(0.5),
+                transforms.AugMix(),
+                transforms.ToTensor()])
+        elif (network_config["augment_mode"] == "trivial_augment_wide" and self.transform_config == 1):
+            self.initial_op = transforms.Compose([
+                transforms.ToPILImage(),
+                transforms.Resize(constants.TEST_IMAGE_SIZE),
+                transforms.RandomHorizontalFlip(0.5),
+                transforms.RandomVerticalFlip(0.5),
+                transforms.TrivialAugmentWide(),
+                transforms.ToTensor()])
+        else:
+            self.initial_op = transforms.Compose([
+                transforms.ToPILImage(),
+                transforms.Resize(constants.TEST_IMAGE_SIZE),
+                transforms.ToTensor()])
 
     def __getitem__(self, idx):
         file_name = self.img_list_a[idx].split("/")[-1].split(".png")[0]
@@ -259,11 +265,10 @@ class ShadowISTDDataset(data.Dataset):
         return self.img_length
 
 class ShadowTestDataset(data.Dataset):
-    def __init__(self, img_length, img_list_a, img_list_b, transform_config, patch_size = 0):
+    def __init__(self, img_length, img_list_a, img_list_b, patch_size = 0):
         self.img_length = img_length
         self.img_list_a = img_list_a
         self.img_list_b = img_list_b
-        self.transform_config = transform_config
         self.patch_size = (patch_size, patch_size)
 
         self.initial_op = transforms.Compose([
@@ -288,14 +293,6 @@ class ShadowTestDataset(data.Dataset):
             rgb_ns = cv2.cvtColor(rgb_ns, cv2.COLOR_BGR2RGB)
             rgb_ns = self.initial_op(rgb_ns)
             rgb_ns = self.final_transform_op(rgb_ns)
-
-            if (self.transform_config == 1):
-                crop_indices = transforms.RandomCrop.get_params(rgb_ws, output_size=self.patch_size)
-                i, j, h, w = crop_indices
-
-                rgb_ws = transforms.functional.crop(rgb_ws, i, j, h, w)
-                rgb_ns = transforms.functional.crop(rgb_ns, i, j, h, w)
-
 
         except:
             print("Failed to load: ", self.img_list_a[idx], self.img_list_b[idx])

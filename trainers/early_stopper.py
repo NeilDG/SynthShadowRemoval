@@ -51,11 +51,11 @@ class EarlyStopper():
         if(epoch < self.min_epochs):
             self.test_metric_list.clear()
             self.stop_counter = -1
-            return
+            return False
 
         if(len(self.test_metric_list) == 0):
             print("No registered metric. Register a metric first.")
-            return
+            return False
 
         with torch.no_grad(), amp.autocast():
             ave_D_loss = 0.0

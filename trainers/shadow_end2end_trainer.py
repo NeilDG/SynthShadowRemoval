@@ -47,9 +47,9 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         self.load_size = network_config["load_size_z"]
         self.batch_size = network_config["batch_size_z"]
-        self.is_end2end = network_config["is_end2end"]
+        self.train_mode = network_config["train_mode"]
 
-        self.stopper_method = early_stopper.EarlyStopper(general_config["train_shadow"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, constants.early_stop_threshold, 99999.9)
+        self.stopper_method = early_stopper.EarlyStopper(general_config["train_shadow"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, 3000, 99999.9)
         self.stop_result = False
 
         self.initialize_dict()
@@ -67,6 +67,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def initialize_shadow_network(self, net_config, num_blocks, input_nc):
         network_creator = abstract_iid_trainer.NetworkCreator(self.gpu_device)
         self.G_SM_predictor, self.D_SM_discriminator = network_creator.initialize_rgb_network(net_config, num_blocks, input_nc)  # shadow map (Shadow - Shadow-Free)
+
     def adversarial_loss(self, pred, target):
         if (self.use_bce == 0):
             return self.mse_loss(pred, target)
@@ -116,18 +117,35 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.caption_dict_s[constants.D_A_REAL_LOSS_KEY] = "D real loss per iteration"
         self.caption_dict_s[self.MASK_LOSS_KEY] = "Mask loss per iteration"
 
+        # what to store in visdom?
+        self.losses_dict_t = {}
+
+        self.TRAIN_LOSS_KEY = "TRAIN_LOSS_KEY"
+        self.losses_dict_t[self.TRAIN_LOSS_KEY] = []
+        self.TEST_LOSS_KEY = "TEST_LOSS_KEY"
+        self.losses_dict_t[self.TEST_LOSS_KEY] = []
+
+        self.caption_dict_t = {}
+        self.caption_dict_t[self.TRAIN_LOSS_KEY] = "Train L1 loss per iteration"
+        self.caption_dict_t[self.TEST_LOSS_KEY] = "Test L1 loss per iteration"
+
     def train(self, epoch, iteration, input_map, target_map):
         input_ws = input_map["rgb"]
         mask_tensor = target_map["shadow_mask"]
 
-        if(self.is_end2end): #use RGB_NS if end2end training
+        if(self.train_mode == 0):
             target_tensor = target_map["rgb_ns"]
-        else:
+        elif(self.train_mode == 1):
+            target_tensor = target_map["rgb_ns"]
+            input_ws = input_ws * mask_tensor
+            target_tensor = target_tensor * mask_tensor
+        elif(self.train_mode == 2):
             target_tensor = target_map["shadow_map"]
+        elif(self.train_mode == 3):
+            input_ws = torch.cat([input_ws, mask_tensor], 1)
+            target_tensor = target_map["rgb_ns"]
 
-        # target only the shadow regions
-        input_ws = input_ws * mask_tensor
-        target_tensor = target_tensor * mask_tensor
+        assert self.train_mode <= 3, "Could not identify train mode."
 
         accum_batch_size = self.load_size * iteration
 
@@ -179,18 +197,19 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_SM_real_loss.item())
                 self.losses_dict_s[self.MASK_LOSS_KEY].append(SM_masking_loss.item())
 
-            rgb2ns, rgb2sm = self.test_istd(input_map)
-            if(self.is_end2end == True):
-                comparison = rgb2ns
-            else:
-                comparison = rgb2sm
+                #perform validation test and early stopping
+                rgb2ns_istd, _ = self.test_istd(input_map)
+                istd_ns_test = input_map["rgb_ns_istd"]
+                self.stopper_method.register_metric(rgb2ns_istd, istd_ns_test, epoch)
+                self.stop_result = self.stopper_method.test(epoch)
 
-            istd_ns_test = input_map["rgb_ns_istd"]
-            self.stopper_method.register_metric(comparison, istd_ns_test, epoch)
-            self.stop_result = self.stopper_method.test(epoch)
+                if (self.stopper_method.has_reset()):
+                    self.save_states(epoch, iteration, False)
 
-            if (self.stopper_method.has_reset()):
-                self.save_states(epoch, iteration, False)
+                #plot train-test loss
+                rgb2ns, _ = self.test(input_map)
+                self.losses_dict_t[self.TRAIN_LOSS_KEY].append(self.l1_loss(rgb2ns, target_tensor).item())
+                self.losses_dict_t[self.TEST_LOSS_KEY].append(self.l1_loss(rgb2ns_istd, istd_ns_test).item())
 
     def is_stop_condition_met(self):
         return self.stop_result
@@ -208,16 +227,18 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             mask_tensor = input_map["shadow_mask"]
             input_ws_inv = input_map["rgb_ws_inv"] * torchvision.transforms.functional.invert(mask_tensor)
 
-            # target only the shadow regions
-            input_ws = input_ws * mask_tensor
+            if (self.train_mode == 1):
+                input_ws = input_ws * mask_tensor
+            elif (self.train_mode == 3):
+                input_ws = torch.cat([input_ws, mask_tensor], 1)
 
-
-            # if ("shadow_map" in input_map):
-            #     rgb2sm = input_map["shadow_map"]
-            # else:
-            if(self.is_end2end == False):
+            if(self.train_mode == 2):
+                # if("shadow_map" in input_map):
+                #     rgb2sm = input_map["shadow_map"]
+                # else:
                 rgb2sm = self.G_SM_predictor(input_ws)
-                rgb2ns = self.shadow_op.remove_rgb_shadow(input_ws, rgb2sm, True)
+                rgb2ns = self.shadow_op.remove_rgb_shadow(input_map["rgb"], rgb2sm, True)
+                rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
             else:
                 # if("rgb_ns" in input_map):
                 #     rgb2ns = input_map["rgb_ns"] * mask_tensor
@@ -235,6 +256,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def visdom_plot(self, iteration):
         self.visdom_reporter.plot_finegrain_loss("a2b_loss_a", iteration, self.losses_dict_s, self.caption_dict_s, self.NETWORK_CHECKPATH)
+        self.visdom_reporter.plot_train_test_loss("train_test_loss", iteration, self.losses_dict_t, self.caption_dict_t, self.NETWORK_CHECKPATH)
 
     def visdom_visualize(self, input_map, label="Train"):
         input_ws = input_map["rgb"]
@@ -242,14 +264,15 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         rgb2ns, rgb2sm = self.test(input_map)
 
         self.visdom_reporter.plot_image(input_ws, str(label) + " RGB (With Shadows) Images - " + self.NETWORK_VERSION + str(self.iteration))
-        self.visdom_reporter.plot_image(mask_tensor, str(label) + " Shadow Region Images - " + self.NETWORK_VERSION + str(self.iteration))
 
-        if(self.is_end2end == False):
+        if(self.train_mode == 2):
             self.visdom_reporter.plot_image(rgb2sm, str(label) + " RGB2SM images - " + self.NETWORK_VERSION + str(self.iteration))
             if("shadow_map" in input_map):
                 shadow_map_tensor = input_map["shadow_map"]
                 shadow_map_tensor = tensor_utils.normalize_to_01(shadow_map_tensor)
                 self.visdom_reporter.plot_image(shadow_map_tensor, str(label) + " RGB Shadow Map images - " + self.NETWORK_VERSION + str(self.iteration))
+        else:
+            self.visdom_reporter.plot_image(mask_tensor, str(label) + " Shadow Region Images - " + self.NETWORK_VERSION + str(self.iteration))
 
         self.visdom_reporter.plot_image(rgb2ns, str(label) + " RGB (No Shadows-Like) images - " + self.NETWORK_VERSION + str(self.iteration))
         if("rgb_ns" in input_map):
@@ -277,28 +300,28 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             self.G_SM_predictor.load_state_dict(checkpoint[constants.GENERATOR_KEY + "Z"])
             self.D_SM_discriminator.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "Z"])
 
-            self.optimizerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "Z"])
-            self.optimizerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "Z"])
-            self.schedulerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler" + "Z"])
-            self.schedulerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler" + "Z"])
+            # self.optimizerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "Z"])
+            # self.optimizerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "Z"])
+            # self.schedulerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler" + "Z"])
+            # self.schedulerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler" + "Z"])
 
     def save_states(self, epoch, iteration, is_temp:bool):
         save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
         netGNS_state_dict = self.G_SM_predictor.state_dict()
         netDNS_state_dict = self.D_SM_discriminator.state_dict()
 
-        optimizerGshading_state_dict = self.optimizerG.state_dict()
-        optimizerDshading_state_dict = self.optimizerD.state_dict()
-        schedulerGshading_state_dict = self.schedulerG.state_dict()
-        schedulerDshading_state_dict = self.schedulerD.state_dict()
+        # optimizerGshading_state_dict = self.optimizerG.state_dict()
+        # optimizerDshading_state_dict = self.optimizerD.state_dict()
+        # schedulerGshading_state_dict = self.schedulerG.state_dict()
+        # schedulerDshading_state_dict = self.schedulerD.state_dict()
 
         save_dict[constants.GENERATOR_KEY + "Z"] = netGNS_state_dict
         save_dict[constants.DISCRIMINATOR_KEY + "Z"] = netDNS_state_dict
 
-        save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "Z"] = optimizerGshading_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "Z"] = optimizerDshading_state_dict
-        save_dict[constants.GENERATOR_KEY + "scheduler" + "Z"] = schedulerGshading_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "scheduler" + "Z"] = schedulerDshading_state_dict
+        # save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY + "Z"] = optimizerGshading_state_dict
+        # save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY + "Z"] = optimizerDshading_state_dict
+        # save_dict[constants.GENERATOR_KEY + "scheduler" + "Z"] = schedulerGshading_state_dict
+        # save_dict[constants.DISCRIMINATOR_KEY + "scheduler" + "Z"] = schedulerDshading_state_dict
 
         if (is_temp):
             torch.save(save_dict, self.NETWORK_CHECKPATH + ".checkpt")

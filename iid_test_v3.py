@@ -83,6 +83,7 @@ def update_config(opts):
         constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
         constants.ws_istd = "C:/Datasets/ISTD_Dataset/test/test_A/*.png"
         constants.ns_istd = "C:/Datasets/ISTD_Dataset/test/test_C/*.png"
+        constants.mask_istd = "C:/Datasets/ISTD_Dataset/test/test_B/*.png"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers)
     else:
@@ -146,7 +147,7 @@ def main(argv):
 
     dataset_version = network_config["dataset_version"]
 
-    assert dataset_version == "v8" or dataset_version == "v15" or dataset_version == "v16", "Cannot identify dataset version."
+    # assert dataset_version == "v17", "Cannot identify dataset version."
     rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
     rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
 
@@ -155,14 +156,14 @@ def main(argv):
     #SHADOW dataset test
     #Using train dataset
     print(rgb_dir_ws, rgb_dir_ns)
-    shadow_loader = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, constants.ws_istd, constants.ns_istd, 256, 8, opts)
+    shadow_loader = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, 256, opts)
     for i, (file_name, rgb_ws, rgb_ns, shadow_map, shadow_mask) in enumerate(shadow_loader, 0):
         rgb_ws = rgb_ws.to(device)
         rgb_ns = rgb_ns.to(device)
         shadow_map = shadow_map.to(device)
         shadow_mask = shadow_mask.to(device)
 
-        dataset_tester.test_shadow(rgb_ws, rgb_ns, shadow_map, shadow_mask, "Train",  refine_enabled, opts.img_vis_enabled, opts)
+        dataset_tester.test_shadow(rgb_ws, rgb_ns, shadow_map, shadow_mask, "Train", opts.img_vis_enabled, 1, opts)
         if (i % 16 == 0):
             break
 
@@ -175,7 +176,7 @@ def main(argv):
         rgb_ns_tensor = rgb_ns.to(device)
         shadow_mask = shadow_mask.to(device)
 
-        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_mask, opts.img_vis_enabled, 1, 0,  opts)
+        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_mask, opts.img_vis_enabled, 1, 1,  opts)
         # break
 
     dataset_tester.print_ave_shadow_performance("ISTD", opts)

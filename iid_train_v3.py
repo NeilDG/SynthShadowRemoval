@@ -53,8 +53,9 @@ def update_config(opts):
         constants.rgb_dir_ws = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
         constants.rgb_dir_ns = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
         constants.DATASET_PLACES_PATH = "/home/jupyter-neil.delgallego/Places Dataset/*.jpg"
-        constants.ws_istd = constants.DATASET_PLACES_PATH
-        constants.ns_istd = constants.DATASET_PLACES_PATH
+        constants.ws_istd = "/home/jupyter-neil.delgallego/ISTD_Dataset/test/test_A/*.png"
+        constants.ns_istd = "/home/jupyter-neil.delgallego/ISTD_Dataset/test/test_C/*.png"
+        constants.mask_istd = "/home/jupyter-neil.delgallego/ISTD_Dataset/test/test_B/*.png"
 
         print("Using CCS configuration. Workers: ", opts.num_workers)
 
@@ -96,7 +97,7 @@ def train_shadow(tf, device, opts):
     patch_size = general_config[mode]["patch_size"]
     dataset_version = network_config["dataset_version"]
 
-    assert dataset_version == "v8" or dataset_version == "v15" or dataset_version == "v16", "Cannot identify dataset version."
+    # assert dataset_version == "v17", "Cannot identify dataset version."
     rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
     rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
 
@@ -104,8 +105,8 @@ def train_shadow(tf, device, opts):
 
     load_size = network_config["load_size_z"]
 
-    train_loader = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, constants.ws_istd, constants.ns_istd, patch_size, load_size, opts)
-    test_loader_train = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
+    train_loader = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, patch_size, load_size, opts)
+    # test_loader_train = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
     test_loader_istd = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, load_size, opts)
 
     iteration = 0
@@ -113,16 +114,17 @@ def train_shadow(tf, device, opts):
     print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
     for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
         for i, (train_data, test_data) in enumerate(zip(train_loader, itertools.cycle(test_loader_istd))):
-            _, rgb_ws, rgb_ns, _, shadow_mask = train_data
+            _, rgb_ws, rgb_ns, shadow_map, shadow_mask = train_data
             rgb_ws = rgb_ws.to(device)
             rgb_ns = rgb_ns.to(device)
+            shadow_map = shadow_map.to(device)
             shadow_mask = shadow_mask.to(device)
 
             _, rgb_ws_istd, _, mask_istd = test_data
             rgb_ws_istd = rgb_ws_istd.to(device)
             mask_istd = mask_istd.to(device)
 
-            input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_mask": shadow_mask,
+            input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_map" : shadow_map, "shadow_mask": shadow_mask,
                          "rgb_ws_istd" : rgb_ws_istd, "rgb_ns_istd" : rgb_ws_istd, "mask_istd" : mask_istd}
             target_map = input_map
 
@@ -139,25 +141,27 @@ def train_shadow(tf, device, opts):
                     tf.visdom_plot(mode, iteration)
                     tf.visdom_visualize(mode, input_map, "Train")
 
-                    _, rgb_ws, rgb_ns = next(itertools.cycle(test_loader_train))
+                    # Temporarily disable visualization of test synth data.
+                    # _, rgb_ws, rgb_ns = next(itertools.cycle(test_loader_train))
+                    # rgb_ws = rgb_ws.to(device)
+                    # rgb_ns = rgb_ns.to(device)
+                    #
+                    # shadow_p = tf.get_shadow_mask_trainer()
+                    # input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
+                    # rgb2mask = shadow_p.test(input_map)
+                    #
+                    # input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_map" : shadow_map, "shadow_mask" : rgb2mask}
+                    # tf.visdom_visualize(mode, input_map, "Test Synthetic")
+
+                    _, rgb_ws, rgb_ns, mask_istd = next(itertools.cycle(test_loader_istd))
                     rgb_ws = rgb_ws.to(device)
                     rgb_ns = rgb_ns.to(device)
-
-                    shadow_p = tf.get_shadow_mask_trainer()
-                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
-                    rgb2mask = shadow_p.test(input_map)
-
-                    input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_mask" : rgb2mask}
-                    tf.visdom_visualize(mode, input_map, "Test Synthetic")
-
-                    _, rgb_ws, rgb_ns, _ = next(itertools.cycle(test_loader_istd))
-                    rgb_ws = rgb_ws.to(device)
-                    rgb_ns = rgb_ns.to(device)
+                    mask_istd = mask_istd.to(device)
 
                     input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
-                    rgb2mask = shadow_p.test(input_map)
+                    # rgb2mask = shadow_p.test(input_map)
 
-                    input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_mask" : rgb2mask}
+                    input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_mask" : mask_istd}
                     tf.visdom_visualize(mode, input_map, "Test ISTD")
 
         if (tf.is_stop_condition_met(mode)):
@@ -174,7 +178,7 @@ def train_shadow_mask(tf, device, opts):
     patch_size = general_config[mode]["patch_size"]
     dataset_version = network_config["dataset_version"]
 
-    assert dataset_version == "v8" or dataset_version == "v15" or dataset_version == "v16", "Cannot identify dataset version."
+    assert dataset_version == "v17", "Cannot identify dataset version."
     rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
     rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
 
@@ -222,11 +226,12 @@ def train_shadow_mask(tf, device, opts):
                     input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
                     tf.visdom_visualize(mode, input_map, "Test Synthetic")
 
-                    _, rgb_ws, rgb_ns, _ = test_data
+                    _, rgb_ws, rgb_ns, mask_istd = test_data
                     rgb_ws = rgb_ws.to(device)
                     rgb_ns = rgb_ns.to(device)
+                    mask_istd = mask_istd.to(device)
 
-                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
+                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_mask" : mask_istd}
                     tf.visdom_visualize(mode, input_map, "Test ISTD")
 
         if (tf.is_stop_condition_met(mode)):
@@ -259,7 +264,7 @@ def main(argv):
     tf = trainer_factory.TrainerFactory(device, opts)
     tf.initialize_all_trainers(opts)
 
-    train_shadow_mask(tf, device, opts)
+    # train_shadow_mask(tf, device, opts)
     train_shadow(tf, device, opts)
 
     #Train shadow refine
