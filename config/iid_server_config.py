@@ -19,7 +19,7 @@ class IIDServerConfig():
         if(constants.server_config <= 5):
             self.general_configs = {"train_style_transfer" : {"min_epochs" : 5, "max_epochs" : 25},
                                     "train_shadow_mask": {"min_epochs": 2, "max_epochs" : 15, "patch_size": 128},
-                                    "train_shadow": {"min_epochs": 3 ,"max_epochs" : 80, "patch_size": 128},
+                                    "train_shadow": {"min_epochs": 20 ,"max_epochs" : 80, "patch_size": 128},
                                     "train_shadow_refine": {"min_epochs": 30,"max_epochs" : 80, "patch_size": 128}}
         #debug
         if(constants.debug_run == 1):
@@ -191,12 +191,16 @@ class IIDServerConfig():
 
         elif (constants.network_version == "v55.04"):
             network_config[SYNTH_DATASET_VERSION] = "v18"
+            network_config[TRAIN_MODE_KEY] = 2
             network_config[AUGMENT_KEY] = "trivial_augment_wide"
-            network_config[DROPOUT_KEY] = True
+            # network_config[DROPOUT_KEY] = True
             network_config[WEIGHT_DECAY_KEY] = 0.01
             network_config[NUM_BLOCKS_KEY] = 6
             network_config[NETWORK_CONFIG_NUM] = 4
-            network_config[NUM_BLOCKS_KEY] = 3
+
+            network_config[LOAD_SIZE_KEY_Z] = 48
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
 
         elif (constants.network_version == "v55.05"):
             network_config[SYNTH_DATASET_VERSION] = "v18"
@@ -233,7 +237,7 @@ class IIDServerConfig():
             elif (constants.server_config == 4):  # RTX 2080Ti
                 network_config[LOAD_SIZE_KEY_Z] = 32
             else:  # RTX 3090
-                network_config[LOAD_SIZE_KEY_Z] = 32
+                network_config[LOAD_SIZE_KEY_Z] = 64
 
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
