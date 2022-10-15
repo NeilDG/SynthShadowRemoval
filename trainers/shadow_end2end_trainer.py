@@ -242,6 +242,15 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 rgb2sm = self.G_SM_predictor(input_ws)
                 rgb2ns = self.shadow_op.remove_rgb_shadow(input_map["rgb"], rgb2sm, True)
                 rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
+            elif(self.train_mode == 3):
+                rgb2ns = self.G_SM_predictor(input_ws) * mask_tensor
+                rgb2ns = rgb2ns + input_ws_inv
+
+                rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
+                rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
+
+                rgb2sm = None
+
             else:
                 # if("rgb_ns" in input_map):
                 #     rgb2ns = input_map["rgb_ns"] * mask_tensor

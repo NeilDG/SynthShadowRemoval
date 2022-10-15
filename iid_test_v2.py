@@ -409,7 +409,7 @@ class TesterClass():
             for i in range(0, np.size(file_name)):
                 impath = path + file_name[i] + ".png"
                 torchvision.utils.save_image(rgb2ns[i], impath)
-                print("Saving ISTD result as: ", file_name[i])
+                # print("Saving ISTD result as: ", file_name[i])
 
 
         psnr_rgb = np.round(kornia.metrics.psnr(rgb2ns, rgb_ns, max_val=1.0).item(), 4)
