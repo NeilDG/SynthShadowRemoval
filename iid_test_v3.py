@@ -83,6 +83,7 @@ def update_config(opts):
         constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
         constants.ws_istd = "C:/Datasets/ISTD_Dataset/test/test_A/*.png"
         constants.ns_istd = "C:/Datasets/ISTD_Dataset/test/test_C/*.png"
+        constants.mask_istd = "C:/Datasets/ISTD_Dataset/test/test_B/*.png"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers)
     else:
