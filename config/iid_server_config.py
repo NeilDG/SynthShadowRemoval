@@ -67,7 +67,7 @@ class IIDServerConfig():
         AUGMENT_KEY = "augment_mode"
 
         TRAIN_MODE_KEY = "train_mode" #0 = end2end, 1 = end2end with masking, 2 = by shadow map, 3 = end2end. mask + input concat
-        # 4 = by shadow map. mask + input concat
+        # 4 = end2end. matte + input concat
 
         #set defaults
         network_config[NETWORK_CONFIG_NUM] = 5
@@ -286,6 +286,13 @@ class IIDServerConfig():
         elif (constants.network_version == "v56.11"):
             network_config[SYNTH_DATASET_VERSION] = "v19"
             network_config[TRAIN_MODE_KEY] = 3
+            network_config[NETWORK_CONFIG_NUM] = 6
+            network_config[NUM_BLOCKS_KEY] = 6
+            network_config[LOAD_SIZE_KEY_Z] = 32
+
+        elif (constants.network_version == "v56.12"):
+            network_config[SYNTH_DATASET_VERSION] = "v19"
+            network_config[TRAIN_MODE_KEY] = 4
             network_config[NETWORK_CONFIG_NUM] = 6
             network_config[NUM_BLOCKS_KEY] = 6
             network_config[LOAD_SIZE_KEY_Z] = 32

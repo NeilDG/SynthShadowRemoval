@@ -131,7 +131,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def train(self, epoch, iteration, input_map, target_map):
         input_ws = input_map["rgb"]
-        mask_tensor = target_map["shadow_mask"]
+        mask_tensor = input_map["shadow_mask"]
+        matte_tensor = input_map["shadow_matte"]
 
         if(self.train_mode == 0):
             target_tensor = target_map["rgb_ns"]
@@ -145,10 +146,13 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             input_ws = torch.cat([input_ws, mask_tensor], 1)
             target_tensor = target_map["rgb_ns"]
         elif(self.train_mode == 4):
+            input_ws = torch.cat([input_ws, matte_tensor], 1)
+            target_tensor = target_map["rgb_ns"]
+        elif(self.train_mode == 5):
             input_ws = torch.cat([input_ws, mask_tensor], 1)
             target_tensor = target_map["shadow_map"]
 
-        assert self.train_mode <= 3, "Could not identify train mode."
+        assert self.train_mode > 5, "Could not identify train mode."
 
         accum_batch_size = self.load_size * iteration
 
@@ -228,12 +232,15 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         with torch.no_grad():
             input_ws = input_map["rgb"]
             mask_tensor = input_map["shadow_mask"]
+            matte_tensor = input_map["shadow_matte"]
             input_ws_inv = input_map["rgb_ws_inv"] * torchvision.transforms.functional.invert(mask_tensor)
 
             if (self.train_mode == 1):
                 input_ws = input_ws * mask_tensor
             elif (self.train_mode == 3):
                 input_ws = torch.cat([input_ws, mask_tensor], 1)
+            elif (self.train_mode == 4):
+                input_ws = torch.cat([input_ws, matte_tensor], 1)
 
             if(self.train_mode == 2):
                 # if("shadow_map" in input_map):
@@ -244,6 +251,15 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
             elif(self.train_mode == 3):
                 rgb2ns = self.G_SM_predictor(input_ws) * mask_tensor
+                rgb2ns = rgb2ns + input_ws_inv
+
+                rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
+                rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
+
+                rgb2sm = None
+
+            elif(self.train_mode == 4):
+                rgb2ns = self.G_SM_predictor(input_ws) * matte_tensor
                 rgb2ns = rgb2ns + input_ws_inv
 
                 rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
@@ -273,6 +289,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def visdom_visualize(self, input_map, label="Train"):
         input_ws = input_map["rgb"]
         mask_tensor = input_map["shadow_mask"]
+        matte_tensor = input_map["shadow_matte"]
         rgb2ns, rgb2sm = self.test(input_map)
 
         self.visdom_reporter.plot_image(input_ws, str(label) + " RGB (With Shadows) Images - " + self.NETWORK_VERSION + str(self.iteration))
@@ -283,8 +300,10 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 shadow_map_tensor = input_map["shadow_map"]
                 shadow_map_tensor = tensor_utils.normalize_to_01(shadow_map_tensor)
                 self.visdom_reporter.plot_image(shadow_map_tensor, str(label) + " RGB Shadow Map images - " + self.NETWORK_VERSION + str(self.iteration))
-        else:
-            self.visdom_reporter.plot_image(mask_tensor, str(label) + " Shadow Region Images - " + self.NETWORK_VERSION + str(self.iteration))
+        elif(self.train_mode == 3):
+            self.visdom_reporter.plot_image(mask_tensor, str(label) + " Shadow Mask Images - " + self.NETWORK_VERSION + str(self.iteration))
+        elif(self.train_mode == 4):
+            self.visdom_reporter.plot_image(matte_tensor, str(label) + " Shadow Matte Images - " + self.NETWORK_VERSION + str(self.iteration))
 
         self.visdom_reporter.plot_image(rgb2ns, str(label) + " RGB (No Shadows-Like) images - " + self.NETWORK_VERSION + str(self.iteration))
         if("rgb_ns" in input_map):
