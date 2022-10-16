@@ -194,7 +194,7 @@ class ShadowTrainDataset(data.Dataset):
             rgb_ws = self.norm_op(rgb_ws)
             rgb_ns = self.norm_op(rgb_ns)
             shadow_map = self.norm_op(shadow_map)
-            shadow_matte = self.norm_op(shadow_matte)
+            # shadow_matte = self.norm_op(shadow_matte)
 
             # print("Shadow map range: ", torch.min(shadow_map), torch.max(shadow_map))
             # print("Loaded pairing: ", self.img_list_a[idx], self.img_list_b[idx])
@@ -253,6 +253,7 @@ class ShadowISTDDataset(data.Dataset):
 
             rgb_ws = self.norm_op(rgb_ws)
             rgb_ns = self.norm_op(rgb_ns)
+            # shadow_matte = self.norm_op(shadow_matte)
 
             # print("Shadow map range: ", torch.min(shadow_map), torch.max(shadow_map))
             # print("Loaded pairing: ", self.img_list_a[idx], self.img_list_b[idx])

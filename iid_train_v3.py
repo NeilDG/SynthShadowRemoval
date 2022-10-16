@@ -163,7 +163,7 @@ def train_shadow(tf, device, opts):
                     # input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
                     # rgb2mask = shadow_p.test(input_map)
 
-                    input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_mask" : mask_istd, "shadow_matte" : matte_istd}
+                    input_map = {"rgb": rgb_ws_istd, "rgb_ws_inv" : rgb_ws_istd, "rgb_ns": rgb_ns_istd, "shadow_mask" : mask_istd, "shadow_matte" : matte_istd}
                     tf.visdom_visualize(mode, input_map, "Test ISTD")
 
         if (tf.is_stop_condition_met(mode)):

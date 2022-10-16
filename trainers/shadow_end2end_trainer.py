@@ -152,7 +152,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             input_ws = torch.cat([input_ws, mask_tensor], 1)
             target_tensor = target_map["shadow_map"]
 
-        assert self.train_mode > 5, "Could not identify train mode."
+        assert self.train_mode <= 5, "Could not identify train mode."
 
         accum_batch_size = self.load_size * iteration
 
@@ -225,7 +225,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         # print("Testing on ISTD dataset.")
         input_map_new = {"rgb" : input_map["rgb_ws_istd"],
                          "rgb_ws_inv" : input_map["rgb_ws_istd"],
-                         "shadow_mask" : input_map["mask_istd"]}
+                         "shadow_mask" : input_map["mask_istd"],
+                         "shadow_matte" : input_map["matte_istd"]}
         return self.test(input_map_new)
 
     def test(self, input_map):
@@ -233,7 +234,11 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             input_ws = input_map["rgb"]
             mask_tensor = input_map["shadow_mask"]
             matte_tensor = input_map["shadow_matte"]
-            input_ws_inv = input_map["rgb_ws_inv"] * torchvision.transforms.functional.invert(mask_tensor)
+
+            if(self.train_mode == 3):
+                input_ws_inv = input_map["rgb_ws_inv"] * torchvision.transforms.functional.invert(mask_tensor)
+            elif(self.train_mode == 4):
+                input_ws_inv = input_map["rgb_ws_inv"] * torchvision.transforms.functional.invert(matte_tensor)
 
             if (self.train_mode == 1):
                 input_ws = input_ws * mask_tensor
@@ -259,8 +264,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 rgb2sm = None
 
             elif(self.train_mode == 4):
-                rgb2ns = self.G_SM_predictor(input_ws) * matte_tensor
-                rgb2ns = rgb2ns + input_ws_inv
+                rgb2ns = self.G_SM_predictor(input_ws)
+                # rgb2ns = rgb2ns + input_ws_inv
 
                 rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
                 rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
