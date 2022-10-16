@@ -64,7 +64,11 @@ def update_config(opts):
         opts.num_workers = 8
         print("Using GCloud configuration. Workers: ", opts.num_workers)
         constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/*.jpg"
-        constants.rgb_dir_ws_styled = "/home/neil_delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.rgb_dir_ws = "/home/neil_delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
+        constants.rgb_dir_ns = "/home/neil_delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
+        constants.ws_istd = "/home/neil_delgallego/ISTD_Dataset/test/test_A/*.png"
+        constants.ns_istd = "/home/neil_delgallego/ISTD_Dataset/test/test_C/*.png"
+        constants.mask_istd = "/home/neil_delgallego/ISTD_Dataset/test/test_B/*.png"
 
     elif (constants.server_config == 4):
         opts.num_workers = 6
