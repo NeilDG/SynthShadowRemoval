@@ -85,7 +85,7 @@ class IIDServerConfig():
         elif (constants.server_config == 2):  # CCS JUPYTER
             network_config[LOAD_SIZE_KEY_Z] = 96
         elif (constants.server_config == 3):  # GCLOUD
-            network_config[LOAD_SIZE_KEY_Z] = 16
+            network_config[LOAD_SIZE_KEY_Z] = 48
         elif (constants.server_config == 4):  # RTX 2080Ti
             network_config[LOAD_SIZE_KEY_Z] = 32
         else:  # RTX 3090
