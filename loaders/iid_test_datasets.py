@@ -246,9 +246,9 @@ class ShadowISTDDataset(data.Dataset):
             shadow_mask = cv2.cvtColor(shadow_mask, cv2.COLOR_BGR2GRAY)
             shadow_mask = self.initial_op(shadow_mask)
 
-            # shadow_tensor = rgb_ns - rgb_ws
+            shadow_map = rgb_ns - rgb_ws
             # shadow_gray = kornia.color.rgb_to_grayscale(shadow_tensor)
-            # shadow_gray = self.initial_op(1.0 - shadow_gray)
+            shadow_map = self.initial_op(1.0 - shadow_map)
 
             rgb_ws = self.norm_op(rgb_ws)
             rgb_ns = self.norm_op(rgb_ns)
