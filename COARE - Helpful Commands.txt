@@ -84,7 +84,7 @@ mkdir "NeuralNets-GenerativeExperiment-V51.XX.XX/checkpoint"
 python "ccs1_main.py"
 python "ccs2_main.py"
 
-rm -rf NeuralNets-GenerativeExperiment-V46.XX.XX
+rm -rf NeuralNets-GenerativeExperiment-V51.XX.XX
 
 zip -r "checkpoints.zip" "rgb2albedo_v9.01_7.pt" "rgb2albedo_v9.01_8.pt" "rgb2albedo_v9.01_9.pt" "rgb2albedo_v9.01_10.pt" "rgb2albedo_v9.01_11.pt" "rgb2albedo_v9.01_12.pt" "rgb2albedo_v9.01_13.pt" "rgb2albedo_v9.01_14.pt" \
 "rgb2mask_v9.01_7.pt" "rgb2mask_v9.01_8.pt" "rgb2mask_v9.01_9.pt" "rgb2mask_v9.01_10.pt" "rgb2mask_v9.01_11.pt" "rgb2mask_v9.01_12.pt" "rgb2mask_v9.01_13.pt" "rgb2mask_v9.01_14.pt" \
@@ -99,7 +99,8 @@ mv "SynthWeather Dataset 10/v8/rgb/rgb/ShadowDatasetScene" "SynthWeather Dataset
 //GCLOUD
 screen -S "MODEL_TRAINER"
 screen -R "MODEL_TRAINER"
-python "gcloud_main.py"
+python "gcloud1_main.py"
+python "gcloud2_main.py"
 
 screen -S "VISDOM_PROCESS"
 screen -R "VISDOM_PROCESS"

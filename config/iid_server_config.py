@@ -299,6 +299,28 @@ class IIDServerConfig():
             network_config[NUM_BLOCKS_KEY] = 3
             network_config[LOAD_SIZE_KEY_Z] = 64
 
+        elif (constants.network_version == "v56.13"):
+            network_config[SYNTH_DATASET_VERSION] = "v17"
+            network_config[TRAIN_MODE_KEY] = 4
+            network_config[NETWORK_CONFIG_NUM] = 4
+            network_config[NC_KEY] = 4
+            network_config[NUM_BLOCKS_KEY] = 3
+
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_Z] = 128
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_Z] = 256
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_Z] = 128
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_Z] = 64
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_Z] = 128
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
+
 
 
         return network_config

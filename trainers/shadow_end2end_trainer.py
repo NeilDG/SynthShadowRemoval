@@ -215,6 +215,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
                 #plot train-test loss
                 rgb2ns, _ = self.test(input_map)
+                target_tensor = tensor_utils.normalize_to_01(target_tensor)
+                istd_ns_test = tensor_utils.normalize_to_01(istd_ns_test)
                 self.losses_dict_t[self.TRAIN_LOSS_KEY].append(self.l1_loss(rgb2ns, target_tensor).item())
                 self.losses_dict_t[self.TEST_LOSS_KEY].append(self.l1_loss(rgb2ns_istd, istd_ns_test).item())
 
