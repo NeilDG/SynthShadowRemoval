@@ -296,8 +296,8 @@ class IIDServerConfig():
             network_config[SYNTH_DATASET_VERSION] = "v19"
             network_config[TRAIN_MODE_KEY] = 4
             network_config[NETWORK_CONFIG_NUM] = 6
-            network_config[NUM_BLOCKS_KEY] = 6
-            network_config[LOAD_SIZE_KEY_Z] = 32
+            network_config[NUM_BLOCKS_KEY] = 3
+            network_config[LOAD_SIZE_KEY_Z] = 64
 
 
 
