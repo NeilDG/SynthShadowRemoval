@@ -261,10 +261,12 @@ class IIDServerConfig():
             network_config[NUM_BLOCKS_KEY] = 6
             network_config[LOAD_SIZE_KEY_Z] = 32
 
-        elif (constants.network_version == "v56.10"): #from v56.06. Just use dropout this time
+        elif (constants.network_version == "v56.10"): #from v56.06 + train mode = 3. Just use dropout this time
             network_config[SYNTH_DATASET_VERSION] = "v17"
+            network_config[TRAIN_MODE_KEY] = 3
             network_config[DROPOUT_KEY] = True
             network_config[NETWORK_CONFIG_NUM] = 4
+            network_config[NC_KEY] = 4
             network_config[NUM_BLOCKS_KEY] = 6
             network_config[LOAD_SIZE_KEY_Z] = 32
 
