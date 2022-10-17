@@ -157,13 +157,14 @@ def main(argv):
     #Using train dataset
     print(rgb_dir_ws, rgb_dir_ns)
     shadow_loader = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, 256, opts)
-    for i, (file_name, rgb_ws, rgb_ns, shadow_map, shadow_mask) in enumerate(shadow_loader, 0):
+    for i, (file_name, rgb_ws, rgb_ns, shadow_map, shadow_mask, shadow_matte) in enumerate(shadow_loader, 0):
         rgb_ws = rgb_ws.to(device)
         rgb_ns = rgb_ns.to(device)
         shadow_map = shadow_map.to(device)
         shadow_mask = shadow_mask.to(device)
+        shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_shadow(rgb_ws, rgb_ns, shadow_map, shadow_mask, "Train", opts.img_vis_enabled, 1, opts)
+        dataset_tester.test_shadow(rgb_ws, rgb_ns, shadow_map, shadow_mask, shadow_matte, "Train", opts.img_vis_enabled, 1, opts)
         if (i % 16 == 0):
             break
 
@@ -171,12 +172,13 @@ def main(argv):
 
     # ISTD test dataset
     shadow_loader = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, 8, opts)
-    for i, (file_name, rgb_ws, rgb_ns, shadow_mask) in enumerate(shadow_loader, 0):
+    for i, (file_name, rgb_ws, rgb_ns, shadow_mask, shadow_matte) in enumerate(shadow_loader, 0):
         rgb_ws_tensor = rgb_ws.to(device)
         rgb_ns_tensor = rgb_ns.to(device)
         shadow_mask = shadow_mask.to(device)
+        shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_mask, opts.img_vis_enabled, 1, 1,  opts)
+        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_mask, shadow_matte, opts.img_vis_enabled, 1, 1,  opts)
         # break
 
     dataset_tester.print_ave_shadow_performance("ISTD", opts)

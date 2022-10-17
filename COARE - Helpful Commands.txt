@@ -101,8 +101,9 @@ screen -S "MODEL_TRAINER"
 screen -R "MODEL_TRAINER"
 python "gcloud_main.py"
 
-rm -rf "SynthWeather Dataset 6/"
-
 screen -S "VISDOM_PROCESS"
 screen -R "VISDOM_PROCESS"
+
+//View all screens
+screen -ls
 

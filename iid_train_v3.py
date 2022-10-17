@@ -64,7 +64,11 @@ def update_config(opts):
         opts.num_workers = 8
         print("Using GCloud configuration. Workers: ", opts.num_workers)
         constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/*.jpg"
-        constants.rgb_dir_ws_styled = "/home/neil_delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
+        constants.rgb_dir_ws = "/home/neil_delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
+        constants.rgb_dir_ns = "/home/neil_delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
+        constants.ws_istd = "/home/neil_delgallego/ISTD_Dataset/test/test_A/*.png"
+        constants.ns_istd = "/home/neil_delgallego/ISTD_Dataset/test/test_C/*.png"
+        constants.mask_istd = "/home/neil_delgallego/ISTD_Dataset/test/test_B/*.png"
 
     elif (constants.server_config == 4):
         opts.num_workers = 6
@@ -114,19 +118,21 @@ def train_shadow(tf, device, opts):
     print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
     for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
         for i, (train_data, test_data) in enumerate(zip(train_loader, itertools.cycle(test_loader_istd))):
-            _, rgb_ws, rgb_ns, shadow_map, shadow_mask = train_data
+            _, rgb_ws, rgb_ns, shadow_map, shadow_mask, shadow_matte = train_data
             rgb_ws = rgb_ws.to(device)
             rgb_ns = rgb_ns.to(device)
             shadow_map = shadow_map.to(device)
             shadow_mask = shadow_mask.to(device)
+            shadow_matte = shadow_matte.to(device)
 
-            _, rgb_ws_istd, rgb_ns_istd, mask_istd = test_data
+            _, rgb_ws_istd, rgb_ns_istd, mask_istd, matte_istd = test_data
             rgb_ws_istd = rgb_ws_istd.to(device)
             rgb_ns_istd = rgb_ns_istd.to(device)
             mask_istd = mask_istd.to(device)
+            matte_istd = matte_istd.to(device)
 
-            input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_map" : shadow_map, "shadow_mask": shadow_mask,
-                         "rgb_ws_istd" : rgb_ws_istd, "rgb_ns_istd" : rgb_ns_istd, "mask_istd" : mask_istd}
+            input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_map" : shadow_map, "shadow_mask": shadow_mask, "shadow_matte" : shadow_matte,
+                         "rgb_ws_istd" : rgb_ws_istd, "rgb_ns_istd" : rgb_ns_istd, "mask_istd" : mask_istd, "matte_istd" : matte_istd}
             target_map = input_map
 
             tf.train(mode, epoch, iteration, input_map, target_map)
@@ -154,15 +160,10 @@ def train_shadow(tf, device, opts):
                     # input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_map" : shadow_map, "shadow_mask" : rgb2mask}
                     # tf.visdom_visualize(mode, input_map, "Test Synthetic")
 
-                    _, rgb_ws, rgb_ns, mask_istd = next(itertools.cycle(test_loader_istd))
-                    rgb_ws = rgb_ws.to(device)
-                    rgb_ns = rgb_ns.to(device)
-                    mask_istd = mask_istd.to(device)
-
-                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
+                    # input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
                     # rgb2mask = shadow_p.test(input_map)
 
-                    input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_mask" : mask_istd}
+                    input_map = {"rgb": rgb_ws_istd, "rgb_ws_inv" : rgb_ws_istd, "rgb_ns": rgb_ns_istd, "shadow_mask" : mask_istd, "shadow_matte" : matte_istd}
                     tf.visdom_visualize(mode, input_map, "Test ISTD")
 
         if (tf.is_stop_condition_met(mode)):

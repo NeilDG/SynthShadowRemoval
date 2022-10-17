@@ -310,12 +310,15 @@ class TesterClass():
 
         self.visdom_reporter.plot_text(display_text)
 
-    def test_shadow(self, rgb_ws, rgb_ns, shadow_map, shadow_mask, prefix, show_images, debug_policy, opts):
+    def test_shadow(self, rgb_ws, rgb_ns, shadow_map, shadow_mask, shadow_matte, prefix, show_images, debug_policy, opts):
         # rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
         # rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
+        sc_instance = iid_server_config.IIDServerConfig.getInstance()
+        network_config = sc_instance.interpret_network_config_from_version()
+        train_mode = network_config["train_mode"]
 
         if (debug_policy == 1):  # test shadow removal
-            input_map = {"rgb": rgb_ws, "rgb_ws_inv": rgb_ws, "shadow_map" : shadow_map, "shadow_mask": shadow_mask}
+            input_map = {"rgb": rgb_ws, "rgb_ws_inv": rgb_ws, "shadow_map" : shadow_map, "shadow_mask": shadow_mask, "shadow_matte" : shadow_matte}
             rgb2mask = shadow_mask
             rgb2ns, rgb2sm = self.shadow_t.test(input_map)
 
@@ -344,7 +347,10 @@ class TesterClass():
 
         if(show_images == 1):
             self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + opts.version + str(opts.iteration))
-            self.visdom_reporter.plot_image(rgb2mask, "WS Shadow Region Images - " + opts.version + str(opts.iteration))
+            if(train_mode == 3):
+                self.visdom_reporter.plot_image(rgb2mask, "WS Shadow Region Images - " + opts.version + str(opts.iteration))
+            if(train_mode == 4):
+                self.visdom_reporter.plot_image(shadow_matte, "WS Shadow Matte Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb_ns, prefix + " NS Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb2ns, prefix + " NS (equation) Images - " + opts.version + str(opts.iteration))
 
@@ -362,13 +368,16 @@ class TesterClass():
         self.mae_list_rgb.append(mae_rgb)
 
     #for ISTD
-    def test_istd_shadow(self, file_name, rgb_ws, rgb_ns, shadow_mask, show_images, save_image_results, debug_policy, opts):
+    def test_istd_shadow(self, file_name, rgb_ws, rgb_ns, shadow_mask, shadow_matte, show_images, save_image_results, debug_policy, opts):
         ### NOTE: ISTD-NS (No Shadows) image already has a different lighting!!! This isn't reported in the dataset. Consider using ISTD-NS as the unmasked region to avoid bias in results.
         ### MAE discrepancy vs ISTD-WS is at 11.055!
+        sc_instance = iid_server_config.IIDServerConfig.getInstance()
+        network_config = sc_instance.interpret_network_config_from_version()
+        train_mode = network_config["train_mode"]
 
         if (debug_policy == 1):  # test shadow removal
-            # input_map = {"rgb": rgb_ns, "rgb_ns" : rgb_ns,  "shadow_mask": shadow_mask}
-            input_map = {"rgb": rgb_ws, "rgb_ws_inv": rgb_ws, "shadow_mask": shadow_mask}
+            # input_map = {"rgb": rgb_ws, "rgb_ws_inv": rgb_ns,  "shadow_mask": shadow_mask, "shadow_matte" : shadow_matte}
+            input_map = {"rgb": rgb_ws, "rgb_ws_inv": rgb_ws, "shadow_mask": shadow_mask, "shadow_matte" : shadow_matte}
             rgb2mask = shadow_mask
             rgb2ns, rgb2sm = self.shadow_t.test(input_map)
 
@@ -397,11 +406,16 @@ class TesterClass():
 
         if(show_images == 1):
             self.visdom_reporter.plot_image(rgb_ws, "ISTD WS Images - " + opts.version + str(opts.iteration))
-            self.visdom_reporter.plot_image(rgb2mask, "ISTD Shadow Region Images - " + opts.version + str(opts.iteration))
+            if(train_mode == 3):
+                self.visdom_reporter.plot_image(rgb2mask, "ISTD Shadow Region Images - " + opts.version + str(opts.iteration))
+            if(train_mode == 4):
+                self.visdom_reporter.plot_image(shadow_matte, "ISTD Shadow Matte Images - " + opts.version + str(opts.iteration))
+            if (rgb2sm != None and train_mode == 2):
+                self.visdom_reporter.plot_image(rgb2sm, "ISTD Shadow Map-Like - " + opts.version + str(opts.iteration))
+
             self.visdom_reporter.plot_image(rgb_ns, "ISTD NS Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb2ns, "ISTD NS (equation) Images - " + opts.version + str(opts.iteration))
-            if (rgb2sm != None):
-                self.visdom_reporter.plot_image(rgb2sm, "ISTD Shadow Matte-Like - " + opts.version + str(opts.iteration))
+
             # self.visdom_reporter.plot_image(rgb2relit, "ISTD Relit-Like Images - " + opts.version + str(opts.iteration))
 
         if(save_image_results == 1):
