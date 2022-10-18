@@ -329,6 +329,13 @@ class IIDServerConfig():
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
 
+        elif (constants.network_version == "v56.14"):
+            network_config[SYNTH_DATASET_VERSION] = "v20"
+            network_config[TRAIN_MODE_KEY] = 4
+            network_config[NETWORK_CONFIG_NUM] = 6
+            network_config[NUM_BLOCKS_KEY] = 3
+            network_config[LOAD_SIZE_KEY_Z] = 64
+
 
 
         return network_config
