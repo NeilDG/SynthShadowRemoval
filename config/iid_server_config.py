@@ -19,7 +19,7 @@ class IIDServerConfig():
         if(constants.server_config <= 5):
             self.general_configs = {"train_style_transfer" : {"min_epochs" : 5, "max_epochs" : 25},
                                     "train_shadow_mask": {"min_epochs": 2, "max_epochs" : 15, "patch_size": 128},
-                                    "train_shadow": {"min_epochs": 20 ,"max_epochs" : 80, "patch_size": 128},
+                                    "train_shadow": {"min_epochs": 5 ,"max_epochs" : 80, "patch_size": 128},
                                     "train_shadow_refine": {"min_epochs": 30,"max_epochs" : 80, "patch_size": 128}}
         #debug
         if(constants.debug_run == 1):
@@ -175,12 +175,20 @@ class IIDServerConfig():
             network_config[AUGMENT_KEY] = "augmix"
             network_config[DROPOUT_KEY] = True
             network_config[WEIGHT_DECAY_KEY] = 0.01
+            network_config[TRAIN_MODE_KEY] = 4
+            network_config[NC_KEY] = 4
+            network_config[NETWORK_CONFIG_NUM] = 6
+            self.general_configs["train_shadow"]["min_epochs"] = 20
 
         elif (constants.network_version == "v55.03"):
             network_config[SYNTH_DATASET_VERSION] = "v18"
             network_config[AUGMENT_KEY] = "augmix"
             network_config[DROPOUT_KEY] = False
             network_config[WEIGHT_DECAY_KEY] = 0.0
+            network_config[TRAIN_MODE_KEY] = 4
+            network_config[NC_KEY] = 4
+            network_config[NETWORK_CONFIG_NUM] = 6
+            self.general_configs["train_shadow"]["min_epochs"] = 20
 
         elif (constants.network_version == "v55.04"):
             network_config[SYNTH_DATASET_VERSION] = "v18"
