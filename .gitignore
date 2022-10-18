@@ -129,6 +129,9 @@ dmypy.json
 .pyre/
 *.pt
 
-checkpoint/
+checkpoint/*.pt
+checkpoint/*.pt.checkpt
+checkpoint/*.pth.checkpt
+checkpoint/*.pth
 iiw_temp/
 comparison/

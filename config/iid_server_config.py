@@ -19,7 +19,7 @@ class IIDServerConfig():
         if(constants.server_config <= 5):
             self.general_configs = {"train_style_transfer" : {"min_epochs" : 5, "max_epochs" : 25},
                                     "train_shadow_mask": {"min_epochs": 2, "max_epochs" : 15, "patch_size": 128},
-                                    "train_shadow": {"min_epochs": 3 ,"max_epochs" : 80, "patch_size": 128},
+                                    "train_shadow": {"min_epochs": 5 ,"max_epochs" : 80, "patch_size": 128},
                                     "train_shadow_refine": {"min_epochs": 30,"max_epochs" : 80, "patch_size": 128}}
         #debug
         if(constants.debug_run == 1):
@@ -67,6 +67,7 @@ class IIDServerConfig():
         AUGMENT_KEY = "augment_mode"
 
         TRAIN_MODE_KEY = "train_mode" #0 = end2end, 1 = end2end with masking, 2 = by shadow map, 3 = end2end. mask + input concat
+        # 4 = end2end. matte + input concat
 
         #set defaults
         network_config[NETWORK_CONFIG_NUM] = 5
@@ -84,7 +85,7 @@ class IIDServerConfig():
         elif (constants.server_config == 2):  # CCS JUPYTER
             network_config[LOAD_SIZE_KEY_Z] = 96
         elif (constants.server_config == 3):  # GCLOUD
-            network_config[LOAD_SIZE_KEY_Z] = 16
+            network_config[LOAD_SIZE_KEY_Z] = 48
         elif (constants.server_config == 4):  # RTX 2080Ti
             network_config[LOAD_SIZE_KEY_Z] = 32
         else:  # RTX 3090
@@ -110,20 +111,12 @@ class IIDServerConfig():
 
         if(constants.network_version == "v51.01"):
             network_config[SYNTH_DATASET_VERSION] = "v17"
-        elif (constants.network_version == "v51.02"):
-            network_config[SYNTH_DATASET_VERSION] = "v17"
-            network_config[TRAIN_MODE_KEY] = 2
-        elif (constants.network_version == "v51.03"):
-            network_config[SYNTH_DATASET_VERSION] = "v17"
-            network_config[TRAIN_MODE_KEY] = 2
-            network_config[NETWORK_CONFIG_NUM] = 4
-            network_config[NUM_BLOCKS_KEY] = 3
 
         elif (constants.network_version == "v52.01"):
             network_config[SYNTH_DATASET_VERSION] = "v17"
             network_config[TRAIN_MODE_KEY] = 3
             network_config[NC_KEY] = 4 #RGB image + mask image
-            network_config[NETWORK_CONFIG_NUM] = 4 #FFA-Net cannot handle >3 channels
+            network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NUM_BLOCKS_KEY] = 3
 
         elif (constants.network_version == "v53.01"):
@@ -182,34 +175,41 @@ class IIDServerConfig():
             network_config[AUGMENT_KEY] = "augmix"
             network_config[DROPOUT_KEY] = True
             network_config[WEIGHT_DECAY_KEY] = 0.01
+            network_config[TRAIN_MODE_KEY] = 4
+            network_config[NC_KEY] = 4
+            network_config[NETWORK_CONFIG_NUM] = 6
+            self.general_configs["train_shadow"]["min_epochs"] = 10
 
         elif (constants.network_version == "v55.03"):
             network_config[SYNTH_DATASET_VERSION] = "v18"
             network_config[AUGMENT_KEY] = "augmix"
             network_config[DROPOUT_KEY] = False
             network_config[WEIGHT_DECAY_KEY] = 0.0
+            network_config[TRAIN_MODE_KEY] = 4
+            network_config[NC_KEY] = 4
+            network_config[NETWORK_CONFIG_NUM] = 6
+            self.general_configs["train_shadow"]["min_epochs"] = 10
 
         elif (constants.network_version == "v55.04"):
             network_config[SYNTH_DATASET_VERSION] = "v18"
+            network_config[TRAIN_MODE_KEY] = 2
             network_config[AUGMENT_KEY] = "trivial_augment_wide"
-            # network_config[DROPOUT_KEY] = True
+            network_config[DROPOUT_KEY] = False
             network_config[WEIGHT_DECAY_KEY] = 0.01
-            network_config[NUM_BLOCKS_KEY] = 6
-            network_config[NETWORK_CONFIG_NUM] = 4
-            network_config[NUM_BLOCKS_KEY] = 6
-
-
-            network_config[LOAD_SIZE_KEY_Z] = 48
-            # configure batch size. NOTE: Batch size must be equal or larger than load size
-            network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
+            network_config[TRAIN_MODE_KEY] = 4
+            network_config[NC_KEY] = 4
+            network_config[NETWORK_CONFIG_NUM] = 6
+            self.general_configs["train_shadow"]["min_epochs"] = 10
 
         elif (constants.network_version == "v55.05"):
             network_config[SYNTH_DATASET_VERSION] = "v18"
             network_config[AUGMENT_KEY] = "trivial_augment_wide"
             network_config[DROPOUT_KEY] = False
             network_config[WEIGHT_DECAY_KEY] = 0.0
-            network_config[NETWORK_CONFIG_NUM] = 4
-            network_config[NUM_BLOCKS_KEY] = 3
+            network_config[TRAIN_MODE_KEY] = 4
+            network_config[NC_KEY] = 4
+            network_config[NETWORK_CONFIG_NUM] = 6
+            self.general_configs["train_shadow"]["min_epochs"] = 10
 
         elif (constants.network_version == "v56.04"):
             network_config[SYNTH_DATASET_VERSION] = "v17"
@@ -222,7 +222,7 @@ class IIDServerConfig():
         elif (constants.network_version == "v56.06"):
             network_config[SYNTH_DATASET_VERSION] = "v17"
             network_config[AUGMENT_KEY] = "trivial_augment_wide"
-            network_config[DROPOUT_KEY] = True
+            # network_config[DROPOUT_KEY] = True
             network_config[WEIGHT_DECAY_KEY] = 0.01
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NUM_BLOCKS_KEY] = 6
@@ -242,6 +242,99 @@ class IIDServerConfig():
 
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
+
+        elif (constants.network_version == "v56.07"):
+            network_config[SYNTH_DATASET_VERSION] = "v17"
+            network_config[AUGMENT_KEY] = "trivial_augment_wide"
+            network_config[TRAIN_MODE_KEY] = 3
+            network_config[NETWORK_CONFIG_NUM] = 6
+            network_config[DROPOUT_KEY] = True
+            network_config[WEIGHT_DECAY_KEY] = 0.01
+            network_config[NUM_BLOCKS_KEY] = 6
+            network_config[LOAD_SIZE_KEY_Z] = 32
+
+        elif (constants.network_version == "v56.08"):
+            network_config[SYNTH_DATASET_VERSION] = "v17"
+            network_config[AUGMENT_KEY] = "trivial_augment_wide"
+            network_config[TRAIN_MODE_KEY] = 3
+            network_config[NETWORK_CONFIG_NUM] = 6
+            network_config[WEIGHT_DECAY_KEY] = 0.001
+            network_config[NUM_BLOCKS_KEY] = 6
+            network_config[LOAD_SIZE_KEY_Z] = 32
+
+        elif (constants.network_version == "v56.09"):
+            network_config[SYNTH_DATASET_VERSION] = "v17"
+            network_config[TRAIN_MODE_KEY] = 3
+            network_config[NETWORK_CONFIG_NUM] = 6
+            network_config[NUM_BLOCKS_KEY] = 6
+            network_config[LOAD_SIZE_KEY_Z] = 32
+
+        elif (constants.network_version == "v56.10"): #from v56.06 + train mode = 3. Just use dropout this time
+            network_config[SYNTH_DATASET_VERSION] = "v17"
+            network_config[TRAIN_MODE_KEY] = 3
+            network_config[DROPOUT_KEY] = True
+            network_config[NETWORK_CONFIG_NUM] = 4
+            network_config[NC_KEY] = 4
+            network_config[NUM_BLOCKS_KEY] = 6
+            network_config[LOAD_SIZE_KEY_Z] = 32
+
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_Z] = 64
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_Z] = 96
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_Z] = 16
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_Z] = 32
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_Z] = 64
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
+
+        elif (constants.network_version == "v56.11"):
+            network_config[SYNTH_DATASET_VERSION] = "v19"
+            network_config[TRAIN_MODE_KEY] = 3
+            network_config[NETWORK_CONFIG_NUM] = 6
+            network_config[NUM_BLOCKS_KEY] = 6
+            network_config[LOAD_SIZE_KEY_Z] = 32
+
+        elif (constants.network_version == "v56.12"):
+            network_config[SYNTH_DATASET_VERSION] = "v19"
+            network_config[TRAIN_MODE_KEY] = 4
+            network_config[NETWORK_CONFIG_NUM] = 6
+            network_config[NUM_BLOCKS_KEY] = 3
+            network_config[LOAD_SIZE_KEY_Z] = 64
+
+        elif (constants.network_version == "v56.13"):
+            network_config[SYNTH_DATASET_VERSION] = "v17"
+            network_config[TRAIN_MODE_KEY] = 4
+            network_config[NETWORK_CONFIG_NUM] = 4
+            network_config[NC_KEY] = 4
+            network_config[NUM_BLOCKS_KEY] = 3
+
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_Z] = 128
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_Z] = 256
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_Z] = 128
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_Z] = 64
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_Z] = 128
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
+
+        elif (constants.network_version == "v56.14"):
+            network_config[SYNTH_DATASET_VERSION] = "v20"
+            network_config[TRAIN_MODE_KEY] = 4
+            network_config[NETWORK_CONFIG_NUM] = 6
+            network_config[NUM_BLOCKS_KEY] = 3
+            network_config[LOAD_SIZE_KEY_Z] = 64
 
 
 

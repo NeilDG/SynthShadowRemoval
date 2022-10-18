@@ -146,12 +146,16 @@ class FFA(nn.Module):
         return x + input
 
 class FFASpecial(nn.Module):
-    def __init__(self, blocks, conv=default_conv):
+    def __init__(self, blocks, use_dropout=False, conv=default_conv):
         super(FFASpecial, self).__init__()
-        self.gps = 5
+        FFAGlobalConfig.initialize()
+        FFAGlobalConfig.getInstance().GLOBAL_USE_DROPOUT = use_dropout
+        print("USE DROPOUT? ", FFAGlobalConfig.getInstance().GLOBAL_USE_DROPOUT)
+
+        self.gps = 4
         self.dim = 64
         kernel_size = 3
-        pre_process = [conv(5, self.dim, kernel_size)]
+        pre_process = [conv(4, self.dim, kernel_size)]
         self.g1 = Group(conv, self.dim, kernel_size, blocks=blocks)
         self.g2 = Group(conv, self.dim, kernel_size, blocks=blocks)
         self.g3 = Group(conv, self.dim, kernel_size, blocks=blocks)

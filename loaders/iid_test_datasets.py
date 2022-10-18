@@ -189,11 +189,12 @@ class ShadowTrainDataset(data.Dataset):
                 rgb_ws = transforms.functional.crop(rgb_ws, i, j, h, w)
                 rgb_ns = transforms.functional.crop(rgb_ns, i, j, h, w)
 
-            rgb_ws, rgb_ns, shadow_map, shadow_mask = self.shadow_op.generate_shadow_map(rgb_ws, rgb_ns, False)
+            rgb_ws, rgb_ns, shadow_map, shadow_mask, shadow_matte = self.shadow_op.generate_shadow_map(rgb_ws, rgb_ns, False)
 
             rgb_ws = self.norm_op(rgb_ws)
             rgb_ns = self.norm_op(rgb_ns)
             shadow_map = self.norm_op(shadow_map)
+            # shadow_matte = self.norm_op(shadow_matte)
 
             # print("Shadow map range: ", torch.min(shadow_map), torch.max(shadow_map))
             # print("Loaded pairing: ", self.img_list_a[idx], self.img_list_b[idx])
@@ -205,8 +206,9 @@ class ShadowTrainDataset(data.Dataset):
             rgb_ns = None
             shadow_map = None
             shadow_mask = None
+            shadow_matte = None
 
-        return file_name, rgb_ws, rgb_ns, shadow_map, shadow_mask
+        return file_name, rgb_ws, rgb_ns, shadow_map, shadow_mask, shadow_matte
 
     def __len__(self):
         return self.img_length
@@ -246,8 +248,12 @@ class ShadowISTDDataset(data.Dataset):
             shadow_mask = cv2.cvtColor(shadow_mask, cv2.COLOR_BGR2GRAY)
             shadow_mask = self.initial_op(shadow_mask)
 
+            shadow_map = rgb_ns - rgb_ws
+            shadow_matte = kornia.color.rgb_to_grayscale(shadow_map)
+
             rgb_ws = self.norm_op(rgb_ws)
             rgb_ns = self.norm_op(rgb_ns)
+            # shadow_matte = self.norm_op(shadow_matte)
 
             # print("Shadow map range: ", torch.min(shadow_map), torch.max(shadow_map))
             # print("Loaded pairing: ", self.img_list_a[idx], self.img_list_b[idx])
@@ -258,8 +264,9 @@ class ShadowISTDDataset(data.Dataset):
             rgb_ws = None
             rgb_ns = None
             shadow_mask = None
+            shadow_matte = None
 
-        return file_name, rgb_ws, rgb_ns, shadow_mask
+        return file_name, rgb_ws, rgb_ns, shadow_mask, shadow_matte
 
     def __len__(self):
         return self.img_length

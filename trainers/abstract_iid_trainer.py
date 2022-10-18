@@ -58,6 +58,8 @@ class NetworkCreator():
             G_A = usi3d_gan.AdaINGen(input_dim=input_nc, output_dim=3, params=params, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
         elif(net_config == 5):
             G_A = ffa_gan.FFA(input_nc, num_blocks, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
+        elif(net_config == 6):
+            G_A = ffa_gan.FFASpecial(num_blocks, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
         else:
             G_A = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
