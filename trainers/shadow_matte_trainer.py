@@ -190,9 +190,10 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                     self.save_states(epoch, iteration, False)
 
                 #plot train-test loss
-                rgb2sm= self.test(input_map)
+                rgb2sm = self.test(input_map)
                 rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
                 target_tensor = tensor_utils.normalize_to_01(target_tensor)
+                rgb2sm_istd = tensor_utils.normalize_to_01(rgb2sm_istd)
                 istd_sm_test = tensor_utils.normalize_to_01(istd_sm_test)
                 self.losses_dict_t[self.TRAIN_LOSS_KEY].append(self.l1_loss(rgb2sm, target_tensor).item())
                 self.losses_dict_t[self.TEST_LOSS_KEY].append(self.l1_loss(rgb2sm_istd, istd_sm_test).item())
