@@ -39,7 +39,7 @@ class NetworkCreator():
 
     def initialize_rgb_network(self, net_config, num_blocks, input_nc):
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
-        network_config = sc_instance.interpret_network_config_from_version()
+        network_config = sc_instance.interpret_shadow_network_params_from_version()
         if (net_config == 1):
             G_A = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
         elif (net_config == 2):
@@ -59,7 +59,7 @@ class NetworkCreator():
         elif(net_config == 5):
             G_A = ffa_gan.FFA(input_nc, num_blocks, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
         elif(net_config == 6):
-            G_A = ffa_gan.FFASpecial(num_blocks, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
+            G_A = ffa_gan.FFABase(num_blocks, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
         else:
             G_A = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 
@@ -91,7 +91,10 @@ class NetworkCreator():
 
         return G_S, D_S
 
-    def initialize_shadow_network(self, net_config, num_blocks, input_nc):
+    def initialize_shadow_matte_network(self, net_config, num_blocks, input_nc):
+        sc_instance = iid_server_config.IIDServerConfig.getInstance()
+        network_config = sc_instance.interpret_shadow_network_params_from_version()
+
         if (net_config == 1):
             G_Z = cycle_gan.Generator(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks).to(self.gpu_device)
         elif (net_config == 2):
@@ -108,10 +111,8 @@ class NetworkCreator():
                       'n_res': num_blocks,  # number of residual blocks in content encoder/decoder
                       'pad_type': 'reflect'}
             G_Z = usi3d_gan.AdaINGen(input_dim=input_nc, output_dim=1, params=params).to(self.gpu_device)
-        elif(net_config == 5):
-            G_Z = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
         else:
-            G_Z = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
+            G_Z = ffa_gan.FFAGrey(num_blocks, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
 
         D_Z = cycle_gan.Discriminator(input_nc=1).to(self.gpu_device)  # use CycleGAN's discriminator
 

@@ -187,18 +187,14 @@ def measure_performance(opts):
     visdom_reporter.plot_image(albedo_e_tensor, "Albedo Ours")
 
 class TesterClass():
-    def __init__(self, shadow_p, shadow_t, shadow_rt):
+    def __init__(self, shadow_m, shadow_t):
         print("Initiating")
         self.cgi_op = iid_transforms.CGITransform()
         self.iid_op = iid_transforms.IIDTransform()
         self.visdom_reporter = plot_utils.VisdomReporter.getInstance()
 
-        # self.mask_t = mask_t
-        # self.albedo_t = albedo_t
-        # self.shading_t = shading_t
-        self.shadow_p = shadow_p
+        self.shadow_m = shadow_m
         self.shadow_t = shadow_t
-        self.shadow_rt = shadow_rt
 
         self.wdhr_metric_list = []
 
@@ -310,36 +306,24 @@ class TesterClass():
 
         self.visdom_reporter.plot_text(display_text)
 
-    def test_shadow(self, rgb_ws, rgb_ns, shadow_map, shadow_mask, shadow_matte, prefix, show_images, debug_policy, opts):
-        # rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
-        # rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
-        sc_instance = iid_server_config.IIDServerConfig.getInstance()
-        network_config = sc_instance.interpret_network_config_from_version()
-        train_mode = network_config["train_mode"]
+    def infer_shadow_results(self, rgb_ws, shadow_matte, debug_policy):
+        if (debug_policy == 1):
+            # only test shadow removal
+            input_map = {"rgb": rgb_ws, "shadow_matte": shadow_matte}
+            rgb2ns = self.shadow_t.test(input_map)
 
-        if (debug_policy == 1):  # test shadow removal
-            input_map = {"rgb": rgb_ws, "rgb_ws_inv": rgb_ws, "shadow_map" : shadow_map, "shadow_mask": shadow_mask, "shadow_matte" : shadow_matte}
-            rgb2mask = shadow_mask
-            rgb2ns, rgb2sm = self.shadow_t.test(input_map)
-
-        elif (debug_policy == 2):  # test shadow mask
-            input_map = {"rgb": rgb_ws}
-            rgb2mask = self.shadow_p.test(input_map)
-
-            input_ws_inv = input_map["rgb"] * torchvision.transforms.functional.invert(shadow_mask)
-            rgb2ns = rgb_ns * rgb2mask
-            rgb2ns = rgb2ns + input_ws_inv
-
-            rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
-            rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
             rgb2sm = None
-
         else:
-            input_map = {"rgb": rgb_ws}
-            rgb2mask = self.shadow_p.test(input_map)
+            # test shadow matte inference + shadow removal
+            rgb2sm = self.shadow_m.test({"rgb": rgb_ws})
+            input_map = {"rgb": rgb_ws, "shadow_matte": rgb2sm}
+            rgb2ns = self.shadow_t.test(input_map)
 
-            input_map = {"rgb": rgb_ws, "rgb_ws_inv": rgb_ws, "shadow_mask": rgb2mask}
-            rgb2ns, rgb2sm = self.shadow_t.test(input_map)
+
+
+        return rgb2ns, rgb2sm
+    def test_shadow(self, rgb_ws, rgb_ns, shadow_matte, prefix, show_images, debug_policy, opts):
+        rgb2ns, rgb2sm = self.infer_shadow_results(rgb_ws, shadow_matte, debug_policy)
 
         # normalize everything
         rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
@@ -347,15 +331,12 @@ class TesterClass():
 
         if(show_images == 1):
             self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + opts.version + str(opts.iteration))
-            if(train_mode == 3):
-                self.visdom_reporter.plot_image(rgb2mask, "WS Shadow Region Images - " + opts.version + str(opts.iteration))
-            if(train_mode == 4):
-                self.visdom_reporter.plot_image(shadow_matte, "WS Shadow Matte Images - " + opts.version + str(opts.iteration))
+            self.visdom_reporter.plot_image(shadow_matte, "WS Shadow Matte Images - " + opts.version + str(opts.iteration))
+            if(rgb2sm != None):
+                rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
+                self.visdom_reporter.plot_image(rgb2sm, "WS Shadow Matte-Like Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb_ns, prefix + " NS Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb2ns, prefix + " NS (equation) Images - " + opts.version + str(opts.iteration))
-
-            if(rgb2sm != None):
-                self.visdom_reporter.plot_image(rgb2sm, prefix + " Shadow Matte-Like - " + opts.version + str(opts.iteration))
 
         psnr_rgb = np.round(kornia.metrics.psnr(rgb2ns, rgb_ns, max_val=1.0).item(), 4)
         ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb2ns, rgb_ns, 5).item(), 4)
@@ -368,37 +349,10 @@ class TesterClass():
         self.mae_list_rgb.append(mae_rgb)
 
     #for ISTD
-    def test_istd_shadow(self, file_name, rgb_ws, rgb_ns, shadow_mask, shadow_matte, show_images, save_image_results, debug_policy, opts):
+    def test_istd_shadow(self, file_name, rgb_ws, rgb_ns, shadow_matte, show_images, save_image_results, debug_policy, opts):
         ### NOTE: ISTD-NS (No Shadows) image already has a different lighting!!! This isn't reported in the dataset. Consider using ISTD-NS as the unmasked region to avoid bias in results.
         ### MAE discrepancy vs ISTD-WS is at 11.055!
-        sc_instance = iid_server_config.IIDServerConfig.getInstance()
-        network_config = sc_instance.interpret_network_config_from_version()
-        train_mode = network_config["train_mode"]
-
-        if (debug_policy == 1):  # test shadow removal
-            # input_map = {"rgb": rgb_ws, "rgb_ws_inv": rgb_ns,  "shadow_mask": shadow_mask, "shadow_matte" : shadow_matte}
-            input_map = {"rgb": rgb_ws, "rgb_ws_inv": rgb_ws, "shadow_mask": shadow_mask, "shadow_matte" : shadow_matte}
-            rgb2mask = shadow_mask
-            rgb2ns, rgb2sm = self.shadow_t.test(input_map)
-
-        elif (debug_policy == 2):  # test shadow mask
-            input_map = {"rgb": rgb_ws}
-            rgb2mask = self.shadow_p.test(input_map)
-
-            input_ws_inv = input_map["rgb"] * torchvision.transforms.functional.invert(shadow_mask)
-            rgb2ns = rgb_ns * rgb2mask
-            rgb2ns = rgb2ns + input_ws_inv
-
-            rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
-            rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
-            rgb2sm = None
-
-        else:
-            input_map = {"rgb": rgb_ws}
-            rgb2mask = self.shadow_p.test(input_map)
-
-            input_map = {"rgb": rgb_ws, "rgb_ws_inv": rgb_ws, "shadow_mask": rgb2mask}
-            rgb2ns, rgb2sm = self.shadow_t.test(input_map)
+        rgb2ns, rgb2sm = self.infer_shadow_results(rgb_ws, shadow_matte, debug_policy)
 
         # normalize everything
         rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
@@ -406,17 +360,12 @@ class TesterClass():
 
         if(show_images == 1):
             self.visdom_reporter.plot_image(rgb_ws, "ISTD WS Images - " + opts.version + str(opts.iteration))
-            if(train_mode == 3):
-                self.visdom_reporter.plot_image(rgb2mask, "ISTD Shadow Region Images - " + opts.version + str(opts.iteration))
-            if(train_mode == 4):
-                self.visdom_reporter.plot_image(shadow_matte, "ISTD Shadow Matte Images - " + opts.version + str(opts.iteration))
-            if (rgb2sm != None and train_mode == 2):
-                self.visdom_reporter.plot_image(rgb2sm, "ISTD Shadow Map-Like - " + opts.version + str(opts.iteration))
-
+            self.visdom_reporter.plot_image(shadow_matte, "ISTD Shadow Matte Images - " + opts.version + str(opts.iteration))
+            if (rgb2sm != None):
+                rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
+                self.visdom_reporter.plot_image(rgb2sm, "ISTD Shadow Matte-Like Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb_ns, "ISTD NS Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb2ns, "ISTD NS (equation) Images - " + opts.version + str(opts.iteration))
-
-            # self.visdom_reporter.plot_image(rgb2relit, "ISTD Relit-Like Images - " + opts.version + str(opts.iteration))
 
         if(save_image_results == 1):
             path = "./comparison/ISTD Dataset/OURS/"
@@ -581,7 +530,7 @@ def main(argv):
     iid_server_config.IIDServerConfig.initialize(opts.version)
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
     general_config = sc_instance.get_general_configs()
-    network_config = sc_instance.interpret_network_config_from_version(opts.version)
+    network_config = sc_instance.interpret_shadow_network_params_from_version(opts.version)
     print("General config:", general_config)
     print("Network config: ", network_config)
 

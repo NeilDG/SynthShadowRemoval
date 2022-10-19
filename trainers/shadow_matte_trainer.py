@@ -18,7 +18,7 @@ from utils import tensor_utils
 from custom_losses import ssim_loss, iid_losses
 import lpips
 
-class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
+class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def __init__(self, gpu_device, opts):
         super().__init__(gpu_device, opts)
         self.initialize_train_config(opts)
@@ -43,10 +43,10 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.visdom_reporter = plot_utils.VisdomReporter.getInstance()
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         general_config = sc_instance.get_general_configs()
-        network_config = sc_instance.interpret_shadow_network_params_from_version()
+        network_config = sc_instance.interpret_shadow_matte_params_from_version()
 
-        self.load_size = network_config["load_size_z"]
-        self.batch_size = network_config["batch_size_z"]
+        self.load_size = network_config["load_size_m"]
+        self.batch_size = network_config["batch_size_m"]
 
         self.stopper_method = early_stopper.EarlyStopper(general_config["train_shadow"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, 3000, 99999.9)
         self.stop_result = False
@@ -59,13 +59,13 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.schedulerG = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG, patience=1000000 / self.batch_size, threshold=0.00005)
         self.schedulerD = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD, patience=1000000 / self.batch_size, threshold=0.00005)
 
-        self.NETWORK_VERSION = sc_instance.get_version_config("network_z_name", self.iteration)
+        self.NETWORK_VERSION = sc_instance.get_version_config("network_m_name", self.iteration)
         self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
         self.load_saved_state()
 
     def initialize_shadow_network(self, net_config, num_blocks, input_nc):
         network_creator = abstract_iid_trainer.NetworkCreator(self.gpu_device)
-        self.G_SM_predictor, self.D_SM_discriminator = network_creator.initialize_rgb_network(net_config, num_blocks, input_nc)  # shadow map (Shadow - Shadow-Free)
+        self.G_SM_predictor, self.D_SM_discriminator = network_creator.initialize_shadow_matte_network(net_config, num_blocks, input_nc)  # shadow map (Shadow - Shadow-Free)
 
     def adversarial_loss(self, pred, target):
         if (self.use_bce == 0):
@@ -130,13 +130,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def train(self, epoch, iteration, input_map, target_map):
         input_ws = input_map["rgb"]
-        matte_tensor = input_map["shadow_matte"]
-
-        input_ws = torch.cat([input_ws, matte_tensor], 1)
-        target_tensor = target_map["rgb_ns"]
-
+        target_tensor = target_map["shadow_matte"]
         accum_batch_size = self.load_size * iteration
-
 
         with amp.autocast():
             # shadow map discriminator
@@ -186,20 +181,20 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 self.losses_dict_s[self.MASK_LOSS_KEY].append(SM_masking_loss.item())
 
                 #perform validation test and early stopping
-                rgb2ns_istd = self.test_istd(input_map)
-                istd_ns_test = input_map["rgb_ns_istd"]
-                self.stopper_method.register_metric(rgb2ns_istd, istd_ns_test, epoch)
+                rgb2sm_istd = self.test_istd(input_map)
+                istd_sm_test = input_map["matte_istd"]
+                self.stopper_method.register_metric(rgb2sm_istd, istd_sm_test, epoch)
                 self.stop_result = self.stopper_method.test(epoch)
 
                 if (self.stopper_method.has_reset()):
                     self.save_states(epoch, iteration, False)
 
                 #plot train-test loss
-                rgb2ns= self.test(input_map)
+                rgb2sm= self.test(input_map)
                 target_tensor = tensor_utils.normalize_to_01(target_tensor)
-                istd_ns_test = tensor_utils.normalize_to_01(istd_ns_test)
-                self.losses_dict_t[self.TRAIN_LOSS_KEY].append(self.l1_loss(rgb2ns, target_tensor).item())
-                self.losses_dict_t[self.TEST_LOSS_KEY].append(self.l1_loss(rgb2ns_istd, istd_ns_test).item())
+                istd_sm_test = tensor_utils.normalize_to_01(istd_sm_test)
+                self.losses_dict_t[self.TRAIN_LOSS_KEY].append(self.l1_loss(rgb2sm, target_tensor).item())
+                self.losses_dict_t[self.TEST_LOSS_KEY].append(self.l1_loss(rgb2sm_istd, istd_sm_test).item())
 
     def is_stop_condition_met(self):
         return self.stop_result
@@ -213,14 +208,12 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def test(self, input_map):
         with torch.no_grad():
             input_ws = input_map["rgb"]
-            matte_tensor = input_map["shadow_matte"]
-            input_ws = torch.cat([input_ws, matte_tensor], 1)
 
-            rgb2ns = self.G_SM_predictor(input_ws)
-            rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
-            rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
+            rgb2sm = self.G_SM_predictor(input_ws)
+            rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
+            rgb2sm = torch.clip(rgb2sm, 0.0, 1.0)
 
-        return rgb2ns
+        return rgb2sm
 
     def visdom_plot(self, iteration):
         self.visdom_reporter.plot_finegrain_loss("a2b_loss_a", iteration, self.losses_dict_s, self.caption_dict_s, self.NETWORK_CHECKPATH)
@@ -229,15 +222,11 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def visdom_visualize(self, input_map, label="Train"):
         input_ws = input_map["rgb"]
         matte_tensor = input_map["shadow_matte"]
-        rgb2ns = self.test(input_map)
+        rgb2sm = self.test(input_map)
 
         self.visdom_reporter.plot_image(input_ws, str(label) + " RGB (With Shadows) Images - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(matte_tensor, str(label) + " Shadow Matte Images - " + self.NETWORK_VERSION + str(self.iteration))
-
-        self.visdom_reporter.plot_image(rgb2ns, str(label) + " RGB (No Shadows-Like) images - " + self.NETWORK_VERSION + str(self.iteration))
-        if("rgb_ns" in input_map):
-            input_ns = input_map["rgb_ns"]
-            self.visdom_reporter.plot_image(input_ns, str(label) + " RGB (No Shadows) images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(rgb2sm, str(label) + " Shadow Matte-Like images - " + self.NETWORK_VERSION + str(self.iteration))
 
     def load_saved_state(self):
         try:
@@ -254,18 +243,18 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 print("No existing checkpoint file found. Creating new shadow network: ", self.NETWORK_CHECKPATH)
 
         if(checkpoint != None):
-            iid_server_config.IIDServerConfig.getInstance().store_epoch_from_checkpt("train_shadow", checkpoint["epoch"])
+            iid_server_config.IIDServerConfig.getInstance().store_epoch_from_checkpt("train_shadow_matte", checkpoint["epoch"])
             self.stopper_method.update_last_metric(checkpoint[constants.LAST_METRIC_KEY])
-            self.G_SM_predictor.load_state_dict(checkpoint[constants.GENERATOR_KEY + "Z"])
-            self.D_SM_discriminator.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "Z"])
+            self.G_SM_predictor.load_state_dict(checkpoint[constants.GENERATOR_KEY + "M"])
+            self.D_SM_discriminator.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "M"])
 
     def save_states(self, epoch, iteration, is_temp:bool):
         save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
         netGNS_state_dict = self.G_SM_predictor.state_dict()
         netDNS_state_dict = self.D_SM_discriminator.state_dict()
 
-        save_dict[constants.GENERATOR_KEY + "Z"] = netGNS_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "Z"] = netDNS_state_dict
+        save_dict[constants.GENERATOR_KEY + "M"] = netGNS_state_dict
+        save_dict[constants.DISCRIMINATOR_KEY + "M"] = netDNS_state_dict
 
         if (is_temp):
             torch.save(save_dict, self.NETWORK_CHECKPATH + ".checkpt")
