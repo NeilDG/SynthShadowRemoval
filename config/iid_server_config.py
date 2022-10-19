@@ -95,6 +95,8 @@ class IIDServerConfig():
         elif(constants.network_version == "v58.03"):
             network_config[SYNTH_DATASET_VERSION] = "v17"
             network_config[NUM_BLOCKS_KEY] = 3
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 10
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 20
 
         return network_config
 
