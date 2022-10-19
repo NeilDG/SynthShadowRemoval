@@ -117,7 +117,7 @@ def load_shadow_train_dataset(ws_path, ns_path, patch_size, load_size, opts):
         shuffle=False
     )
 
-    return data_loader
+    return data_loader, len(ws_list)
 
 def clean_dataset(ws_path, ns_path, filter_minimum):
     BASE_PATH = "E:/SynthWeather Dataset 10/"

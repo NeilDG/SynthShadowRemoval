@@ -17,6 +17,9 @@ from transforms import iid_transforms
 import constants
 from utils import plot_utils
 from trainers import trainer_factory
+from tqdm import tqdm
+from tqdm.auto import trange
+from time import sleep
 
 parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
@@ -108,7 +111,7 @@ def train_shadow(tf, device, opts):
 
     load_size = network_config["load_size_z"]
 
-    train_loader = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, patch_size, load_size, opts)
+    train_loader, dataset_count = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, patch_size, load_size, opts)
     test_loader_train = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
     test_loader_istd = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, load_size, opts)
 
@@ -117,6 +120,13 @@ def train_shadow(tf, device, opts):
     print("---------------------------------------------------------------------------")
     print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
     print("---------------------------------------------------------------------------")
+
+    # compute total progress
+    needed_progress = int((general_config[mode]["max_epochs"]) * (dataset_count / load_size))
+    current_progress = int(start_epoch * (dataset_count / load_size))
+    pbar = tqdm(total=needed_progress)
+    pbar.update(current_progress)
+
     for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
         for i, (train_data, test_data) in enumerate(zip(train_loader, itertools.cycle(test_loader_istd))):
             _, rgb_ws, rgb_ns, shadow_map, shadow_matte = train_data
@@ -136,6 +146,7 @@ def train_shadow(tf, device, opts):
 
             tf.train(mode, epoch, iteration, input_map, target_map)
             iteration = iteration + 1
+            pbar.update(1)
 
             if (tf.is_stop_condition_met(mode)):
                 break
@@ -162,6 +173,8 @@ def train_shadow(tf, device, opts):
         if (tf.is_stop_condition_met(mode)):
             break
 
+    pbar.close()
+
 def train_shadow_matte(tf, device, opts):
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
     general_config = sc_instance.get_general_configs()
@@ -178,7 +191,7 @@ def train_shadow_matte(tf, device, opts):
 
     load_size = network_config["load_size_m"]
 
-    train_loader = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, patch_size, load_size, opts)
+    train_loader, dataset_count = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, patch_size, load_size, opts)
     test_loader_train = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
     test_loader_istd = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, load_size, opts)
 
@@ -187,7 +200,14 @@ def train_shadow_matte(tf, device, opts):
     print("---------------------------------------------------------------------------")
     print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
     print("---------------------------------------------------------------------------")
-    for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
+
+    #compute total progress
+    needed_progress = int((general_config[mode]["max_epochs"]) * (dataset_count / load_size))
+    current_progress = int(start_epoch * (dataset_count / load_size))
+    pbar = tqdm(total=needed_progress)
+    pbar.update(current_progress)
+
+    for epoch in (start_epoch, general_config[mode]["max_epochs"]):
         for i, (train_data, test_data) in enumerate(zip(train_loader, itertools.cycle(test_loader_istd))):
             _, rgb_ws, rgb_ns, _, shadow_matte = train_data
             rgb_ws = rgb_ws.to(device)
@@ -204,6 +224,7 @@ def train_shadow_matte(tf, device, opts):
 
             tf.train(mode, epoch, iteration, input_map, target_map)
             iteration = iteration + 1
+            pbar.update(1)
 
             if (tf.is_stop_condition_met(mode)):
                 break
@@ -228,6 +249,8 @@ def train_shadow_matte(tf, device, opts):
 
         if (tf.is_stop_condition_met(mode)):
             break
+
+    pbar.close()
 
 def main(argv):
     (opts, args) = parser.parse_args(argv)

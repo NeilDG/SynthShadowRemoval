@@ -319,9 +319,8 @@ class TesterClass():
             input_map = {"rgb": rgb_ws, "shadow_matte": rgb2sm}
             rgb2ns = self.shadow_t.test(input_map)
 
-
-
         return rgb2ns, rgb2sm
+
     def test_shadow(self, rgb_ws, rgb_ns, shadow_matte, prefix, show_images, debug_policy, opts):
         rgb2ns, rgb2sm = self.infer_shadow_results(rgb_ws, shadow_matte, debug_policy)
 
@@ -348,6 +347,11 @@ class TesterClass():
         self.ssim_list_rgb.append(ssim_rgb)
         self.mae_list_rgb.append(mae_rgb)
 
+        #shadow matte
+        if(rgb2sm != None):
+            mae_sm = np.round(mae(rgb2sm, shadow_matte).cpu(), 4)
+            self.mae_list_sm.append(mae_sm)
+
     #for ISTD
     def test_istd_shadow(self, file_name, rgb_ws, rgb_ns, shadow_matte, show_images, save_image_results, debug_policy, opts):
         ### NOTE: ISTD-NS (No Shadows) image already has a different lighting!!! This isn't reported in the dataset. Consider using ISTD-NS as the unmasked region to avoid bias in results.
@@ -357,12 +361,15 @@ class TesterClass():
         # normalize everything
         rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
         rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
+        rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
+
+        if (rgb2sm != None):
+            rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
 
         if(show_images == 1):
             self.visdom_reporter.plot_image(rgb_ws, "ISTD WS Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(shadow_matte, "ISTD Shadow Matte Images - " + opts.version + str(opts.iteration))
             if (rgb2sm != None):
-                rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
                 self.visdom_reporter.plot_image(rgb2sm, "ISTD Shadow Matte-Like Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb_ns, "ISTD NS Images - " + opts.version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb2ns, "ISTD NS (equation) Images - " + opts.version + str(opts.iteration))
@@ -385,17 +392,19 @@ class TesterClass():
         self.ssim_list_rgb.append(ssim_rgb)
         self.mae_list_rgb.append(mae_rgb)
 
+        # shadow matte
+        if (rgb2sm != None):
+            mae_sm = np.round(mae(rgb2sm, shadow_matte).cpu(), 4)
+            self.mae_list_sm.append(mae_sm)
+
     def print_ave_shadow_performance(self, prefix, opts):
         ave_psnr_rgb = np.round(np.mean(self.psnr_list_rgb), 4)
         ave_ssim_rgb = np.round(np.mean(self.ssim_list_rgb), 4)
-        ave_psnr_sm = np.round(np.mean(self.psnr_list_sm), 4)
-        ave_ssim_sm = np.round(np.mean(self.ssim_list_sm), 4)
-
-        ave_mae_sm = np.round(np.mean(self.mae_list_sm) * 255.0, 4)
         ave_mae_rgb = np.round(np.mean(self.mae_list_rgb) * 255.0, 4)
 
+        ave_mae_sm = np.round(np.mean(self.mae_list_sm) * 255.0, 4)
+
         display_text = prefix + " - Versions: " + opts.version + "_" + str(opts.iteration) + \
-                       "<br> SM Reconstruction PSNR: " + str(ave_psnr_sm) + "<br> SM Reconstruction SSIM: " + str(ave_ssim_sm) + \
                        "<br> MAE Error (SM): " + str(ave_mae_sm) + "<br> MAE Error (RGB): " +str(ave_mae_rgb) + \
                        "<br> RGB Reconstruction PSNR: " + str(ave_psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ave_ssim_rgb)
 
