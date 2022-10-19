@@ -170,6 +170,12 @@ class AdaINGen(nn.Module):
                 num_adain_params += 2 * m.num_features
         return num_adain_params
 
+class AdaINGenConcat(AdaINGen):
+    def __init__(self, input_dim, output_dim, params, use_dropout = False):
+        super().__init__(input_dim, output_dim, params, use_dropout)
+
+    def forward(self, input):
+        return super().forward(input) + input
 
 class VAEGen(nn.Module):
     # VAE architecture

@@ -191,6 +191,7 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
                 #plot train-test loss
                 rgb2sm= self.test(input_map)
+                rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
                 target_tensor = tensor_utils.normalize_to_01(target_tensor)
                 istd_sm_test = tensor_utils.normalize_to_01(istd_sm_test)
                 self.losses_dict_t[self.TRAIN_LOSS_KEY].append(self.l1_loss(rgb2sm, target_tensor).item())
@@ -210,8 +211,6 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             input_ws = input_map["rgb"]
 
             rgb2sm = self.G_SM_predictor(input_ws)
-            rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
-            rgb2sm = torch.clip(rgb2sm, 0.0, 1.0)
 
         return rgb2sm
 

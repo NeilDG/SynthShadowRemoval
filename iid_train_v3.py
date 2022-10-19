@@ -29,6 +29,7 @@ parser.add_option('--d_lr', type=float, help="LR", default="0.0005")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--debug_run', type=int, help="Debug mode?", default=0)
 parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
+parser.add_option('--train_mode', type=str, default="all") #all, train_shadow_matte, train_shadow
 
 def update_config(opts):
     constants.server_config = opts.server_config
@@ -255,8 +256,15 @@ def main(argv):
     tf = trainer_factory.TrainerFactory(device, opts)
     tf.initialize_all_trainers(opts)
 
-    # train_shadow_matte(tf, device, opts)
-    train_shadow(tf, device, opts)
+    assert opts.train_mode == "all" or opts.train_mode == "train_shadow" or opts.train_mode == "train_shadow_matte", "Unrecognized train mode: " + opts.train_mode
+
+    if(opts.train_mode == "all"):
+        train_shadow_matte(tf, device, opts)
+        train_shadow(tf, device, opts)
+    elif (opts.train_mode == "train_shadow_matte"):
+        train_shadow_matte(tf, device, opts)
+    elif(opts.train_mode == "train_shadow"):
+        train_shadow(tf, device, opts)
 
 
 if __name__ == "__main__":

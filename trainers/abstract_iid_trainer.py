@@ -60,6 +60,16 @@ class NetworkCreator():
             G_A = ffa_gan.FFA(input_nc, num_blocks, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
         elif(net_config == 6):
             G_A = ffa_gan.FFABase(num_blocks, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
+        elif (net_config == 7):
+            params = {'dim': 64,  # number of filters in the bottommost layer
+                      'mlp_dim': 256,  # number of filters in MLP
+                      'style_dim': 8,  # length of style code
+                      'n_layer': 3,  # number of layers in feature merger/splitor
+                      'activ': 'relu',  # activation function [relu/lrelu/prelu/selu/tanh]
+                      'n_downsample': 2,  # number of downsampling layers in content encoder
+                      'n_res': num_blocks,  # number of residual blocks in content encoder/decoder
+                      'pad_type': 'reflect'}
+            G_A = usi3d_gan.AdaINGenConcat(input_dim=input_nc, output_dim=3, params=params, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
         else:
             G_A = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
 

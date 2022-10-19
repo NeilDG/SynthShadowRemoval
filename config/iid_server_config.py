@@ -86,7 +86,7 @@ class IIDServerConfig():
         network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
 
         if (constants.network_version == "v58.01"):
-            network_config[SYNTH_DATASET_VERSION] = "v20"
+            network_config[SYNTH_DATASET_VERSION] = "v20_refined"
             network_config[NUM_BLOCKS_KEY] = 3
 
         return network_config
@@ -128,8 +128,13 @@ class IIDServerConfig():
         network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
 
         if (constants.network_version == "v58.01"):
-            network_config[SYNTH_DATASET_VERSION] = "v20"
+            network_config[SYNTH_DATASET_VERSION] = "v20_refined"
             network_config[NETWORK_CONFIG_NUM] = 6
+            network_config[NUM_BLOCKS_KEY] = 3
+
+        elif (constants.network_version == "v58.02"):
+            network_config[SYNTH_DATASET_VERSION] = "v20_refined"
+            network_config[NETWORK_CONFIG_NUM] = 7
             network_config[NUM_BLOCKS_KEY] = 3
 
         return network_config

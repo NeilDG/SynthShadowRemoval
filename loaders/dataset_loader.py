@@ -1,7 +1,10 @@
 import glob
 import random
+from pathlib import Path
+import numpy as np
 import torch
 from torch.utils import data
+import cv2
 
 import constants
 from config import iid_server_config
@@ -95,53 +98,6 @@ def load_iid_datasetv2_train(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, patc
 
     return data_loader
 
-def load_cgi_dataset(rgb_dir, patch_size, opts):
-    rgb_list = assemble_img_list(rgb_dir, opts)
-
-    img_length = len(rgb_list)
-    print("Length of images: %d" % img_length)
-
-    data_loader = torch.utils.data.DataLoader(
-        iid_test_datasets.CGIDataset(img_length, rgb_list, 2, patch_size),
-        batch_size=8,
-        num_workers=1,
-        shuffle=False
-    )
-
-    return data_loader
-
-def load_iiw_dataset(rgb_dir, opts):
-    rgb_list = assemble_img_list(rgb_dir, opts)
-    rgb_list = rgb_list[0:100] #temporary short
-
-    img_length = len(rgb_list)
-    print("Length of images: %d" % img_length)
-
-    data_loader = torch.utils.data.DataLoader(
-        iid_test_datasets.IIWDataset(img_length, rgb_list),
-        batch_size=8,
-        num_workers=1,
-        shuffle=False
-    )
-
-    return data_loader
-
-def load_bell2014_dataset(r_dir, s_dir, patch_size, opts):
-    r_list = assemble_img_list(r_dir, opts)
-    s_list = assemble_img_list(s_dir, opts)
-
-    img_length = len(r_list)
-    print("Length of images: %d" % img_length)
-
-    data_loader = torch.utils.data.DataLoader(
-        iid_test_datasets.Bell2014Dataset(img_length, r_list, s_list, 2, patch_size),
-        batch_size=8,
-        num_workers=1,
-        shuffle=False
-    )
-
-    return data_loader
-
 def load_shadow_train_dataset(ws_path, ns_path, patch_size, load_size, opts):
     ws_list = assemble_img_list(ws_path, opts)
     ns_list = assemble_img_list(ns_path, opts)
@@ -162,6 +118,48 @@ def load_shadow_train_dataset(ws_path, ns_path, patch_size, load_size, opts):
     )
 
     return data_loader
+
+def clean_dataset(ws_path, ns_path, filter_minimum):
+    BASE_PATH = "E:/SynthWeather Dataset 10/"
+    ws_path_revised = ws_path[0].split("/")
+    ns_path_revised = ns_path[0].split("/")
+
+    SAVE_PATH_WS = BASE_PATH + ws_path_revised[2] + "_refined/" + ws_path_revised[3] + "/" + ws_path_revised[4] + "/"
+    SAVE_PATH_NS = BASE_PATH + ns_path_revised[2] + "_refined/" + ns_path_revised[3] + "/" + ns_path_revised[4] + "/"
+
+    try:
+        path = Path(SAVE_PATH_WS)
+        path.mkdir(parents=True)
+
+        path = Path(SAVE_PATH_NS)
+        path.mkdir(parents=True)
+    except OSError as error:
+        print("Save path already exists. Skipping.", error)
+
+    assert filter_minimum <= 100.0, "Filter minimum cannot be > 100.0"
+
+    index = 0
+    for (ws_img_path, ns_img_path) in zip(ws_path, ns_path):
+        ws_img = cv2.imread(ws_img_path)
+        # ws_img = cv2.cvtColor(ws_img, cv2.COLOR_BGR2RGB)
+
+        sobel_x = cv2.Sobel(ws_img, cv2.CV_64F, 1, 0, ksize=5)
+        sobel_y = cv2.Sobel(ws_img, cv2.CV_64F, 0, 1, ksize=5)
+        sobel_img = sobel_x + sobel_y
+        total_pixels = np.shape(ws_img)[0] * np.shape(ws_img)[1]
+        sobel_quality = np.linalg.norm(sobel_img) / total_pixels
+
+        if(sobel_quality > filter_minimum): #only save images with good edges
+            img_name = ws_img_path.split(".")[0].split("/")[-1]
+            ns_img = cv2.imread(ns_img_path)
+            # ns_img = cv2.cvtColor(ns_img, cv2.COLOR_BGR2RGB)
+
+            cv2.imwrite(SAVE_PATH_WS + img_name + ".png", ws_img)
+            cv2.imwrite(SAVE_PATH_NS + img_name + ".png", ns_img)
+            print("Saved image: ", (SAVE_PATH_WS + img_name + ".png"))
+        else:
+            print("Sobel quality of img %s: %f. DISCARDING" % (ws_img_path, sobel_quality))
+
 
 def load_shadow_test_dataset(ws_path, ns_path, opts):
     ws_list = assemble_img_list(ws_path, opts)
