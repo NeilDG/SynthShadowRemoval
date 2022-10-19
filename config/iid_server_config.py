@@ -65,7 +65,7 @@ class IIDServerConfig():
         network_config[NETWORK_CONFIG_NUM] = 5
         network_config[NC_KEY] = 3
         network_config[NUM_BLOCKS_KEY] = 3
-        network_config[SYNTH_DATASET_VERSION] = "v17"
+        network_config[SYNTH_DATASET_VERSION] = "v20_refined"
         network_config[WEIGHT_DECAY_KEY] = 0.0
         network_config[DROPOUT_KEY] = False
         network_config[AUGMENT_KEY] = "none"
