@@ -207,7 +207,7 @@ def train_shadow_matte(tf, device, opts):
     pbar = tqdm(total=needed_progress)
     pbar.update(current_progress)
 
-    for epoch in (start_epoch, general_config[mode]["max_epochs"]):
+    for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
         for i, (train_data, test_data) in enumerate(zip(train_loader, itertools.cycle(test_loader_istd))):
             _, rgb_ws, rgb_ns, _, shadow_matte = train_data
             rgb_ws = rgb_ws.to(device)
