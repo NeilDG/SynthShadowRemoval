@@ -88,6 +88,10 @@ class IIDServerConfig():
         if (constants.network_version == "v58.01"):
             network_config[SYNTH_DATASET_VERSION] = "v20_refined"
             network_config[NUM_BLOCKS_KEY] = 3
+        elif(constants.network_version == "v58.02"):
+            network_config[SYNTH_DATASET_VERSION] = "v21_refined"
+            network_config[NUM_BLOCKS_KEY] = 15
+            network_config[LOAD_SIZE_KEY_M] = 16
 
         return network_config
 

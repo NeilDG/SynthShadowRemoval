@@ -5,7 +5,7 @@ from loaders import dataset_loader
 
 parser = OptionParser()
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
-parser.add_option('--dataset_version', type=str, default="v20")
+parser.add_option('--dataset_version', type=str, default="v21")
 def main(argv):
     (opts, args) = parser.parse_args(argv)
     print(opts)
