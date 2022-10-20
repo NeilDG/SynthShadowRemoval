@@ -133,6 +133,13 @@ class IIDServerConfig():
             network_config[SYNTH_DATASET_VERSION] = "v8"
             network_config[NUM_BLOCKS_KEY] = 3
 
+        elif (constants.shadow_matte_network_version == "v58.07"):
+            network_config[SYNTH_DATASET_VERSION] = "v18"
+            network_config[NETWORK_CONFIG_NUM] = 4
+            network_config[NUM_BLOCKS_KEY] = 3
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 10
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 20
+
         return network_config
 
     def interpret_shadow_network_params_from_version(self): #interprets a given version name + iteration, to its corresponding network config.
