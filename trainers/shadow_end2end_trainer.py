@@ -237,7 +237,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             mask_tensor = input_map["shadow_mask"]
             matte_tensor = input_map["shadow_matte"]
 
-            if(self.train_mode == 3):
+            if(self.train_mode == 1 or self.train_mode == 3):
                 input_ws_inv = input_map["rgb_ws_inv"] * torchvision.transforms.functional.invert(mask_tensor)
             elif(self.train_mode == 4):
                 input_ws_inv = input_map["rgb_ws_inv"] * torchvision.transforms.functional.invert(matte_tensor)
