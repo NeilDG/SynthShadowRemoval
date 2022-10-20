@@ -77,30 +77,6 @@ class NetworkCreator():
 
         return G_A, D_A
 
-    def initialize_shading_network(self, net_config, num_blocks, input_nc):
-        if (net_config == 1):
-            G_S = cycle_gan.Generator(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks).to(self.gpu_device)
-        elif (net_config == 2):
-            G_S = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
-        elif (net_config == 3):
-            G_S = cycle_gan.Generator(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
-        elif (net_config == 4):
-            params = {'dim': 64,  # number of filters in the bottommost layer
-                      'mlp_dim': 256,  # number of filters in MLP
-                      'style_dim': 8,  # length of style code
-                      'n_layer': 3,  # number of layers in feature merger/splitor
-                      'activ': 'relu',  # activation function [relu/lrelu/prelu/selu/tanh]
-                      'n_downsample': 2,  # number of downsampling layers in content encoder
-                      'n_res': num_blocks,  # number of residual blocks in content encoder/decoder
-                      'pad_type': 'reflect'}
-            G_S = usi3d_gan.AdaINGen(input_dim=input_nc, output_dim=1, params=params).to(self.gpu_device)
-        else:
-            G_S = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
-
-        D_S = cycle_gan.Discriminator(input_nc=1).to(self.gpu_device)  # use CycleGAN's discriminator
-
-        return G_S, D_S
-
     def initialize_shadow_matte_network(self, net_config, num_blocks, input_nc):
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         network_config = sc_instance.interpret_shadow_network_params_from_version()
@@ -127,6 +103,30 @@ class NetworkCreator():
         D_Z = cycle_gan.Discriminator(input_nc=1).to(self.gpu_device)  # use CycleGAN's discriminator
 
         return G_Z, D_Z
+
+    def initialize_shading_network(self, net_config, num_blocks, input_nc):
+        if (net_config == 1):
+            G_S = cycle_gan.Generator(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks).to(self.gpu_device)
+        elif (net_config == 2):
+            G_S = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=1, num_downs=num_blocks).to(self.gpu_device)
+        elif (net_config == 3):
+            G_S = cycle_gan.Generator(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
+        elif (net_config == 4):
+            params = {'dim': 64,  # number of filters in the bottommost layer
+                      'mlp_dim': 256,  # number of filters in MLP
+                      'style_dim': 8,  # length of style code
+                      'n_layer': 3,  # number of layers in feature merger/splitor
+                      'activ': 'relu',  # activation function [relu/lrelu/prelu/selu/tanh]
+                      'n_downsample': 2,  # number of downsampling layers in content encoder
+                      'n_res': num_blocks,  # number of residual blocks in content encoder/decoder
+                      'pad_type': 'reflect'}
+            G_S = usi3d_gan.AdaINGen(input_dim=input_nc, output_dim=1, params=params).to(self.gpu_device)
+        else:
+            G_S = cycle_gan.GeneratorV2(input_nc=input_nc, output_nc=1, n_residual_blocks=num_blocks, has_dropout=False, multiply=False).to(self.gpu_device)
+
+        D_S = cycle_gan.Discriminator(input_nc=1).to(self.gpu_device)  # use CycleGAN's discriminator
+
+        return G_S, D_S
 
     def initialize_parsing_network(self, input_nc):
         G_P = unet_gan.UNetClassifier(num_channels=input_nc, num_classes=2).to(self.gpu_device)
