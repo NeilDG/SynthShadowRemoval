@@ -184,7 +184,7 @@ class IIDServerConfig():
             network_config[NUM_BLOCKS_KEY] = 3
             network_config[NETWORK_CONFIG_NUM] = 6
             self.general_configs["train_shadow"]["min_epochs"] = 20
-            self.general_configs["train_shadow"]["max_epochs"] = 80
+            self.general_configs["train_shadow"]["max_epochs"] = 25
 
         return network_config
 
