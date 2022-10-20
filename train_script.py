@@ -2,8 +2,8 @@
 
 import os
 def train_relighting():
-    os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --train_mode=train_shadow_matte "
-              "--plot_enabled=1 --version=\"v58.02\" --iteration=1")
+    os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --train_mode=all "
+              "--plot_enabled=0 --version=\"v58.06\" --iteration=1")
 
 def train_domain_adaptation():
     os.system("python \"cyclegan_main.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
