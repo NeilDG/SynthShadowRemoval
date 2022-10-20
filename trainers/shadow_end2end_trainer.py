@@ -59,7 +59,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.schedulerG = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG, patience=1000000 / self.batch_size, threshold=0.00005)
         self.schedulerD = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD, patience=1000000 / self.batch_size, threshold=0.00005)
 
-        self.NETWORK_VERSION = sc_instance.get_version_config("network_z_name", self.iteration)
+        self.NETWORK_VERSION = sc_instance.get_version_config("shadow_network_version", "network_z_name", self.iteration)
         self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
         self.load_saved_state()
 
@@ -195,7 +195,9 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                     self.save_states(epoch, iteration, False)
 
                 #plot train-test loss
-                rgb2ns= self.test(input_map)
+                rgb2ns = self.test(input_map)
+                rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
+                rgb2ns_istd = tensor_utils.normalize_to_01(rgb2ns_istd)
                 target_tensor = tensor_utils.normalize_to_01(target_tensor)
                 istd_ns_test = tensor_utils.normalize_to_01(istd_ns_test)
                 self.losses_dict_t[self.TRAIN_LOSS_KEY].append(self.l1_loss(rgb2ns, target_tensor).item())
@@ -217,8 +219,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             input_ws = torch.cat([input_ws, matte_tensor], 1)
 
             rgb2ns = self.G_SM_predictor(input_ws)
-            rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
-            rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
+            # rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
+            # rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
 
         return rgb2ns
 

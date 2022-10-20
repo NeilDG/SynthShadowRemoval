@@ -273,7 +273,8 @@ def main(argv):
 
     plot_utils.VisdomReporter.initialize()
 
-    constants.network_version = opts.version
+    constants.shadow_network_version = opts.version
+    constants.shadow_matte_network_version = opts.version
     iid_server_config.IIDServerConfig.initialize()
 
     tf = trainer_factory.TrainerFactory(device, opts)

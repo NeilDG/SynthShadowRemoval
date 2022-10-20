@@ -19,9 +19,6 @@ class ShadowMapTransforms():
     def __init__(self):
         super(ShadowMapTransforms, self).__init__()
 
-        sc_instance = iid_server_config.IIDServerConfig.getInstance()
-        network_config = sc_instance.interpret_shadow_network_params_from_version()
-
 
     def generate_shadow_map(self, rgb_tensor_ws, rgb_tensor_ns, one_channel = True):
         shadow_tensor = rgb_tensor_ns - rgb_tensor_ws

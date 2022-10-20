@@ -59,7 +59,7 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.schedulerG = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG, patience=1000000 / self.batch_size, threshold=0.00005)
         self.schedulerD = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD, patience=1000000 / self.batch_size, threshold=0.00005)
 
-        self.NETWORK_VERSION = sc_instance.get_version_config("network_m_name", self.iteration)
+        self.NETWORK_VERSION = sc_instance.get_version_config("shadow_matte_network_version", "network_m_name", self.iteration)
         self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
         self.load_saved_state()
 

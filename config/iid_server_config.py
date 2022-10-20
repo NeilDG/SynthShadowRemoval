@@ -31,15 +31,15 @@ class IIDServerConfig():
 
 
     def update_version_config(self):
-        self.version_config = {"version": constants.network_version, "network_m_name": "rgb2sm", "network_z_name": "rgb2ns",
+        self.version_config = {"shadow_network_version": constants.shadow_network_version, "shadow_matte_network_version": constants.shadow_matte_network_version, "network_m_name": "rgb2sm", "network_z_name": "rgb2ns",
                                "style_transfer_name": "synth2rgb"}
 
     def get_general_configs(self):
         return self.general_configs
 
-    def get_version_config(self, network_name, iteration):
+    def get_version_config(self, version_keyword, network_name, iteration):
         network = self.version_config[network_name]
-        version = self.version_config["version"]
+        version = self.version_config[version_keyword]
 
         return network + "_" + version + "_" + str(iteration)
 
@@ -85,15 +85,26 @@ class IIDServerConfig():
         # configure batch size. NOTE: Batch size must be equal or larger than load size
         network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
 
-        if (constants.network_version == "v58.01"):
+        assert "v58" in constants.shadow_matte_network_version, "Shadow matte network version not recognized: " + constants.shadow_matte_network_version
+
+        if (constants.shadow_matte_network_version == "v58.01"):
             network_config[SYNTH_DATASET_VERSION] = "v20_refined"
             network_config[NUM_BLOCKS_KEY] = 3
-        elif(constants.network_version == "v58.02"):
+        elif(constants.shadow_matte_network_version == "v58.02"):
             network_config[SYNTH_DATASET_VERSION] = "v21_refined"
             network_config[NUM_BLOCKS_KEY] = 15
             network_config[LOAD_SIZE_KEY_M] = 16
-        elif(constants.network_version == "v58.03"):
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+
+        elif(constants.shadow_matte_network_version == "v58.03"):
             network_config[SYNTH_DATASET_VERSION] = "v17"
+            network_config[NUM_BLOCKS_KEY] = 3
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 10
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 20
+
+        elif (constants.shadow_matte_network_version == "v58.04"):
+            network_config[SYNTH_DATASET_VERSION] = "v18"
             network_config[NUM_BLOCKS_KEY] = 3
             self.general_configs["train_shadow_matte"]["min_epochs"] = 10
             self.general_configs["train_shadow_matte"]["max_epochs"] = 20
@@ -136,12 +147,14 @@ class IIDServerConfig():
         #configure batch size. NOTE: Batch size must be equal or larger than load size
         network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
 
-        if (constants.network_version == "v58.01"):
+        assert "v58" in constants.shadow_network_version, "Shadow network version not recognized: " + constants.shadow_network_version
+
+        if (constants.shadow_network_version == "v58.01"):
             network_config[SYNTH_DATASET_VERSION] = "v20_refined"
             network_config[NETWORK_CONFIG_NUM] = 6
             network_config[NUM_BLOCKS_KEY] = 3
 
-        elif (constants.network_version == "v58.02"):
+        elif (constants.shadow_network_version == "v58.02"):
             network_config[SYNTH_DATASET_VERSION] = "v20_refined"
             network_config[NETWORK_CONFIG_NUM] = 7
             network_config[NUM_BLOCKS_KEY] = 3
@@ -174,7 +187,7 @@ class IIDServerConfig():
         network_config[BATCH_SIZE_KEY] = 256
         network_config[NORM_MODE_KEY] = "batch"
 
-        if(constants.network_version == "v8.03"): #AdainGEN
+        if(constants.shadow_network_version == "v8.03"): #AdainGEN
             network_config[NETWORK_CONFIG_NUM] = 3
             network_config[NUM_BLOCKS_KEY] = 4
 
@@ -189,26 +202,26 @@ class IIDServerConfig():
             else:  # RTX 3090
                 network_config[LOAD_SIZE_KEY] = 8
 
-        elif(constants.network_version == "v8.04"): #Unet
+        elif(constants.shadow_network_version == "v8.04"): #Unet
             network_config[NETWORK_CONFIG_NUM] = 2
             network_config[NUM_BLOCKS_KEY] = 0
 
-        elif (constants.network_version == "v8.05"):  # Unet
+        elif (constants.shadow_network_version == "v8.05"):  # Unet
             network_config[NETWORK_CONFIG_NUM] = 2
             network_config[NUM_BLOCKS_KEY] = 0
             network_config[NORM_MODE_KEY] = "instance"
 
-        elif (constants.network_version == "v8.06"):  # Cycle-GAN
+        elif (constants.shadow_network_version == "v8.06"):  # Cycle-GAN
             network_config[NETWORK_CONFIG_NUM] = 1
             network_config[NUM_BLOCKS_KEY] = 10
             network_config[NORM_MODE_KEY] = "batch"
 
-        elif (constants.network_version == "v8.07"):  # Cycle-GAN
+        elif (constants.shadow_network_version == "v8.07"):  # Cycle-GAN
             network_config[NETWORK_CONFIG_NUM] = 1
             network_config[NUM_BLOCKS_KEY] = 10
             network_config[NORM_MODE_KEY] = "instance"
         else:
-            print("Network config not found for ", constants.network_version)
+            print("Network config not found for ", constants.shadow_network_version)
 
         return network_config
 
