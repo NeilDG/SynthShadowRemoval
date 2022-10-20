@@ -143,9 +143,11 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             self.optimizerD.zero_grad()
             self.D_SM_discriminator.train()
             output = self.G_SM_predictor(input_ws)
-            prediction = self.D_SM_discriminator(output)
+
+            prediction = self.D_SM_discriminator(target_tensor)
             real_tensor = torch.ones_like(prediction)
             fake_tensor = torch.zeros_like(prediction)
+
             D_SM_real_loss = self.adversarial_loss(self.D_SM_discriminator(target_tensor), real_tensor) * self.adv_weight
             D_SM_fake_loss = self.adversarial_loss(self.D_SM_pool.query(self.D_SM_discriminator(output.detach())), fake_tensor) * self.adv_weight
 
@@ -153,8 +155,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
             self.fp16_scaler.scale(errD).backward()
             if (accum_batch_size % self.batch_size == 0):
-                self.fp16_scaler.step(self.optimizerD)
                 self.schedulerD.step(errD)
+                self.fp16_scaler.step(self.optimizerD)
 
             #shadow map generator
             self.optimizerG.zero_grad()
@@ -171,8 +173,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
             self.fp16_scaler.scale(errG).backward()
             if (accum_batch_size % self.batch_size == 0):
-                self.fp16_scaler.step(self.optimizerG)
                 self.schedulerG.step(errG)
+                self.fp16_scaler.step(self.optimizerG)
                 self.fp16_scaler.update()
 
                 # what to put to losses dict for visdom reporting?
