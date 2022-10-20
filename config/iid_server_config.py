@@ -149,7 +149,7 @@ class IIDServerConfig():
         elif (constants.shadow_matte_network_version == "v58.09"):
             network_config[SYNTH_DATASET_VERSION] = "v18"
             network_config[NUM_BLOCKS_KEY] = 3
-
+            
         elif (constants.shadow_matte_network_version == "v58.10"):
             network_config[SYNTH_DATASET_VERSION] = "v22"
             network_config[NUM_BLOCKS_KEY] = 3
@@ -157,6 +157,12 @@ class IIDServerConfig():
             network_config[WEIGHT_DECAY_KEY] = 0.01
             self.general_configs["train_shadow_matte"]["min_epochs"] = 10
             self.general_configs["train_shadow_matte"]["max_epochs"] = 20
+
+        elif (constants.shadow_matte_network_version == "v58.11"):
+            network_config[SYNTH_DATASET_VERSION] = "v18"
+            network_config[NETWORK_CONFIG_NUM] = 2
+            network_config[NUM_BLOCKS_KEY] = 1
+            network_config[LOAD_SIZE_KEY_M] = 64
 
         return network_config
 
