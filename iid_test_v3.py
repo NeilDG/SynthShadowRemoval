@@ -110,7 +110,7 @@ def test_shadow_matte(dataset_tester, opts):
     rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
 
     print("Dataset path: ", rgb_dir_ws, rgb_dir_ns)
-    shadow_loader = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
+    shadow_loader, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
     for i, (_, rgb_ws, _, _, shadow_matte) in enumerate(shadow_loader, 0):
         rgb_ws = rgb_ws.to(device)
         shadow_matte = shadow_matte.to(device)
@@ -122,7 +122,7 @@ def test_shadow_matte(dataset_tester, opts):
     dataset_tester.print_shadow_matte_performance("SM - Train Set", opts)
 
     # ISTD test dataset
-    shadow_loader = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, 8, opts)
+    shadow_loader, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, 8, opts)
     for i, (file_name, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
         rgb_ws_tensor = rgb_ws.to(device)
         shadow_matte = shadow_matte.to(device)
@@ -201,7 +201,7 @@ def main(argv):
 
     dataset_tester = TesterClass(shadow_m, shadow_t)
     test_shadow_matte(dataset_tester, opts)
-    test_shadow_removal(dataset_tester, opts)
+    # test_shadow_removal(dataset_tester, opts)
 
 
 if __name__ == "__main__":

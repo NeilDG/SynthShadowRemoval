@@ -83,7 +83,11 @@ cd NeuralNets-GenerativeExperiment-V58.XX.XX
 python "ccs1_main.py"
 python "ccs2_main.py"
 
+//FOR DOWNLOAD DATASET, TRY GDRIVE
+gdown https://drive.google.com/uc?id=1KsvUTjiCPFoHBYNgUBYVqj6xvSibx3cX
+
 rm -rf NeuralNets-GenerativeExperiment-V51.XX.XX
+rm -rf "SynthWeather Dataset 9"
 
 zip -r "checkpoints.zip" "rgb2albedo_v9.01_7.pt" "rgb2albedo_v9.01_8.pt" "rgb2albedo_v9.01_9.pt" "rgb2albedo_v9.01_10.pt" "rgb2albedo_v9.01_11.pt" "rgb2albedo_v9.01_12.pt" "rgb2albedo_v9.01_13.pt" "rgb2albedo_v9.01_14.pt" \
 "rgb2mask_v9.01_7.pt" "rgb2mask_v9.01_8.pt" "rgb2mask_v9.01_9.pt" "rgb2mask_v9.01_10.pt" "rgb2mask_v9.01_11.pt" "rgb2mask_v9.01_12.pt" "rgb2mask_v9.01_13.pt" "rgb2mask_v9.01_14.pt" \

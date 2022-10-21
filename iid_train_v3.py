@@ -112,7 +112,7 @@ def train_shadow(tf, device, opts):
     load_size = network_config["load_size_z"]
 
     train_loader, dataset_count = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, patch_size, load_size, opts)
-    test_loader_train = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
+    test_loader_train, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
     test_loader_istd = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, load_size, opts)
 
     iteration = 0
@@ -192,8 +192,8 @@ def train_shadow_matte(tf, device, opts):
     load_size = network_config["load_size_m"]
 
     train_loader, dataset_count = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, patch_size, load_size, opts)
-    test_loader_train = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
-    test_loader_istd = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, load_size, opts)
+    test_loader_train, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
+    test_loader_istd, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, load_size, opts)
 
     iteration = 0
     start_epoch = sc_instance.get_last_epoch_from_mode(mode)
@@ -259,8 +259,6 @@ def main(argv):
     print("=====================BEGIN============================")
     print("Server config? %d Has GPU available? %d Count: %d" % (constants.server_config, torch.cuda.is_available(), torch.cuda.device_count()))
     print("Torch CUDA version: %s" % torch.version.cuda)
-    
-    torch.multiprocessing.set_sharing_strategy('file_system')
 
     manualSeed = 0
     random.seed(manualSeed)
