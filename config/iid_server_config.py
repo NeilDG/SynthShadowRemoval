@@ -190,6 +190,13 @@ class IIDServerConfig():
             self.general_configs["train_shadow_matte"]["min_epochs"] = 20
             self.general_configs["train_shadow_matte"]["max_epochs"] = 40
 
+        elif (constants.shadow_matte_network_version == "v58.17"):
+            network_config[SYNTH_DATASET_VERSION] = "v25_refined"
+            network_config[NETWORK_CONFIG_NUM] = 4
+            network_config[NUM_BLOCKS_KEY] = 3
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 20
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
+
         return network_config
 
     def interpret_shadow_network_params_from_version(self): #interprets a given version name + iteration, to its corresponding network config.
@@ -310,13 +317,13 @@ class IIDServerConfig():
             network_config[NETWORK_CONFIG_NUM] = 1
             network_config[NUM_BLOCKS_KEY] = 10
             network_config[NORM_MODE_KEY] = "batch"
-            network_config[LOAD_SIZE_KEY] = 4
+            network_config[LOAD_SIZE_KEY] = 6
 
         elif (constants.style_transfer_version == "v9.07"):  # Cycle-GAN
             network_config[NETWORK_CONFIG_NUM] = 1
             network_config[NUM_BLOCKS_KEY] = 10
             network_config[NORM_MODE_KEY] = "instance"
-            network_config[LOAD_SIZE_KEY] = 4
+            network_config[LOAD_SIZE_KEY] = 6
         else:
             print("Network config not found for ", constants.style_transfer_version)
 
