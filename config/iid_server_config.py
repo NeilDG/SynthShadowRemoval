@@ -310,13 +310,13 @@ class IIDServerConfig():
             network_config[NETWORK_CONFIG_NUM] = 1
             network_config[NUM_BLOCKS_KEY] = 10
             network_config[NORM_MODE_KEY] = "batch"
-            network_config[LOAD_SIZE_KEY] = 8
+            network_config[LOAD_SIZE_KEY] = 4
 
         elif (constants.style_transfer_version == "v9.07"):  # Cycle-GAN
             network_config[NETWORK_CONFIG_NUM] = 1
             network_config[NUM_BLOCKS_KEY] = 10
             network_config[NORM_MODE_KEY] = "instance"
-            network_config[LOAD_SIZE_KEY] = 8
+            network_config[LOAD_SIZE_KEY] = 4
         else:
             print("Network config not found for ", constants.style_transfer_version)
 
