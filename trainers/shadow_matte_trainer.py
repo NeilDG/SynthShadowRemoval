@@ -42,13 +42,13 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         self.visdom_reporter = plot_utils.VisdomReporter.getInstance()
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
-        general_config = sc_instance.get_general_configs()
         network_config = sc_instance.interpret_shadow_matte_params_from_version()
+        general_config = sc_instance.get_general_configs()
 
         self.load_size = network_config["load_size_m"]
         self.batch_size = network_config["batch_size_m"]
 
-        self.stopper_method = early_stopper.EarlyStopper(general_config["train_shadow"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, 3000, 99999.9)
+        self.stopper_method = early_stopper.EarlyStopper(general_config["train_shadow_matte"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, 3000, 99999.9)
         self.stop_result = False
 
         self.initialize_dict()
