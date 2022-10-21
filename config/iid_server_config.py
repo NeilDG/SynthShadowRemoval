@@ -31,8 +31,9 @@ class IIDServerConfig():
 
 
     def update_version_config(self):
-        self.version_config = {"shadow_network_version": constants.shadow_network_version, "shadow_matte_network_version": constants.shadow_matte_network_version, "network_m_name": "rgb2sm", "network_z_name": "rgb2ns",
-                               "style_transfer_name": "synth2rgb"}
+        self.version_config = {"shadow_network_version": constants.shadow_network_version, "shadow_matte_network_version": constants.shadow_matte_network_version,
+                               "style_transfer_version" : constants.style_transfer_version,
+                               "network_m_name": "rgb2sm", "network_z_name": "rgb2ns", "style_transfer_name": "synth2rgb"}
 
     def get_general_configs(self):
         return self.general_configs
@@ -183,7 +184,7 @@ class IIDServerConfig():
             self.general_configs["train_shadow_matte"]["max_epochs"] = 40
 
         elif (constants.shadow_matte_network_version == "v58.16"):
-            network_config[SYNTH_DATASET_VERSION] = "v24"
+            network_config[SYNTH_DATASET_VERSION] = "v24_refined"
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NUM_BLOCKS_KEY] = 3
             self.general_configs["train_shadow_matte"]["min_epochs"] = 20
@@ -267,7 +268,7 @@ class IIDServerConfig():
         if (constants.server_config == 1):  # COARE
             network_config[LOAD_SIZE_KEY] = 16
         elif (constants.server_config == 2):  # CCS JUPYTER
-            network_config[LOAD_SIZE_KEY] = 16
+            network_config[LOAD_SIZE_KEY] = 12
         elif (constants.server_config == 3):  # GCLOUD
             network_config[LOAD_SIZE_KEY] = 16
         elif (constants.server_config == 4):  # RTX 2080Ti
@@ -279,14 +280,16 @@ class IIDServerConfig():
         network_config[BATCH_SIZE_KEY] = 256
         network_config[NORM_MODE_KEY] = "batch"
 
-        if(constants.shadow_network_version == "v8.03"): #AdainGEN
+        assert "v9" in constants.style_transfer_version, "Style transfer network version not recognized: " + constants.style_transfer_version
+
+        if(constants.style_transfer_version == "v9.03"): #AdainGEN
             network_config[NETWORK_CONFIG_NUM] = 3
             network_config[NUM_BLOCKS_KEY] = 4
 
             if (constants.server_config == 1):  # COARE
                 network_config[LOAD_SIZE_KEY] = 8
             elif (constants.server_config == 2):  # CCS JUPYTER
-                network_config[LOAD_SIZE_KEY] = 8
+                network_config[LOAD_SIZE_KEY] = 5
             elif (constants.server_config == 3):  # GCLOUD
                 network_config[LOAD_SIZE_KEY] = 8
             elif (constants.server_config == 4):  # RTX 2080Ti
@@ -294,26 +297,26 @@ class IIDServerConfig():
             else:  # RTX 3090
                 network_config[LOAD_SIZE_KEY] = 8
 
-        elif(constants.shadow_network_version == "v8.04"): #Unet
+        elif(constants.style_transfer_version == "v9.04"): #Unet
             network_config[NETWORK_CONFIG_NUM] = 2
             network_config[NUM_BLOCKS_KEY] = 0
 
-        elif (constants.shadow_network_version == "v8.05"):  # Unet
+        elif (constants.style_transfer_version == "v9.05"):  # Unet
             network_config[NETWORK_CONFIG_NUM] = 2
             network_config[NUM_BLOCKS_KEY] = 0
             network_config[NORM_MODE_KEY] = "instance"
 
-        elif (constants.shadow_network_version == "v8.06"):  # Cycle-GAN
+        elif (constants.style_transfer_version == "v9.06"):  # Cycle-GAN
             network_config[NETWORK_CONFIG_NUM] = 1
             network_config[NUM_BLOCKS_KEY] = 10
             network_config[NORM_MODE_KEY] = "batch"
 
-        elif (constants.shadow_network_version == "v8.07"):  # Cycle-GAN
+        elif (constants.style_transfer_version == "v9.07"):  # Cycle-GAN
             network_config[NETWORK_CONFIG_NUM] = 1
             network_config[NUM_BLOCKS_KEY] = 10
             network_config[NORM_MODE_KEY] = "instance"
         else:
-            print("Network config not found for ", constants.shadow_network_version)
+            print("Network config not found for ", constants.style_transfer_version)
 
         return network_config
 
