@@ -152,8 +152,8 @@ def test_shadow_removal(dataset_tester, opts):
     print("Dataset path: ", rgb_dir_ws, rgb_dir_ns)
     # SHADOW dataset test
     # Using train dataset
-    shadow_loader = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
-    for i, (_, rgb_ws, rgb_ns, _, shadow_matte) in enumerate(shadow_loader, 0):
+    shadow_loader, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
+    for i, (_, rgb_ws, rgb_ns, _, _, shadow_matte) in enumerate(shadow_loader, 0):
         rgb_ws = rgb_ws.to(device)
         rgb_ns = rgb_ns.to(device)
         shadow_matte = shadow_matte.to(device)
@@ -165,8 +165,8 @@ def test_shadow_removal(dataset_tester, opts):
     dataset_tester.print_ave_shadow_performance("Train Set", opts)
 
     # ISTD test dataset
-    shadow_loader = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, 8, opts)
-    for i, (file_name, rgb_ws, rgb_ns, shadow_matte) in enumerate(shadow_loader, 0):
+    shadow_loader, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, 8, opts)
+    for i, (file_name, rgb_ws, rgb_ns, _, shadow_matte) in enumerate(shadow_loader, 0):
         rgb_ws_tensor = rgb_ws.to(device)
         rgb_ns_tensor = rgb_ns.to(device)
         shadow_matte = shadow_matte.to(device)
@@ -174,7 +174,7 @@ def test_shadow_removal(dataset_tester, opts):
         dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.debug_policy, opts)
         # break
 
-    dataset_tester.print_ave_shadow_performance("ISTD", opts)\
+    dataset_tester.print_ave_shadow_performance("ISTD", opts)
 
 def main(argv):
     (opts, args) = parser.parse_args(argv)
@@ -204,8 +204,8 @@ def main(argv):
     shadow_t = tf.get_shadow_trainer()
 
     dataset_tester = TesterClass(shadow_m, shadow_t)
-    test_shadow_matte(dataset_tester, opts)
-    # test_shadow_removal(dataset_tester, opts)
+    # test_shadow_matte(dataset_tester, opts)
+    test_shadow_removal(dataset_tester, opts)
 
 
 if __name__ == "__main__":

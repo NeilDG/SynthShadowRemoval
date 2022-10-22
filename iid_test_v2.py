@@ -307,6 +307,7 @@ class TesterClass():
     def infer_shadow_results(self, rgb_ws, shadow_matte, debug_policy):
         if (debug_policy == 1):
             # only test shadow removal
+            # shadow_matte = tensor_utils.normalize_to_01(shadow_matte)
             input_map = {"rgb": rgb_ws, "shadow_matte": shadow_matte}
             rgb2ns = self.shadow_t.test(input_map)
 

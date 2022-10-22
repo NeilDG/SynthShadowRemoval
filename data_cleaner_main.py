@@ -14,7 +14,7 @@ parser = OptionParser()
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
 parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:0")
 parser.add_option('--version', type=str, default="v58.16")
-parser.add_option('--dataset_version_to_refine', type=str, default="v25")
+parser.add_option('--dataset_version_to_refine', type=str, default="v26")
 parser.add_option('--iteration', type=int, help="Style version?", default="1")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 
@@ -87,9 +87,12 @@ def prepare_clean(opts):
     istd_mean = -0.0003
     istd_std = 0.0345 * 2.0
 
-    # index = 49996
-    # ws_list = ws_list[index: len(ws_list)]
-    # ns_list = ns_list[index: len(ns_list)]
+    print("Dataset len before: ", len(ws_list))
+    index = 199262
+    ws_list = ws_list[index: len(ws_list)]
+    ns_list = ns_list[index: len(ns_list)]
+
+    print("Trimming dataset. Dataset len after: ", len(ws_list))
 
     dataset_loader.clean_dataset_using_std_mean(ws_list, ns_list, istd_mean, istd_std)
 
