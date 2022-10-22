@@ -71,7 +71,9 @@ class ShadowTrainDataset(data.Dataset):
 
             rgb_ws, rgb_ns, shadow_map, shadow_matte = self.shadow_op.generate_shadow_map(rgb_ws, rgb_ns, False)
 
+            rgb_ws_gray = kornia.color.rgb_to_grayscale(rgb_ws)
             rgb_ws = self.norm_op(rgb_ws)
+            rgb_ws_gray = self.norm_op(rgb_ws_gray)
             rgb_ns = self.norm_op(rgb_ns)
             shadow_map = self.norm_op(shadow_map)
             shadow_matte = self.norm_op(shadow_matte)
@@ -80,11 +82,12 @@ class ShadowTrainDataset(data.Dataset):
             print("Failed to load: ", self.img_list_a[idx], self.img_list_b[idx])
             print("ERROR: ", e)
             rgb_ws = None
+            rgb_ws_gray = None
             rgb_ns = None
             shadow_map = None
             shadow_matte = None
 
-        return file_name, rgb_ws, rgb_ns, shadow_map, shadow_matte
+        return file_name, rgb_ws, rgb_ns, rgb_ws_gray, shadow_map, shadow_matte
 
     def __len__(self):
         return self.img_length
@@ -122,7 +125,9 @@ class ShadowISTDDataset(data.Dataset):
             shadow_map = rgb_ns - rgb_ws
             shadow_matte = kornia.color.rgb_to_grayscale(shadow_map)
 
+            rgb_ws_gray = kornia.color.rgb_to_grayscale(rgb_ws)
             rgb_ws = self.norm_op(rgb_ws)
+            rgb_ws_gray = self.norm_op(rgb_ws_gray)
             rgb_ns = self.norm_op(rgb_ns)
             shadow_matte = self.norm_op(shadow_matte)
 
@@ -131,10 +136,11 @@ class ShadowISTDDataset(data.Dataset):
             print("ERROR: ", e)
             rgb_ws = None
             rgb_ns = None
+            rgb_ws_gray = None
             shadow_mask = None
             shadow_matte = None
 
-        return file_name, rgb_ws, rgb_ns, shadow_matte
+        return file_name, rgb_ws, rgb_ns, rgb_ws_gray, shadow_matte
 
     def __len__(self):
         return self.img_length

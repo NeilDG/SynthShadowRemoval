@@ -101,8 +101,11 @@ def test_shadow_matte(dataset_tester, opts):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
 
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
-    network_config = sc_instance.interpret_shadow_matte_params_from_version()
     sc_instance.update_version_config()
+    network_config = sc_instance.interpret_shadow_matte_params_from_version()
+    general_config = sc_instance.get_general_configs()
+    print("General config:", general_config)
+    print("Network config: ", network_config)
 
     dataset_version = network_config["dataset_version"]
 
@@ -111,11 +114,12 @@ def test_shadow_matte(dataset_tester, opts):
 
     print("Dataset path: ", rgb_dir_ws, rgb_dir_ns)
     shadow_loader, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
-    for i, (_, rgb_ws, _, _, shadow_matte) in enumerate(shadow_loader, 0):
+    for i, (_, rgb_ws, _, rgb_ws_gray, _, shadow_matte) in enumerate(shadow_loader, 0):
         rgb_ws = rgb_ws.to(device)
+        rgb_ws_gray = rgb_ws_gray.to(device)
         shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_shadow_matte(rgb_ws, shadow_matte, "Train", opts.img_vis_enabled, opts)
+        dataset_tester.test_shadow_matte(rgb_ws, rgb_ws_gray, shadow_matte, "Train", opts.img_vis_enabled, opts)
         if (i % 16 == 0):
             break
 
@@ -123,11 +127,12 @@ def test_shadow_matte(dataset_tester, opts):
 
     # ISTD test dataset
     shadow_loader, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, 8, opts)
-    for i, (file_name, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
-        rgb_ws_tensor = rgb_ws.to(device)
+    for i, (_, rgb_ws, _, rgb_ws_gray, shadow_matte) in enumerate(shadow_loader, 0):
+        rgb_ws = rgb_ws.to(device)
+        rgb_ws_gray = rgb_ws_gray.to(device)
         shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_shadow_matte(rgb_ws_tensor, shadow_matte, "ISTD", opts.img_vis_enabled, opts)
+        dataset_tester.test_shadow_matte(rgb_ws, rgb_ws_gray, shadow_matte, "ISTD", opts.img_vis_enabled, opts)
         # break
 
     dataset_tester.print_shadow_matte_performance("SM - ISTD", opts)
@@ -194,7 +199,6 @@ def main(argv):
     constants.shadow_network_version = opts.shadow_network_version
 
     iid_server_config.IIDServerConfig.initialize()
-
     tf = trainer_factory.TrainerFactory(device, opts)
     shadow_m = tf.get_shadow_matte_trainer()
     shadow_t = tf.get_shadow_trainer()

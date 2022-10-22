@@ -47,6 +47,7 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         self.load_size = network_config["load_size_m"]
         self.batch_size = network_config["batch_size_m"]
+        self.use_grayscale = network_config["use_grayscale"]
 
         self.stopper_method = early_stopper.EarlyStopper(general_config["train_shadow_matte"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, 3000, 99999.9)
         self.stop_result = False
@@ -129,7 +130,10 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.caption_dict_t[self.TEST_LOSS_KEY] = "Test L1 loss per iteration"
 
     def train(self, epoch, iteration, input_map, target_map):
-        input_ws = input_map["rgb"]
+        if(self.use_grayscale):
+            input_ws = input_map["rgb_ws_gray"]
+        else:
+            input_ws = input_map["rgb"]
         target_tensor = target_map["shadow_matte"]
         accum_batch_size = self.load_size * iteration
 
@@ -203,13 +207,19 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def test_istd(self, input_map):
         # print("Testing on ISTD dataset.")
-        input_map_new = {"rgb" : input_map["rgb_ws_istd"],
-                         "shadow_matte" : input_map["matte_istd"]}
+
+        input_map_new = {"rgb": input_map["rgb_ws_istd"],
+                         "rgb_ws_gray" : input_map["gray_istd"],
+                         "shadow_matte": input_map["matte_istd"]}
+
         return self.test(input_map_new)
 
     def test(self, input_map):
         with torch.no_grad():
-            input_ws = input_map["rgb"]
+            if (self.use_grayscale):
+                input_ws = input_map["rgb_ws_gray"]
+            else:
+                input_ws = input_map["rgb"]
 
             rgb2sm = self.G_SM_predictor(input_ws)
 
@@ -220,7 +230,11 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.visdom_reporter.plot_train_test_loss("train_test_loss", iteration, self.losses_dict_t, self.caption_dict_t, self.NETWORK_CHECKPATH)
 
     def visdom_visualize(self, input_map, label="Train"):
-        input_ws = input_map["rgb"]
+        if (self.use_grayscale):
+            input_ws = input_map["rgb_ws_gray"]
+        else:
+            input_ws = input_map["rgb"]
+
         matte_tensor = input_map["shadow_matte"]
         rgb2sm = self.test(input_map)
 

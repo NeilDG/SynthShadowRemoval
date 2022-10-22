@@ -319,8 +319,8 @@ class TesterClass():
 
         return rgb2ns, rgb2sm
 
-    def test_shadow_matte(self, rgb_ws, shadow_matte, prefix, show_images, opts):
-        rgb2sm = self.shadow_m.test({"rgb": rgb_ws})
+    def test_shadow_matte(self, rgb_ws, rgb_ws_gray, shadow_matte, prefix, show_images, opts):
+        rgb2sm = self.shadow_m.test({"rgb": rgb_ws, "rgb_ws_gray": rgb_ws_gray})
 
         # normalize everything
         rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
@@ -329,6 +329,7 @@ class TesterClass():
 
         if (show_images == 1):
             self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + opts.shadow_matte_network_version + str(opts.iteration))
+            self.visdom_reporter.plot_image(rgb_ws_gray, prefix + " WS (Grey) Images - " + opts.shadow_matte_network_version + str(opts.iteration))
             self.visdom_reporter.plot_image(shadow_matte, prefix + " WS Shadow Matte Images - " + opts.shadow_matte_network_version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb2sm, prefix + " WS Shadow Matte-Like Images - " + opts.shadow_matte_network_version + str(opts.iteration))
 

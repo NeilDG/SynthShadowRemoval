@@ -61,6 +61,7 @@ class IIDServerConfig():
         WEIGHT_DECAY_KEY = "weight_decay"
         DROPOUT_KEY = "use_dropout"
         AUGMENT_KEY = "augment_mode"
+        GRAYSCALE_KEY = "use_grayscale"
 
         # set defaults
         network_config[NETWORK_CONFIG_NUM] = 5
@@ -70,6 +71,7 @@ class IIDServerConfig():
         network_config[WEIGHT_DECAY_KEY] = 0.0
         network_config[DROPOUT_KEY] = False
         network_config[AUGMENT_KEY] = "none"
+        network_config[GRAYSCALE_KEY] = False
 
         # configure load sizes (GPU memory allocation of data) #for 128
         if (constants.server_config == 1):  # COARE
@@ -190,12 +192,61 @@ class IIDServerConfig():
             self.general_configs["train_shadow_matte"]["min_epochs"] = 20
             self.general_configs["train_shadow_matte"]["max_epochs"] = 40
 
-        elif (constants.shadow_matte_network_version == "v58.17"):
+        elif (constants.shadow_matte_network_version == "v58.18"):
+            network_config[SYNTH_DATASET_VERSION] = "v25"
+            network_config[NETWORK_CONFIG_NUM] = 4
+            network_config[NUM_BLOCKS_KEY] = 3
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 20
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
+
+        elif (constants.shadow_matte_network_version == "v58.19"):
             network_config[SYNTH_DATASET_VERSION] = "v25_refined"
             network_config[NETWORK_CONFIG_NUM] = 4
             network_config[NUM_BLOCKS_KEY] = 3
             self.general_configs["train_shadow_matte"]["min_epochs"] = 20
             self.general_configs["train_shadow_matte"]["max_epochs"] = 40
+
+        elif (constants.shadow_matte_network_version == "v58.20"):
+            network_config[SYNTH_DATASET_VERSION] = "v25"
+            network_config[NETWORK_CONFIG_NUM] = 4
+            network_config[NUM_BLOCKS_KEY] = 3
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 20
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
+
+            network_config[GRAYSCALE_KEY] = True
+            network_config[NC_KEY] = 1
+
+        elif (constants.shadow_matte_network_version == "v58.21"):
+            network_config[SYNTH_DATASET_VERSION] = "v25_refined"
+            network_config[NETWORK_CONFIG_NUM] = 4
+            network_config[NUM_BLOCKS_KEY] = 3
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 20
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
+
+            network_config[GRAYSCALE_KEY] = True
+            network_config[NC_KEY] = 1
+
+        elif (constants.shadow_matte_network_version == "v58.22"):
+            network_config[SYNTH_DATASET_VERSION] = "v25"
+            network_config[NETWORK_CONFIG_NUM] = 4
+            network_config[NUM_BLOCKS_KEY] = 3
+            network_config[AUGMENT_KEY] = "trivial_augment_wide"
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 20
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
+
+            network_config[GRAYSCALE_KEY] = True
+            network_config[NC_KEY] = 1
+
+        elif (constants.shadow_matte_network_version == "v58.23"):
+            network_config[SYNTH_DATASET_VERSION] = "v25_refined"
+            network_config[NETWORK_CONFIG_NUM] = 4
+            network_config[NUM_BLOCKS_KEY] = 3
+            network_config[AUGMENT_KEY] = "trivial_augment_wide"
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 20
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
+
+            network_config[GRAYSCALE_KEY] = True
+            network_config[NC_KEY] = 1
 
         return network_config
 

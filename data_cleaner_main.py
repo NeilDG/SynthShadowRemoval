@@ -14,6 +14,7 @@ parser = OptionParser()
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
 parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:0")
 parser.add_option('--version', type=str, default="v58.16")
+parser.add_option('--dataset_version_to_refine', type=str, default="v25")
 parser.add_option('--iteration', type=int, help="Style version?", default="1")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 
@@ -72,13 +73,10 @@ def quantify_datasets(opts):
     print("Synth dataset min: ", synth_analyzer.get_min(), synth_analyzer.get_max())
 
 def prepare_clean(opts):
-    sc_instance = iid_server_config.IIDServerConfig.getInstance()
-    network_config = sc_instance.interpret_shadow_matte_params_from_version()
-    dataset_version = network_config["dataset_version"]
     constants.rgb_dir_ws = "E:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
     constants.rgb_dir_ns = "E:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
-    rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
-    rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
+    rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=opts.dataset_version_to_refine)
+    rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=opts.dataset_version_to_refine)
 
     ws_istd = "E:/ISTD_Dataset/test/test_A/*.png"
     ns_istd = "E:/ISTD_Dataset/test/test_C/*.png"
@@ -88,6 +86,11 @@ def prepare_clean(opts):
 
     istd_mean = -0.0003
     istd_std = 0.0345 * 2.0
+
+    # index = 49996
+    # ws_list = ws_list[index: len(ws_list)]
+    # ns_list = ns_list[index: len(ns_list)]
+
     dataset_loader.clean_dataset_using_std_mean(ws_list, ns_list, istd_mean, istd_std)
 
 def main(argv):
