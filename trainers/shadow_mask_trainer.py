@@ -24,7 +24,7 @@ class ShadowMaskTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.visdom_reporter = plot_utils.VisdomReporter.getInstance()
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
         general_config = sc_instance.get_general_configs()
-        network_config = sc_instance.interpret_network_config_from_version()
+        network_config = sc_instance.interpret_shadow_network_params_from_version()
 
         self.load_size = network_config["load_size_p"]
         self.batch_size = network_config["batch_size_p"]

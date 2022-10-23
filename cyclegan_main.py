@@ -63,7 +63,7 @@ def update_config(opts):
         opts.num_workers = 8
         print("Using GCloud configuration. Workers: ", opts.num_workers, " ", opts.version)
         constants.imgx_dir = "/home/neil_delgallego/Places Dataset/*.jpg"
-        constants.imgy_dir = "/home/neil_delgallego/SynthWeather Dataset 9/rgb/*/*.png"
+        constants.imgy_dir = "/home/neil_delgallego/SynthWeather Dataset 10/synth_city/*/*/*.png"
 
     elif (constants.server_config == 4):
         opts.num_workers = 6
@@ -93,11 +93,14 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    constants.network_version = opts.version
+    constants.style_transfer_version = opts.version
     iid_server_config.IIDServerConfig.initialize()
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
     general_config = sc_instance.get_general_configs()
     network_config = sc_instance.interpret_style_transfer_config_from_version()
+
+    print(general_config)
+    print(network_config)
 
     gt = cyclegan_trainer.CycleGANTrainer(device, opts)
     iteration = 0

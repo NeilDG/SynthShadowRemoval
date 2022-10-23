@@ -26,12 +26,14 @@ parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
 parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:0")
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
-parser.add_option('--version', type=str, default="")
+parser.add_option('--shadow_matte_network_version', type=str, default="VXX.XX")
+parser.add_option('--shadow_network_version', type=str, default="VXX.XX")
 parser.add_option('--iteration', type=int, default="1")
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
 parser.add_option('--img_vis_enabled', type=int, default=1)
+parser.add_option('--debug_policy', type=int, default=0)
 parser.add_option('--input_path', type=str)
 parser.add_option('--output_path', type=str)
 parser.add_option('--img_size', type=int, default=(256, 256))
@@ -95,6 +97,85 @@ def update_config(opts):
         constants.unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)
 
+def test_shadow_matte(dataset_tester, opts):
+    device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
+
+    sc_instance = iid_server_config.IIDServerConfig.getInstance()
+    sc_instance.update_version_config()
+    network_config = sc_instance.interpret_shadow_matte_params_from_version()
+    general_config = sc_instance.get_general_configs()
+    print("General config:", general_config)
+    print("Network config: ", network_config)
+
+    dataset_version = network_config["dataset_version"]
+
+    rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
+    rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
+
+    print("Dataset path: ", rgb_dir_ws, rgb_dir_ns)
+    shadow_loader, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
+    for i, (_, rgb_ws, _, rgb_ws_gray, _, shadow_matte) in enumerate(shadow_loader, 0):
+        rgb_ws = rgb_ws.to(device)
+        rgb_ws_gray = rgb_ws_gray.to(device)
+        shadow_matte = shadow_matte.to(device)
+
+        dataset_tester.test_shadow_matte(rgb_ws, rgb_ws_gray, shadow_matte, "Train", opts.img_vis_enabled, opts)
+        if (i % 16 == 0):
+            break
+
+    dataset_tester.print_shadow_matte_performance("SM - Train Set", opts)
+
+    # ISTD test dataset
+    shadow_loader, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, 8, opts)
+    for i, (_, rgb_ws, _, rgb_ws_gray, shadow_matte) in enumerate(shadow_loader, 0):
+        rgb_ws = rgb_ws.to(device)
+        rgb_ws_gray = rgb_ws_gray.to(device)
+        shadow_matte = shadow_matte.to(device)
+
+        dataset_tester.test_shadow_matte(rgb_ws, rgb_ws_gray, shadow_matte, "ISTD", opts.img_vis_enabled, opts)
+        # break
+
+    dataset_tester.print_shadow_matte_performance("SM - ISTD", opts)
+
+def test_shadow_removal(dataset_tester, opts):
+    device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
+
+    sc_instance = iid_server_config.IIDServerConfig.getInstance()
+    network_config = sc_instance.interpret_shadow_matte_params_from_version()
+    sc_instance.update_version_config()
+
+    dataset_version = network_config["dataset_version"]
+
+    rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
+    rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
+
+    print("Dataset path: ", rgb_dir_ws, rgb_dir_ns)
+    # SHADOW dataset test
+    # Using train dataset
+    shadow_loader, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
+    for i, (_, rgb_ws, rgb_ns, _, _, shadow_matte) in enumerate(shadow_loader, 0):
+        rgb_ws = rgb_ws.to(device)
+        rgb_ns = rgb_ns.to(device)
+        shadow_matte = shadow_matte.to(device)
+
+        dataset_tester.test_shadow(rgb_ws, rgb_ns, shadow_matte, "Train", opts.img_vis_enabled, opts.debug_policy, opts)
+        if (i % 16 == 0):
+            break
+
+    dataset_tester.print_ave_shadow_performance("Train Set", opts)
+
+    # ISTD test dataset
+    shadow_loader, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, 8, opts)
+    for i, (file_name, rgb_ws, rgb_ns, _, shadow_matte) in enumerate(shadow_loader, 0):
+        rgb_ws_tensor = rgb_ws.to(device)
+        rgb_ns_tensor = rgb_ns.to(device)
+        shadow_matte = shadow_matte.to(device)
+
+        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.debug_policy, opts)
+        # break
+
+    dataset_tester.print_ave_shadow_performance("ISTD", opts)
+
 def main(argv):
     (opts, args) = parser.parse_args(argv)
     update_config(opts)
@@ -114,104 +195,18 @@ def main(argv):
     print(constants.rgb_dir_ws_styled, constants.albedo_dir)
     plot_utils.VisdomReporter.initialize()
 
-    constants.network_version = opts.version
+    constants.shadow_matte_network_version = opts.shadow_matte_network_version
+    constants.shadow_network_version = opts.shadow_network_version
+
     iid_server_config.IIDServerConfig.initialize()
-    sc_instance = iid_server_config.IIDServerConfig.getInstance()
-    network_config = sc_instance.interpret_network_config_from_version()
-    refine_enabled = False
-
-    # version_z = opts.version
-    # iteration_z = opts.iteration
-    #
-    # opts.version = version_a
-    # opts.iteration = iteration_a
-    # sc_instance.update_version_config()
-    # tf = trainer_factory.TrainerFactory(device, opts)
-    # albedo_t = tf.get_albedo_trainer()
-
-    # opts.version = version_s
-    # opts.iteration = iteration_s
-    # sc_instance.update_version_config()
-    # tf = trainer_factory.TrainerFactory(device, opts)
-    # shading_t = tf.get_shading_trainer()
-
-    # opts.version = version_z
-    # opts.iteration = iteration_z
-    sc_instance.update_version_config()
     tf = trainer_factory.TrainerFactory(device, opts)
-    shadow_p = tf.get_shadow_mask_trainer()
+    shadow_m = tf.get_shadow_matte_trainer()
     shadow_t = tf.get_shadow_trainer()
-    shadow_rt = tf.get_shadow_refine_trainer()
 
-    dataset_tester = TesterClass(shadow_p, shadow_t, shadow_rt)
+    dataset_tester = TesterClass(shadow_m, shadow_t)
+    test_shadow_matte(dataset_tester, opts)
+    test_shadow_removal(dataset_tester, opts)
 
-    dataset_version = network_config["dataset_version"]
-
-    # assert dataset_version == "v17", "Cannot identify dataset version."
-    rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
-    rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
-
-    print("Dataset path: ", rgb_dir_ws, rgb_dir_ns)
-
-    #SHADOW dataset test
-    #Using train dataset
-    print(rgb_dir_ws, rgb_dir_ns)
-    shadow_loader = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, 256, opts)
-    for i, (file_name, rgb_ws, rgb_ns, shadow_map, shadow_mask, shadow_matte) in enumerate(shadow_loader, 0):
-        rgb_ws = rgb_ws.to(device)
-        rgb_ns = rgb_ns.to(device)
-        shadow_map = shadow_map.to(device)
-        shadow_mask = shadow_mask.to(device)
-        shadow_matte = shadow_matte.to(device)
-
-        dataset_tester.test_shadow(rgb_ws, rgb_ns, shadow_map, shadow_mask, shadow_matte, "Train", opts.img_vis_enabled, 1, opts)
-        if (i % 16 == 0):
-            break
-
-    dataset_tester.print_ave_shadow_performance("Train Set", opts)
-
-    # ISTD test dataset
-    shadow_loader = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, 8, opts)
-    for i, (file_name, rgb_ws, rgb_ns, shadow_mask, shadow_matte) in enumerate(shadow_loader, 0):
-        rgb_ws_tensor = rgb_ws.to(device)
-        rgb_ns_tensor = rgb_ns.to(device)
-        shadow_mask = shadow_mask.to(device)
-        shadow_matte = shadow_matte.to(device)
-
-        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_mask, shadow_matte, opts.img_vis_enabled, 1, 1,  opts)
-        # break
-
-    dataset_tester.print_ave_shadow_performance("ISTD", opts)
-
-    # cgi_rgb_dir = "E:/CGIntrinsics/images/*/*_mlt.png"
-    # rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
-    #
-    # test_loader = dataset_loader.load_cgi_dataset(cgi_rgb_dir, 480, opts)
-    # for i, (file_name, rgb_batch, albedo_batch) in enumerate(test_loader, 0):
-    #     # CGI dataset
-    #     rgb_tensor = rgb_batch.to(device)
-    #     albedo_tensor = albedo_batch.to(device)
-    #     dataset_tester.test_cgi(rgb_tensor, albedo_tensor, opts)
-    #     break
-    #
-    # #IIW dataset
-    # iiw_rgb_dir = "E:/iiw-decompositions/original_image/*.jpg"
-    # test_loader = dataset_loader.load_iiw_dataset(iiw_rgb_dir, opts)
-    # for i, (file_name, rgb_img) in enumerate(test_loader, 0):
-    #     with torch.no_grad():
-    #         rgb_tensor = rgb_img.to(device)
-    #         dataset_tester.test_iiw(file_name, rgb_tensor, opts)
-    #
-    # dataset_tester.get_average_whdr(opts)
-    #
-    # #check RW performance
-    # _, input_rgb_batch = next(iter(rw_loader))
-    # input_rgb_tensor = input_rgb_batch.to(device)
-    # dataset_tester.test_rw(input_rgb_tensor, opts)
-    #
-    # #measure GTA performance
-    # dataset_tester.test_gta(opts)
-    # iid_test_v2.measure_performance(opts)
 
 if __name__ == "__main__":
     main(sys.argv)

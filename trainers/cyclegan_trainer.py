@@ -167,7 +167,7 @@ class CycleGANTrainer:
         self.stopper_method = early_stopper.EarlyStopper(general_config["train_style_transfer"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, constants.early_stop_threshold, 99999.9)
         self.stop_result = False
 
-        self.NETWORK_VERSION = sc_instance.get_version_config("style_transfer_name", self.iteration)
+        self.NETWORK_VERSION = sc_instance.get_version_config("style_transfer_version", "style_transfer_name", self.iteration)
         self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
         self.load_saved_state()
 
@@ -279,15 +279,15 @@ class CycleGANTrainer:
             real_tensor = torch.ones_like(prediction)
             fake_tensor = torch.zeros_like(prediction)
 
-            D_A_real_loss = self.adversarial_loss(self.D_A_pool.query(self.D_A(tensor_y)), real_tensor) * self.adv_weight
-            D_A_fake_loss = self.adversarial_loss(self.D_B_pool.query(self.D_A(y_like.detach())), fake_tensor) * self.adv_weight
+            D_A_real_loss = self.adversarial_loss(self.D_A(tensor_y), real_tensor) * self.adv_weight
+            D_A_fake_loss = self.adversarial_loss(self.D_A_pool.query(self.D_A(y_like.detach())), fake_tensor) * self.adv_weight
 
             prediction = self.D_B(tensor_x)
             real_tensor = torch.ones_like(prediction)
             fake_tensor = torch.zeros_like(prediction)
 
             D_B_real_loss = self.adversarial_loss(self.D_B(tensor_x), real_tensor) * self.adv_weight
-            D_B_fake_loss = self.adversarial_loss(self.D_B(x_like.detach()), fake_tensor) * self.adv_weight
+            D_B_fake_loss = self.adversarial_loss(self.D_B_pool.query(self.D_B(x_like.detach())), fake_tensor) * self.adv_weight
 
             errD = D_A_real_loss + D_A_fake_loss + D_B_real_loss + D_B_fake_loss
             self.fp16_scaler.scale(errD).backward()
@@ -405,10 +405,6 @@ class CycleGANTrainer:
             self.G_B.load_state_dict(checkpoint[constants.GENERATOR_KEY + "B"])
             self.D_A.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "A"])
             self.D_B.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "B"])
-            self.optimizerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY])
-            self.optimizerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY])
-            self.schedulerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler"])
-            self.schedulerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler"])
 
     def save_states(self, epoch, iteration, is_temp:bool):
         save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
@@ -417,22 +413,10 @@ class CycleGANTrainer:
         netDA_state_dict = self.D_A.state_dict()
         netDB_state_dict = self.D_B.state_dict()
 
-        optimizerG_state_dict = self.optimizerG.state_dict()
-        optimizerD_state_dict = self.optimizerD.state_dict()
-
-        schedulerG_state_dict = self.schedulerG.state_dict()
-        schedulerD_state_dict = self.schedulerD.state_dict()
-
         save_dict[constants.GENERATOR_KEY + "A"] = netGA_state_dict
         save_dict[constants.GENERATOR_KEY + "B"] = netGB_state_dict
         save_dict[constants.DISCRIMINATOR_KEY + "A"] = netDA_state_dict
         save_dict[constants.DISCRIMINATOR_KEY + "B"] = netDB_state_dict
-
-        save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY] = optimizerG_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY] = optimizerD_state_dict
-
-        save_dict[constants.GENERATOR_KEY + "scheduler"] = schedulerG_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "scheduler"] = schedulerD_state_dict
 
         if (is_temp):
             torch.save(save_dict, self.NETWORK_CHECKPATH + ".checkpt")

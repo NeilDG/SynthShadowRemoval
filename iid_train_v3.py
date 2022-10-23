@@ -17,6 +17,9 @@ from transforms import iid_transforms
 import constants
 from utils import plot_utils
 from trainers import trainer_factory
+from tqdm import tqdm
+from tqdm.auto import trange
+from time import sleep
 
 parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
@@ -29,6 +32,7 @@ parser.add_option('--d_lr', type=float, help="LR", default="0.0005")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--debug_run', type=int, help="Debug mode?", default=0)
 parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
+parser.add_option('--train_mode', type=str, default="all") #all, train_shadow_matte, train_shadow
 
 def update_config(opts):
     constants.server_config = opts.server_config
@@ -93,7 +97,7 @@ def update_config(opts):
 def train_shadow(tf, device, opts):
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
     general_config = sc_instance.get_general_configs()
-    network_config = sc_instance.interpret_network_config_from_version()
+    network_config = sc_instance.interpret_shadow_network_params_from_version()
     print("General config:", general_config)
     print("Network config: ", network_config)
 
@@ -105,38 +109,46 @@ def train_shadow(tf, device, opts):
     rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
     rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
 
-    print("SHADOW MAP TRAIN... Dataset path: ", rgb_dir_ws, rgb_dir_ns)
-
     load_size = network_config["load_size_z"]
 
-    train_loader = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, patch_size, load_size, opts)
-    # test_loader_train = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
+    train_loader, dataset_count = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, patch_size, load_size, opts)
+    test_loader_train, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
     test_loader_istd = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, load_size, opts)
 
     iteration = 0
     start_epoch = sc_instance.get_last_epoch_from_mode(mode)
+    print("---------------------------------------------------------------------------")
     print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
+    print("---------------------------------------------------------------------------")
+
+    # compute total progress
+    needed_progress = int((general_config[mode]["max_epochs"]) * (dataset_count / load_size))
+    current_progress = int(start_epoch * (dataset_count / load_size))
+    pbar = tqdm(total=needed_progress)
+    pbar.update(current_progress)
+
     for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
         for i, (train_data, test_data) in enumerate(zip(train_loader, itertools.cycle(test_loader_istd))):
-            _, rgb_ws, rgb_ns, shadow_map, shadow_mask, shadow_matte = train_data
+            _, rgb_ws, rgb_ns, rgb_ws_gray, shadow_map, shadow_matte = train_data
             rgb_ws = rgb_ws.to(device)
             rgb_ns = rgb_ns.to(device)
+            rgb_ws_gray = rgb_ws_gray.to(device)
             shadow_map = shadow_map.to(device)
-            shadow_mask = shadow_mask.to(device)
             shadow_matte = shadow_matte.to(device)
 
-            _, rgb_ws_istd, rgb_ns_istd, mask_istd, matte_istd = test_data
+            _, rgb_ws_istd, rgb_ns_istd, gray_istd, matte_istd = test_data
             rgb_ws_istd = rgb_ws_istd.to(device)
             rgb_ns_istd = rgb_ns_istd.to(device)
-            mask_istd = mask_istd.to(device)
+            gray_istd = gray_istd.to(device)
             matte_istd = matte_istd.to(device)
 
-            input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_map" : shadow_map, "shadow_mask": shadow_mask, "shadow_matte" : shadow_matte,
-                         "rgb_ws_istd" : rgb_ws_istd, "rgb_ns_istd" : rgb_ns_istd, "mask_istd" : mask_istd, "matte_istd" : matte_istd}
+            input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "rgb_ws_gray" : rgb_ws_gray, "shadow_map" : shadow_map, "shadow_matte" : shadow_matte,
+                         "rgb_ws_istd" : rgb_ws_istd, "rgb_ns_istd" : rgb_ns_istd, "gray_istd" : gray_istd, "matte_istd" : matte_istd}
             target_map = input_map
 
             tf.train(mode, epoch, iteration, input_map, target_map)
             iteration = iteration + 1
+            pbar.update(1)
 
             if (tf.is_stop_condition_met(mode)):
                 break
@@ -148,68 +160,78 @@ def train_shadow(tf, device, opts):
                     tf.visdom_plot(mode, iteration)
                     tf.visdom_visualize(mode, input_map, "Train")
 
-                    # Temporarily disable visualization of test synth data.
-                    # _, rgb_ws, rgb_ns = next(itertools.cycle(test_loader_train))
-                    # rgb_ws = rgb_ws.to(device)
-                    # rgb_ns = rgb_ns.to(device)
-                    #
-                    # shadow_p = tf.get_shadow_mask_trainer()
-                    # input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
-                    # rgb2mask = shadow_p.test(input_map)
-                    #
-                    # input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "rgb_ns": rgb_ns, "shadow_map" : shadow_map, "shadow_mask" : rgb2mask}
-                    # tf.visdom_visualize(mode, input_map, "Test Synthetic")
+                    _, rgb_ws, rgb_ns, rgb_ws_gray, shadow_map, shadow_matte = next(itertools.cycle(test_loader_train))
+                    rgb_ws = rgb_ws.to(device)
+                    rgb_ns = rgb_ns.to(device)
+                    rgb_ws_gray = rgb_ws_gray.to(device)
+                    shadow_map = shadow_map.to(device)
+                    shadow_matte = shadow_matte.to(device)
 
-                    # input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
-                    # rgb2mask = shadow_p.test(input_map)
+                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "rgb_ws_gray" : rgb_ws_gray, "shadow_map": shadow_map, "shadow_matte": shadow_matte}
+                    tf.visdom_visualize(mode, input_map, "Test Synthetic")
 
-                    input_map = {"rgb": rgb_ws_istd, "rgb_ws_inv" : rgb_ws_istd, "rgb_ns": rgb_ns_istd, "shadow_mask" : mask_istd, "shadow_matte" : matte_istd}
+                    input_map = {"rgb": rgb_ws_istd, "rgb_ns": rgb_ns_istd, "rgb_ws_gray" : gray_istd, "shadow_matte" : matte_istd}
                     tf.visdom_visualize(mode, input_map, "Test ISTD")
 
         if (tf.is_stop_condition_met(mode)):
             break
 
-def train_shadow_mask(tf, device, opts):
+    pbar.close()
+
+def train_shadow_matte(tf, device, opts):
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
     general_config = sc_instance.get_general_configs()
-    network_config = sc_instance.interpret_network_config_from_version()
+    network_config = sc_instance.interpret_shadow_matte_params_from_version()
     print("General config:", general_config)
     print("Network config: ", network_config)
 
-    mode = "train_shadow_mask"
+    mode = "train_shadow_matte"
     patch_size = general_config[mode]["patch_size"]
     dataset_version = network_config["dataset_version"]
 
-    assert dataset_version == "v17", "Cannot identify dataset version."
     rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
     rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
 
-    print("SHADOW MASK TRAIN.... Dataset path: ", rgb_dir_ws, rgb_dir_ns)
+    load_size = network_config["load_size_m"]
 
-    load_size = network_config["load_size_p"]
-
-    train_loader = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, constants.ws_istd, constants.ns_istd, patch_size, load_size, opts)
-    test_loader_train = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
-    test_loader_istd = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, load_size, opts)
+    train_loader, dataset_count = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, patch_size, load_size, opts)
+    test_loader_train, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
+    test_loader_istd, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, load_size, opts)
 
     iteration = 0
     start_epoch = sc_instance.get_last_epoch_from_mode(mode)
+    print("---------------------------------------------------------------------------")
     print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
+    print("---------------------------------------------------------------------------")
+
+    #compute total progress
+    needed_progress = int((general_config[mode]["max_epochs"]) * (dataset_count / load_size))
+    current_progress = int(start_epoch * (dataset_count / load_size))
+    pbar = tqdm(total=needed_progress)
+    pbar.update(current_progress)
+
     for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
         for i, (train_data, test_data) in enumerate(zip(train_loader, itertools.cycle(test_loader_istd))):
-            _, rgb_ws, _, _, shadow_mask = train_data
+            _, rgb_ws, rgb_ns, rgb_ws_gray, shadow_map, shadow_matte = train_data
             rgb_ws = rgb_ws.to(device)
-            shadow_mask = shadow_mask.to(device)
+            rgb_ns = rgb_ns.to(device)
+            rgb_ws_gray = rgb_ws_gray.to(device)
+            shadow_map = shadow_map.to(device)
+            shadow_matte = shadow_matte.to(device)
 
-            _, rgb_ws_istd, _, mask_istd = test_data
+            _, rgb_ws_istd, rgb_ns_istd, gray_istd, matte_istd = test_data
             rgb_ws_istd = rgb_ws_istd.to(device)
-            mask_istd = mask_istd.to(device)
+            rgb_ns_istd = rgb_ns_istd.to(device)
+            gray_istd = gray_istd.to(device)
+            matte_istd = matte_istd.to(device)
 
-            input_map = {"rgb": rgb_ws, "rgb_ws_inv" : rgb_ws, "shadow_mask": shadow_mask, "rgb_ws_istd" : rgb_ws_istd, "mask_istd" : mask_istd}
+            input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "rgb_ws_gray": rgb_ws_gray, "shadow_map": shadow_map, "shadow_matte": shadow_matte,
+                         "rgb_ws_istd": rgb_ws_istd, "rgb_ns_istd": rgb_ns_istd, "gray_istd": gray_istd, "matte_istd": matte_istd}
             target_map = input_map
 
             tf.train(mode, epoch, iteration, input_map, target_map)
             iteration = iteration + 1
+            pbar.update(1)
 
             if (tf.is_stop_condition_met(mode)):
                 break
@@ -221,23 +243,22 @@ def train_shadow_mask(tf, device, opts):
                     tf.visdom_plot(mode, iteration)
                     tf.visdom_visualize(mode, input_map, "Train")
 
-                    _, rgb_ws, rgb_ns = next(itertools.cycle(test_loader_train))
+                    _, rgb_ws, rgb_ns, rgb_ws_gray, shadow_map, shadow_matte = next(itertools.cycle(test_loader_train))
                     rgb_ws = rgb_ws.to(device)
+                    rgb_ws_gray = rgb_ws_gray.to(device)
                     rgb_ns = rgb_ns.to(device)
+                    shadow_matte = shadow_matte.to(device)
 
-                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
+                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "rgb_ws_gray": rgb_ws_gray, "shadow_matte": shadow_matte}
                     tf.visdom_visualize(mode, input_map, "Test Synthetic")
 
-                    _, rgb_ws, rgb_ns, mask_istd = test_data
-                    rgb_ws = rgb_ws.to(device)
-                    rgb_ns = rgb_ns.to(device)
-                    mask_istd = mask_istd.to(device)
-
-                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_mask" : mask_istd}
+                    input_map = {"rgb": rgb_ws_istd, "rgb_ws_gray": gray_istd, "shadow_matte": matte_istd}
                     tf.visdom_visualize(mode, input_map, "Test ISTD")
 
         if (tf.is_stop_condition_met(mode)):
             break
+
+    pbar.close()
 
 def main(argv):
     (opts, args) = parser.parse_args(argv)
@@ -246,8 +267,6 @@ def main(argv):
     print("=====================BEGIN============================")
     print("Server config? %d Has GPU available? %d Count: %d" % (constants.server_config, torch.cuda.is_available(), torch.cuda.device_count()))
     print("Torch CUDA version: %s" % torch.version.cuda)
-    
-    torch.multiprocessing.set_sharing_strategy('file_system')
 
     manualSeed = 0
     random.seed(manualSeed)
@@ -260,85 +279,22 @@ def main(argv):
 
     plot_utils.VisdomReporter.initialize()
 
-    constants.network_version = opts.version
+    constants.shadow_network_version = opts.version
+    constants.shadow_matte_network_version = opts.version
     iid_server_config.IIDServerConfig.initialize()
 
     tf = trainer_factory.TrainerFactory(device, opts)
     tf.initialize_all_trainers(opts)
 
-    # train_shadow_mask(tf, device, opts)
-    train_shadow(tf, device, opts)
+    assert opts.train_mode == "all" or opts.train_mode == "train_shadow" or opts.train_mode == "train_shadow_matte", "Unrecognized train mode: " + opts.train_mode
 
-    #Train shadow refine
-    # mode = "train_shadow_refine"
-    # patch_size = general_config[mode]["patch_size"]
-    # refine_enabled = network_config["refine_enabled"]
-    # mix_type = network_config["mix_type"]
-    #
-    # if(refine_enabled == False):
-    #     print("Refinement network training DISABLED. Stopping.")
-    #     return
-    #
-    # print("Refinement network training STARTED...")
-    #
-    # batch_size = sc_instance.get_batch_size_from_mode(mode, network_config)
-    #
-    # train_loader = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, constants.ws_istd, constants.ns_istd, patch_size, batch_size, mix_type, opts)
-    # test_loader_train = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
-    # test_loader_istd = dataset_loader.load_shadow_test_dataset(constants.ws_istd, constants.ns_istd, opts)
-    # rw_loader = dataset_loader.load_single_test_dataset(constants.DATASET_PLACES_PATH)
-    #
-    # iteration = 0
-    # start_epoch = sc_instance.get_last_epoch_from_mode(mode)
-    # print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
-    # for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
-    #     for i, (_, rgb_ws, rgb_ns, shadow_map) in enumerate(train_loader, 0):
-    #         rgb_ws = rgb_ws.to(device)
-    #         rgb_ns = rgb_ns.to(device)
-    #         shadow_map = shadow_map.to(device)
-    #
-    #         input_map = {"rgb": rgb_ws, "rgb_ns" : rgb_ns, "shadow_map" : shadow_map}
-    #         target_map = input_map
-    #
-    #         tf.train(mode, epoch, iteration, input_map, target_map)
-    #         iteration = iteration + 1
-    #
-    #         if(tf.is_stop_condition_met(mode)):
-    #             break
-    #
-    #         if (i % 300 == 0):
-    #             tf.save(mode, epoch, iteration, True)
-    #
-    #             if(opts.plot_enabled == 1):
-    #                 tf.visdom_plot(mode, iteration)
-    #                 tf.visdom_visualize(mode, input_map, "Train")
-    #
-    #                 _, rgb_ws, rgb_ns = next(itertools.cycle(test_loader_train))
-    #                 rgb_ws = rgb_ws.to(device)
-    #                 rgb_ns = rgb_ns.to(device)
-    #
-    #                 input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns}
-    #                 shadow_t = tf.get_shadow_trainer()
-    #                 _, rgb2sm = shadow_t.test(input_map)
-    #                 input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_map": rgb2sm}
-    #                 tf.visdom_visualize(mode, input_map, "Test Synthetic")
-    #
-    #                 _, rgb_ws, rgb_ns = next(itertools.cycle(test_loader_istd))
-    #                 rgb_ws = rgb_ws.to(device)
-    #                 rgb_ns = rgb_ns.to(device)
-    #
-    #                 input_map = {"rgb": rgb_ws, "rgb_ns" : rgb_ns}
-    #                 _, rgb2sm = shadow_t.test(input_map)
-    #                 input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_map": rgb2sm}
-    #                 tf.visdom_visualize(mode, input_map, "Test ISTD")
-    #
-    #                 _, rgb_ws_batch = next(itertools.cycle(rw_loader))
-    #                 rgb_ws_tensor = rgb_ws_batch.to(device)
-    #                 input_map = {"rgb": rgb_ws_tensor}
-    #                 tf.visdom_infer(mode, input_map)
-    #
-    #         if (tf.is_stop_condition_met(mode)):
-    #             break
+    if(opts.train_mode == "all"):
+        train_shadow_matte(tf, device, opts)
+        train_shadow(tf, device, opts)
+    elif (opts.train_mode == "train_shadow_matte"):
+        train_shadow_matte(tf, device, opts)
+    elif(opts.train_mode == "train_shadow"):
+        train_shadow(tf, device, opts)
 
 
 if __name__ == "__main__":

@@ -28,7 +28,7 @@ class IIDTransform(nn.Module):
         self.transform_op = transforms.Normalize((0.5,), (0.5,))
 
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
-        network_config = sc_instance.interpret_network_config_from_version()
+        network_config = sc_instance.interpret_shadow_network_params_from_version()
 
         # self.MIN_GAMMA = network_config["min_gamma"]
         # self.MIN_BETA = network_config["min_beta"]

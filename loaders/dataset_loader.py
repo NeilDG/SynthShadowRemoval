@@ -1,11 +1,19 @@
 import glob
 import random
+from pathlib import Path
+
+import kornia
+import numpy as np
 import torch
+import torchvision.utils
 from torch.utils import data
+import cv2
+import torchvision.transforms as transforms
+from tqdm import tqdm
 
 import constants
 from config import iid_server_config
-from loaders import image_dataset, iid_test_datasets
+from loaders import image_dataset, shadow_datasets
 import os
 
 def assemble_unpaired_data(path_a, num_image_to_load=-1, force_complete=False):
@@ -95,59 +103,12 @@ def load_iid_datasetv2_train(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, patc
 
     return data_loader
 
-def load_cgi_dataset(rgb_dir, patch_size, opts):
-    rgb_list = assemble_img_list(rgb_dir, opts)
-
-    img_length = len(rgb_list)
-    print("Length of images: %d" % img_length)
-
-    data_loader = torch.utils.data.DataLoader(
-        iid_test_datasets.CGIDataset(img_length, rgb_list, 2, patch_size),
-        batch_size=8,
-        num_workers=1,
-        shuffle=False
-    )
-
-    return data_loader
-
-def load_iiw_dataset(rgb_dir, opts):
-    rgb_list = assemble_img_list(rgb_dir, opts)
-    rgb_list = rgb_list[0:100] #temporary short
-
-    img_length = len(rgb_list)
-    print("Length of images: %d" % img_length)
-
-    data_loader = torch.utils.data.DataLoader(
-        iid_test_datasets.IIWDataset(img_length, rgb_list),
-        batch_size=8,
-        num_workers=1,
-        shuffle=False
-    )
-
-    return data_loader
-
-def load_bell2014_dataset(r_dir, s_dir, patch_size, opts):
-    r_list = assemble_img_list(r_dir, opts)
-    s_list = assemble_img_list(s_dir, opts)
-
-    img_length = len(r_list)
-    print("Length of images: %d" % img_length)
-
-    data_loader = torch.utils.data.DataLoader(
-        iid_test_datasets.Bell2014Dataset(img_length, r_list, s_list, 2, patch_size),
-        batch_size=8,
-        num_workers=1,
-        shuffle=False
-    )
-
-    return data_loader
-
 def load_shadow_train_dataset(ws_path, ns_path, patch_size, load_size, opts):
     ws_list = assemble_img_list(ws_path, opts)
     ns_list = assemble_img_list(ns_path, opts)
 
     print("Using synthetic train dataset")
-    for i in range(0, 1): #TEMP: formerly 0-1
+    for i in range(0, 5): #TEMP: formerly 0-1
         ws_list += ws_list
         ns_list += ns_list
 
@@ -155,15 +116,122 @@ def load_shadow_train_dataset(ws_path, ns_path, patch_size, load_size, opts):
     print("Length of images: %d %d" % (len(ws_list), len(ns_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        iid_test_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 1, patch_size),
+        shadow_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 1, patch_size),
         batch_size=load_size,
         num_workers=opts.num_workers,
         shuffle=False
     )
 
-    return data_loader
+    return data_loader, len(ws_list)
 
-def load_shadow_test_dataset(ws_path, ns_path, patch_size, opts):
+def clean_dataset(ws_path, ns_path, filter_minimum):
+    BASE_PATH = "E:/SynthWeather Dataset 10/"
+    ws_path_revised = ws_path[0].split("/")
+    ns_path_revised = ns_path[0].split("/")
+
+    SAVE_PATH_WS = BASE_PATH + ws_path_revised[2] + "_refined/" + ws_path_revised[3] + "/" + ws_path_revised[4] + "/"
+    SAVE_PATH_NS = BASE_PATH + ns_path_revised[2] + "_refined/" + ns_path_revised[3] + "/" + ns_path_revised[4] + "/"
+
+    try:
+        path = Path(SAVE_PATH_WS)
+        path.mkdir(parents=True)
+
+        path = Path(SAVE_PATH_NS)
+        path.mkdir(parents=True)
+    except OSError as error:
+        print("Save path already exists. Skipping.", error)
+
+    assert filter_minimum <= 100.0, "Filter minimum cannot be > 100.0"
+
+    index = 0
+    for (ws_img_path, ns_img_path) in zip(ws_path, ns_path):
+        ws_img = cv2.imread(ws_img_path)
+        # ws_img = cv2.cvtColor(ws_img, cv2.COLOR_BGR2RGB)
+
+        sobel_x = cv2.Sobel(ws_img, cv2.CV_64F, 1, 0, ksize=5)
+        sobel_y = cv2.Sobel(ws_img, cv2.CV_64F, 0, 1, ksize=5)
+        sobel_img = sobel_x + sobel_y
+        total_pixels = np.shape(ws_img)[0] * np.shape(ws_img)[1]
+        sobel_quality = np.linalg.norm(sobel_img) / total_pixels
+
+        if(sobel_quality > filter_minimum): #only save images with good edges
+            img_name = ws_img_path.split(".")[0].split("/")[-1]
+            ns_img = cv2.imread(ns_img_path)
+            # ns_img = cv2.cvtColor(ns_img, cv2.COLOR_BGR2RGB)
+
+            cv2.imwrite(SAVE_PATH_WS + img_name + ".png", ws_img)
+            cv2.imwrite(SAVE_PATH_NS + img_name + ".png", ns_img)
+            print("Saved image: ", (SAVE_PATH_WS + img_name + ".png"))
+        else:
+            print("Sobel quality of img %s: %f. DISCARDING" % (ws_img_path, sobel_quality))
+
+def clean_dataset_using_std_mean(ws_path, ns_path, basis_mean, basis_std):
+    BASE_PATH = "E:/SynthWeather Dataset 10/"
+    ws_path_revised = ws_path[0].split("/")
+    ns_path_revised = ns_path[0].split("/")
+
+    print(ws_path_revised)
+
+    SAVE_PATH_WS = BASE_PATH + ws_path_revised[2] + "_refined/" + ws_path_revised[3] + "/" + ws_path_revised[4] + "/"
+    SAVE_PATH_NS = BASE_PATH + ns_path_revised[2] + "_refined/" + ns_path_revised[3] + "/" + ns_path_revised[4] + "/"
+
+    try:
+        path = Path(SAVE_PATH_WS)
+        path.mkdir(parents=True)
+
+        path = Path(SAVE_PATH_NS)
+        path.mkdir(parents=True)
+    except OSError as error:
+        print("Save path already exists. Skipping.", error)
+
+    assert basis_std <= 100.0, "Filter minimum cannot be > 100.0"
+
+    tensor_op = transforms.Compose([
+        transforms.ToPILImage(),
+        transforms.Resize(constants.TEST_IMAGE_SIZE),
+        transforms.ToTensor()])
+
+    num_saved = 0
+    num_discarded = 0
+
+    needed_progress = len(ws_path)
+    pbar = tqdm(total=needed_progress)
+    for (ws_img_path, ns_img_path) in zip(ws_path, ns_path):
+        rgb_ws = cv2.imread(ws_img_path)
+        rgb_ws = cv2.cvtColor(rgb_ws, cv2.COLOR_BGR2RGB)
+        rgb_ws = tensor_op(rgb_ws)
+
+        rgb_ns = cv2.imread(ns_img_path)
+        rgb_ns = cv2.cvtColor(rgb_ns, cv2.COLOR_BGR2RGB)
+        rgb_ns = tensor_op(rgb_ns)
+
+        shadow_map = rgb_ns - rgb_ws
+        shadow_matte = kornia.color.rgb_to_grayscale(shadow_map)
+
+        sm_mean = torch.mean(shadow_matte)
+
+        min = basis_mean - basis_std
+        max = basis_mean + basis_std
+
+        if(min <= sm_mean <= max): #only save images within the specified mean and std
+            img_name = ws_img_path.split(".")[0].split("/")[-1]
+
+            torchvision.utils.save_image(rgb_ws, SAVE_PATH_WS + img_name + ".png")
+            torchvision.utils.save_image(rgb_ns, SAVE_PATH_NS + img_name + ".png")
+            # print("Saved image: ", (SAVE_PATH_WS + img_name + ".png"))
+
+            num_saved += 1
+        else:
+            # print("Mean quality of img %s: %f MIN: %f MAX: %f. DISCARDING" % (ws_img_path, sm_mean, min, max))
+            num_discarded +=1
+
+        pbar.update(1)
+
+    pbar.close()
+    print("Total images processed: " + str(len(ws_path)) + " Saved: " + str(num_saved) + " Discarded: " + str(num_discarded))
+
+
+def load_shadow_test_dataset(ws_path, ns_path, opts):
     ws_list = assemble_img_list(ws_path, opts)
     ns_list = assemble_img_list(ns_path, opts)
 
@@ -171,13 +239,13 @@ def load_shadow_test_dataset(ws_path, ns_path, patch_size, opts):
     print("Length of images: %d %d" % (len(ws_list), len(ns_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        iid_test_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 2, patch_size),
+        shadow_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 2, constants.TEST_IMAGE_SIZE),
         batch_size=16,
         num_workers=1,
         shuffle=False
     )
 
-    return data_loader
+    return data_loader, len(ws_list)
 
 def load_istd_dataset(ws_path, ns_path, mask_path, load_size, opts):
     ws_istd_list = assemble_img_list(ws_path, opts)
@@ -188,13 +256,13 @@ def load_istd_dataset(ws_path, ns_path, mask_path, load_size, opts):
     print("Length of images: %d %d %d" % (len(ws_istd_list), len(ns_istd_list), len(mask_istd_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        iid_test_datasets.ShadowISTDDataset(img_length, ws_istd_list, ns_istd_list, mask_istd_list, 1),
+        shadow_datasets.ShadowISTDDataset(img_length, ws_istd_list, ns_istd_list, mask_istd_list, 1),
         batch_size=load_size,
         num_workers=1,
         shuffle=False
     )
 
-    return data_loader
+    return data_loader, len(ws_istd_list)
 
 def load_iid_datasetv2_test(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, patch_size, opts):
     rgb_list_ws = glob.glob(rgb_dir_ws)
