@@ -16,8 +16,8 @@ unzip "scratch2/SynthWeather Dataset 10.zip"
 
 scratch2/NeuralNets-GenerativeExperiment-V50.XX.XX
 git clone -b "workspace/V50.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "scratch2/NeuralNets-GenerativeExperiment-V50.XX.XX"
-rm -rf "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v3/"
-rm -rf "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10.zip"
+rm -rf "/scratch1/scratch2/neil.delgallego/NeuralNets-GenerativeExperiment-V50.XX.XX"
+rm -rf "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v7"
 
 //Execute job
 sbatch slurm_install.slurm
