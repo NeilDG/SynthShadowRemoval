@@ -22,7 +22,9 @@ module load cuda/10.1_cudnn-7.6.5
 #do fresh install
 source activate NeilGAN_V2
 conda uninstall pytorch
-conda install pytorch==1.9.0 torchvision==0.10.0 torchaudio==0.9.0 cudatoolkit=11.3 -c pytorch -c conda-forge
+conda uninstall torchvision
+conda uninstall torchaudio
+conda install pytorch==1.12.0 torchvision==0.13.0 torchaudio==0.12.0 cudatoolkit=11.3 -c pytorch
 #conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
 #conda install -c conda-forge scikit-image
 #pip install visdom
