@@ -24,11 +24,11 @@ source activate NeilGAN_V2
 conda install pytorch==1.12.0 torchvision==0.13.0 torchaudio==0.12.0 cudatoolkit=11.3 -c pytorch
 #conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
 #conda install -c conda-forge scikit-image
-#pip install visdom
-#pip install kornia
-#pip install opencv-python
-#pip install --upgrade pillow
-#pip install lpips
+pip install visdom
+pip install kornia
+pip install opencv-python
+pip install --upgrade pillow
+pip install lpips
 conda list
 conda deactivate
 
