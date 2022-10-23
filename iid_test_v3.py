@@ -204,7 +204,7 @@ def main(argv):
     shadow_t = tf.get_shadow_trainer()
 
     dataset_tester = TesterClass(shadow_m, shadow_t)
-    # test_shadow_matte(dataset_tester, opts)
+    test_shadow_matte(dataset_tester, opts)
     test_shadow_removal(dataset_tester, opts)
 
 
