@@ -14,10 +14,10 @@
 module load anaconda
 module load cuda/10.1_cudnn-7.6.5
 
-conda env remove --name NeilGAN_V2
-conda create --name NeilGAN_V2 python=3.9
-source activate NeilGAN_V2
-conda update python
+#conda env remove --name NeilGAN_V2
+#conda create --name NeilGAN_V2 python=3.9
+#source activate NeilGAN_V2
+#conda update python
 
 #do fresh install
 source activate NeilGAN_V2
