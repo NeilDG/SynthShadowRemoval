@@ -15,8 +15,8 @@ module load anaconda
 module load cuda/10.1_cudnn-7.6.5
 
 rm -rf "/home/neil.delgallego/.conda/envs/NeilGAN_V2"
-conda env remove --name NeilGAN_V2
-conda create --name NeilGAN_V2 python=3.9
+conda env remove --name NeilGAN_V2 --yes
+conda create --name NeilGAN_V2 python=3.9 --yes
 source activate NeilGAN_V2
 conda update python
 
