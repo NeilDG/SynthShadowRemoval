@@ -11,12 +11,13 @@
 #About this script:
 # Installation of necessary libraries
 
-module load anaconda
+module load anaconda/3-2021.11
 module load cuda/10.1_cudnn-7.6.5
 
 rm -rf "/home/neil.delgallego/.conda/envs/NeilGAN_V2"
 conda env remove --name NeilGAN_V2 --yes
 conda create --name NeilGAN_V2 python=3.9 --yes
+conda create --yes
 source activate NeilGAN_V2
 conda update python
 
