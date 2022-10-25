@@ -21,6 +21,8 @@ rm -rf "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v7"
 gdown https://drive.google.com/uc?id=1AxI1mwiL5PbpsTSzBzbjfalJSuUpRiyL "scratch2/SynthWeather Dataset 10/"
 
 //Execute job
+sbatch --dependency=afterany:335484 slurm_download.slurm
+sbatch slurm_download.slurm
 sbatch slurm_install.slurm
 sbatch slurm_visdom_test.slurm
 sbatch visdom_run.slurm
@@ -88,7 +90,7 @@ python "ccs2_main.py"
 gdown https://drive.google.com/uc?id=1AxI1mwiL5PbpsTSzBzbjfalJSuUpRiyL
 unzip "v26.zip" -d "SynthWeather Dataset 10/"
 
-rm -rf NeuralNets-GenerativeExperiment-V51.XX.XX
+rm -rf "NeuralNets-GenerativeExperiment-V50.XX.XX"
 rm -rf "SynthWeather Dataset 9"
 
 zip -r "checkpoints.zip" "rgb2albedo_v9.01_7.pt" "rgb2albedo_v9.01_8.pt" "rgb2albedo_v9.01_9.pt" "rgb2albedo_v9.01_10.pt" "rgb2albedo_v9.01_11.pt" "rgb2albedo_v9.01_12.pt" "rgb2albedo_v9.01_13.pt" "rgb2albedo_v9.01_14.pt" \
