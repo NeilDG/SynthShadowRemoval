@@ -11,16 +11,17 @@
 #About this script:
 # Installation of necessary libraries
 
-module load anaconda
+module load anaconda/3-2021.11
 module load cuda/10.1_cudnn-7.6.5
 
-conda env remove --name NeilGAN_V2
-conda create --name NeilGAN_V2 python=3.9
-source activate NeilGAN_V2
+conda env remove --name NeilGAN_V2 --yes
+conda create --name NeilGAN_V3 python=3.9 --yes
+conda create --yes
+source activate NeilGAN_V3
 conda update python
 
 #do fresh install
-source activate NeilGAN_V2
+#source activate NeilGAN_V2
 conda install pytorch==1.12.0 torchvision==0.13.0 torchaudio==0.12.0 cudatoolkit=11.3 -c pytorch
 #conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
 #conda install -c conda-forge scikit-image

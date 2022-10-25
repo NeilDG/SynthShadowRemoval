@@ -62,6 +62,7 @@ class IIDServerConfig():
         DROPOUT_KEY = "use_dropout"
         AUGMENT_KEY = "augment_mode"
         GRAYSCALE_KEY = "use_grayscale"
+        DATASET_REPEAT_KEY = "dataset_repeats"
 
         # set defaults
         network_config[NETWORK_CONFIG_NUM] = 5
@@ -72,6 +73,7 @@ class IIDServerConfig():
         network_config[DROPOUT_KEY] = False
         network_config[AUGMENT_KEY] = "none"
         network_config[GRAYSCALE_KEY] = False
+        network_config[DATASET_REPEAT_KEY] = 1
 
         # configure load sizes (GPU memory allocation of data) #for 128
         if (constants.server_config == 1):  # COARE
@@ -269,8 +271,28 @@ class IIDServerConfig():
 
         elif(constants.shadow_matte_network_version == "v28.27"):
             network_config[SYNTH_DATASET_VERSION] = "v26"
-            network_config[NUM_BLOCKS_KEY] = 3
             network_config[NUM_BLOCKS_KEY] = 15
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_M] = 16
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_M] = 24
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_M] = 8
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_M] = 8
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_M] = 16
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 20
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
+
+        elif (constants.shadow_matte_network_version == "v58.28"):
+            network_config[SYNTH_DATASET_VERSION] = "v_istd"
+            network_config[NUM_BLOCKS_KEY] = 15
+            network_config[DATASET_REPEAT_KEY] = 35
             # configure load sizes (GPU memory allocation of data) #for 128
             if (constants.server_config == 1):  # COARE
                 network_config[LOAD_SIZE_KEY_M] = 16

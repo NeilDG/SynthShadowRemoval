@@ -104,13 +104,19 @@ def load_iid_datasetv2_train(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, patc
     return data_loader
 
 def load_shadow_train_dataset(ws_path, ns_path, patch_size, load_size, opts):
-    ws_list = assemble_img_list(ws_path, opts)
-    ns_list = assemble_img_list(ns_path, opts)
+    initial_ws_list = assemble_img_list(ws_path, opts)
+    initial_ns_list = assemble_img_list(ns_path, opts)
+
+    ws_list = []
+    ns_list = []
 
     print("Using synthetic train dataset")
-    for i in range(0, 5): #TEMP: formerly 0-1
-        ws_list += ws_list
-        ns_list += ns_list
+    sc_instance = iid_server_config.IIDServerConfig.getInstance()
+    network_config = sc_instance.interpret_shadow_matte_params_from_version()
+
+    for i in range(0, network_config["dataset_repeats"]): #TEMP: formerly 0-1
+        ws_list += initial_ws_list
+        ns_list += initial_ns_list
 
     img_length = len(ws_list)
     print("Length of images: %d %d" % (len(ws_list), len(ns_list)))

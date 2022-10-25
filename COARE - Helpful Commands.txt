@@ -18,14 +18,20 @@ git clone -b "workspace/V58.XX.XX" "https://github.com/NeilDG/NeuralNets-Experim
 rm -rf "/scratch1/scratch2/neil.delgallego/NeuralNets-GenerativeExperiment-V50.XX.XX"
 rm -rf "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v7"
 
-gdown https://drive.google.com/uc?id=1AxI1mwiL5PbpsTSzBzbjfalJSuUpRiyL "scratch2/SynthWeather Dataset 10/"
+gdown https://drive.google.com/uc?id=1B6erEfeB2_n_KYP5GtCQU-DHGE1bKEVE --o "scratch2/SynthWeather Dataset 10/"
+mv "/scratch1/scratch2/neil.delgallego/NeuralNets-GenerativeExperiment-V58.XX.XX/v26" "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v26"
 
 //Execute job
+sbatch --dependency=afterany:335484 slurm_download.slurm
+sbatch slurm_download.slurm
 sbatch slurm_install.slurm
 sbatch slurm_visdom_test.slurm
 sbatch visdom_run.slurm
 sbatch -w saliksik-cpu-23 visdom_run.slurm
 sbatch -w saliksik-cpu-23 --dependency=afterany:321141 visdom_run.slurm
+
+sbatch --dependency=afterany:335889 script_1.slurm
+sbatch --dependency=afterany:335890 script_2.slurm
 
 sbatch script_debug.slurm
 sbatch script_1.slurm
@@ -88,7 +94,7 @@ python "ccs2_main.py"
 gdown https://drive.google.com/uc?id=1AxI1mwiL5PbpsTSzBzbjfalJSuUpRiyL
 unzip "v26.zip" -d "SynthWeather Dataset 10/"
 
-rm -rf NeuralNets-GenerativeExperiment-V51.XX.XX
+rm -rf "NeuralNets-GenerativeExperiment-V50.XX.XX"
 rm -rf "SynthWeather Dataset 9"
 
 zip -r "checkpoints.zip" "rgb2albedo_v9.01_7.pt" "rgb2albedo_v9.01_8.pt" "rgb2albedo_v9.01_9.pt" "rgb2albedo_v9.01_10.pt" "rgb2albedo_v9.01_11.pt" "rgb2albedo_v9.01_12.pt" "rgb2albedo_v9.01_13.pt" "rgb2albedo_v9.01_14.pt" \
