@@ -18,7 +18,8 @@ git clone -b "workspace/V58.XX.XX" "https://github.com/NeilDG/NeuralNets-Experim
 rm -rf "/scratch1/scratch2/neil.delgallego/NeuralNets-GenerativeExperiment-V50.XX.XX"
 rm -rf "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v7"
 
-gdown https://drive.google.com/uc?id=1AxI1mwiL5PbpsTSzBzbjfalJSuUpRiyL "scratch2/SynthWeather Dataset 10/"
+gdown https://drive.google.com/uc?id=1B6erEfeB2_n_KYP5GtCQU-DHGE1bKEVE --o "scratch2/SynthWeather Dataset 10/"
+mv "/scratch1/scratch2/neil.delgallego/NeuralNets-GenerativeExperiment-V58.XX.XX/v26" "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v26"
 
 //Execute job
 sbatch --dependency=afterany:335484 slurm_download.slurm
