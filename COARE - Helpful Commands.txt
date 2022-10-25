@@ -30,6 +30,9 @@ sbatch visdom_run.slurm
 sbatch -w saliksik-cpu-23 visdom_run.slurm
 sbatch -w saliksik-cpu-23 --dependency=afterany:321141 visdom_run.slurm
 
+sbatch --dependency=afterany:335889 script_1.slurm
+sbatch --dependency=afterany:335890 script_2.slurm
+
 sbatch script_debug.slurm
 sbatch script_1.slurm
 sbatch script_2.slurm
