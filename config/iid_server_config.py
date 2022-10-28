@@ -269,7 +269,7 @@ class IIDServerConfig():
             self.general_configs["train_shadow_matte"]["min_epochs"] = 30
             self.general_configs["train_shadow_matte"]["max_epochs"] = 40
 
-        elif(constants.shadow_matte_network_version == "v28.27"):
+        elif(constants.shadow_matte_network_version == "v58.27"):
             network_config[SYNTH_DATASET_VERSION] = "v26"
             network_config[NUM_BLOCKS_KEY] = 15
             # configure load sizes (GPU memory allocation of data) #for 128
