@@ -7,7 +7,7 @@ import gdown
 
 url = "https://drive.google.com/uc?id=1NLYQA3vn_-tB-YTxG_wp7s5O1T0O9tAm"
 output = "./v26_base/"
-gdown.download(url, output=output)
+gdown.download(url, use_cookies=False, output=output)
 
 # #separate files
 # #z04
