@@ -91,12 +91,14 @@ python "ccs1_main.py"
 python "ccs2_main.py"
 
 //FOR DOWNLOAD DATASET, TRY GDRIVE
-gdown https://drive.google.com/uc?id=1AxI1mwiL5PbpsTSzBzbjfalJSuUpRiyL
+gdown https://drive.google.com/uc?id=1H16LnceIDI7RhCC2MkdJM5H8We9mF0uM
+gdown https://drive.google.com/drive/folders/1CMz2flknC81dX3xlKBgNP34NJAQ651DB --fuzzy --o "./v26_base/"
 unzip "v26.zip" -d "SynthWeather Dataset 10/"
 
 rm -rf "NeuralNets-GenerativeExperiment-V50.XX.XX"
 rm -rf "SynthWeather Dataset 9"
-rm -rf "SynthWeather Dataset 10"
+rm -rf "/home/neil_delgallego/SynthWeather Dataset 10"
+
 
 zip -r "checkpoints.zip" "rgb2albedo_v9.01_7.pt" "rgb2albedo_v9.01_8.pt" "rgb2albedo_v9.01_9.pt" "rgb2albedo_v9.01_10.pt" "rgb2albedo_v9.01_11.pt" "rgb2albedo_v9.01_12.pt" "rgb2albedo_v9.01_13.pt" "rgb2albedo_v9.01_14.pt" \
 "rgb2mask_v9.01_7.pt" "rgb2mask_v9.01_8.pt" "rgb2mask_v9.01_9.pt" "rgb2mask_v9.01_10.pt" "rgb2mask_v9.01_11.pt" "rgb2mask_v9.01_12.pt" "rgb2mask_v9.01_13.pt" "rgb2mask_v9.01_14.pt" \
@@ -114,6 +116,7 @@ screen -R "MODEL_TRAINER"
 python "gcloud1_main.py"
 python "gcloud2_main.py"
 python "gcloud3_main.py"
+python "gdown_download.py"
 
 screen -S "VISDOM_PROCESS"
 screen -R "VISDOM_PROCESS"
