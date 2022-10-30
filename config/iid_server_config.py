@@ -74,6 +74,7 @@ class IIDServerConfig():
         network_config[DROPOUT_KEY] = False
         network_config[AUGMENT_KEY] = "none"
         network_config[GRAYSCALE_KEY] = False
+        network_config[DATASET_REPEAT_KEY] = 1
 
         # configure load sizes (GPU memory allocation of data) #for 128
         if (constants.server_config == 1):  # COARE
