@@ -28,10 +28,10 @@ sbatch slurm_install.slurm
 sbatch slurm_visdom_test.slurm
 sbatch visdom_run.slurm
 sbatch -w saliksik-cpu-23 visdom_run.slurm
-sbatch -w saliksik-cpu-23 --dependency=afterany:321141 visdom_run.slurm
+sbatch -w saliksik-cpu-23 --dependency=afterany:335892 visdom_run.slurm
 
-sbatch --dependency=afterany:335889 script_1.slurm
-sbatch --dependency=afterany:335890 script_2.slurm
+sbatch --dependency=afterany:335892 script_1.slurm
+sbatch --dependency=afterany:336942 script_2.slurm
 
 sbatch script_debug.slurm
 sbatch script_1.slurm
@@ -91,7 +91,7 @@ python "ccs1_main.py"
 python "ccs2_main.py"
 
 //FOR DOWNLOAD DATASET, TRY GDRIVE
-gdown https://drive.google.com/uc?id=1H16LnceIDI7RhCC2MkdJM5H8We9mF0uM
+gdown https://drive.google.com/uc?id=1B6erEfeB2_n_KYP5GtCQU-DHGE1bKEVE
 gdown https://drive.google.com/drive/folders/1CMz2flknC81dX3xlKBgNP34NJAQ651DB --fuzzy --o "./v26_base/"
 unzip "v26.zip" -d "SynthWeather Dataset 10/"
 

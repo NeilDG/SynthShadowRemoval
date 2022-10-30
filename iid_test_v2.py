@@ -394,6 +394,7 @@ class TesterClass():
         rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
         if(rgb2sm != None):
             rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
+            shadow_matte = tensor_utils.normalize_to_01(shadow_matte)
 
         if(show_images == 1):
             self.visdom_reporter.plot_image(rgb_ws, "ISTD WS Images - " + opts.shadow_network_version + str(opts.iteration))
@@ -405,9 +406,14 @@ class TesterClass():
 
         if(save_image_results == 1):
             path = "./comparison/ISTD Dataset/OURS/"
+            matte_path = path + "/matte/"
             for i in range(0, np.size(file_name)):
                 impath = path + file_name[i] + ".png"
                 torchvision.utils.save_image(rgb2ns[i], impath)
+
+                shadow_matte_path = matte_path + file_name[i] + ".jpeg"
+                torchvision.utils.save_image(shadow_matte[i], shadow_matte_path)
+
                 # print("Saving ISTD result as: ", file_name[i])
 
 

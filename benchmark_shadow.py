@@ -84,21 +84,34 @@ def measure_performance(path_list, opts):
         )
 
         mae = nn.L1Loss()
+        mse = nn.MSELoss()
+
         mae_list = []
+        rmse_list = []
         psnr_list = []
 
         mae_list_ws = []
+        rmse_list_ws = []
         psnr_list_ws = []
+
         mae_list_ns = []
+        rmse_list_ns = []
         psnr_list_ns = []
 
         mae_lab = []
         mae_lab_ws = []
         mae_lab_ns = []
 
+        rmse_lab = []
+        rmse_lab_ws = []
+        rmse_lab_ns = []
+
+
+
         for i, (_, rgb_ns_like, rgb_ns, shadow_mask) in enumerate(data_loader, 0):
             mae_error = mae(rgb_ns_like, rgb_ns)
             mae_list.append(mae_error)
+            rmse_list.append(torch.sqrt(mse(rgb_ns_like, rgb_ns)))
 
             psnr_error = kornia.metrics.psnr(rgb_ns_like, rgb_ns, 1.0)
             psnr_list.append(psnr_error)
@@ -107,33 +120,48 @@ def measure_performance(path_list, opts):
             rgb_ns_lab = kornia.color.rgb_to_lab(rgb_ns)
 
             mae_lab.append(mae(rgb_ns_like_lab, rgb_ns_lab))
+            rmse_lab.append(torch.sqrt(mse(rgb_ns_like_lab, rgb_ns_lab)))
 
             #WS regions
             mae_list_ws.append(mae(rgb_ns_like * shadow_mask, rgb_ns * shadow_mask))
+            rmse_list_ws.append(torch.sqrt(mse(rgb_ns_like * shadow_mask, rgb_ns * shadow_mask)))
             psnr_list_ws.append(kornia.metrics.psnr(rgb_ns_like * shadow_mask, rgb_ns * shadow_mask, 1.0))
             mae_lab_ws.append(mae(rgb_ns_like_lab * shadow_mask, rgb_ns_lab * shadow_mask))
+            rmse_lab_ws.append(torch.sqrt(mse(rgb_ns_like_lab * shadow_mask, rgb_ns_lab * shadow_mask)))
 
+            #NS regions
             shadow_mask_inv = transforms.functional.invert(shadow_mask)
             mae_list_ns.append(mae(rgb_ns_like * shadow_mask_inv, rgb_ns * shadow_mask_inv))
             psnr_list_ns.append(kornia.metrics.psnr(rgb_ns_like * shadow_mask_inv, rgb_ns * shadow_mask_inv, 1.0))
+            rmse_list_ns.append(torch.sqrt(mse(rgb_ns_like * shadow_mask_inv, rgb_ns * shadow_mask_inv)))
             mae_lab_ns.append(mae(rgb_ns_like_lab * shadow_mask_inv, rgb_ns_lab * shadow_mask_inv))
-
+            rmse_lab_ns.append(torch.sqrt(mse(rgb_ns_like_lab * shadow_mask_inv, rgb_ns_lab * shadow_mask_inv)))
 
         mean_mae = np.round(np.mean(mae_list) * 255.0, 4)
+        mean_rmse = np.round(np.mean(rmse_list) * 255.0, 4)
         mean_psnr = np.round(np.mean(psnr_list), 4)
         mean_mae_lab = np.round(np.mean(mae_lab), 4)
+        mean_rmse_lab = np.round(np.mean(rmse_lab), 4)
 
         mean_mae_ws = np.round(np.mean(mae_list_ws) * 255.0, 4)
+        mean_rmse_ws = np.round(np.mean(rmse_list_ws) * 255.0, 4)
         mean_psnr_ws = np.round(np.mean(psnr_list_ws), 4)
         mean_mae_lab_ws = np.round(np.mean(mae_lab_ws), 4)
+        mean_rmse_lab_ws = np.round(np.mean(rmse_lab_ws), 4)
 
         mean_mae_ns = np.round(np.mean(mae_list_ns) * 255.0, 4)
+        mean_rmse_ns = np.round(np.mean(rmse_list_ns) * 255.0, 4)
         mean_psnr_ns = np.round(np.mean(psnr_list_ns), 4)
         mean_mae_lab_ns = np.round(np.mean(mae_lab_ns), 4)
+        mean_rmse_lab_ns = np.round(np.mean(rmse_lab_ns), 4)
 
-        print("Model name: ", model_name, " Mean PSNR: ", mean_psnr, " Mean MAE: ", mean_mae, " Mean MAE Lab: ", mean_mae_lab,
-              "\nModel name: ", model_name, " Mean PSNR (WS): ", mean_psnr_ws, " Mean MAE (WS): ", mean_mae_ws, " Mean MAE Lab (WS): ", mean_mae_lab_ws,
-              "\nModel name: ", model_name, " Mean PSNR (NS): ", mean_psnr_ns, " Mean MAE (NS): ", mean_mae_ns, " Mean MAE Lab (NS): ", mean_mae_lab_ns)
+        # print("Model name: ", model_name, " Mean PSNR: ", mean_psnr, " Mean MAE: ", mean_mae, " Mean MAE Lab: ", mean_mae_lab,
+        #       "\nModel name: ", model_name, " Mean PSNR (WS): ", mean_psnr_ws, " Mean MAE (WS): ", mean_mae_ws, " Mean MAE Lab (WS): ", mean_mae_lab_ws,
+        #       "\nModel name: ", model_name, " Mean PSNR (NS): ", mean_psnr_ns, " Mean MAE (NS): ", mean_mae_ns, " Mean MAE Lab (NS): ", mean_mae_lab_ns)
+
+        print("Model name: ", model_name, " Mean RMSE: ", mean_rmse, " Mean RMSE Lab: ", mean_rmse_lab,
+              "\nModel name: ", model_name, " Mean RMSE (WS): ", mean_rmse_ws, " Mean RMSE Lab (WS): ", mean_rmse_lab_ws,
+              "\nModel name: ", model_name, " Mean RMSE (NS): ", mean_rmse_ns, " Mean RMSE Lab (NS): ", mean_rmse_lab_ns)
 
 def main(argv):
     (opts, args) = parser.parse_args(argv)

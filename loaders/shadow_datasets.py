@@ -105,7 +105,8 @@ class ShadowISTDDataset(data.Dataset):
 
         self.initial_op = transforms.Compose([
             transforms.ToPILImage(),
-            transforms.Resize(constants.TEST_IMAGE_SIZE),
+            # transforms.Resize(constants.TEST_IMAGE_SIZE),
+            transforms.Resize((240, 320)),
             transforms.ToTensor()])
 
     def __getitem__(self, idx):

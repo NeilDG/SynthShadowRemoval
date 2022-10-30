@@ -50,6 +50,7 @@ class IIDServerConfig():
     def get_last_epoch_from_mode(self, mode):
         return self.epoch_map[mode]
 
+
     def interpret_shadow_matte_params_from_version(self):  # interprets a given version name + iteration, to its corresponding network config.
         network_config = {}
         NETWORK_CONFIG_NUM = "net_config"
@@ -73,7 +74,6 @@ class IIDServerConfig():
         network_config[DROPOUT_KEY] = False
         network_config[AUGMENT_KEY] = "none"
         network_config[GRAYSCALE_KEY] = False
-        network_config[DATASET_REPEAT_KEY] = 1
 
         # configure load sizes (GPU memory allocation of data) #for 128
         if (constants.server_config == 1):  # COARE
@@ -285,6 +285,7 @@ class IIDServerConfig():
         WEIGHT_DECAY_KEY = "weight_decay"
         DROPOUT_KEY = "use_dropout"
         AUGMENT_KEY = "augment_mode"
+        DATASET_REPEAT_KEY = "dataset_repeats"
 
         #set defaults
         network_config[NETWORK_CONFIG_NUM] = 5
@@ -294,6 +295,7 @@ class IIDServerConfig():
         network_config[WEIGHT_DECAY_KEY] = 0.0
         network_config[DROPOUT_KEY] = False
         network_config[AUGMENT_KEY] = "none"
+        network_config[DATASET_REPEAT_KEY] = 1
 
         # configure load sizes (GPU memory allocation of data) #for 128
         if (constants.server_config == 1):  # COARE
@@ -333,6 +335,14 @@ class IIDServerConfig():
             network_config[SYNTH_DATASET_VERSION] = "v8"
             network_config[NUM_BLOCKS_KEY] = 3
             network_config[NETWORK_CONFIG_NUM] = 6
+
+        elif (constants.shadow_network_version == "v58.28"):
+            network_config[SYNTH_DATASET_VERSION] = "v26"
+            network_config[NETWORK_CONFIG_NUM] = 6
+            network_config[NUM_BLOCKS_KEY] = 3
+
+            self.general_configs["train_shadow"]["min_epochs"] = 5
+            self.general_configs["train_shadow"]["max_epochs"] = 20
 
         return network_config
 
