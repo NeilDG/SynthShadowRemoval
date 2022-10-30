@@ -262,11 +262,11 @@ class IIDServerConfig():
             elif (constants.server_config == 2):  # CCS JUPYTER
                 network_config[LOAD_SIZE_KEY_M] = 96
             elif (constants.server_config == 3):  # GCLOUD
-                network_config[LOAD_SIZE_KEY_M] = 16
+                network_config[LOAD_SIZE_KEY_M] = 8
             elif (constants.server_config == 4):  # RTX 2080Ti
                 network_config[LOAD_SIZE_KEY_M] = 24
             else:  # RTX 3090
-                network_config[LOAD_SIZE_KEY_M] = 64
+                network_config[LOAD_SIZE_KEY_M] = 32
 
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
