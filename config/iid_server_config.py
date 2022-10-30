@@ -238,15 +238,15 @@ class IIDServerConfig():
 
             # configure load sizes (GPU memory allocation of data) #for 128
             if (constants.server_config == 1):  # COARE
-                network_config[LOAD_SIZE_KEY_M] = 32
+                network_config[LOAD_SIZE_KEY_M] = 128
             elif (constants.server_config == 2):  # CCS JUPYTER
-                network_config[LOAD_SIZE_KEY_M] = 48
+                network_config[LOAD_SIZE_KEY_M] = 196
             elif (constants.server_config == 3):  # GCLOUD
-                network_config[LOAD_SIZE_KEY_M] = 24
+                network_config[LOAD_SIZE_KEY_M] = 64
             elif (constants.server_config == 4):  # RTX 2080Ti
-                network_config[LOAD_SIZE_KEY_M] = 16
+                network_config[LOAD_SIZE_KEY_M] = 64
             else:  # RTX 3090
-                network_config[LOAD_SIZE_KEY_M] = 32
+                network_config[LOAD_SIZE_KEY_M] = 128
 
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
@@ -258,15 +258,15 @@ class IIDServerConfig():
             network_config[NUM_BLOCKS_KEY] = 15
             # configure load sizes (GPU memory allocation of data) #for 128
             if (constants.server_config == 1):  # COARE
-                network_config[LOAD_SIZE_KEY_M] = 16
+                network_config[LOAD_SIZE_KEY_M] = 64
             elif (constants.server_config == 2):  # CCS JUPYTER
-                network_config[LOAD_SIZE_KEY_M] = 24
+                network_config[LOAD_SIZE_KEY_M] = 96
             elif (constants.server_config == 3):  # GCLOUD
-                network_config[LOAD_SIZE_KEY_M] = 8
+                network_config[LOAD_SIZE_KEY_M] = 48
             elif (constants.server_config == 4):  # RTX 2080Ti
-                network_config[LOAD_SIZE_KEY_M] = 8
+                network_config[LOAD_SIZE_KEY_M] = 32
             else:  # RTX 3090
-                network_config[LOAD_SIZE_KEY_M] = 16
+                network_config[LOAD_SIZE_KEY_M] = 64
 
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
