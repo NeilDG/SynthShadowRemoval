@@ -17,7 +17,7 @@ from torch.autograd import Variable
 import torch
 from utils import pytorch_colors
 import matplotlib.pyplot as plt
-from skimage.metrics import structural_similarity
+# from skimage.metrics import structural_similarity
 import torchvision.transforms as transforms
 import constants
 from torchvision.transforms import functional as transform_functional
@@ -270,13 +270,13 @@ def compute_z_signal_concat(value, batch_size, image_size):
     z_signal = torch.randn((batch_size, 100, image_size[0], image_size[1]))
     return z_signal
 
-
-def measure_ssim(img1, img2):
-    # preprocessing
-    img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2YUV)
-    img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2YUV)
-
-    return structural_similarity(img1, img2, multichannel=True, gaussian_weights=True, sigma=1.5)
+#
+# def measure_ssim(img1, img2):
+#     # preprocessing
+#     img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2YUV)
+#     img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2YUV)
+#
+#     return structural_similarity(img1, img2, multichannel=True, gaussian_weights=True, sigma=1.5)
 
 # def produce_albedo(rgb_tensor, shading_tensor):
 #     rgb_tensor = rgb_tensor.transpose(0, 1)
