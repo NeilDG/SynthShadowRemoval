@@ -110,9 +110,11 @@ def load_shadow_train_dataset(ws_path, ns_path, patch_size, load_size, opts):
     ws_list = []
     ns_list = []
 
-    print("Using synthetic train dataset")
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
-    network_config = sc_instance.interpret_shadow_matte_params_from_version()
+    if(opts.train_mode == "train_shadow_matte" or opts.train_mode == "all"):
+        network_config = sc_instance.interpret_shadow_matte_params_from_version()
+    else:
+        network_config = sc_instance.interpret_shadow_network_params_from_version()
 
     for i in range(0, network_config["dataset_repeats"]): #TEMP: formerly 0-1
         ws_list += initial_ws_list
