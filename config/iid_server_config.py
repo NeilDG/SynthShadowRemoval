@@ -310,12 +310,56 @@ class IIDServerConfig():
             elif (constants.server_config == 4):  # RTX 2080Ti
                 network_config[LOAD_SIZE_KEY_M] = 32
             else:  # RTX 3090
-                network_config[LOAD_SIZE_KEY_M] = 48
+                network_config[LOAD_SIZE_KEY_M] = 64
 
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
             self.general_configs["train_shadow_matte"]["min_epochs"] = 60
-            self.general_configs["train_shadow_matte"]["max_epochs"] = 80
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 100
+
+        elif (constants.shadow_matte_network_version == "v58.34"):
+            network_config[SYNTH_DATASET_VERSION] = "v28_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 64
+            network_config[NUM_BLOCKS_KEY] = 15
+
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_M] = 64
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_M] = 96
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_M] = 48
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_M] = 32
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_M] = 64
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 60
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 100
+
+        elif (constants.shadow_matte_network_version == "v58.35"):
+            network_config[SYNTH_DATASET_VERSION] = "v28_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 64
+            network_config[NUM_BLOCKS_KEY] = 3
+
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_M] = 128
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_M] = 196
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_M] = 96
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_M] = 64
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_M] = 128
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 60
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 100
 
         return network_config
 
