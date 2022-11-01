@@ -25,8 +25,10 @@ parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
 parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:0")
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
-parser.add_option('--version', type=str, default="")
-parser.add_option('--iteration', type=int, help="Style version?", default="1")
+parser.add_option('--shadow_matte_network_version', type=str, default="VXX.XX")
+parser.add_option('--shadow_removal_version', type=str, default="VXX.XX")
+parser.add_option('--shadow_matte_iteration', type=int, default="1")
+parser.add_option('--shadow_removal_iteration', type=int, default="1")
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0005")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
@@ -36,7 +38,6 @@ parser.add_option('--train_mode', type=str, default="all") #all, train_shadow_ma
 
 def update_config(opts):
     constants.server_config = opts.server_config
-    constants.ITERATION = str(opts.iteration)
     constants.plot_enabled = opts.plot_enabled
     constants.debug_run = opts.debug_run
 
@@ -279,8 +280,8 @@ def main(argv):
 
     plot_utils.VisdomReporter.initialize()
 
-    constants.shadow_network_version = opts.version
-    constants.shadow_matte_network_version = opts.version
+    constants.shadow_removal_version = opts.shadow_removal_version
+    constants.shadow_matte_network_version = opts.shadow_matte_network_version
     iid_server_config.IIDServerConfig.initialize()
 
     tf = trainer_factory.TrainerFactory(device, opts)

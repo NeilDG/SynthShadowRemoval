@@ -329,10 +329,10 @@ class TesterClass():
         rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
 
         if (show_images == 1):
-            self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + opts.shadow_matte_network_version + str(opts.iteration))
-            self.visdom_reporter.plot_image(rgb_ws_gray, prefix + " WS (Grey) Images - " + opts.shadow_matte_network_version + str(opts.iteration))
-            self.visdom_reporter.plot_image(shadow_matte, prefix + " WS Shadow Matte Images - " + opts.shadow_matte_network_version + str(opts.iteration))
-            self.visdom_reporter.plot_image(rgb2sm, prefix + " WS Shadow Matte-Like Images - " + opts.shadow_matte_network_version + str(opts.iteration))
+            self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration))
+            self.visdom_reporter.plot_image(rgb_ws_gray, prefix + " WS (Grey) Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration))
+            self.visdom_reporter.plot_image(shadow_matte, prefix + " WS Shadow Matte Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration))
+            self.visdom_reporter.plot_image(rgb2sm, prefix + " WS Shadow Matte-Like Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration))
 
         mae = nn.L1Loss()
 
@@ -343,7 +343,7 @@ class TesterClass():
     def print_shadow_matte_performance(self, prefix, opts):
         ave_mae_sm = np.round(np.mean(self.mae_list_sm) * 255.0, 4)
 
-        display_text = prefix + " - Versions: " + opts.shadow_matte_network_version + "_" + str(opts.iteration) + \
+        display_text = prefix + " - Versions: " + opts.shadow_matte_network_version + "_" + str(opts.shadow_matte_iteration) + \
                        "<br> MAE Error (SM): " + str(ave_mae_sm)
 
         self.visdom_reporter.plot_text(display_text)
@@ -362,13 +362,13 @@ class TesterClass():
         # rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
 
         if(show_images == 1):
-            self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + opts.shadow_network_version + str(opts.iteration))
+            self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
             # self.visdom_reporter.plot_image(shadow_matte, "WS Shadow Matte Images - " + opts.shadow_network_version + str(opts.iteration))
             # if(rgb2sm != None):
             #     rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
             #     self.visdom_reporter.plot_image(rgb2sm, prefix + " WS Shadow Matte-Like Images - " + opts.shadow_network_version + str(opts.iteration))
-            self.visdom_reporter.plot_image(rgb_ns, prefix + " NS Images - " + opts.shadow_network_version + str(opts.iteration))
-            self.visdom_reporter.plot_image(rgb2ns, prefix + " NS (equation) Images - " + opts.shadow_network_version + str(opts.iteration))
+            self.visdom_reporter.plot_image(rgb_ns, prefix + " NS Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+            self.visdom_reporter.plot_image(rgb2ns, prefix + " NS (equation) Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
 
         psnr_rgb = np.round(kornia.metrics.psnr(rgb2ns, rgb_ns, max_val=1.0).item(), 4)
         ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb2ns, rgb_ns, 5).item(), 4)
@@ -397,12 +397,12 @@ class TesterClass():
             shadow_matte = tensor_utils.normalize_to_01(shadow_matte)
 
         if(show_images == 1):
-            self.visdom_reporter.plot_image(rgb_ws, "ISTD WS Images - " + opts.shadow_network_version + str(opts.iteration))
-            self.visdom_reporter.plot_image(shadow_matte, "ISTD Shadow Matte Images - " + opts.shadow_network_version + str(opts.iteration))
+            self.visdom_reporter.plot_image(rgb_ws, "ISTD WS Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration) + " " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+            self.visdom_reporter.plot_image(shadow_matte, "ISTD Shadow Matte Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration) + " " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
             if (rgb2sm != None):
-                self.visdom_reporter.plot_image(rgb2sm, "ISTD Shadow Matte-Like Images - " + opts.shadow_network_version + str(opts.iteration))
-            self.visdom_reporter.plot_image(rgb_ns, "ISTD NS Images - " + opts.shadow_network_version + str(opts.iteration))
-            self.visdom_reporter.plot_image(rgb2ns, "ISTD NS (equation) Images - " + opts.shadow_network_version + str(opts.iteration))
+                self.visdom_reporter.plot_image(rgb2sm, "ISTD Shadow Matte-Like Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration) + " " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+            self.visdom_reporter.plot_image(rgb_ns, "ISTD NS Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration) + " " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+            self.visdom_reporter.plot_image(rgb2ns, "ISTD NS-Like Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration) + " " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
 
         if(save_image_results == 1):
             path = "./comparison/ISTD Dataset/OURS/"
@@ -427,6 +427,47 @@ class TesterClass():
         self.ssim_list_rgb.append(ssim_rgb)
         self.mae_list_rgb.append(mae_rgb)
 
+    def test_srd(self, file_name, rgb_ws, rgb_ns, shadow_matte, show_images, save_image_results, debug_policy, opts):
+        rgb2ns, rgb2sm = self.infer_shadow_results(rgb_ws, shadow_matte, debug_policy)
+
+        # normalize everything
+        rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
+        rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
+        rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
+        rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
+        if (rgb2sm != None):
+            rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
+            shadow_matte = tensor_utils.normalize_to_01(shadow_matte)
+
+        if(show_images == 1):
+            self.visdom_reporter.plot_image(rgb_ws, "SRD WS Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+            self.visdom_reporter.plot_image(shadow_matte, "SRD Shadow Matte Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+            if (rgb2sm != None):
+                self.visdom_reporter.plot_image(rgb2sm, "SRD Shadow Matte-Like Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+            self.visdom_reporter.plot_image(rgb_ns, "SRD NS Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+            self.visdom_reporter.plot_image(rgb2ns, "SRD NS-Like Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+
+        if(save_image_results == 1):
+            path = "./comparison/SRD Dataset/OURS/"
+            matte_path = path + "/matte-like/"
+            for i in range(0, np.size(file_name)):
+                impath = path + file_name[i] + ".png"
+                torchvision.utils.save_image(rgb2ns[i], impath)
+
+                if(rgb2sm != None):
+                    shadow_matte_path = matte_path + file_name[i] + ".jpeg"
+                    torchvision.utils.save_image(rgb2sm[i], shadow_matte_path)
+
+        psnr_rgb = np.round(kornia.metrics.psnr(rgb2ns, rgb_ns, max_val=1.0).item(), 4)
+        ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb2ns, rgb_ns, 5).item(), 4)
+
+        mae = nn.L1Loss()
+        mae_rgb = np.round(mae(rgb2ns, rgb_ns).cpu(), 4)
+
+        self.psnr_list_rgb.append(psnr_rgb)
+        self.ssim_list_rgb.append(ssim_rgb)
+        self.mae_list_rgb.append(mae_rgb)
+
     def print_ave_shadow_performance(self, prefix, opts):
         ave_psnr_rgb = np.round(np.mean(self.psnr_list_rgb), 4)
         ave_ssim_rgb = np.round(np.mean(self.ssim_list_rgb), 4)
@@ -434,7 +475,8 @@ class TesterClass():
 
         ave_mae_sm = np.round(np.mean(self.mae_list_sm) * 255.0, 4)
 
-        display_text = prefix + " - Versions: " + opts.shadow_matte_network_version + "_" + str(opts.iteration) + \
+        display_text = prefix + " - Versions: " + opts.shadow_matte_network_version + "_" + str(opts.shadow_matte_iteration) + \
+                       "<br>" + opts.shadow_removal_version + "_" + str(opts.shadow_removal_iteration) + \
                        "<br> MAE Error (SM): " + str(ave_mae_sm) + "<br> MAE Error (RGB): " +str(ave_mae_rgb) + \
                        "<br> RGB Reconstruction PSNR: " + str(ave_psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ave_ssim_rgb)
 

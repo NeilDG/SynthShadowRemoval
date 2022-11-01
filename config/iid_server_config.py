@@ -31,7 +31,7 @@ class IIDServerConfig():
 
 
     def update_version_config(self):
-        self.version_config = {"shadow_network_version": constants.shadow_network_version, "shadow_matte_network_version": constants.shadow_matte_network_version,
+        self.version_config = {"shadow_network_version": constants.shadow_removal_version, "shadow_matte_network_version": constants.shadow_matte_network_version,
                                "style_transfer_version" : constants.style_transfer_version,
                                "network_m_name": "rgb2sm", "network_z_name": "rgb2ns", "style_transfer_name": "synth2rgb"}
 
@@ -250,8 +250,8 @@ class IIDServerConfig():
 
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
-            self.general_configs["train_shadow_matte"]["min_epochs"] = 5
-            self.general_configs["train_shadow_matte"]["max_epochs"] = 20
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 30
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 30
 
         elif(constants.shadow_matte_network_version == "v58.31"):
             network_config[SYNTH_DATASET_VERSION] = "v26"
@@ -288,7 +288,7 @@ class IIDServerConfig():
             elif (constants.server_config == 4):  # RTX 2080Ti
                 network_config[LOAD_SIZE_KEY_M] = 32
             else:  # RTX 3090
-                network_config[LOAD_SIZE_KEY_M] = 48
+                network_config[LOAD_SIZE_KEY_M] = 64
 
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
@@ -335,31 +335,31 @@ class IIDServerConfig():
         #configure batch size. NOTE: Batch size must be equal or larger than load size
         network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
 
-        assert "v58" in constants.shadow_network_version, "Shadow network version not recognized: " + constants.shadow_network_version
+        assert "v58" in constants.shadow_removal_version, "Shadow network version not recognized: " + constants.shadow_removal_version
 
-        if (constants.shadow_network_version == "v58.01"):
+        if (constants.shadow_removal_version == "v58.01"):
             network_config[SYNTH_DATASET_VERSION] = "v20_refined"
             network_config[NETWORK_CONFIG_NUM] = 6
             network_config[NUM_BLOCKS_KEY] = 3
 
-        elif (constants.shadow_network_version == "v58.02"):
+        elif (constants.shadow_removal_version == "v58.02"):
             network_config[SYNTH_DATASET_VERSION] = "v20_refined"
             network_config[NETWORK_CONFIG_NUM] = 7
             network_config[NUM_BLOCKS_KEY] = 3
 
-        elif (constants.shadow_matte_network_version == "v58.05"):
+        elif (constants.shadow_removal_version == "v58.05"):
             network_config[SYNTH_DATASET_VERSION] = "v8"
             network_config[NUM_BLOCKS_KEY] = 3
             network_config[NETWORK_CONFIG_NUM] = 6
             self.general_configs["train_shadow"]["min_epochs"] = 20
             self.general_configs["train_shadow"]["max_epochs"] = 25
 
-        elif (constants.shadow_matte_network_version == "v58.06"):
+        elif (constants.shadow_removal_version == "v58.06"):
             network_config[SYNTH_DATASET_VERSION] = "v8"
             network_config[NUM_BLOCKS_KEY] = 3
             network_config[NETWORK_CONFIG_NUM] = 6
 
-        elif (constants.shadow_network_version == "v58.28"):
+        elif (constants.shadow_removal_version == "v58.28"):
             network_config[SYNTH_DATASET_VERSION] = "v26"
             network_config[NETWORK_CONFIG_NUM] = 6
             network_config[NUM_BLOCKS_KEY] = 3

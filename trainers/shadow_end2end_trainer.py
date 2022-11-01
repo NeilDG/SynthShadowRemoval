@@ -24,7 +24,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.initialize_train_config(opts)
 
     def initialize_train_config(self, opts):
-        self.iteration = opts.iteration
+        self.iteration = opts.shadow_removal_iteration
         self.it_table = shadow_iteration_table.ShadowIterationTable()
         self.use_bce = self.it_table.is_bce_enabled(self.iteration)
         self.adv_weight = self.it_table.get_adv_weight()
