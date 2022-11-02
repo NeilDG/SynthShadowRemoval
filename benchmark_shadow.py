@@ -1,5 +1,6 @@
 import sys
 from optparse import OptionParser
+from pathlib import Path
 
 import kornia.losses
 import torch
@@ -280,13 +281,42 @@ def measure_sbu_performance(path_list, ns_path, mask_path, opts):
               "\nModel name: ", model_name, " Mean RMSE (WS): ", mean_rmse_ws, " Mean RMSE Lab (WS): ", mean_rmse_lab_ws,
               "\nModel name: ", model_name, " Mean RMSE (NS): ", mean_rmse_ns, " Mean RMSE Lab (NS): ", mean_rmse_lab_ns)
 
+def save_img_copies_for_results(results_list, ns_path, dataset_name, target_size, opts):
+    transform_op = transforms.Compose([
+        transforms.ToPILImage(),
+        transforms.Resize(target_size),
+        transforms.ToTensor()])
+
+    BASE_SAVE_PATH = "./reports/"
+
+    results_list.append(ns_path)
+    for img_dir in results_list:
+        img_list = dataset_loader.assemble_img_list(img_dir, opts)
+        img_dir_split = img_dir.split("/")
+
+        folder_dir = BASE_SAVE_PATH + dataset_name + "/" + img_dir_split[3] + "/"
+        try:
+            path = Path(folder_dir)
+            path.mkdir(parents=True)
+        except OSError as error:
+            print("Save path already exists. Skipping.", error)
+
+        for img_path in img_list:
+            file_name = img_path.split("/")[4]
+            rgb_img = cv2.imread(img_path)
+            rgb_img = cv2.cvtColor(rgb_img, cv2.COLOR_BGR2RGB)
+            rgb_img = transform_op(rgb_img)
+
+            print(folder_dir + file_name)
+            torchvision.utils.save_image(rgb_img, folder_dir + file_name)
+
 def main(argv):
     (opts, args) = parser.parse_args(argv)
     istd_all_list = [
     "E:/ISTD_Dataset/test/test_A/*.png",
     "./comparison/ISTD Dataset/SID_PAMI/*.png",
     "./comparison/ISTD Dataset/DC-ShadowNet_ISTD/*.png",
-    "./comparison/ISTD Dataset/BMNET_2022_ISTD/ISTD_Result/*.png",
+    "./comparison/ISTD Dataset/BMNET_2022_ISTD/*.png",
     "./comparison/ISTD Dataset/AAAI_2020_ISTD/*.png",
     "./comparison/ISTD Dataset/AAAI_2020+_ISTD/*.png",
     "./comparison/ISTD Dataset/SynShadow-SP+M/*.png",
@@ -297,24 +327,27 @@ def main(argv):
     mask_path = "E:/ISTD_Dataset/test/test_B/*.png"
 
     # measure_performance(istd_all_list, ns_path, mask_path, opts)
+    save_img_copies_for_results(istd_all_list, ns_path, "ISTD Dataset", (240, 320), opts)
 
     #for SRD
-    ns_path = "E:/SRD_Test/shadow_free/*.jpg"
+    ns_path = "E:/SRD_Test/srd/shadow_free/*.jpg"
     mask_path = "E:/SRD_REMOVAL_RESULTS/rawB/*.png"
 
     sbu_all_list = [
-    "E:/SRD_Test/shadow/*.jpg",
+    "E:/SRD_Test/srd/shadow/*.jpg",
     "./comparison/SRD Dataset/SID_PAMI/*.png",
     "./comparison/SRD Dataset/DC-ShadowNet/*.png",
     "./comparison/SRD Dataset/BMNET_2022/*.jpg",
     "./comparison/SRD Dataset/AAAI_2020_SRD/*.jpg",
     "./comparison/SRD Dataset/AAAI_2020+_SRD/*.jpg",
-    # "./comparison/SRD Dataset/SynShadow-SP+M/*.png",
-    # "./comparison/SRD Dataset/SynShadow-DHAN/*.png",
+    "./comparison/SRD Dataset/SynShadow-SP+M/*.png",
+    "./comparison/SRD Dataset/SynShadow-DHAN/*.png",
     "./comparison/SRD Dataset/OURS/*.png"]
 
     # measure_sbu_performance(sbu_all_list, ns_path, mask_path, opts)
-    measure_performance(sbu_all_list, ns_path, mask_path, opts)
+    # measure_performance(sbu_all_list, ns_path, mask_path, opts)
+    save_img_copies_for_results(sbu_all_list, ns_path, "SRD Dataset", (160, 210), opts)
+
 
 
 if __name__ == "__main__":

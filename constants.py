@@ -106,8 +106,8 @@ mask_istd = "E:/ISTD_Dataset/test/test_B/*.png"
 # ws_istd = "E:/ISTD_Dataset/train/train_A/*.png"
 # ns_istd = "E:/ISTD_Dataset/train/train_C/*.png"
 
-ws_srd = "E:/SRD_Test/shadow/*.jpg"
-ns_srd = "E:/SRD_Test/shadow_free/*.jpg"
+ws_srd = "E:/SRD_Test/srd/shadow/*.jpg"
+ns_srd = "E:/SRD_Test/srd/shadow_free/*.jpg"
 # ws_srd = "E:/SRD_REMOVAL_RESULTS/rawA/*.png"
 # ns_srd = "E:/SRD_REMOVAL_RESULTS/rawC/*.png"
 

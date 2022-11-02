@@ -92,70 +92,7 @@ class IIDServerConfig():
         network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
 
         assert "v58" in constants.shadow_matte_network_version, "Shadow matte network version not recognized: " + constants.shadow_matte_network_version
-        if (constants.shadow_matte_network_version == "v58.18"):
-            network_config[SYNTH_DATASET_VERSION] = "v25"
-            network_config[NETWORK_CONFIG_NUM] = 4
-            network_config[NUM_BLOCKS_KEY] = 3
-            self.general_configs["train_shadow_matte"]["min_epochs"] = 20
-            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
-
-        elif (constants.shadow_matte_network_version == "v58.19"):
-            network_config[SYNTH_DATASET_VERSION] = "v25_refined"
-            network_config[NETWORK_CONFIG_NUM] = 4
-            network_config[NUM_BLOCKS_KEY] = 3
-            self.general_configs["train_shadow_matte"]["min_epochs"] = 20
-            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
-
-        elif (constants.shadow_matte_network_version == "v58.20"):
-            network_config[SYNTH_DATASET_VERSION] = "v25"
-            network_config[NETWORK_CONFIG_NUM] = 4
-            network_config[NUM_BLOCKS_KEY] = 3
-            self.general_configs["train_shadow_matte"]["min_epochs"] = 20
-            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
-
-            network_config[GRAYSCALE_KEY] = True
-            network_config[NC_KEY] = 1
-
-        elif (constants.shadow_matte_network_version == "v58.21"):
-            network_config[SYNTH_DATASET_VERSION] = "v25_refined"
-            network_config[NETWORK_CONFIG_NUM] = 4
-            network_config[NUM_BLOCKS_KEY] = 3
-            self.general_configs["train_shadow_matte"]["min_epochs"] = 20
-            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
-
-            network_config[GRAYSCALE_KEY] = True
-            network_config[NC_KEY] = 1
-
-        elif (constants.shadow_matte_network_version == "v58.22"):
-            network_config[SYNTH_DATASET_VERSION] = "v25"
-            network_config[NETWORK_CONFIG_NUM] = 4
-            network_config[NUM_BLOCKS_KEY] = 3
-            network_config[AUGMENT_KEY] = "trivial_augment_wide"
-            self.general_configs["train_shadow_matte"]["min_epochs"] = 20
-            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
-
-            network_config[GRAYSCALE_KEY] = True
-            network_config[NC_KEY] = 1
-
-        elif (constants.shadow_matte_network_version == "v58.23"):
-            network_config[SYNTH_DATASET_VERSION] = "v25_refined"
-            network_config[NETWORK_CONFIG_NUM] = 4
-            network_config[NUM_BLOCKS_KEY] = 3
-            network_config[AUGMENT_KEY] = "trivial_augment_wide"
-            self.general_configs["train_shadow_matte"]["min_epochs"] = 20
-            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
-
-            network_config[GRAYSCALE_KEY] = True
-            network_config[NC_KEY] = 1
-
-        elif (constants.shadow_matte_network_version == "v58.24"):
-            network_config[SYNTH_DATASET_VERSION] = "v_istd"
-            network_config[NETWORK_CONFIG_NUM] = 4
-            network_config[NUM_BLOCKS_KEY] = 3
-            self.general_configs["train_shadow_matte"]["min_epochs"] = 30
-            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
-
-        elif(constants.shadow_matte_network_version == "v58.25"):
+        if(constants.shadow_matte_network_version == "v58.25"):
             network_config[SYNTH_DATASET_VERSION] = "v_istd"
             network_config[NUM_BLOCKS_KEY] = 3
             self.general_configs["train_shadow_matte"]["min_epochs"] = 30
@@ -332,12 +269,12 @@ class IIDServerConfig():
             elif (constants.server_config == 4):  # RTX 2080Ti
                 network_config[LOAD_SIZE_KEY_M] = 32
             else:  # RTX 3090
-                network_config[LOAD_SIZE_KEY_M] = 64
+                network_config[LOAD_SIZE_KEY_M] = 48
 
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
-            self.general_configs["train_shadow_matte"]["min_epochs"] = 60
-            self.general_configs["train_shadow_matte"]["max_epochs"] = 100
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 15
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 20
 
         elif (constants.shadow_matte_network_version == "v58.35"):
             network_config[SYNTH_DATASET_VERSION] = "v28_istd"
@@ -429,6 +366,15 @@ class IIDServerConfig():
             network_config[SYNTH_DATASET_VERSION] = "v26"
             network_config[NETWORK_CONFIG_NUM] = 6
             network_config[NUM_BLOCKS_KEY] = 3
+
+            self.general_configs["train_shadow"]["min_epochs"] = 5
+            self.general_configs["train_shadow"]["max_epochs"] = 20
+
+        elif (constants.shadow_removal_version == "v58.28_istdtuned"):
+            network_config[SYNTH_DATASET_VERSION] = "v_istd"
+            network_config[NETWORK_CONFIG_NUM] = 6
+            network_config[NUM_BLOCKS_KEY] = 3
+            network_config[DATASET_REPEAT_KEY] = 35
 
             self.general_configs["train_shadow"]["min_epochs"] = 5
             self.general_configs["train_shadow"]["max_epochs"] = 20
