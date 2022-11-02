@@ -269,12 +269,12 @@ class IIDServerConfig():
             elif (constants.server_config == 4):  # RTX 2080Ti
                 network_config[LOAD_SIZE_KEY_M] = 32
             else:  # RTX 3090
-                network_config[LOAD_SIZE_KEY_M] = 48
+                network_config[LOAD_SIZE_KEY_M] = 64
 
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
-            self.general_configs["train_shadow_matte"]["min_epochs"] = 15
-            self.general_configs["train_shadow_matte"]["max_epochs"] = 20
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 35
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 45
 
         elif (constants.shadow_matte_network_version == "v58.35"):
             network_config[SYNTH_DATASET_VERSION] = "v28_istd"
