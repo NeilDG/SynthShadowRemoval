@@ -16,9 +16,11 @@ module load cuda/10.1_cudnn-7.6.5
 
 #do fresh install
 source activate NeilGAN_V2
+
 pip install gdown
-gdown https://drive.google.com/uc?id=1B6erEfeB2_n_KYP5GtCQU-DHGE1bKEVE --o "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
-unzip "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v26.zip" -d "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
+srun python "gdown_download.py"
+zip -F "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v28_istd.zip" --out "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v28_istd_fixed.zip"
+unzip "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v28_istd_fixed.zip" -d "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v28_istd/"
 
 conda list
 conda deactivate
