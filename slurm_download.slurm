@@ -20,7 +20,8 @@ source activate NeilGAN_V2
 pip install gdown
 srun python "gdown_download.py"
 zip -F "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v28_istd.zip" --out "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v28_istd_fixed.zip"
-unzip "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v28_istd_fixed.zip" -d "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v28_istd/"
+unzip "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v28_istd_fixed.zip" -d "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
+#mv "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v28_istd_2/v28_istd" "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
 
 conda list
 conda deactivate
