@@ -14,9 +14,9 @@ from utils import tensor_utils
 parser = OptionParser()
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
 parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:0")
-parser.add_option('--shadow_matte_network_version', type=str, default="v58.32")
+parser.add_option('--shadow_matte_network_version', type=str, default="v58.34")
 parser.add_option('--shadow_removal_version', type=str, default="v58.28")
-parser.add_option('--dataset_version_to_refine', type=str, default="v28_istd")
+parser.add_option('--dataset_version_to_refine', type=str, default="v29_istd")
 parser.add_option('--iteration', type=int, help="Style version?", default="1")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--train_mode', type=str, default="all") #all, train_shadow_matte, train_shadow
@@ -28,9 +28,7 @@ def quantify_datasets(opts):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    sc_instance = iid_server_config.IIDServerConfig.getInstance()
-    network_config = sc_instance.interpret_shadow_matte_params_from_version()
-    dataset_version = network_config["dataset_version"]
+    dataset_version = opts.dataset_version_to_refine
 
     constants.rgb_dir_ws = "E:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
     constants.rgb_dir_ns = "E:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
@@ -41,44 +39,44 @@ def quantify_datasets(opts):
     ns_istd = "E:/ISTD_Dataset/test/test_C/*.png"
     mask_istd = "E:/ISTD_Dataset/test/test_B/*.png"
 
-    load_size = 256
-    istd_loader, dataset_count = dataset_loader.load_istd_dataset(ws_istd, ns_istd, mask_istd, load_size, opts)
-
-    needed_progress = int(dataset_count / load_size)
-    current_progress = 0
-    pbar = tqdm(total=needed_progress)
-    pbar.update(current_progress)
-
-    istd_analyzer = DatasetAnalyzer()
-    istd_hsv_analyzer = DatasetHSVAnalyzer()
-    for i, (file_name, input_ws, input_ns, _, shadow_matte) in enumerate(istd_loader, 0):
-        input_ws = input_ws.to(device)
-        input_ns = input_ns.to(device)
-        shadow_matte = shadow_matte.to(device)
-        istd_analyzer.compute_std_mean_of_batch(shadow_matte)
-        istd_hsv_analyzer.compute_std_mean_of_batch(input_ws)
-        pbar.update(1)
-
-    pbar.close()
-    print()
-
-    istd_mean = istd_analyzer.get_std_mean()[1]
-    istd_std = istd_analyzer.get_std_mean()[0]
-    istd_mean_h = istd_hsv_analyzer.get_std_mean_h()[1]
-    istd_std_h = istd_hsv_analyzer.get_std_mean_h()[0]
-    istd_mean_s = istd_hsv_analyzer.get_std_mean_s()[1]
-    istd_std_s = istd_hsv_analyzer.get_std_mean_s()[0]
-    istd_mean_v = istd_hsv_analyzer.get_std_mean_v()[1]
-    istd_std_v = istd_hsv_analyzer.get_std_mean_v()[0]
-
-
-    print("Running mean of ISTD is: ", istd_mean, " Std dev: ", istd_std)
-    print("ISTD min: ", istd_analyzer.get_min(), istd_analyzer.get_max())
-    print("-------")
-    print("Hue mean of ISTD is: ", istd_mean_h, " Std dev: ", istd_std_h)
-    print("Sat mean of ISTD is: ", istd_mean_s, " Std dev: ", istd_std_s)
-    print("Val mean of ISTD is: ", istd_mean_v, " Std dev: ", istd_std_v)
-    print("ISTD HSV range: ", istd_hsv_analyzer.get_min(), istd_hsv_analyzer.get_max())
+    # load_size = 256
+    # istd_loader, dataset_count = dataset_loader.load_istd_dataset(ws_istd, ns_istd, mask_istd, load_size, opts)
+    #
+    # needed_progress = int(dataset_count / load_size)
+    # current_progress = 0
+    # pbar = tqdm(total=needed_progress)
+    # pbar.update(current_progress)
+    #
+    # istd_analyzer = DatasetAnalyzer()
+    # istd_hsv_analyzer = DatasetHSVAnalyzer()
+    # for i, (file_name, input_ws, input_ns, _, shadow_matte) in enumerate(istd_loader, 0):
+    #     input_ws = input_ws.to(device)
+    #     input_ns = input_ns.to(device)
+    #     shadow_matte = shadow_matte.to(device)
+    #     istd_analyzer.compute_std_mean_of_batch(shadow_matte)
+    #     istd_hsv_analyzer.compute_std_mean_of_batch(input_ws)
+    #     pbar.update(1)
+    #
+    # pbar.close()
+    # print()
+    #
+    # istd_mean = istd_analyzer.get_std_mean()[1]
+    # istd_std = istd_analyzer.get_std_mean()[0]
+    # istd_mean_h = istd_hsv_analyzer.get_std_mean_h()[1]
+    # istd_std_h = istd_hsv_analyzer.get_std_mean_h()[0]
+    # istd_mean_s = istd_hsv_analyzer.get_std_mean_s()[1]
+    # istd_std_s = istd_hsv_analyzer.get_std_mean_s()[0]
+    # istd_mean_v = istd_hsv_analyzer.get_std_mean_v()[1]
+    # istd_std_v = istd_hsv_analyzer.get_std_mean_v()[0]
+    #
+    #
+    # print("Running mean of ISTD is: ", istd_mean, " Std dev: ", istd_std)
+    # # print("ISTD min: ", istd_analyzer.get_min(), istd_analyzer.get_max())
+    # print("-------")
+    # print("Hue mean of ISTD is: ", istd_mean_h, " Std dev: ", istd_std_h)
+    # print("Sat mean of ISTD is: ", istd_mean_s, " Std dev: ", istd_std_s)
+    # print("Val mean of ISTD is: ", istd_mean_v, " Std dev: ", istd_std_v)
+    # print("ISTD HSV range: ", istd_hsv_analyzer.get_min(), istd_hsv_analyzer.get_max())
 
     load_size = 128
     train_loader, dataset_count = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, 256, load_size, opts)
@@ -107,12 +105,12 @@ def quantify_datasets(opts):
     synth_std_s = synth_hsv_analyzer.get_std_mean_s()[0]
     synth_mean_v = synth_hsv_analyzer.get_std_mean_v()[1]
     synth_std_v = synth_hsv_analyzer.get_std_mean_v()[0]
-    print("Running mean of Synth dataset is: ", synth_analyzer.get_std_mean()[1], " Std dev: ", synth_analyzer.get_std_mean()[0])
-    print("Synth dataset min: ", synth_analyzer.get_min(), synth_analyzer.get_max())
+    print("Running mean of Synth ", opts.dataset_version_to_refine, " dataset is: ", synth_analyzer.get_std_mean()[1], " Std dev: ", synth_analyzer.get_std_mean()[0])
+    # print("Synth dataset min: ", synth_analyzer.get_min(), synth_analyzer.get_max())
     print("-------")
-    print("Hue mean of ISTD is: ", synth_mean_h, " Std dev: ", synth_std_h)
-    print("Sat mean of ISTD is: ", synth_mean_s, " Std dev: ", synth_std_s)
-    print("Val mean of ISTD is: ", synth_mean_v, " Std dev: ", synth_std_v)
+    print("Hue mean of Synth is: ", synth_mean_h, " Std dev: ", synth_std_h)
+    print("Sat mean of Synth is: ", synth_mean_s, " Std dev: ", synth_std_s)
+    print("Val mean of Synth is: ", synth_mean_v, " Std dev: ", synth_std_v)
     print("SYNTH HSV range: ", synth_hsv_analyzer.get_min(), synth_hsv_analyzer.get_max())
 
 def prepare_clean(opts):

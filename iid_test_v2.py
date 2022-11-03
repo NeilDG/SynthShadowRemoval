@@ -330,7 +330,7 @@ class TesterClass():
 
         if (show_images == 1):
             self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration))
-            self.visdom_reporter.plot_image(rgb_ws_gray, prefix + " WS (Grey) Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration))
+            # self.visdom_reporter.plot_image(rgb_ws_gray, prefix + " WS (Grey) Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration))
             self.visdom_reporter.plot_image(shadow_matte, prefix + " WS Shadow Matte Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration))
             self.visdom_reporter.plot_image(rgb2sm, prefix + " WS Shadow Matte-Like Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration))
 

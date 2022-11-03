@@ -30,7 +30,7 @@ sbatch visdom_run.slurm
 sbatch -w saliksik-cpu-23 visdom_run.slurm
 sbatch -w saliksik-cpu-23 --dependency=afterany:335892 visdom_run.slurm
 
-sbatch --dependency=afterany:335892 script_1.slurm
+sbatch --dependency=afterany:337852 script_1.slurm
 sbatch --dependency=afterany:336942 script_2.slurm
 
 sbatch script_debug.slurm
@@ -57,7 +57,7 @@ sbatch script_20.slurm
 
 sbatch --dependency=afterany:275293 script_debug.slurm
 sbatch -w saliksik-gpu-06 slurm_install_gpu.slurm
-sbatch -w saliksik-gpu-06 script_1.slurm
+sbatch -w saliksik-gpu-03 script_1.slurm
 sbatch -w saliksik-gpu-04 script_2.slurm
 sbatch -w saliksik-gpu-05 script_3.slurm
 sbatch -w saliksik-gpu-04 script_4.slurm
@@ -105,10 +105,12 @@ zip -r "checkpoints.zip" "rgb2albedo_v9.01_7.pt" "rgb2albedo_v9.01_8.pt" "rgb2al
 "rgb2shading_v9.01_7.pt" "rgb2shading_v9.01_8.pt" "rgb2shading_v9.01_9.pt" "rgb2shading_v9.01_10.pt" "rgb2shading_v9.01_11.pt" "rgb2shading_v9.01_12.pt" "rgb2shading_v9.01_13.pt" "rgb2shading_v9.01_14.pt"
 
 zip -r "NeuralNets-CCS.zip" "./NeuralNets-GenerativeExperiment-V9.XX.XX" -x "./NeuralNets-GenerativeExperiment-V9.XX.XX/checkpoint/*"
-zip -F "rgb_noshadows.zip" --out "rgb_noshadows_fixed.zip"
-unzip "rgb_noshadows_fixed.zip" -d "SynthWeather Dataset 10/v8/"
+zip -F "v28_istd.zip" --out "v28_istd_fixed.zip"
+unzip "v28_istd_fixed.zip" -d "/home/neil_delgallego/SynthWeather Dataset 10/v28_istd/"
+rm -rf "/home/neil_delgallego/SynthWeather Dataset 10/v26_base"
+rm -rf "/home/neil_delgallego/SynthWeather Dataset 10/v26"
 
-mv "SynthWeather Dataset 10/v8/rgb/rgb/ShadowDatasetScene" "SynthWeather Dataset 10/v8/rgb/ShadowDatasetScene"
+mv "/home/neil_delgallego/SynthWeather Dataset 10/v28_istd/v28_istd/" "/home/neil_delgallego/SynthWeather Dataset 10/v28_istd"
 
 //GCLOUD
 screen -S "MODEL_TRAINER"
