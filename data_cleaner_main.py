@@ -128,10 +128,10 @@ def prepare_clean(opts):
     istd_mean = -0.0003
     istd_std = 0.0345 * 2.0
 
-    # print("Dataset len before: ", len(ws_list))
-    # index = 199262
-    # ws_list = ws_list[index: len(ws_list)]
-    # ns_list = ns_list[index: len(ns_list)]
+    print("Dataset len before: ", len(ws_list))
+    index = 27293
+    ws_list = ws_list[index: len(ws_list)]
+    ns_list = ns_list[index: len(ns_list)]
 
     print("Trimming dataset. Dataset len after: ", len(ws_list))
 
