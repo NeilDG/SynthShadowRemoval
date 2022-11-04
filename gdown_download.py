@@ -1,32 +1,22 @@
 import gdown
 
 
-#z05
-url = "https://drive.google.com/uc?id=1Cfqv0U6vPiHDaeBWWlOwNucY6A3iX0wN"
-output = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/v26_base/"
+#z00
+url = "https://drive.google.com/uc?id=1Ffd81ihNKlCcowoV2qk6Lad7zcJ0Wgq4"
+output = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
 gdown.download(url, output=output)
 
-#z06
-url = "https://drive.google.com/uc?id=1CjN64ivdfhtEBy37HvhXEvMa4052ZXkk"
-output = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/v26_base/"
+#z01
+url = "https://drive.google.com/uc?id=1FjB2MQMfC-iHc9108KGiP-IXQZxWezJc"
+output = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
 gdown.download(url, output=output)
 
-#z07
-url = "https://drive.google.com/uc?id=1CktT5UVhS7-uXncvOatAaqN4jJoyIZfk"
-output = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/v26_base/"
+#z02
+url = "https://drive.google.com/uc?id=1FsW-WLQL660x6ynO5b7hlJWv7f92fr9F"
+output = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
 gdown.download(url, output=output)
 
-#z08
-url = "https://drive.google.com/uc?id=1CmKvgRDImfz0H01AgA-YA2T4iHQJEcs4"
-output = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/v26_base/"
-gdown.download(url, output=output)
-
-#z09
-url = "https://drive.google.com/uc?id=1CqtCSzxJ8_IFF8Lj7Cja6qqwmb9ha4ZM"
-output = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/v26_base/"
-gdown.download(url, output=output)
-
-#z10
-url = "https://drive.google.com/uc?id=1Cv0lfr6KSKzTwNTC8jEKi699Lzvv2EC5"
-output = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/v26_base/"
+#z03
+url = "https://drive.google.com/uc?id=1Ft2uR2ZWjD1ygCFutOamlGz54YUQn9HJ"
+output = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
 gdown.download(url, output=output)

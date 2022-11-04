@@ -272,6 +272,22 @@ def load_istd_dataset(ws_path, ns_path, mask_path, load_size, opts):
 
     return data_loader, len(ws_istd_list)
 
+def load_srd_dataset(ws_path, ns_path, load_size, opts):
+    ws_istd_list = assemble_img_list(ws_path, opts)
+    ns_istd_list = assemble_img_list(ns_path, opts)
+
+    img_length = len(ws_istd_list)
+    print("Length of images: %d %d" % (len(ws_istd_list), len(ns_istd_list)))
+
+    data_loader = torch.utils.data.DataLoader(
+        shadow_datasets.ShadowSRDDataset(img_length, ws_istd_list, ns_istd_list, 1),
+        batch_size=load_size,
+        num_workers=1,
+        shuffle=False
+    )
+
+    return data_loader, len(ws_istd_list)
+
 def load_iid_datasetv2_test(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, patch_size, opts):
     rgb_list_ws = glob.glob(rgb_dir_ws)
     random.shuffle(rgb_list_ws)

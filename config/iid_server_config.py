@@ -31,7 +31,7 @@ class IIDServerConfig():
 
 
     def update_version_config(self):
-        self.version_config = {"shadow_network_version": constants.shadow_network_version, "shadow_matte_network_version": constants.shadow_matte_network_version,
+        self.version_config = {"shadow_network_version": constants.shadow_removal_version, "shadow_matte_network_version": constants.shadow_matte_network_version,
                                "style_transfer_version" : constants.style_transfer_version,
                                "network_m_name": "rgb2sm", "network_z_name": "rgb2ns", "style_transfer_name": "synth2rgb"}
 
@@ -92,70 +92,7 @@ class IIDServerConfig():
         network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
 
         assert "v58" in constants.shadow_matte_network_version, "Shadow matte network version not recognized: " + constants.shadow_matte_network_version
-        if (constants.shadow_matte_network_version == "v58.18"):
-            network_config[SYNTH_DATASET_VERSION] = "v25"
-            network_config[NETWORK_CONFIG_NUM] = 4
-            network_config[NUM_BLOCKS_KEY] = 3
-            self.general_configs["train_shadow_matte"]["min_epochs"] = 20
-            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
-
-        elif (constants.shadow_matte_network_version == "v58.19"):
-            network_config[SYNTH_DATASET_VERSION] = "v25_refined"
-            network_config[NETWORK_CONFIG_NUM] = 4
-            network_config[NUM_BLOCKS_KEY] = 3
-            self.general_configs["train_shadow_matte"]["min_epochs"] = 20
-            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
-
-        elif (constants.shadow_matte_network_version == "v58.20"):
-            network_config[SYNTH_DATASET_VERSION] = "v25"
-            network_config[NETWORK_CONFIG_NUM] = 4
-            network_config[NUM_BLOCKS_KEY] = 3
-            self.general_configs["train_shadow_matte"]["min_epochs"] = 20
-            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
-
-            network_config[GRAYSCALE_KEY] = True
-            network_config[NC_KEY] = 1
-
-        elif (constants.shadow_matte_network_version == "v58.21"):
-            network_config[SYNTH_DATASET_VERSION] = "v25_refined"
-            network_config[NETWORK_CONFIG_NUM] = 4
-            network_config[NUM_BLOCKS_KEY] = 3
-            self.general_configs["train_shadow_matte"]["min_epochs"] = 20
-            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
-
-            network_config[GRAYSCALE_KEY] = True
-            network_config[NC_KEY] = 1
-
-        elif (constants.shadow_matte_network_version == "v58.22"):
-            network_config[SYNTH_DATASET_VERSION] = "v25"
-            network_config[NETWORK_CONFIG_NUM] = 4
-            network_config[NUM_BLOCKS_KEY] = 3
-            network_config[AUGMENT_KEY] = "trivial_augment_wide"
-            self.general_configs["train_shadow_matte"]["min_epochs"] = 20
-            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
-
-            network_config[GRAYSCALE_KEY] = True
-            network_config[NC_KEY] = 1
-
-        elif (constants.shadow_matte_network_version == "v58.23"):
-            network_config[SYNTH_DATASET_VERSION] = "v25_refined"
-            network_config[NETWORK_CONFIG_NUM] = 4
-            network_config[NUM_BLOCKS_KEY] = 3
-            network_config[AUGMENT_KEY] = "trivial_augment_wide"
-            self.general_configs["train_shadow_matte"]["min_epochs"] = 20
-            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
-
-            network_config[GRAYSCALE_KEY] = True
-            network_config[NC_KEY] = 1
-
-        elif (constants.shadow_matte_network_version == "v58.24"):
-            network_config[SYNTH_DATASET_VERSION] = "v_istd"
-            network_config[NETWORK_CONFIG_NUM] = 4
-            network_config[NUM_BLOCKS_KEY] = 3
-            self.general_configs["train_shadow_matte"]["min_epochs"] = 30
-            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
-
-        elif(constants.shadow_matte_network_version == "v58.25"):
+        if(constants.shadow_matte_network_version == "v58.25"):
             network_config[SYNTH_DATASET_VERSION] = "v_istd"
             network_config[NUM_BLOCKS_KEY] = 3
             self.general_configs["train_shadow_matte"]["min_epochs"] = 30
@@ -250,28 +187,182 @@ class IIDServerConfig():
 
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
-            self.general_configs["train_shadow_matte"]["min_epochs"] = 5
-            self.general_configs["train_shadow_matte"]["max_epochs"] = 20
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 30
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 30
 
         elif(constants.shadow_matte_network_version == "v58.31"):
             network_config[SYNTH_DATASET_VERSION] = "v26"
             network_config[NUM_BLOCKS_KEY] = 15
             # configure load sizes (GPU memory allocation of data) #for 128
             if (constants.server_config == 1):  # COARE
-                network_config[LOAD_SIZE_KEY_M] = 64
+                network_config[LOAD_SIZE_KEY_M] = 24
             elif (constants.server_config == 2):  # CCS JUPYTER
-                network_config[LOAD_SIZE_KEY_M] = 96
+                network_config[LOAD_SIZE_KEY_M] = 32
             elif (constants.server_config == 3):  # GCLOUD
                 network_config[LOAD_SIZE_KEY_M] = 12
             elif (constants.server_config == 4):  # RTX 2080Ti
                 network_config[LOAD_SIZE_KEY_M] = 24
             else:  # RTX 3090
-                network_config[LOAD_SIZE_KEY_M] = 32
+                network_config[LOAD_SIZE_KEY_M] = 16
 
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
             self.general_configs["train_shadow_matte"]["min_epochs"] = 5
             self.general_configs["train_shadow_matte"]["max_epochs"] = 20
+
+        elif (constants.shadow_matte_network_version == "v58.32"):
+            network_config[SYNTH_DATASET_VERSION] = "v26"
+            network_config[NUM_BLOCKS_KEY] = 15
+            self.general_configs["train_shadow_matte"]["patch_size"] = 64
+
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_M] = 64
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_M] = 96
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_M] = 48
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_M] = 32
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_M] = 64
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 5
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 20
+
+        elif (constants.shadow_matte_network_version == "v58.33"):
+            network_config[SYNTH_DATASET_VERSION] = "v27"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 64
+            network_config[NUM_BLOCKS_KEY] = 15
+
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_M] = 64
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_M] = 96
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_M] = 48
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_M] = 32
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_M] = 64
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 60
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 100
+
+        elif (constants.shadow_matte_network_version == "v58.34"):
+            network_config[SYNTH_DATASET_VERSION] = "v28_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 64
+            network_config[NUM_BLOCKS_KEY] = 15
+
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_M] = 64
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_M] = 96
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_M] = 48
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_M] = 32
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_M] = 48
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 80
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 90
+
+        elif (constants.shadow_matte_network_version == "v58.35"):
+            network_config[SYNTH_DATASET_VERSION] = "v28_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 64
+            network_config[NUM_BLOCKS_KEY] = 3
+
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_M] = 128
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_M] = 196
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_M] = 96
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_M] = 64
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_M] = 128
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 60
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 100
+
+        elif (constants.shadow_matte_network_version == "v58.36"):
+            network_config[SYNTH_DATASET_VERSION] = "v28_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 32
+            network_config[NUM_BLOCKS_KEY] = 15
+
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_M] = 256
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_M] = 256
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_M] = 256
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_M] = 64
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_M] = 256
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 80
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 85
+
+        elif (constants.shadow_matte_network_version == "v58.37"):
+            network_config[SYNTH_DATASET_VERSION] = "v29_istd_refined"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 64
+            network_config[NUM_BLOCKS_KEY] = 15
+
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_M] = 64
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_M] = 96
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_M] = 48
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_M] = 32
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_M] = 64
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 35
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
+
+        elif (constants.shadow_matte_network_version == "v58.38"):
+            network_config[SYNTH_DATASET_VERSION] = "v29_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 64
+            network_config[NUM_BLOCKS_KEY] = 15
+
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_M] = 64
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_M] = 96
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_M] = 48
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_M] = 32
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_M] = 64
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 35
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 40
 
         return network_config
 
@@ -313,34 +404,43 @@ class IIDServerConfig():
         #configure batch size. NOTE: Batch size must be equal or larger than load size
         network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
 
-        assert "v58" in constants.shadow_network_version, "Shadow network version not recognized: " + constants.shadow_network_version
+        assert "v58" in constants.shadow_removal_version, "Shadow network version not recognized: " + constants.shadow_removal_version
 
-        if (constants.shadow_network_version == "v58.01"):
+        if (constants.shadow_removal_version == "v58.01"):
             network_config[SYNTH_DATASET_VERSION] = "v20_refined"
             network_config[NETWORK_CONFIG_NUM] = 6
             network_config[NUM_BLOCKS_KEY] = 3
 
-        elif (constants.shadow_network_version == "v58.02"):
+        elif (constants.shadow_removal_version == "v58.02"):
             network_config[SYNTH_DATASET_VERSION] = "v20_refined"
             network_config[NETWORK_CONFIG_NUM] = 7
             network_config[NUM_BLOCKS_KEY] = 3
 
-        elif (constants.shadow_matte_network_version == "v58.05"):
+        elif (constants.shadow_removal_version == "v58.05"):
             network_config[SYNTH_DATASET_VERSION] = "v8"
             network_config[NUM_BLOCKS_KEY] = 3
             network_config[NETWORK_CONFIG_NUM] = 6
             self.general_configs["train_shadow"]["min_epochs"] = 20
             self.general_configs["train_shadow"]["max_epochs"] = 25
 
-        elif (constants.shadow_matte_network_version == "v58.06"):
+        elif (constants.shadow_removal_version == "v58.06"):
             network_config[SYNTH_DATASET_VERSION] = "v8"
             network_config[NUM_BLOCKS_KEY] = 3
             network_config[NETWORK_CONFIG_NUM] = 6
 
-        elif (constants.shadow_network_version == "v58.28"):
+        elif (constants.shadow_removal_version == "v58.28"):
             network_config[SYNTH_DATASET_VERSION] = "v26"
             network_config[NETWORK_CONFIG_NUM] = 6
             network_config[NUM_BLOCKS_KEY] = 3
+
+            self.general_configs["train_shadow"]["min_epochs"] = 5
+            self.general_configs["train_shadow"]["max_epochs"] = 20
+
+        elif (constants.shadow_removal_version == "v58.28_istdtuned"):
+            network_config[SYNTH_DATASET_VERSION] = "v_istd"
+            network_config[NETWORK_CONFIG_NUM] = 6
+            network_config[NUM_BLOCKS_KEY] = 3
+            network_config[DATASET_REPEAT_KEY] = 35
 
             self.general_configs["train_shadow"]["min_epochs"] = 5
             self.general_configs["train_shadow"]["max_epochs"] = 20

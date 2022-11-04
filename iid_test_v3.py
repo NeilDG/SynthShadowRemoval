@@ -27,8 +27,9 @@ parser.add_option('--server_config', type=int, help="Is running on COARE?", defa
 parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:0")
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
 parser.add_option('--shadow_matte_network_version', type=str, default="VXX.XX")
-parser.add_option('--shadow_network_version', type=str, default="VXX.XX")
-parser.add_option('--iteration', type=int, default="1")
+parser.add_option('--shadow_removal_version', type=str, default="VXX.XX")
+parser.add_option('--shadow_matte_iteration', type=int, default="1")
+parser.add_option('--shadow_removal_iteration', type=int, default="1")
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
@@ -47,7 +48,6 @@ parser.add_option('--img_size', type=int, default=(256, 256))
 
 def update_config(opts):
     constants.server_config = opts.server_config
-    constants.ITERATION = str(opts.iteration)
     constants.plot_enabled = opts.plot_enabled
 
     ## COARE
@@ -164,6 +164,18 @@ def test_shadow_removal(dataset_tester, opts):
 
     dataset_tester.print_ave_shadow_performance("Train Set", opts)
 
+    # SRD test dataset
+    shadow_loader, _ = dataset_loader.load_srd_dataset(constants.ws_srd, constants.ns_srd, 8, opts)
+    for i, (file_name, rgb_ws, rgb_ns, _, shadow_matte) in enumerate(shadow_loader, 0):
+        rgb_ws_tensor = rgb_ws.to(device)
+        rgb_ns_tensor = rgb_ns.to(device)
+        shadow_matte = shadow_matte.to(device)
+
+        dataset_tester.test_srd(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.debug_policy, opts)
+        # break
+
+    dataset_tester.print_ave_shadow_performance("SRD", opts)
+
     # ISTD test dataset
     shadow_loader, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, 8, opts)
     for i, (file_name, rgb_ws, rgb_ns, _, shadow_matte) in enumerate(shadow_loader, 0):
@@ -196,7 +208,7 @@ def main(argv):
     plot_utils.VisdomReporter.initialize()
 
     constants.shadow_matte_network_version = opts.shadow_matte_network_version
-    constants.shadow_network_version = opts.shadow_network_version
+    constants.shadow_removal_version = opts.shadow_removal_version
 
     iid_server_config.IIDServerConfig.initialize()
     tf = trainer_factory.TrainerFactory(device, opts)

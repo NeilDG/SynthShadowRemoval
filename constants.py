@@ -45,20 +45,20 @@ SHADING_VERSION = "rgb2shading_v7.00"
 SHADOWMAP_VERSION = "rgb2shadowmap_v1.00"
 SHADOWMAP_RELIGHT_VERSION = "shadow2relight_v1.00"
 
-ITERATION = "1"
+# ITERATION = "1"
 
-UNLIT_TRANSFER_CHECKPATH ='checkpoint/' + UNLIT_VERSION + "_" + ITERATION + '.pt'
-STYLE_TRANSFER_CHECKPATH = 'checkpoint/' + STYLE_TRANSFER_VERSION + "_" + ITERATION + '.pt'
-EMBEDDING_CHECKPATH = 'checkpoint/' + EMBEDDING_VERSION + "_" + ITERATION + '.pt'
-MAPPER_CHECKPATH = 'checkpoint/' + MAPPER_VERSION + "_" + ITERATION + '.pt'
-IID_CHECKPATH = 'checkpoint/' + IID_VERSION + "_" + ITERATION + '.pt'
-RELIGHTING_CHECKPATH = 'checkpoint/' + RELIGHTING_VERSION + "_" + ITERATION + '.pt'
-SHADING_CHECKPATH = 'checkpoint/' + SHADING_VERSION + "_" + ITERATION + '.pt'
-SHADOWMAP_CHECKPATH = 'checkpoint/' + SHADOWMAP_VERSION + "_" + ITERATION + '.pt'
-SHADOWMAP_RELIGHT_CHECKPATH = 'checkpoint/' + SHADOWMAP_RELIGHT_VERSION + "_" + ITERATION + '.pt'
-
-ALBEDO_MASK_VERSION = "rgb2mask_v1.00"
-ALBEDO_MASK_CHECKPATH = 'checkpoint/' + ALBEDO_MASK_VERSION + "_" + ITERATION + '.pt'
+# UNLIT_TRANSFER_CHECKPATH ='checkpoint/' + UNLIT_VERSION + "_" + ITERATION + '.pt'
+# STYLE_TRANSFER_CHECKPATH = 'checkpoint/' + STYLE_TRANSFER_VERSION + "_" + ITERATION + '.pt'
+# EMBEDDING_CHECKPATH = 'checkpoint/' + EMBEDDING_VERSION + "_" + ITERATION + '.pt'
+# MAPPER_CHECKPATH = 'checkpoint/' + MAPPER_VERSION + "_" + ITERATION + '.pt'
+# IID_CHECKPATH = 'checkpoint/' + IID_VERSION + "_" + ITERATION + '.pt'
+# RELIGHTING_CHECKPATH = 'checkpoint/' + RELIGHTING_VERSION + "_" + ITERATION + '.pt'
+# SHADING_CHECKPATH = 'checkpoint/' + SHADING_VERSION + "_" + ITERATION + '.pt'
+# SHADOWMAP_CHECKPATH = 'checkpoint/' + SHADOWMAP_VERSION + "_" + ITERATION + '.pt'
+# SHADOWMAP_RELIGHT_CHECKPATH = 'checkpoint/' + SHADOWMAP_RELIGHT_VERSION + "_" + ITERATION + '.pt'
+#
+# ALBEDO_MASK_VERSION = "rgb2mask_v1.00"
+# ALBEDO_MASK_CHECKPATH = 'checkpoint/' + ALBEDO_MASK_VERSION + "_" + ITERATION + '.pt'
 
 # dictionary keys
 G_LOSS_KEY = "g_loss"
@@ -106,10 +106,15 @@ mask_istd = "E:/ISTD_Dataset/test/test_B/*.png"
 # ws_istd = "E:/ISTD_Dataset/train/train_A/*.png"
 # ns_istd = "E:/ISTD_Dataset/train/train_C/*.png"
 
+ws_srd = "E:/SRD_Test/srd/shadow/*.jpg"
+ns_srd = "E:/SRD_Test/srd/shadow_free/*.jpg"
+# ws_srd = "E:/SRD_REMOVAL_RESULTS/rawA/*.png"
+# ns_srd = "E:/SRD_REMOVAL_RESULTS/rawC/*.png"
+
 imgx_dir = "E:/Places Dataset/*.jpg"
 # imgy_dir = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"
 imgy_dir = "E:/SynthWeather Dataset 8/albedo/*.png"
 
-shadow_network_version = "VXX.XX"
+shadow_removal_version = "VXX.XX"
 shadow_matte_network_version = "VXX.XX"
 style_transfer_version = "VXX.XX"
