@@ -445,6 +445,29 @@ class IIDServerConfig():
             self.general_configs["train_shadow"]["min_epochs"] = 5
             self.general_configs["train_shadow"]["max_epochs"] = 20
 
+        elif (constants.shadow_matte_network_version == "v58.34"):
+            network_config[SYNTH_DATASET_VERSION] = "v28_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 64
+            network_config[NETWORK_CONFIG_NUM] = 6
+            network_config[NUM_BLOCKS_KEY] = 3
+
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_Z] = 64
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_Z] = 96
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_Z] = 48
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_Z] = 32
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_Z] = 48
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 50
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 60
+
         return network_config
 
     def interpret_style_transfer_config_from_version(self):
