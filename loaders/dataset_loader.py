@@ -123,8 +123,8 @@ def load_shadow_train_dataset(ws_path, ns_path, ws_istd_path, ns_istd_path, patc
         ws_list += initial_ws_list
         ns_list += initial_ns_list
 
-    if(network_config["mix_istd"] == True):
-        synth_len = int(len(ws_list) * 0.5) #add 50% istd
+    if(network_config["mix_istd"] > 0.0):
+        synth_len = int(len(ws_list) * network_config["mix_istd"]) #add 50% istd
         istd_len = 0
         while istd_len < synth_len:
             ws_list += initial_istd_ws_list

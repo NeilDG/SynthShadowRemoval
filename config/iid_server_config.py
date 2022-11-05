@@ -76,7 +76,7 @@ class IIDServerConfig():
         network_config[AUGMENT_KEY] = "none"
         network_config[GRAYSCALE_KEY] = False
         network_config[DATASET_REPEAT_KEY] = 1
-        network_config[MIX_ISTD_KEY] = False #chance to use ISTD dataset when training
+        network_config[MIX_ISTD_KEY] = 0.0 # percent to use ISTD
 
         # configure load sizes (GPU memory allocation of data) #for 128
         if (constants.server_config == 1):  # COARE
@@ -99,7 +99,7 @@ class IIDServerConfig():
             network_config[SYNTH_DATASET_VERSION] = "v30_istd"
             self.general_configs["train_shadow_matte"]["patch_size"] = 64
             network_config[NUM_BLOCKS_KEY] = 15
-            network_config[MIX_ISTD_KEY] = True
+            network_config[MIX_ISTD_KEY] = 0.5
 
             # configure load sizes (GPU memory allocation of data) #for 128
             if (constants.server_config == 1):  # COARE
