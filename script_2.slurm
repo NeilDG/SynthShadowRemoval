@@ -20,7 +20,7 @@ module load cuda/10.1_cudnn-7.6.5
 source activate NeilGAN_V2
 
 srun python iid_train_v3.py \
---version="v58.27" --iteration=$ITERATION \
+--shadow_matte_network_version="v58.27" --shadow_removal_version="v58.27" --shadow_matte_iteration=$ITERATION --shadow_removal_iteration=1 \
 --server_config=1 --plot_enabled=0 --img_to_load=-1 --train_mode=all
 
 
