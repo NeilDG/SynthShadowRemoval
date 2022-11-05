@@ -103,9 +103,12 @@ def load_iid_datasetv2_train(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, patc
 
     return data_loader
 
-def load_shadow_train_dataset(ws_path, ns_path, patch_size, load_size, opts):
+def load_shadow_train_dataset(ws_path, ns_path, ws_istd_path, ns_istd_path, patch_size, load_size, opts):
     initial_ws_list = assemble_img_list(ws_path, opts)
     initial_ns_list = assemble_img_list(ns_path, opts)
+
+    initial_istd_ws_list = assemble_img_list(ws_istd_path, opts)
+    initial_istd_ns_list = assemble_img_list(ns_istd_path, opts)
 
     ws_list = []
     ns_list = []
@@ -120,13 +123,23 @@ def load_shadow_train_dataset(ws_path, ns_path, patch_size, load_size, opts):
         ws_list += initial_ws_list
         ns_list += initial_ns_list
 
+    if(network_config["mix_istd"] == True):
+        synth_len = int(len(ws_list) * 0.5) #add 50% istd
+        istd_len = 0
+        while istd_len < synth_len:
+            ws_list += initial_istd_ws_list
+            ns_list += initial_istd_ns_list
+            istd_len += len(initial_istd_ws_list)
+    else:
+        istd_len = 0
+
     img_length = len(ws_list)
-    print("Length of images: %d %d" % (len(ws_list), len(ns_list)))
+    print("Length of images: %d %d. ISTD len: %d"  % (len(ws_list), len(ns_list), istd_len))
 
     data_loader = torch.utils.data.DataLoader(
         shadow_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 1, patch_size),
         batch_size=load_size,
-        num_workers=opts.num_workers,
+        num_workers=int(opts.num_workers / 2),
         shuffle=False
     )
 

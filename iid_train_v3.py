@@ -195,7 +195,7 @@ def train_shadow_matte(tf, device, opts):
 
     load_size = network_config["load_size_m"]
 
-    train_loader, dataset_count = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, patch_size, load_size, opts)
+    train_loader_synth, dataset_count = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, constants.ws_istd, constants.ns_istd, patch_size, load_size, opts)
     test_loader_train, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
     test_loader_istd, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, load_size, opts)
 
@@ -212,7 +212,7 @@ def train_shadow_matte(tf, device, opts):
     pbar.update(current_progress)
 
     for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
-        for i, (train_data, test_data) in enumerate(zip(train_loader, itertools.cycle(test_loader_istd))):
+        for i, (train_data, test_data) in enumerate(zip(train_loader_synth, itertools.cycle(test_loader_istd))):
             _, rgb_ws, rgb_ns, rgb_ws_gray, shadow_map, shadow_matte = train_data
             rgb_ws = rgb_ws.to(device)
             rgb_ns = rgb_ns.to(device)
