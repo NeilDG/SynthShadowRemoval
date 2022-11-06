@@ -65,6 +65,7 @@ class IIDServerConfig():
         GRAYSCALE_KEY = "use_grayscale"
         DATASET_REPEAT_KEY = "dataset_repeats"
         MIX_ISTD_KEY = "mix_istd"
+        USE_ISTD_POOL_KEY = "use_istd_pool"
 
         # set defaults
         network_config[NETWORK_CONFIG_NUM] = 5
@@ -77,6 +78,7 @@ class IIDServerConfig():
         network_config[GRAYSCALE_KEY] = False
         network_config[DATASET_REPEAT_KEY] = 1
         network_config[MIX_ISTD_KEY] = 0.0 # percent to use ISTD
+        network_config[USE_ISTD_POOL_KEY] = False
 
         # configure load sizes (GPU memory allocation of data) #for 128
         if (constants.server_config == 1):  # COARE
@@ -100,6 +102,29 @@ class IIDServerConfig():
             self.general_configs["train_shadow_matte"]["patch_size"] = 64
             network_config[NUM_BLOCKS_KEY] = 15
             network_config[MIX_ISTD_KEY] = 0.5
+
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_M] = 64
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_M] = 96
+            elif (constants.server_config == 3):  # GCLOUD
+                network_config[LOAD_SIZE_KEY_M] = 48
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_M] = 32
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_M] = 48
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 60
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 65
+
+        if (constants.shadow_matte_network_version == "v58.40"):
+            network_config[SYNTH_DATASET_VERSION] = "v30_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 64
+            network_config[NUM_BLOCKS_KEY] = 15
+            network_config[USE_ISTD_POOL_KEY] = True
 
             # configure load sizes (GPU memory allocation of data) #for 128
             if (constants.server_config == 1):  # COARE
