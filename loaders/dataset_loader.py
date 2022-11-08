@@ -104,11 +104,11 @@ def load_iid_datasetv2_train(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, patc
     return data_loader
 
 def load_shadow_train_dataset(ws_path, ns_path, ws_istd_path, ns_istd_path, patch_size, load_size, opts):
-    initial_ws_list = assemble_img_list(ws_path, opts)
-    initial_ns_list = assemble_img_list(ns_path, opts)
+    initial_ws_list = assemble_img_list(ws_path, opts, True)
+    initial_ns_list = assemble_img_list(ns_path, opts, True)
 
-    initial_istd_ws_list = assemble_img_list(ws_istd_path, opts)
-    initial_istd_ns_list = assemble_img_list(ns_istd_path, opts)
+    initial_istd_ws_list = assemble_img_list(ws_istd_path, opts, True)
+    initial_istd_ns_list = assemble_img_list(ns_istd_path, opts, True)
 
     ws_list = []
     ns_list = []
