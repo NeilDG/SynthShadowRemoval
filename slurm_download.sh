@@ -14,7 +14,7 @@
 pip install gdown
 python "gdown_download.py"
 
-OUTPUT_DIR="/home/neil_delgallego/SynthWeather Dataset 10/"
+OUTPUT_DIR="/home/jupyter-neil.delgallego/SynthWeather Dataset 10/"
 echo $OUTPUT_DIR
 
 zip -F $OUTPUT_DIR+"/v31_istd.zip" --out $OUTPUT_DIR+"/v31_istd_fixed.zip"

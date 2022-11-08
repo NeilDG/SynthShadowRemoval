@@ -1,6 +1,6 @@
 import gdown
 
-output_dir = "/home/neil_delgallego/SynthWeather Dataset 10/"
+output_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/"
 
 #V31_ISTD
 #z00
