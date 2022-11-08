@@ -256,6 +256,18 @@ class IIDServerConfig():
             network_config[LOAD_SIZE_KEY_M] = 4
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
 
+        elif (constants.shadow_matte_network_version == "v58.56"):
+            network_config[SYNTH_DATASET_VERSION] = "v32_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 64
+            network_config[NUM_BLOCKS_KEY] = 15
+            network_config[USE_ISTD_POOL_KEY] = True
+
+        elif (constants.shadow_matte_network_version == "v58.57"):
+            network_config[SYNTH_DATASET_VERSION] = "v32_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 64
+            network_config[NUM_BLOCKS_KEY] = 15
+            network_config[USE_ISTD_POOL_KEY] = True
+
 
         return network_config
 
