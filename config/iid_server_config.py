@@ -13,25 +13,23 @@ class IIDServerConfig():
         return IIDServerConfig._sharedInstance
 
     def __init__(self):
-        self.epoch_map = {"train_style_transfer" : 0, "train_shadow_matte" : 0, "train_shadow" : 0}
+        self.epoch_map = {"train_style_transfer" : 0, "train_shadow_end2end" : 0}
 
         # COARE, CCS CLOUD, GCLOUD, RTX 2080TI, RTX 3090
         if(constants.server_config <= 5):
             self.general_configs = {"train_style_transfer" : {"min_epochs" : 5, "max_epochs" : 25},
-                                    "train_shadow_matte": {"min_epochs": 5, "max_epochs" : 15, "patch_size": 128},
-                                    "train_shadow": {"min_epochs": 10 ,"max_epochs" : 80, "patch_size": 128}}
+                                    "train_shadow_end2end": {"min_epochs": 10 ,"max_epochs" : 80, "patch_size": 128}}
         #debug
         if(constants.debug_run == 1):
             self.general_configs = {"train_style_transfer": {"min_epochs": 1, "max_epochs": 25},
-                                    "train_shadow_matte": {"min_epochs": 1, "max_epochs": 15, "patch_size": 128},
-                                    "train_shadow": {"min_epochs": 1, "max_epochs": 80, "patch_size": 128}}
+                                    "train_shadow_end2end": {"min_epochs": 1, "max_epochs": 80, "patch_size": 128}}
 
 
         self.update_version_config()
 
 
     def update_version_config(self):
-        self.version_config = {"shadow_network_version": constants.shadow_removal_version, "shadow_matte_network_version": constants.shadow_matte_network_version,
+        self.version_config = {"shadow_network_version": constants.shadow_removal_version,
                                "style_transfer_version" : constants.style_transfer_version,
                                "network_m_name": "rgb2sm", "network_z_name": "rgb2ns", "style_transfer_name": "synth2rgb"}
 
@@ -62,6 +60,7 @@ class IIDServerConfig():
         DROPOUT_KEY = "use_dropout"
         AUGMENT_KEY = "augment_mode"
         DATASET_REPEAT_KEY = "dataset_repeats"
+        MIX_ISTD_KEY = "mix_istd"
 
         #set defaults
         network_config[NETWORK_CONFIG_NUM] = 5
@@ -72,6 +71,7 @@ class IIDServerConfig():
         network_config[DROPOUT_KEY] = False
         network_config[AUGMENT_KEY] = "none"
         network_config[DATASET_REPEAT_KEY] = 1
+        network_config[MIX_ISTD_KEY] = 0.0
 
         # configure load sizes (GPU memory allocation of data) #for 128
         if (constants.server_config == 1):  # COARE
@@ -92,17 +92,29 @@ class IIDServerConfig():
 
         # TODO: Temporary - for quick experiment. K dataset repeats to lessen number of epochs, given <2000 images
         network_config[DATASET_REPEAT_KEY] = 20
-        self.general_configs["train_shadow_matte"]["min_epochs"] = 3
-        self.general_configs["train_shadow_matte"]["max_epochs"] = 10
+        self.general_configs["train_shadow_end2end"]["min_epochs"] = 3
+        self.general_configs["train_shadow_end2end"]["max_epochs"] = 10
 
-        if (constants.shadow_matte_network_version == "v59.01"):
+        if (constants.shadow_removal_version == "v59.01"):
             network_config[SYNTH_DATASET_VERSION] = "v31_istd"
-            self.general_configs["train_shadow_matte"]["patch_size"] = 64
+            self.general_configs["train_shadow_end2end"]["patch_size"] = 64
             network_config[NUM_BLOCKS_KEY] = 15
 
-        elif (constants.shadow_matte_network_version == "v59.02"):
+        elif (constants.shadow_removal_version == "v59.02"):
             network_config[SYNTH_DATASET_VERSION] = "v32_istd"
-            self.general_configs["train_shadow_matte"]["patch_size"] = 64
+            self.general_configs["train_shadow_end2end"]["patch_size"] = 64
+            network_config[NUM_BLOCKS_KEY] = 15
+
+        elif (constants.shadow_removal_version == "v59.03"):
+            network_config[SYNTH_DATASET_VERSION] = "v31_istd"
+            network_config[NETWORK_CONFIG_NUM] = 6
+            self.general_configs["train_shadow_end2end"]["patch_size"] = 64
+            network_config[NUM_BLOCKS_KEY] = 15
+
+        elif (constants.shadow_removal_version == "v59.04"):
+            network_config[SYNTH_DATASET_VERSION] = "v32_istd"
+            network_config[NETWORK_CONFIG_NUM] = 6
+            self.general_configs["train_shadow_end2end"]["patch_size"] = 64
             network_config[NUM_BLOCKS_KEY] = 15
 
         return network_config

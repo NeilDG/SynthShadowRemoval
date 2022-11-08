@@ -100,7 +100,7 @@ def train_shadow(tf, device, opts):
     print("General config:", general_config)
     print("Network config: ", network_config)
 
-    mode = "train_shadow"
+    mode = "train_shadow_end2end"
     patch_size = general_config[mode]["patch_size"]
     dataset_version = network_config["dataset_version"]
 
@@ -110,7 +110,7 @@ def train_shadow(tf, device, opts):
 
     load_size = network_config["load_size_z"]
 
-    train_loader, dataset_count = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, patch_size, load_size, opts)
+    train_loader, dataset_count = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, constants.ws_istd, constants.ns_istd, patch_size, load_size, opts)
     test_loader_train, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
     test_loader_istd, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, load_size, opts)
 
