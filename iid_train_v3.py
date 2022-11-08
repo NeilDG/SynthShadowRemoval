@@ -259,7 +259,7 @@ def train_shadow_matte(tf, device, opts):
                     input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "rgb_ws_gray": rgb_ws_gray, "shadow_matte": shadow_matte}
                     tf.visdom_visualize(mode, input_map, "Test Synthetic")
 
-                    input_map = {"rgb": rgb_ws_istd, "rgb_ws_gray": gray_istd, "shadow_matte": matte_istd}
+                    input_map = {"rgb": rgb_ws_istd, "rgb_ns" : rgb_ns_istd,  "rgb_ws_gray": gray_istd, "shadow_matte": matte_istd}
                     tf.visdom_visualize(mode, input_map, "Test ISTD")
 
         if (tf.is_stop_condition_met(mode)):

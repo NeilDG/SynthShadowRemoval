@@ -146,7 +146,9 @@ def load_shadow_train_dataset(ws_path, ns_path, ws_istd_path, ns_istd_path, patc
         shadow_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 1, patch_size),
         batch_size=load_size,
         num_workers=int(opts.num_workers / 2),
-        shuffle=False
+        shuffle=False,
+        pin_memory=True,
+        pin_memory_device=opts.cuda_device
     )
 
     return data_loader, len(ws_list)
@@ -269,6 +271,8 @@ def load_shadow_test_dataset(ws_path, ns_path, opts):
         shadow_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 2, constants.TEST_IMAGE_SIZE),
         batch_size=16,
         num_workers=1,
+        pin_memory=True,
+        pin_memory_device=opts.cuda_device,
         shuffle=False
     )
 
@@ -285,6 +289,8 @@ def load_istd_train_dataset(ws_path, ns_path, patch_size, load_size, opts):
         shadow_datasets.ShadowTrainDataset(img_length, ws_istd_list, ns_istd_list, 1, patch_size),
         batch_size=load_size,
         num_workers=4,
+        pin_memory=True,
+        pin_memory_device=opts.cuda_device,
         shuffle=False
     )
 
@@ -302,6 +308,8 @@ def load_istd_dataset(ws_path, ns_path, mask_path, load_size, opts):
         shadow_datasets.ShadowISTDDataset(img_length, ws_istd_list, ns_istd_list, mask_istd_list, 1),
         batch_size=load_size,
         num_workers=1,
+        pin_memory=True,
+        pin_memory_device=opts.cuda_device,
         shuffle=False
     )
 

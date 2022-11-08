@@ -260,9 +260,11 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             input_ws = input_map["rgb"]
 
         matte_tensor = input_map["shadow_matte"]
+        rgb_ns = input_map["rgb_ns"]
         rgb2sm = self.test(input_map)
 
         self.visdom_reporter.plot_image(input_ws, str(label) + " RGB (With Shadows) Images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(rgb_ns, str(label) + " RGB (No Shadows) Images - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(matte_tensor, str(label) + " Shadow Matte Images - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(rgb2sm, str(label) + " Shadow Matte-Like images - " + self.NETWORK_VERSION + str(self.iteration))
 
