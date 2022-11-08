@@ -232,10 +232,10 @@ def train_shadow_matte(tf, device, opts):
             matte_istd = matte_istd.to(device)
 
             input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "rgb_ws_gray": rgb_ws_gray, "shadow_map": shadow_map, "shadow_matte": shadow_matte,
-                         "rgb_ws_istd": rgb_ws_istd, "rgb_ns_istd": rgb_ns_istd, "gray_istd": gray_istd, "matte_istd": matte_istd}
+                         "rgb_ws_istd": rgb_ws_istd, "rgb_ns_istd": rgb_ns_istd, "gray_istd": gray_istd, "matte_istd": matte_istd,
+                         "matte_train_istd" : matte_train_istd}
             target_map = input_map
 
-            shadow_matte_pool.ShadowMattePool.getInstance().set_samples(matte_train_istd)
             tf.train(mode, epoch, iteration, input_map, target_map)
             iteration = iteration + 1
             pbar.update(1)

@@ -45,8 +45,11 @@ class ShadowMattePool():
                 self.sm_pool = torch.cat([self.sm_pool, matte_istd[i]], 0)
             else:
                 #replace random SM in pool
-                new_index = np.random.randint(0, self.pool_size)
-                self.sm_pool[new_index] = matte_istd[i]
+                # new_index = np.random.randint(0, self.pool_size)
+                # self.sm_pool[new_index] = matte_istd[i]
+
+                # replace index sequentially
+                self.sm_pool[i] = matte_istd[i]
 
     def query_samples(self, query_size):
         return torch.unsqueeze(self.sm_pool[0: query_size], 1)

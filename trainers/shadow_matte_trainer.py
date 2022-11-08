@@ -157,6 +157,9 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         accum_batch_size = self.load_size * iteration
 
         with amp.autocast():
+            if(self.use_istd_pool):
+                shadow_matte_pool.ShadowMattePool.getInstance().set_samples(input_map["matte_train_istd"])
+
             # shadow map discriminator
             self.optimizerD.zero_grad()
             self.D_SM_discriminator.train()
@@ -263,8 +266,9 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.visdom_reporter.plot_image(matte_tensor, str(label) + " Shadow Matte Images - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(rgb2sm, str(label) + " Shadow Matte-Like images - " + self.NETWORK_VERSION + str(self.iteration))
 
-        istd_matte_tensors = self.ISTD_SM_pool.query_samples(16)
-        self.visdom_reporter.plot_image(istd_matte_tensors, str(label) + " ISTD SM Pool - " + self.NETWORK_VERSION + str(self.iteration))
+        if(self.use_istd_pool):
+            istd_matte_tensors = self.ISTD_SM_pool.query_samples(16)
+            self.visdom_reporter.plot_image(istd_matte_tensors, str(label) + " ISTD SM Pool - " + self.NETWORK_VERSION + str(self.iteration))
 
     def load_saved_state(self):
         try:
