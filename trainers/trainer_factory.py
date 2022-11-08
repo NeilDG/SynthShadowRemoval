@@ -8,7 +8,7 @@ from model import unet_gan
 from trainers import early_stopper
 from trainers.shadow_matte_trainer import ShadowMatteTrainer
 # from trainers.shadow_trainer import ShadowTrainer
-from trainers.shadow_end2end_trainer import ShadowTrainer
+from trainers.shadow_removal_trainer import ShadowTrainer
 import torch
 
 class TrainerFactory():
