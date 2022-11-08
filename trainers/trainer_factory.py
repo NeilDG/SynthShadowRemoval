@@ -9,6 +9,7 @@ from trainers import early_stopper
 from trainers.shadow_matte_trainer import ShadowMatteTrainer
 # from trainers.shadow_trainer import ShadowTrainer
 from trainers.shadow_removal_trainer import ShadowTrainer
+from trainers.shadow_end2end_trainer import ShadowEnd2EndTrainer
 import torch
 
 class TrainerFactory():
@@ -25,27 +26,21 @@ class TrainerFactory():
         self.network_config = sc_instance.interpret_shadow_network_params_from_version()
 
         # self.trainer_list["train_shadow_mask"] = ShadowMaskTrainer(self.gpu_device, opts)
-        self.trainer_list["train_shadow_matte"] = ShadowMatteTrainer(self.gpu_device, opts)
-        self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device, opts)
+        # self.trainer_list["train_shadow_matte"] = ShadowMatteTrainer(self.gpu_device, opts)
+        # self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device, opts)
         # self.trainer_list["train_shadow_refine"] = ShadowRefinementTrainer(self.gpu_device, opts)
+        self.trainer_list["train_shadow_end2end"] = ShadowEnd2EndTrainer(self.gpu_device, opts)
 
     def get_all_trainers(self, opts):
         self.initialize_all_trainers(opts)
-        return self.trainer_list["train_shadow_matte"], self.trainer_list["train_shadow"]
+        return self.trainer_list["train_shadow_end2end"]
 
     def get_shadow_trainer(self):
-        if ("train_shadow" in self.trainer_list):
-            return self.trainer_list["train_shadow"]
+        if ("train_shadow_end2end" in self.trainer_list):
+            return self.trainer_list["train_shadow_end2end"]
         else:
-            self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device, self.opts)
-            return self.trainer_list["train_shadow"]
-
-    def get_shadow_matte_trainer(self):
-        if ("train_shadow_matte" in self.trainer_list):
-            return self.trainer_list["train_shadow_matte"]
-        else:
-            self.trainer_list["train_shadow_matte"] = ShadowMatteTrainer(self.gpu_device, self.opts)
-            return self.trainer_list["train_shadow_matte"]
+            self.trainer_list["train_shadow_end2end"] = ShadowEnd2EndTrainer(self.gpu_device, self.opts)
+            return self.trainer_list["train_shadow_end2end"]
 
     def train(self, mode, epoch, iteration, input_map, target_map):
         self.trainer_list[mode].train(epoch, iteration, input_map, target_map)

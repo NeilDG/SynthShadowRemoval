@@ -116,5 +116,4 @@ imgx_dir = "E:/Places Dataset/*.jpg"
 imgy_dir = "E:/SynthWeather Dataset 8/albedo/*.png"
 
 shadow_removal_version = "VXX.XX"
-shadow_matte_network_version = "VXX.XX"
 style_transfer_version = "VXX.XX"

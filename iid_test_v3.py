@@ -141,7 +141,7 @@ def test_shadow_removal(dataset_tester, opts):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
 
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
-    network_config = sc_instance.interpret_shadow_matte_params_from_version()
+    network_config = sc_instance.interpret_shadow_network_params_from_version()
     sc_instance.update_version_config()
 
     dataset_version = network_config["dataset_version"]
@@ -158,7 +158,7 @@ def test_shadow_removal(dataset_tester, opts):
         rgb_ns = rgb_ns.to(device)
         shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_shadow(rgb_ws, rgb_ns, shadow_matte, "Train", opts.img_vis_enabled, opts.debug_policy, opts)
+        dataset_tester.test_shadow(rgb_ws, rgb_ns, shadow_matte, "Train", opts.img_vis_enabled, opts)
         if (i % 16 == 0):
             break
 
@@ -171,7 +171,7 @@ def test_shadow_removal(dataset_tester, opts):
         rgb_ns_tensor = rgb_ns.to(device)
         shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.debug_policy, opts)
+        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts)
         # break
 
     dataset_tester.print_ave_shadow_performance("ISTD", opts)
@@ -183,7 +183,7 @@ def test_shadow_removal(dataset_tester, opts):
         rgb_ns_tensor = rgb_ns.to(device)
         shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_srd(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.debug_policy, opts)
+        dataset_tester.test_srd(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts)
         # break
 
     dataset_tester.print_ave_shadow_performance("SRD", opts)
@@ -212,11 +212,9 @@ def main(argv):
 
     iid_server_config.IIDServerConfig.initialize()
     tf = trainer_factory.TrainerFactory(device, opts)
-    shadow_m = tf.get_shadow_matte_trainer()
     shadow_t = tf.get_shadow_trainer()
 
-    dataset_tester = TesterClass(shadow_m, shadow_t)
-    test_shadow_matte(dataset_tester, opts)
+    dataset_tester = TesterClass(shadow_t)
     test_shadow_removal(dataset_tester, opts)
 
 

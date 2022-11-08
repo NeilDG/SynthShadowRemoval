@@ -26,16 +26,13 @@ parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
 parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:0")
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
-parser.add_option('--shadow_matte_network_version', type=str, default="VXX.XX")
 parser.add_option('--shadow_removal_version', type=str, default="VXX.XX")
-parser.add_option('--shadow_matte_iteration', type=int, default="1")
 parser.add_option('--shadow_removal_iteration', type=int, default="1")
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0005")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--debug_run', type=int, help="Debug mode?", default=0)
 parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
-parser.add_option('--train_mode', type=str, default="all") #all, train_shadow_matte, train_shadow
 
 def update_config(opts):
     constants.server_config = opts.server_config
@@ -180,92 +177,6 @@ def train_shadow(tf, device, opts):
 
     pbar.close()
 
-def train_shadow_matte(tf, device, opts):
-    sc_instance = iid_server_config.IIDServerConfig.getInstance()
-    general_config = sc_instance.get_general_configs()
-    network_config = sc_instance.interpret_shadow_matte_params_from_version()
-    print("General config:", general_config)
-    print("Network config: ", network_config)
-
-    mode = "train_shadow_matte"
-    patch_size = general_config[mode]["patch_size"]
-    dataset_version = network_config["dataset_version"]
-
-    rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
-    rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
-
-    load_size = network_config["load_size_m"]
-
-    train_loader_synth, dataset_count = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, constants.ws_istd, constants.ns_istd, patch_size, load_size, opts)
-    train_loader_istd, _ = dataset_loader.load_istd_train_dataset(constants.ws_istd, constants.ns_istd, patch_size, load_size, opts)
-    test_loader_train, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
-    test_loader_istd, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, load_size, opts)
-
-    iteration = 0
-    start_epoch = sc_instance.get_last_epoch_from_mode(mode)
-    print("---------------------------------------------------------------------------")
-    print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
-    print("---------------------------------------------------------------------------")
-
-    #compute total progress
-    needed_progress = int((general_config[mode]["max_epochs"]) * (dataset_count / load_size))
-    current_progress = int(start_epoch * (dataset_count / load_size))
-    pbar = tqdm(total=needed_progress)
-    pbar.update(current_progress)
-
-    for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
-        for i, (train_data, train_data_istd, test_data) in enumerate(zip(train_loader_synth, itertools.cycle(train_loader_istd), itertools.cycle(test_loader_istd))):
-            _, rgb_ws, rgb_ns, rgb_ws_gray, shadow_map, shadow_matte = train_data
-            rgb_ws = rgb_ws.to(device)
-            rgb_ns = rgb_ns.to(device)
-            rgb_ws_gray = rgb_ws_gray.to(device)
-            shadow_map = shadow_map.to(device)
-            shadow_matte = shadow_matte.to(device)
-
-            _, _, _, _, _, matte_train_istd = train_data_istd
-            matte_train_istd = matte_train_istd.to(device)
-
-            _, rgb_ws_istd, rgb_ns_istd, gray_istd, matte_istd = test_data
-            rgb_ws_istd = rgb_ws_istd.to(device)
-            rgb_ns_istd = rgb_ns_istd.to(device)
-            gray_istd = gray_istd.to(device)
-            matte_istd = matte_istd.to(device)
-
-            input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "rgb_ws_gray": rgb_ws_gray, "shadow_map": shadow_map, "shadow_matte": shadow_matte,
-                         "rgb_ws_istd": rgb_ws_istd, "rgb_ns_istd": rgb_ns_istd, "gray_istd": gray_istd, "matte_istd": matte_istd,
-                         "matte_train_istd" : matte_train_istd}
-            target_map = input_map
-
-            tf.train(mode, epoch, iteration, input_map, target_map)
-            iteration = iteration + 1
-            pbar.update(1)
-
-            if (tf.is_stop_condition_met(mode)):
-                break
-
-            if (iteration % 150 == 0):
-                tf.save(mode, epoch, iteration, True)
-
-                if (opts.plot_enabled == 1):
-                    tf.visdom_plot(mode, iteration)
-                    tf.visdom_visualize(mode, input_map, "Train")
-
-                    _, rgb_ws, rgb_ns, rgb_ws_gray, shadow_map, shadow_matte = next(itertools.cycle(test_loader_train))
-                    rgb_ws = rgb_ws.to(device)
-                    rgb_ws_gray = rgb_ws_gray.to(device)
-                    rgb_ns = rgb_ns.to(device)
-                    shadow_matte = shadow_matte.to(device)
-
-                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "rgb_ws_gray": rgb_ws_gray, "shadow_matte": shadow_matte}
-                    tf.visdom_visualize(mode, input_map, "Test Synthetic")
-
-                    input_map = {"rgb": rgb_ws_istd, "rgb_ns" : rgb_ns_istd,  "rgb_ws_gray": gray_istd, "shadow_matte": matte_istd}
-                    tf.visdom_visualize(mode, input_map, "Test ISTD")
-
-        if (tf.is_stop_condition_met(mode)):
-            break
-
-    pbar.close()
 
 def main(argv):
     (opts, args) = parser.parse_args(argv)
@@ -287,21 +198,12 @@ def main(argv):
     plot_utils.VisdomReporter.initialize()
 
     constants.shadow_removal_version = opts.shadow_removal_version
-    constants.shadow_matte_network_version = opts.shadow_matte_network_version
     iid_server_config.IIDServerConfig.initialize()
 
     tf = trainer_factory.TrainerFactory(device, opts)
     tf.initialize_all_trainers(opts)
 
-    assert opts.train_mode == "all" or opts.train_mode == "train_shadow" or opts.train_mode == "train_shadow_matte", "Unrecognized train mode: " + opts.train_mode
-
-    if(opts.train_mode == "all"):
-        train_shadow_matte(tf, device, opts)
-        train_shadow(tf, device, opts)
-    elif (opts.train_mode == "train_shadow_matte"):
-        train_shadow_matte(tf, device, opts)
-    elif(opts.train_mode == "train_shadow"):
-        train_shadow(tf, device, opts)
+    train_shadow(tf, device, opts)
 
 
 if __name__ == "__main__":
