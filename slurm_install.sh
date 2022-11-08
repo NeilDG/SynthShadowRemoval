@@ -12,12 +12,12 @@
 # Installation of necessary libraries
 
 #do fresh install
+pip-review --local --auto
 pip install torch==1.12.1+cu116 torchvision==0.13.1+cu116 torchaudio==0.12.1 --extra-index-url https://download.pytorch.org/whl/cu116
 pip install scikit-learn
 pip install scikit-image
 pip install visdom
 pip install kornia
 pip install opencv-python
-pip install --upgrYade pillow
+pip install --upgrade pillow
 pip install lpips
-pip-review --local --auto
