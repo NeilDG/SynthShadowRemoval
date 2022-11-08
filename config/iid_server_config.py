@@ -99,6 +99,11 @@ class IIDServerConfig():
 
         assert "v58" in constants.shadow_matte_network_version, "Shadow matte network version not recognized: " + constants.shadow_matte_network_version
 
+        #TODO: Temporary - for quick experiment. K dataset repeats to lessen number of epochs, given <2000 images
+        network_config[DATASET_REPEAT_KEY] = 20
+        self.general_configs["train_shadow_matte"]["min_epochs"] = 3
+        self.general_configs["train_shadow_matte"]["max_epochs"] = 10
+
         if (constants.shadow_matte_network_version == "v58.39"):
             network_config[SYNTH_DATASET_VERSION] = "v30_istd"
             self.general_configs["train_shadow_matte"]["patch_size"] = 64
@@ -180,6 +185,59 @@ class IIDServerConfig():
             network_config[MIX_ISTD_KEY] = 0.25
 
             network_config[LOAD_SIZE_KEY_M] = 48
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+
+        elif (constants.shadow_matte_network_version == "v58.49"):
+            network_config[SYNTH_DATASET_VERSION] = "v33_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 64
+            network_config[NUM_BLOCKS_KEY] = 15
+
+            network_config[LOAD_SIZE_KEY_M] = 48
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+
+        elif (constants.shadow_matte_network_version == "v58.50"):
+            network_config[SYNTH_DATASET_VERSION] = "v33_istd_refined"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 64
+            network_config[NUM_BLOCKS_KEY] = 3
+
+            network_config[LOAD_SIZE_KEY_M] = 128
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+
+        elif (constants.shadow_matte_network_version == "v58.51"):
+            network_config[SYNTH_DATASET_VERSION] = "v33_istd_refined"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 64
+            network_config[NUM_BLOCKS_KEY] = 15
+            network_config[MIX_ISTD_KEY] = 0.25
+
+            network_config[LOAD_SIZE_KEY_M] = 48
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+
+        elif (constants.shadow_matte_network_version == "v58.52"):
+            network_config[SYNTH_DATASET_VERSION] = "v32_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 128
+            network_config[NUM_BLOCKS_KEY] = 3
+
+            # configure load sizes (GPU memory allocation of data)
+            if (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_M] = 16
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_M] = 32
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+
+        elif (constants.shadow_matte_network_version == "v58.53"):
+            network_config[SYNTH_DATASET_VERSION] = "v33_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 128
+            network_config[NUM_BLOCKS_KEY] = 3
+
+            # configure load sizes (GPU memory allocation of data)
+            if (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_M] = 16
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_M] = 32
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
 
 

@@ -243,7 +243,7 @@ def train_shadow_matte(tf, device, opts):
             if (tf.is_stop_condition_met(mode)):
                 break
 
-            if (i % 300 == 0):
+            if (iteration % 150 == 0):
                 tf.save(mode, epoch, iteration, True)
 
                 if (opts.plot_enabled == 1):
