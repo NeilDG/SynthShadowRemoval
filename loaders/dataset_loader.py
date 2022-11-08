@@ -39,10 +39,8 @@ def assemble_unpaired_data(path_a, num_image_to_load=-1, force_complete=False):
 
     return a_list
 
-def assemble_img_list(img_dir, opts, shuffle = False):
+def assemble_img_list(img_dir, opts):
     img_list = glob.glob(img_dir)
-    if(shuffle):
-        random.shuffle(img_list)
 
     if (opts.img_to_load > 0):
         img_list = img_list[0: opts.img_to_load]
@@ -103,9 +101,20 @@ def load_iid_datasetv2_train(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, patc
 
     return data_loader
 
-def load_shadow_train_dataset(ws_path, ns_path, patch_size, load_size, opts):
+def load_shadow_train_dataset(ws_path, ns_path, ws_istd_path, ns_istd_path, patch_size, load_size, opts):
     initial_ws_list = assemble_img_list(ws_path, opts)
     initial_ns_list = assemble_img_list(ns_path, opts)
+
+    temp_list = list(zip(initial_ws_list, initial_ns_list))
+    random.shuffle(temp_list)
+    initial_ws_list, initial_ns_list = zip(*temp_list)
+
+    initial_istd_ws_list = assemble_img_list(ws_istd_path, opts)
+    initial_istd_ns_list = assemble_img_list(ns_istd_path, opts)
+
+    temp_list = list(zip(initial_istd_ws_list, initial_istd_ns_list))
+    random.shuffle(temp_list)
+    initial_istd_ws_list, initial_istd_ns_list = zip(*temp_list)
 
     ws_list = []
     ns_list = []
@@ -120,14 +129,26 @@ def load_shadow_train_dataset(ws_path, ns_path, patch_size, load_size, opts):
         ws_list += initial_ws_list
         ns_list += initial_ns_list
 
+    if(network_config["mix_istd"] > 0.0):
+        synth_len = int(len(ws_list) * network_config["mix_istd"]) #add N% istd
+        istd_len = 0
+        while istd_len < synth_len:
+            ws_list += initial_istd_ws_list
+            ns_list += initial_istd_ns_list
+            istd_len += len(initial_istd_ws_list)
+    else:
+        istd_len = 0
+
     img_length = len(ws_list)
-    print("Length of images: %d %d" % (len(ws_list), len(ns_list)))
+    print("Length of images: %d %d. ISTD len: %d"  % (len(ws_list), len(ns_list), istd_len))
 
     data_loader = torch.utils.data.DataLoader(
         shadow_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 1, patch_size),
         batch_size=load_size,
-        num_workers=opts.num_workers,
-        shuffle=False
+        num_workers=int(opts.num_workers / 2),
+        shuffle=False,
+        pin_memory=True,
+        pin_memory_device=opts.cuda_device
     )
 
     return data_loader, len(ws_list)
@@ -250,10 +271,30 @@ def load_shadow_test_dataset(ws_path, ns_path, opts):
         shadow_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 2, constants.TEST_IMAGE_SIZE),
         batch_size=16,
         num_workers=1,
+        pin_memory=True,
+        pin_memory_device=opts.cuda_device,
         shuffle=False
     )
 
     return data_loader, len(ws_list)
+
+def load_istd_train_dataset(ws_path, ns_path, patch_size, load_size, opts):
+    ws_istd_list = assemble_img_list(ws_path, opts)
+    ns_istd_list = assemble_img_list(ns_path, opts)
+
+    img_length = len(ws_istd_list)
+    print("Length of images: %d %d" % (len(ws_istd_list), len(ns_istd_list)))
+
+    data_loader = torch.utils.data.DataLoader(
+        shadow_datasets.ShadowTrainDataset(img_length, ws_istd_list, ns_istd_list, 1, patch_size),
+        batch_size=load_size,
+        num_workers=4,
+        pin_memory=True,
+        pin_memory_device=opts.cuda_device,
+        shuffle=False
+    )
+
+    return data_loader, len(ws_istd_list)
 
 def load_istd_dataset(ws_path, ns_path, mask_path, load_size, opts):
     ws_istd_list = assemble_img_list(ws_path, opts)
@@ -267,6 +308,8 @@ def load_istd_dataset(ws_path, ns_path, mask_path, load_size, opts):
         shadow_datasets.ShadowISTDDataset(img_length, ws_istd_list, ns_istd_list, mask_istd_list, 1),
         batch_size=load_size,
         num_workers=1,
+        pin_memory=True,
+        pin_memory_device=opts.cuda_device,
         shuffle=False
     )
 

@@ -231,6 +231,47 @@ class FFAConcat(nn.Module):
         x = self.post(out)
         return x + input
 
+class FFAInputGrey(nn.Module):
+    def __init__(self, blocks, use_dropout=False, conv=default_conv):
+        super(FFAInputGrey, self).__init__()
+        FFAGlobalConfig.initialize()
+        FFAGlobalConfig.getInstance().GLOBAL_USE_DROPOUT = use_dropout
+        print("USE DROPOUT? ", FFAGlobalConfig.getInstance().GLOBAL_USE_DROPOUT)
+
+        self.gps = 1
+        self.dim = 64
+        kernel_size = 3
+        pre_process = [conv(self.gps, self.dim, kernel_size)]
+        self.g1 = Group(conv, self.dim, kernel_size, blocks=blocks)
+        # self.g2 = Group(conv, self.dim, kernel_size, blocks=blocks)
+        # self.g3 = Group(conv, self.dim, kernel_size, blocks=blocks)
+        self.ca = nn.Sequential(*[
+            nn.AdaptiveAvgPool2d(1),
+            nn.Conv2d(self.dim * self.gps, self.dim // 16, 1, padding=0),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(self.dim // 16, self.dim * self.gps, 1, padding=0, bias=True),
+            nn.Sigmoid()
+        ])
+        self.palayer = PALayer(self.dim)
+
+        post_precess = [
+            conv(self.dim, self.dim, kernel_size),
+            conv(self.dim, 1, kernel_size)]
+
+        self.pre = nn.Sequential(*pre_process)
+        self.post = nn.Sequential(*post_precess)
+
+    def forward(self, x1):
+        #print("X1 shape: ", np.shape(x1))
+        x = self.pre(x1)
+        res1 = self.g1(x)
+        w = self.ca(torch.cat([res1], dim=1))
+        w = w.view(-1, self.gps, self.dim)[:, :, :, None, None]
+        out = w[:, 0, ::] * res1
+        out = self.palayer(out)
+        x = self.post(out)
+        return x
+
 class FFAGrey(nn.Module):
     def __init__(self, blocks, use_dropout=False, conv=default_conv):
         super(FFAGrey, self).__init__()

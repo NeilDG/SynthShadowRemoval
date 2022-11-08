@@ -3,25 +3,10 @@
 import os
 
 def test_relighting():
-    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-    #           "--plot_enabled=1 --img_vis_enabled=1 --debug_policy=0 "
-    #           "--shadow_matte_network_version=\"v58.30\" --shadow_removal_version=\"v58.28\" "
-    #           "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
-    #
-    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-    #           "--plot_enabled=1 --img_vis_enabled=1 --debug_policy=0 "
-    #           "--shadow_matte_network_version=\"v58.31\" --shadow_removal_version=\"v58.28\" "
-    #           "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
-
     os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
               "--plot_enabled=1 --img_vis_enabled=1 --debug_policy=0 "
-              "--shadow_matte_network_version=\"v58.38\" --shadow_removal_version=\"v58.28\" "
+              "--shadow_matte_network_version=\"v58.43\" --shadow_removal_version=\"v58.28\" "
               "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
-
-    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-    #           "--plot_enabled=1 --img_vis_enabled=1 --debug_policy=0 "
-    #           "--shadow_matte_network_version=\"v58.28\" --shadow_removal_version=\"v58.28_istdtuned\" "
-    #           "--shadow_matte_iteration=1 --shadow_removal_iteration=1")
 
 def main():
     # os.system("python \"processing/dataset_creator.py\"")

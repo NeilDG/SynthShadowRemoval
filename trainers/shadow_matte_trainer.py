@@ -17,6 +17,7 @@ from utils import plot_utils
 from utils import tensor_utils
 from custom_losses import ssim_loss, iid_losses
 import lpips
+from model.modules import shadow_matte_pool
 
 class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def __init__(self, gpu_device, opts):
@@ -47,7 +48,13 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         self.load_size = network_config["load_size_m"]
         self.batch_size = network_config["batch_size_m"]
+        self.patch_size = general_config["train_shadow_matte"]["patch_size"]
         self.use_grayscale = network_config["use_grayscale"]
+        self.use_istd_pool = network_config["use_istd_pool"]
+
+        if(self.use_istd_pool):
+            shadow_matte_pool.ShadowMattePool.initialize()
+            self.ISTD_SM_pool = shadow_matte_pool.ShadowMattePool().getInstance()
 
         self.stopper_method = early_stopper.EarlyStopper(general_config["train_shadow_matte"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, 3000, 99999.9)
         self.stop_result = False
@@ -94,6 +101,15 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         return self.l1_loss(pred_mask, target_mask)
 
+
+    def istd_sm_loss(self, pred):
+        if(self.use_istd_pool):
+            istd_sm_samples = self.ISTD_SM_pool.query_samples(np.shape(pred)[0])
+            # print("Shape of ISTD SM samples:" , np.shape(istd_sm_samples), np.shape(pred))
+            return self.l1_loss(pred, istd_sm_samples)
+        else:
+            return self.l1_loss(pred, pred) #workaround to return 0.0
+
     def initialize_dict(self):
         # what to store in visdom?
         self.losses_dict_s = {}
@@ -106,6 +122,8 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.losses_dict_s[constants.D_A_REAL_LOSS_KEY] = []
         self.MASK_LOSS_KEY = "MASK_LOSS_KEY"
         self.losses_dict_s[self.MASK_LOSS_KEY] = []
+        self.ISTD_SM_LOSS_KEY = "ISTD_SM_LOSS_KEY"
+        self.losses_dict_s[self.ISTD_SM_LOSS_KEY] = []
 
         self.caption_dict_s = {}
         self.caption_dict_s[constants.G_LOSS_KEY] = "Shadow G loss per iteration"
@@ -116,6 +134,7 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.caption_dict_s[constants.D_A_FAKE_LOSS_KEY] = "D fake loss per iteration"
         self.caption_dict_s[constants.D_A_REAL_LOSS_KEY] = "D real loss per iteration"
         self.caption_dict_s[self.MASK_LOSS_KEY] = "Mask loss per iteration"
+        self.caption_dict_s[self.ISTD_SM_LOSS_KEY] = "ISTD SM loss per iterationm"
 
         # what to store in visdom?
         self.losses_dict_t = {}
@@ -138,6 +157,9 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         accum_batch_size = self.load_size * iteration
 
         with amp.autocast():
+            if(self.use_istd_pool):
+                shadow_matte_pool.ShadowMattePool.getInstance().set_samples(input_map["matte_train_istd"])
+
             # shadow map discriminator
             self.optimizerD.zero_grad()
             self.D_SM_discriminator.train()
@@ -165,8 +187,9 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             prediction = self.D_SM_discriminator(rgb2sm)
             real_tensor = torch.ones_like(prediction)
             SM_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
+            SM_istd_loss = self.istd_sm_loss(rgb2sm)
 
-            errG = SM_likeness_loss + SM_lpip_loss + SM_masking_loss + SM_adv_loss
+            errG = SM_likeness_loss + SM_lpip_loss + SM_masking_loss + SM_adv_loss + SM_istd_loss
 
             self.fp16_scaler.scale(errG).backward()
             if (accum_batch_size % self.batch_size == 0):
@@ -183,6 +206,7 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY].append(D_SM_fake_loss.item())
                 self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_SM_real_loss.item())
                 self.losses_dict_s[self.MASK_LOSS_KEY].append(SM_masking_loss.item())
+                self.losses_dict_s[self.ISTD_SM_LOSS_KEY].append(SM_istd_loss.item())
 
                 #perform validation test and early stopping
                 rgb2sm_istd = self.test_istd(input_map)
@@ -236,11 +260,17 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             input_ws = input_map["rgb"]
 
         matte_tensor = input_map["shadow_matte"]
+        rgb_ns = input_map["rgb_ns"]
         rgb2sm = self.test(input_map)
 
         self.visdom_reporter.plot_image(input_ws, str(label) + " RGB (With Shadows) Images - " + self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_image(rgb_ns, str(label) + " RGB (No Shadows) Images - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(matte_tensor, str(label) + " Shadow Matte Images - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(rgb2sm, str(label) + " Shadow Matte-Like images - " + self.NETWORK_VERSION + str(self.iteration))
+
+        if(self.use_istd_pool):
+            istd_matte_tensors = self.ISTD_SM_pool.query_samples(16)
+            self.visdom_reporter.plot_image(istd_matte_tensors, str(label) + " ISTD SM Pool - " + self.NETWORK_VERSION + str(self.iteration))
 
     def load_saved_state(self):
         try:
