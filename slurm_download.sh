@@ -11,12 +11,12 @@
 #About this script:
 #Download of dataset
 
-pip install gdown
-python "gdown_download.py"
+#pip install gdown
+#python "gdown_download.py"
 
 OUTPUT_DIR="/home/jupyter-neil.delgallego/SynthWeather Dataset 10/"
 echo $OUTPUT_DIR
 
-zip -F $OUTPUT_DIR+"/v31_istd.zip" --out $OUTPUT_DIR+"/v31_istd_fixed.zip"
-unzip $OUTPUT_DIR+"/v31_istd_fixed.zip" -d $OUTPUT_DIR+
-mv $OUTPUT_DIR+"/v31_istd_fixed" $OUTPUT_DIR+"/v31_istd"
+zip -F $OUTPUT_DIR"/v31_istd.zip" --out $OUTPUT_DIR"/v31_istd_fixed.zip"
+unzip $OUTPUT_DIR"/v31_istd_fixed.zip" -d $OUTPUT_DIR
+mv $OUTPUT_DIR"/v31_istd_fixed" $OUTPUT_DIR"/v31_istd"
