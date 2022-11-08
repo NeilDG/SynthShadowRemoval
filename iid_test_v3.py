@@ -26,9 +26,7 @@ parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
 parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:0")
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
-parser.add_option('--shadow_matte_network_version', type=str, default="VXX.XX")
 parser.add_option('--shadow_removal_version', type=str, default="VXX.XX")
-parser.add_option('--shadow_matte_iteration', type=int, default="1")
 parser.add_option('--shadow_removal_iteration', type=int, default="1")
 parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
@@ -207,7 +205,6 @@ def main(argv):
     print(constants.rgb_dir_ws_styled, constants.albedo_dir)
     plot_utils.VisdomReporter.initialize()
 
-    constants.shadow_matte_network_version = opts.shadow_matte_network_version
     constants.shadow_removal_version = opts.shadow_removal_version
 
     iid_server_config.IIDServerConfig.initialize()

@@ -3,7 +3,7 @@
 import os
 def train_relighting():
     os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=1000 "
-              "--plot_enabled=1  --shadow_removal_version=\"v59.01 "
+              "--plot_enabled=1  --shadow_removal_version=\"v59.03\" "
               "--shadow_removal_iteration=1")
 
 def train_domain_adaptation():

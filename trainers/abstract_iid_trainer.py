@@ -59,7 +59,7 @@ class NetworkCreator():
         elif(net_config == 5):
             G_A = ffa_gan.FFA(input_nc, num_blocks, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
         elif(net_config == 6):
-            G_A = ffa_gan.FFABase(num_blocks, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
+            G_A = ffa_gan.FFABase(input_nc, num_blocks, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
         elif (net_config == 7):
             params = {'dim': 64,  # number of filters in the bottommost layer
                       'mlp_dim': 256,  # number of filters in MLP
