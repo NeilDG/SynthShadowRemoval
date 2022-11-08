@@ -240,6 +240,22 @@ class IIDServerConfig():
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
 
+        elif (constants.shadow_matte_network_version == "v58.54"):
+            network_config[SYNTH_DATASET_VERSION] = "v32_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 256
+            network_config[NUM_BLOCKS_KEY] = 15
+
+            network_config[LOAD_SIZE_KEY_M] = 4
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+
+        elif (constants.shadow_matte_network_version == "v58.55"):
+            network_config[SYNTH_DATASET_VERSION] = "v32_istd_refined"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 256
+            network_config[NUM_BLOCKS_KEY] = 15
+
+            network_config[LOAD_SIZE_KEY_M] = 4
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+
 
         return network_config
 
