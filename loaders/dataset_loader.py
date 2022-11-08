@@ -39,10 +39,8 @@ def assemble_unpaired_data(path_a, num_image_to_load=-1, force_complete=False):
 
     return a_list
 
-def assemble_img_list(img_dir, opts, shuffle = False):
+def assemble_img_list(img_dir, opts):
     img_list = glob.glob(img_dir)
-    if(shuffle):
-        random.shuffle(img_list)
 
     if (opts.img_to_load > 0):
         img_list = img_list[0: opts.img_to_load]
@@ -104,11 +102,19 @@ def load_iid_datasetv2_train(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, patc
     return data_loader
 
 def load_shadow_train_dataset(ws_path, ns_path, ws_istd_path, ns_istd_path, patch_size, load_size, opts):
-    initial_ws_list = assemble_img_list(ws_path, opts, True)
-    initial_ns_list = assemble_img_list(ns_path, opts, True)
+    initial_ws_list = assemble_img_list(ws_path, opts)
+    initial_ns_list = assemble_img_list(ns_path, opts)
 
-    initial_istd_ws_list = assemble_img_list(ws_istd_path, opts, True)
-    initial_istd_ns_list = assemble_img_list(ns_istd_path, opts, True)
+    temp_list = list(zip(initial_ws_list, initial_ns_list))
+    random.shuffle(temp_list)
+    initial_ws_list, initial_ns_list = zip(*temp_list)
+
+    initial_istd_ws_list = assemble_img_list(ws_istd_path, opts)
+    initial_istd_ns_list = assemble_img_list(ns_istd_path, opts)
+
+    temp_list = list(zip(initial_istd_ws_list, initial_istd_ns_list))
+    random.shuffle(temp_list)
+    initial_istd_ws_list, initial_istd_ns_list = zip(*temp_list)
 
     ws_list = []
     ns_list = []
