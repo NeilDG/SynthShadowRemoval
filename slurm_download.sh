@@ -12,7 +12,7 @@
 #Download of dataset
 
 pip install gdown
-srun python "gdown_download.py"
+python "gdown_download.py"
 
 OUTPUT_DIR="/home/neil_delgallego/SynthWeather Dataset 10/"
 echo $OUTPUT_DIR
