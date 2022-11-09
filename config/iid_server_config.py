@@ -90,7 +90,7 @@ class IIDServerConfig():
         elif (constants.server_config == 4):  # RTX 2080Ti
             network_config[LOAD_SIZE_KEY_M] = 32
         else:  # RTX 3090
-            network_config[LOAD_SIZE_KEY_M] = 48
+            network_config[LOAD_SIZE_KEY_M] = 64
 
         # configure batch size. NOTE: Batch size must be equal or larger than load size
         network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
@@ -263,10 +263,70 @@ class IIDServerConfig():
             network_config[USE_ISTD_POOL_KEY] = True
 
         elif (constants.shadow_matte_network_version == "v58.57"):
+            network_config[SYNTH_DATASET_VERSION] = "v33_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 64
+            network_config[NUM_BLOCKS_KEY] = 15
+            network_config[AUGMENT_KEY] = "add_noise"
+
+        elif (constants.shadow_matte_network_version == "v58.58"):
             network_config[SYNTH_DATASET_VERSION] = "v32_istd"
             self.general_configs["train_shadow_matte"]["patch_size"] = 64
             network_config[NUM_BLOCKS_KEY] = 15
-            network_config[USE_ISTD_POOL_KEY] = True
+            network_config[AUGMENT_KEY] = "add_noise"
+
+        elif (constants.shadow_matte_network_version == "v58.59"):
+            network_config[SYNTH_DATASET_VERSION] = "v33_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 256
+            network_config[NUM_BLOCKS_KEY] = 15
+            network_config[AUGMENT_KEY] = "add_noise"
+
+            network_config[LOAD_SIZE_KEY_M] = 4
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+
+        elif (constants.shadow_matte_network_version == "v58.60"):
+            network_config[SYNTH_DATASET_VERSION] = "v33_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 256
+            network_config[NUM_BLOCKS_KEY] = 15
+            network_config[AUGMENT_KEY] = "add_noise"
+
+            network_config[LOAD_SIZE_KEY_M] = 4
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+
+        elif (constants.shadow_matte_network_version == "v58.61"):
+            network_config[SYNTH_DATASET_VERSION] = "v33_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 64
+            network_config[AUGMENT_KEY] = "add_noise"
+
+            network_config[NUM_BLOCKS_KEY] = 3
+            network_config[LOAD_SIZE_KEY_M] = 128
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+
+        elif (constants.shadow_matte_network_version == "v58.62"):
+            network_config[SYNTH_DATASET_VERSION] = "v32_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 64
+            network_config[AUGMENT_KEY] = "add_noise"
+
+            network_config[NUM_BLOCKS_KEY] = 3
+            network_config[LOAD_SIZE_KEY_M] = 128
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+
+        elif (constants.shadow_matte_network_version == "v58.63"):
+            network_config[SYNTH_DATASET_VERSION] = "v33_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 256
+            network_config[AUGMENT_KEY] = "add_noise"
+
+            network_config[NUM_BLOCKS_KEY] = 3
+            network_config[LOAD_SIZE_KEY_M] = 128
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+
+        elif (constants.shadow_matte_network_version == "v58.64"):
+            network_config[SYNTH_DATASET_VERSION] = "v33_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 256
+            network_config[AUGMENT_KEY] = "add_noise"
+
+            network_config[NUM_BLOCKS_KEY] = 3
+            network_config[LOAD_SIZE_KEY_M] = 128
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
 
 
         return network_config

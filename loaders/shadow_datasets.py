@@ -8,6 +8,7 @@ import torchvision.transforms.functional
 import constants
 import kornia
 from pathlib import Path
+import kornia.augmentation as K
 
 from config import iid_server_config
 from transforms import shadow_map_transforms
@@ -24,9 +25,9 @@ class ShadowTrainDataset(data.Dataset):
         self.norm_op = transforms.Normalize((0.5, ), (0.5, ))
 
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
-        network_config = sc_instance.interpret_shadow_network_params_from_version()
+        self.network_config = sc_instance.interpret_shadow_matte_params_from_version()
 
-        if (network_config["augment_mode"] == "augmix" and self.transform_config == 1):
+        if (self.network_config["augment_mode"] == "augmix" and self.transform_config == 1):
             self.initial_op = transforms.Compose([
                 transforms.ToPILImage(),
                 transforms.Resize(constants.TEST_IMAGE_SIZE),
@@ -34,7 +35,7 @@ class ShadowTrainDataset(data.Dataset):
                 transforms.RandomVerticalFlip(0.5),
                 transforms.AugMix(),
                 transforms.ToTensor()])
-        elif (network_config["augment_mode"] == "trivial_augment_wide" and self.transform_config == 1):
+        elif (self.network_config["augment_mode"] == "trivial_augment_wide" and self.transform_config == 1):
             self.initial_op = transforms.Compose([
                 transforms.ToPILImage(),
                 transforms.Resize(constants.TEST_IMAGE_SIZE),
@@ -48,14 +49,21 @@ class ShadowTrainDataset(data.Dataset):
                 transforms.Resize(constants.TEST_IMAGE_SIZE),
                 transforms.ToTensor()])
 
+
+        self.noise_op = K.RandomGaussianNoise(p=1.0, mean=0.0, std=0.02)
+
     def __getitem__(self, idx):
         file_name = self.img_list_a[idx].split("/")[-1].split(".png")[0]
-
         try:
             rgb_ws = cv2.imread(self.img_list_a[idx])
             rgb_ws = cv2.cvtColor(rgb_ws, cv2.COLOR_BGR2RGB)
             state = torch.get_rng_state()
             rgb_ws = self.initial_op(rgb_ws)
+
+            #add gaussian noise to WS
+            if(self.network_config["augment_mode"] == "add_noise"):
+                # rgb_ws = torch.squeeze(self.noise_op(rgb_ws))
+                rgb_ws = rgb_ws * np.random.uniform(1.001, 1.1)
 
             torch.set_rng_state(state)
             rgb_ns = cv2.imread(self.img_list_b[idx])
