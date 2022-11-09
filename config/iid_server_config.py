@@ -84,7 +84,7 @@ class IIDServerConfig():
         if (constants.server_config == 1):  # COARE
             network_config[LOAD_SIZE_KEY_M] = 64
         elif (constants.server_config == 2):  # CCS JUPYTER
-            network_config[LOAD_SIZE_KEY_M] = 96
+            network_config[LOAD_SIZE_KEY_M] = 64
         elif (constants.server_config == 3):  # GCLOUD
             network_config[LOAD_SIZE_KEY_M] = 48
         elif (constants.server_config == 4):  # RTX 2080Ti
