@@ -328,6 +328,24 @@ class IIDServerConfig():
             network_config[LOAD_SIZE_KEY_M] = 16
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
 
+        elif (constants.shadow_matte_network_version == "v58.65"):
+            network_config[SYNTH_DATASET_VERSION] = "v32_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 256
+            network_config[AUGMENT_KEY] = ["random_noise", "random_exposure"]
+
+            network_config[NUM_BLOCKS_KEY] = 3
+            network_config[LOAD_SIZE_KEY_M] = 16
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+
+        elif (constants.shadow_matte_network_version == "v58.66"):
+            network_config[SYNTH_DATASET_VERSION] = "v33_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 256
+            network_config[AUGMENT_KEY] = ["random_noise", "random_exposure"]
+
+            network_config[NUM_BLOCKS_KEY] = 3
+            network_config[LOAD_SIZE_KEY_M] = 16
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+
 
         return network_config
 
@@ -415,66 +433,71 @@ class IIDServerConfig():
     def interpret_style_transfer_config_from_version(self):
         network_config = {}
         NETWORK_CONFIG_NUM = "net_config"
+        SYNTH_DATASET_VERSION = "dataset_version"
         NUM_BLOCKS_KEY = "num_blocks"
         BATCH_SIZE_KEY = "batch_size"
         PATCH_SIZE_KEY = "patch_size"
         LOAD_SIZE_KEY = "load_size"
         NORM_MODE_KEY = "norm_mode"
+        DATASET_REPEAT_KEY = "dataset_repeats"
 
         #set defaults
         network_config[PATCH_SIZE_KEY] = 32
         if (constants.server_config == 1):  # COARE
-            network_config[LOAD_SIZE_KEY] = 16
+            network_config[LOAD_SIZE_KEY] = 512
         elif (constants.server_config == 2):  # CCS JUPYTER
-            network_config[LOAD_SIZE_KEY] = 16
-        elif (constants.server_config == 3):  # GCLOUD
-            network_config[LOAD_SIZE_KEY] = 18
+            network_config[LOAD_SIZE_KEY] = 512
         elif (constants.server_config == 4):  # RTX 2080Ti
-            network_config[LOAD_SIZE_KEY] = 8
+            network_config[LOAD_SIZE_KEY] = 256
         else:  # RTX 3090
-            network_config[LOAD_SIZE_KEY] = 16
+            network_config[LOAD_SIZE_KEY] = 512
 
         # configure batch size. NOTE: Batch size must be equal or larger than load size
-        network_config[BATCH_SIZE_KEY] = 256
+        network_config[BATCH_SIZE_KEY] = network_config[LOAD_SIZE_KEY]
         network_config[NORM_MODE_KEY] = "batch"
+        network_config[SYNTH_DATASET_VERSION] = "v32_istd"
 
-        assert "v9" in constants.style_transfer_version, "Style transfer network version not recognized: " + constants.style_transfer_version
+        # TODO: Temporary - for quick experiment. K dataset repeats to lessen number of epochs, given <2000 images
+        network_config[DATASET_REPEAT_KEY] = 40
+        self.general_configs["train_style_transfer"]["min_epochs"] = 5
+        self.general_configs["train_style_transfer"]["max_epochs"] = 25
 
-        if(constants.style_transfer_version == "v9.03"): #AdainGEN
+        assert "v10" in constants.style_transfer_version, "Style transfer network version not recognized: " + constants.style_transfer_version
+
+        if(constants.style_transfer_version == "v10.03"): #AdainGEN
             network_config[NETWORK_CONFIG_NUM] = 3
             network_config[NUM_BLOCKS_KEY] = 4
 
             if (constants.server_config == 1):  # COARE
-                network_config[LOAD_SIZE_KEY] = 8
+                network_config[LOAD_SIZE_KEY] = 128
             elif (constants.server_config == 2):  # CCS JUPYTER
-                network_config[LOAD_SIZE_KEY] = 8
-            elif (constants.server_config == 3):  # GCLOUD
-                network_config[LOAD_SIZE_KEY] = 4
+                network_config[LOAD_SIZE_KEY] = 128
             elif (constants.server_config == 4):  # RTX 2080Ti
-                network_config[LOAD_SIZE_KEY] = 4
+                network_config[LOAD_SIZE_KEY] = 64
             else:  # RTX 3090
-                network_config[LOAD_SIZE_KEY] = 8
+                network_config[LOAD_SIZE_KEY] = 128
 
-        elif(constants.style_transfer_version == "v9.04"): #Unet
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY] = network_config[LOAD_SIZE_KEY]
+
+        elif(constants.style_transfer_version == "v10.04"): #Unet
             network_config[NETWORK_CONFIG_NUM] = 2
             network_config[NUM_BLOCKS_KEY] = 0
 
-        elif (constants.style_transfer_version == "v9.05"):  # Unet
+        elif (constants.style_transfer_version == "v10.05"):  # Unet
             network_config[NETWORK_CONFIG_NUM] = 2
             network_config[NUM_BLOCKS_KEY] = 0
             network_config[NORM_MODE_KEY] = "instance"
 
-        elif (constants.style_transfer_version == "v9.06"):  # Cycle-GAN
+        elif (constants.style_transfer_version == "v10.06"):  # Cycle-GAN
             network_config[NETWORK_CONFIG_NUM] = 1
             network_config[NUM_BLOCKS_KEY] = 10
             network_config[NORM_MODE_KEY] = "batch"
-            network_config[LOAD_SIZE_KEY] = 6
 
-        elif (constants.style_transfer_version == "v9.07"):  # Cycle-GAN
+        elif (constants.style_transfer_version == "v10.07"):  # Cycle-GAN
             network_config[NETWORK_CONFIG_NUM] = 1
             network_config[NUM_BLOCKS_KEY] = 10
             network_config[NORM_MODE_KEY] = "instance"
-            network_config[LOAD_SIZE_KEY] = 6
         else:
             print("Network config not found for ", constants.style_transfer_version)
 

@@ -35,7 +35,6 @@ GENERATOR_KEY = "generator"
 DISCRIMINATOR_KEY = "discriminator"
 
 UNLIT_VERSION = "synth2unlit_v1.00"
-STYLE_TRANSFER_VERSION = "synth2rgb_v1.00"
 EMBEDDING_VERSION = "embedding_v1.01"
 FFA_TRANSFER_VERSION = "synthplaces2sunny_v1.01"
 MAPPER_VERSION = "rgb2albedo_v1.00"

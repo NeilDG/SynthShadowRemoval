@@ -362,7 +362,7 @@ class CycleGANTrainer:
             return x2y, y2x
 
     def visdom_plot(self, iteration):
-        self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict, constants.STYLE_TRANSFER_CHECKPATH)
+        self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict, constants.style_transfer_version)
 
     def visdom_visualize(self, tensor_x, tensor_y, label="Train"):
         with torch.no_grad():
@@ -376,13 +376,13 @@ class CycleGANTrainer:
             x2y2x = self.G_B(x2y)
             y2x2y = self.G_A(y2x)
 
-            self.visdom_reporter.plot_image(tensor_x, str(label) + " Input X Images - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(x2y2x, str(label) + " Input X Cycle - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(x2y, str(label) + " X2Y Transfer " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(tensor_x, str(label) + " Input X Images - " + constants.style_transfer_version + str(self.iteration))
+            self.visdom_reporter.plot_image(x2y2x, str(label) + " Input X Cycle - " + constants.style_transfer_version + str(self.iteration))
+            self.visdom_reporter.plot_image(x2y, str(label) + " X2Y Transfer " + constants.style_transfer_version + str(self.iteration))
 
-            self.visdom_reporter.plot_image(tensor_y, str(label) + " Input Y Images - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(y2x2y, str(label) + " Input Y Cycle - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(y2x, str(label) + " Y2X Transfer - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(tensor_y, str(label) + " Input Y Images - " + constants.style_transfer_version + str(self.iteration))
+            self.visdom_reporter.plot_image(y2x2y, str(label) + " Input Y Cycle - " + constants.style_transfer_version + str(self.iteration))
+            self.visdom_reporter.plot_image(y2x, str(label) + " Y2X Transfer - " + constants.style_transfer_version + str(self.iteration))
 
     def load_saved_state(self):
         try:

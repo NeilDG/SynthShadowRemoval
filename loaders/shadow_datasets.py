@@ -61,9 +61,11 @@ class ShadowTrainDataset(data.Dataset):
             rgb_ws = self.initial_op(rgb_ws)
 
             #add gaussian noise to WS
-            if(self.network_config["augment_mode"] == "add_noise"):
-                # rgb_ws = torch.squeeze(self.noise_op(rgb_ws))
+            if("random_exposure" in self.network_config["augment_mode"]):
                 rgb_ws = rgb_ws * np.random.uniform(1.001, 1.1)
+
+            if ("random_noise" in self.network_config["augment_mode"]):
+                rgb_ws = torch.squeeze(self.noise_op(rgb_ws))
 
             torch.set_rng_state(state)
             rgb_ns = cv2.imread(self.img_list_b[idx])
