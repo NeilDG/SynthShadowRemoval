@@ -249,10 +249,10 @@ class TesterClass():
         rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
 
         if(show_images == 1):
-            self.visdom_reporter.plot_image(rgb_ws, "ISTD WS Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration) + " " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
-            self.visdom_reporter.plot_image(shadow_matte, "ISTD Shadow Matte Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration) + " " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
-            self.visdom_reporter.plot_image(rgb_ns, "ISTD NS Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration) + " " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
-            self.visdom_reporter.plot_image(rgb2ns, "ISTD NS-Like Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration) + " " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+            self.visdom_reporter.plot_image(rgb_ws, "ISTD WS Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+            self.visdom_reporter.plot_image(shadow_matte, "ISTD Shadow Matte Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+            self.visdom_reporter.plot_image(rgb_ns, "ISTD NS Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+            self.visdom_reporter.plot_image(rgb2ns, "ISTD NS-Like Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
 
         if(save_image_results == 1):
             path = "./comparison/ISTD Dataset/OURS/"
@@ -310,7 +310,7 @@ class TesterClass():
 
         ave_mae_sm = np.round(np.mean(self.mae_list_sm) * 255.0, 4)
 
-        display_text = prefix + " - Versions: " + opts.shadow_matte_network_version + "_" + str(opts.shadow_matte_iteration) + \
+        display_text = prefix + " - Versions: " + opts.shadow_removal_version + "_" + str(opts.shadow_removal_iteration) + \
                        "<br>" + opts.shadow_removal_version + "_" + str(opts.shadow_removal_iteration) + \
                        "<br> MAE Error (SM): " + str(ave_mae_sm) + "<br> MAE Error (RGB): " +str(ave_mae_rgb) + \
                        "<br> RGB Reconstruction PSNR: " + str(ave_psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ave_ssim_rgb)
