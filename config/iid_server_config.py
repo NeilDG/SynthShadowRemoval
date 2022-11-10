@@ -311,12 +311,12 @@ class IIDServerConfig():
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
 
         elif (constants.shadow_matte_network_version == "v58.63"):
-            network_config[SYNTH_DATASET_VERSION] = "v33_istd"
+            network_config[SYNTH_DATASET_VERSION] = "v32_istd"
             self.general_configs["train_shadow_matte"]["patch_size"] = 256
             network_config[AUGMENT_KEY] = "add_noise"
 
             network_config[NUM_BLOCKS_KEY] = 3
-            network_config[LOAD_SIZE_KEY_M] = 128
+            network_config[LOAD_SIZE_KEY_M] = 16
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
 
         elif (constants.shadow_matte_network_version == "v58.64"):
@@ -325,7 +325,7 @@ class IIDServerConfig():
             network_config[AUGMENT_KEY] = "add_noise"
 
             network_config[NUM_BLOCKS_KEY] = 3
-            network_config[LOAD_SIZE_KEY_M] = 128
+            network_config[LOAD_SIZE_KEY_M] = 16
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
 
 
