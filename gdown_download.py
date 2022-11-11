@@ -11,7 +11,12 @@ output_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/"
 # url = "https://drive.google.com/uc?id=1G806v7pob1h7a3bGFV_wPHgKlixBRp9Q"
 # gdown.download(url, output=output_dir)
 
-#V32_ISTD
+# #V32_ISTD
+# #z00
+# url = "https://drive.google.com/uc?id=1GRY4HI0MouBTmnMZler_GRZW0OqqHswk"
+# gdown.download(url, output=output_dir)
+
+#V33_ISTD
 #z00
-url = "https://drive.google.com/uc?id=1GRY4HI0MouBTmnMZler_GRZW0OqqHswk"
+url = "https://drive.google.com/uc?id=1Krqr7Hku9Feb2BVSaXVi92TcTzhtUtMo"
 gdown.download(url, output=output_dir)
