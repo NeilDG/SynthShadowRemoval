@@ -7,8 +7,8 @@ def train_relighting():
               "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
 
 def train_domain_adaptation():
-    os.system("python \"cyclegan_main.py\" --server_config=5 --img_to_load=1000 --debug_run=0 "
-              "--plot_enabled=1 --g_lr=0.0002 --d_lr=0.0002 --version=\"v10.07\" --iteration=2")
+    os.system("python \"cyclegan_main.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
+              "--plot_enabled=0 --g_lr=0.0002 --d_lr=0.0002 --version=\"v10.07\" --iteration=1")
 
 def train_embedding():
     os.system("python \"embedding_main.py\" --server_config=5 --img_to_load=-1 --load_previous=1 --test_mode=0 --net_config=4 --num_blocks=4 "
@@ -46,10 +46,8 @@ def train_unlit():
 
 
 def main():
-    # train_unlit()
-    train_domain_adaptation()
     # train_relighting()
-    # train_embedding()
+    train_domain_adaptation()
     # os.system("shutdown /s /t 1")
 
 

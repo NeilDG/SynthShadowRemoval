@@ -101,8 +101,8 @@ class IIDServerConfig():
 
         #TODO: Temporary - for quick experiment. K dataset repeats to lessen number of epochs, given <2000 images
         network_config[DATASET_REPEAT_KEY] = 20
-        self.general_configs["train_shadow_matte"]["min_epochs"] = 3
-        self.general_configs["train_shadow_matte"]["max_epochs"] = 10
+        self.general_configs["train_shadow_matte"]["min_epochs"] = 30
+        self.general_configs["train_shadow_matte"]["max_epochs"] = 40
 
         if (constants.shadow_matte_network_version == "v58.39"):
             network_config[SYNTH_DATASET_VERSION] = "v30_istd"
@@ -266,19 +266,19 @@ class IIDServerConfig():
             network_config[SYNTH_DATASET_VERSION] = "v33_istd"
             self.general_configs["train_shadow_matte"]["patch_size"] = 64
             network_config[NUM_BLOCKS_KEY] = 15
-            network_config[AUGMENT_KEY] = "add_noise"
+            network_config[AUGMENT_KEY] = ["random_exposure"]
 
         elif (constants.shadow_matte_network_version == "v58.58"):
             network_config[SYNTH_DATASET_VERSION] = "v32_istd"
             self.general_configs["train_shadow_matte"]["patch_size"] = 64
             network_config[NUM_BLOCKS_KEY] = 15
-            network_config[AUGMENT_KEY] = "add_noise"
+            network_config[AUGMENT_KEY] = ["random_exposure"]
 
         elif (constants.shadow_matte_network_version == "v58.59"):
             network_config[SYNTH_DATASET_VERSION] = "v33_istd"
             self.general_configs["train_shadow_matte"]["patch_size"] = 256
             network_config[NUM_BLOCKS_KEY] = 15
-            network_config[AUGMENT_KEY] = "add_noise"
+            network_config[AUGMENT_KEY] = ["random_exposure"]
 
             network_config[LOAD_SIZE_KEY_M] = 4
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
@@ -287,7 +287,7 @@ class IIDServerConfig():
             network_config[SYNTH_DATASET_VERSION] = "v33_istd"
             self.general_configs["train_shadow_matte"]["patch_size"] = 256
             network_config[NUM_BLOCKS_KEY] = 15
-            network_config[AUGMENT_KEY] = "add_noise"
+            network_config[AUGMENT_KEY] = ["random_exposure"]
 
             network_config[LOAD_SIZE_KEY_M] = 4
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
@@ -295,7 +295,7 @@ class IIDServerConfig():
         elif (constants.shadow_matte_network_version == "v58.61"):
             network_config[SYNTH_DATASET_VERSION] = "v33_istd"
             self.general_configs["train_shadow_matte"]["patch_size"] = 64
-            network_config[AUGMENT_KEY] = "add_noise"
+            network_config[AUGMENT_KEY] = ["random_exposure"]
 
             network_config[NUM_BLOCKS_KEY] = 3
             network_config[LOAD_SIZE_KEY_M] = 128
@@ -304,7 +304,7 @@ class IIDServerConfig():
         elif (constants.shadow_matte_network_version == "v58.62"):
             network_config[SYNTH_DATASET_VERSION] = "v32_istd"
             self.general_configs["train_shadow_matte"]["patch_size"] = 64
-            network_config[AUGMENT_KEY] = "add_noise"
+            network_config[AUGMENT_KEY] = ["random_exposure"]
 
             network_config[NUM_BLOCKS_KEY] = 3
             network_config[LOAD_SIZE_KEY_M] = 128
@@ -313,7 +313,7 @@ class IIDServerConfig():
         elif (constants.shadow_matte_network_version == "v58.63"):
             network_config[SYNTH_DATASET_VERSION] = "v32_istd"
             self.general_configs["train_shadow_matte"]["patch_size"] = 256
-            network_config[AUGMENT_KEY] = "add_noise"
+            network_config[AUGMENT_KEY] = ["random_exposure"]
 
             network_config[NUM_BLOCKS_KEY] = 3
             network_config[LOAD_SIZE_KEY_M] = 16
@@ -322,7 +322,7 @@ class IIDServerConfig():
         elif (constants.shadow_matte_network_version == "v58.64"):
             network_config[SYNTH_DATASET_VERSION] = "v33_istd"
             self.general_configs["train_shadow_matte"]["patch_size"] = 256
-            network_config[AUGMENT_KEY] = "add_noise"
+            network_config[AUGMENT_KEY] = ["random_exposure"]
 
             network_config[NUM_BLOCKS_KEY] = 3
             network_config[LOAD_SIZE_KEY_M] = 16
@@ -459,8 +459,8 @@ class IIDServerConfig():
 
         # TODO: Temporary - for quick experiment. K dataset repeats to lessen number of epochs, given <2000 images
         network_config[DATASET_REPEAT_KEY] = 40
-        self.general_configs["train_style_transfer"]["min_epochs"] = 5
-        self.general_configs["train_style_transfer"]["max_epochs"] = 25
+        self.general_configs["train_style_transfer"]["min_epochs"] = 25
+        self.general_configs["train_style_transfer"]["max_epochs"] = 30
 
         assert "v10" in constants.style_transfer_version, "Style transfer network version not recognized: " + constants.style_transfer_version
 
