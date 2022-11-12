@@ -38,10 +38,10 @@ class DomainAdaptIterationTable():
         self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=0.0, id_weight=0.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=1)
 
         iteration = 3
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=0.0, id_weight=0.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=0)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=0.0, id_weight=1.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=0)
 
         iteration = 4
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=0.0, id_weight=0.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=1)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=0.0, id_weight=1.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=1)
 
         iteration = 5
         self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=1.0, id_weight=1.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=0)
