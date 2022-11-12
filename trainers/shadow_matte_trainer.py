@@ -240,6 +240,7 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def test(self, input_map):
         with torch.no_grad():
+            self.G_SM_predictor.eval()
             if (self.use_grayscale):
                 input_ws = input_map["rgb_ws_gray"]
             else:

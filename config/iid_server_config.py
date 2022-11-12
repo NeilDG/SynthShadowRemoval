@@ -498,6 +498,25 @@ class IIDServerConfig():
             network_config[NETWORK_CONFIG_NUM] = 1
             network_config[NUM_BLOCKS_KEY] = 10
             network_config[NORM_MODE_KEY] = "instance"
+
+        elif (constants.style_transfer_version == "v10.08"):  # Cycle-GAN
+            network_config[PATCH_SIZE_KEY] = 64
+            network_config[NETWORK_CONFIG_NUM] = 1
+            network_config[NUM_BLOCKS_KEY] = 10
+            network_config[NORM_MODE_KEY] = "instance"
+
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY] = 128
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY] = 128
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY] = 64
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY] = 128
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY] = network_config[LOAD_SIZE_KEY]
+
         else:
             print("Network config not found for ", constants.style_transfer_version)
 

@@ -355,6 +355,8 @@ class CycleGANTrainer:
 
     def test(self, tensor_x, tensor_y):
         with torch.no_grad():
+            self.G_X2Y.eval()
+            self.G_Y2X.eval()
             x2y = self.G_X2Y(tensor_x)
             y2x = self.G_Y2X(tensor_y)
             return x2y, y2x
