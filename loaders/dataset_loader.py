@@ -380,19 +380,27 @@ def load_gta_dataset(rgb_dir, albedo_dir, opts):
 
     return data_loader
 
-def load_da_dataset_train(imgx_dir, imgy_dir, opts):
+def load_da_dataset_train(imgx_dir, imgy_dir_list, opts):
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
     network_config = sc_instance.interpret_style_transfer_config_from_version()
 
-    imgx_list = glob.glob(imgx_dir)
-    imgy_list = glob.glob(imgy_dir)
+    initial_imgx_list = glob.glob(imgx_dir)
+    initial_imgy_list = glob.glob(imgy_dir_list[0])
+    for i in range(1, len(imgy_dir_list)):
+        initial_imgy_list += glob.glob(imgy_dir_list[i])
 
-    random.shuffle(imgx_list)
-    random.shuffle(imgy_list)
+    random.shuffle(initial_imgx_list)
+    random.shuffle(initial_imgy_list)
 
     if(opts.img_to_load > 0):
-        imgx_list = imgx_list[0: opts.img_to_load]
-        imgy_list = imgy_list[0: opts.img_to_load]
+        initial_imgx_list = initial_imgx_list[0: opts.img_to_load]
+        initial_imgy_list = initial_imgy_list[0: opts.img_to_load]
+
+    imgx_list = []
+    imgy_list = []
+    for i in range(0, network_config["dataset_repeats"]):
+        imgx_list += initial_imgx_list
+        imgy_list += initial_imgy_list
 
     print("Length of images: %d %d" % (len(imgx_list), len(imgy_list)))
 
@@ -406,7 +414,7 @@ def load_da_dataset_train(imgx_dir, imgy_dir, opts):
         shuffle=False,
     )
 
-    return data_loader
+    return data_loader, len(imgx_list)
 
 def load_unlit_dataset_train(styled_dir, unlit_dir, opts):
     styled_img_list = glob.glob(styled_dir)
@@ -445,12 +453,14 @@ def load_unlit_dataset_test(styled_dir, unlit_dir, opts):
     return data_loader
 
 
-def load_da_dataset_test(imgx_dir, imgy_dir, opts):
+def load_da_dataset_test(imgx_dir, imgy_dir_list, opts):
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
     network_config = sc_instance.interpret_style_transfer_config_from_version()
 
     imgx_list = glob.glob(imgx_dir)
-    imgy_list = glob.glob(imgy_dir)
+    imgy_list = glob.glob(imgy_dir_list[0])
+    for i in range(1, len(imgy_dir_list)):
+        imgy_list += glob.glob(imgy_dir_list[i])
 
     random.shuffle(imgx_list)
     random.shuffle(imgy_list)

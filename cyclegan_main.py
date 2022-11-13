@@ -16,6 +16,8 @@ import torch.utils.data
 import torchvision.utils as vutils
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
+
 from config import iid_server_config
 from loaders import dataset_loader
 from trainers import cyclegan_trainer, early_stopper
@@ -46,35 +48,30 @@ def update_config(opts):
     if (constants.server_config == 1):
         opts.num_workers = 6
         print("Using COARE configuration. Workers: ", opts.num_workers, " ", opts.version)
-        constants.imgx_dir = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
-        constants.imgy_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 9/rgb/*/*.png"
-        constants.imgx_dir_test = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
-        constants.imgy_dir_test = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 9/rgb/*/*.png"
+        constants.ws_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_A/*.png"
+        constants.ns_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_C/*.png"
+        constants.imgx_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/*/*/*.png"
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
         opts.num_workers = 12
         print("Using CCS configuration. Workers: ", opts.num_workers, " ", opts.version)
-        constants.imgx_dir = "/home/jupyter-neil.delgallego/Places Dataset/*.jpg"
-        constants.imgy_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 9/rgb/*/*.png"
-
-    # GCLOUD
-    elif (constants.server_config == 3):
-        opts.num_workers = 8
-        print("Using GCloud configuration. Workers: ", opts.num_workers, " ", opts.version)
-        constants.imgx_dir = "/home/neil_delgallego/Places Dataset/*.jpg"
-        constants.imgy_dir = "/home/neil_delgallego/SynthWeather Dataset 10/synth_city/*/*/*.png"
+        constants.ws_istd = "/home/jupyter-neil.delgallego/ISTD_Dataset/test/test_A/*.png"
+        constants.ns_istd = "/home/jupyter-neil.delgallego/ISTD_Dataset/test/test_C/*.png"
+        constants.imgx_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/*/*/*.png"
 
     elif (constants.server_config == 4):
         opts.num_workers = 6
-        constants.imgx_dir = "C:/Datasets/Places Dataset/*.jpg"
-        constants.imgy_dir = "C:/Datasets/SynthWeather Dataset 9/rgb/*/*.png"
+        constants.ws_istd = "C:/Datasets/ISTD_Dataset/test/test_A/*.png"
+        constants.ns_istd = "C:/Datasets/ISTD_Dataset/test/test_C/*.png"
+        constants.imgx_dir = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/*/*/*.png"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers, " ", opts.version)
     else:
         opts.num_workers = 12
-        constants.imgx_dir = "E:/Places Dataset/*.jpg"
-        constants.imgy_dir = "E:/SynthWeather Dataset 10/synth_city/*/*/*.png"
+        constants.ws_istd = "E:/ISTD_Dataset/test/test_A/*.png"
+        constants.ns_istd = "E:/ISTD_Dataset/test/test_C/*.png"
+        constants.imgx_dir = "E:/SynthWeather Dataset 10/{dataset_version}/*/*/*.png"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers, " ", opts.version)
 
 def main(argv):
@@ -98,19 +95,30 @@ def main(argv):
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
     general_config = sc_instance.get_general_configs()
     network_config = sc_instance.interpret_style_transfer_config_from_version()
+    print("General config:", general_config)
+    print("Network config: ", network_config)
 
-    print(general_config)
-    print(network_config)
+    dataset_version = network_config["dataset_version"]
+    constants.imgx_dir = constants.imgx_dir.format(dataset_version=dataset_version)
 
     gt = cyclegan_trainer.CycleGANTrainer(device, opts)
-    iteration = 0
-    start_epoch = sc_instance.get_last_epoch_from_mode("train_style_transfer")
-    
     # Create the dataloader
-    train_loader = dataset_loader.load_da_dataset_train(constants.imgx_dir, constants.imgy_dir, opts)
-    test_loader = dataset_loader.load_da_dataset_test(constants.imgx_dir, constants.imgy_dir, opts)
+    train_loader, dataset_count = dataset_loader.load_da_dataset_train(constants.imgx_dir, [constants.ns_istd, constants.ws_istd], opts)
+    test_loader = dataset_loader.load_da_dataset_test(constants.imgx_dir,[constants.ns_istd, constants.ws_istd], opts)
 
-    print("Starting Training Loop...")
+    mode = "train_style_transfer"
+    iteration = 0
+    start_epoch = sc_instance.get_last_epoch_from_mode(mode)
+    print("---------------------------------------------------------------------------")
+    print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
+    print("---------------------------------------------------------------------------")
+
+    # compute total progress
+    load_size = network_config["load_size"]
+    needed_progress = int((general_config[mode]["max_epochs"]) * (dataset_count / load_size))
+    current_progress = int(start_epoch * (dataset_count / load_size))
+    pbar = tqdm(total=needed_progress)
+    pbar.update(current_progress)
 
     for epoch in range(start_epoch, general_config["train_style_transfer"]["max_epochs"]):
         # For each batch in the dataloader
@@ -127,9 +135,9 @@ def main(argv):
 
             gt.train(epoch, iteration, imgx_tensor, imgy_tensor, i)
             iteration = iteration + 1
+            pbar.update(1)
 
             if(iteration % 50 == 0):
-                print("Iteration:", iteration)
                 gt.visdom_visualize(imgx_tensor, imgy_tensor, "Train")
 
                 gt.save_states(epoch, iteration, False)
