@@ -51,7 +51,6 @@ def update_config(opts):
         constants.ws_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_A/*.png"
         constants.ns_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_C/*.png"
         constants.imgx_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/*/*/*.png"
-        constants.imgy_dir = constants.ns_istd
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
@@ -60,14 +59,12 @@ def update_config(opts):
         constants.ws_istd = "/home/jupyter-neil.delgallego/ISTD_Dataset/test/test_A/*.png"
         constants.ns_istd = "/home/jupyter-neil.delgallego/ISTD_Dataset/test/test_C/*.png"
         constants.imgx_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/*/*/*.png"
-        constants.imgy_dir = constants.ns_istd
 
     elif (constants.server_config == 4):
         opts.num_workers = 6
         constants.ws_istd = "C:/Datasets/ISTD_Dataset/test/test_A/*.png"
         constants.ns_istd = "C:/Datasets/ISTD_Dataset/test/test_C/*.png"
         constants.imgx_dir = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/*/*/*.png"
-        constants.imgy_dir = constants.ns_istd
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers, " ", opts.version)
     else:
@@ -75,7 +72,6 @@ def update_config(opts):
         constants.ws_istd = "E:/ISTD_Dataset/test/test_A/*.png"
         constants.ns_istd = "E:/ISTD_Dataset/test/test_C/*.png"
         constants.imgx_dir = "E:/SynthWeather Dataset 10/{dataset_version}/*/*/*.png"
-        constants.imgy_dir = constants.ns_istd
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers, " ", opts.version)
 
 def main(argv):
@@ -104,10 +100,11 @@ def main(argv):
 
     dataset_version = network_config["dataset_version"]
     constants.imgx_dir = constants.imgx_dir.format(dataset_version=dataset_version)
+
     gt = cyclegan_trainer.CycleGANTrainer(device, opts)
     # Create the dataloader
-    train_loader, dataset_count = dataset_loader.load_da_dataset_train(constants.imgx_dir, constants.imgy_dir, opts)
-    test_loader = dataset_loader.load_da_dataset_test(constants.imgx_dir, constants.imgy_dir, opts)
+    train_loader, dataset_count = dataset_loader.load_da_dataset_train(constants.imgx_dir, [constants.ns_istd, constants.ws_istd], opts)
+    test_loader = dataset_loader.load_da_dataset_test(constants.imgx_dir,[constants.ns_istd, constants.ws_istd], opts)
 
     mode = "train_style_transfer"
     iteration = 0

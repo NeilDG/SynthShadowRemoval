@@ -380,12 +380,14 @@ def load_gta_dataset(rgb_dir, albedo_dir, opts):
 
     return data_loader
 
-def load_da_dataset_train(imgx_dir, imgy_dir, opts):
+def load_da_dataset_train(imgx_dir, imgy_dir_list, opts):
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
     network_config = sc_instance.interpret_style_transfer_config_from_version()
 
     initial_imgx_list = glob.glob(imgx_dir)
-    initial_imgy_list = glob.glob(imgy_dir)
+    initial_imgy_list = glob.glob(imgy_dir_list[0])
+    for i in range(1, len(imgy_dir_list)):
+        initial_imgy_list += glob.glob(imgy_dir_list[i])
 
     random.shuffle(initial_imgx_list)
     random.shuffle(initial_imgy_list)
@@ -451,12 +453,14 @@ def load_unlit_dataset_test(styled_dir, unlit_dir, opts):
     return data_loader
 
 
-def load_da_dataset_test(imgx_dir, imgy_dir, opts):
+def load_da_dataset_test(imgx_dir, imgy_dir_list, opts):
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
     network_config = sc_instance.interpret_style_transfer_config_from_version()
 
     imgx_list = glob.glob(imgx_dir)
-    imgy_list = glob.glob(imgy_dir)
+    imgy_list = glob.glob(imgy_dir_list[0])
+    for i in range(1, len(imgy_dir_list)):
+        imgy_list += glob.glob(imgy_dir_list[i])
 
     random.shuffle(imgx_list)
     random.shuffle(imgy_list)
