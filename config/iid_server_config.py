@@ -517,6 +517,24 @@ class IIDServerConfig():
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY] = network_config[LOAD_SIZE_KEY]
 
+        elif (constants.style_transfer_version == "v10.09"):  # U-Net
+            network_config[PATCH_SIZE_KEY] = 64
+            network_config[NETWORK_CONFIG_NUM] = 2
+            network_config[NUM_BLOCKS_KEY] = 0
+            network_config[NORM_MODE_KEY] = "instance"
+
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY] = 512
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY] = 512
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY] = 256
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY] = 512
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY] = network_config[LOAD_SIZE_KEY]
+
         else:
             print("Network config not found for ", constants.style_transfer_version)
 
