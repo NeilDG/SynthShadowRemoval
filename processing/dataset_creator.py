@@ -369,7 +369,7 @@ def produce_color_images(INPUT_PATH, SAVE_PATH, CHECKPT_NAME, net_config, argv):
     # load color transfer
     if (net_config == 1):
         print("Using vanilla cycle GAN")
-        color_transfer_gan = cycle_gan.Generator(n_residual_blocks=6, has_dropout=False).to(device)
+        color_transfer_gan = cycle_gan.Generator(n_residual_blocks=10, has_dropout=False, norm="instance").to(device)
     elif (net_config == 2):
         print("Using U-Net GAN")
         color_transfer_gan = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=0, norm_layer=nn.InstanceNorm2d).to(device)
@@ -610,10 +610,7 @@ def main(argv):
     # produce_color_images("E:/SynthWeather Dataset 6/azimuth/144deg/rgb/", "E:/SynthWeather Dataset 6/azimuth/144deg/rgb - styled/", "synth2rgb_v4.07_3.pt", 2, argv)
     # produce_color_images("E:/SynthWeather Dataset 6/no_shadows/*.png", "E:/SynthWeather Dataset 6/no_shadows_styled/", "synth2rgb_v4.07_3.pt", 2, argv)
 
-    # base_path = "E:/SynthWeather Dataset 10/synth_city/rgb/"
-    base_path = "E:/SynthWeather Dataset 10/v22/rgb_noshadows/"
-    # output_base_path = "E:/SynthWeather Dataset 8/train_rgb_styled/"
-    # output_base_path = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+    base_path = "E:/SynthWeather Dataset 10/v32_istd/"
     output_base_path = "E:/SynthWeather Dataset 10/temp/"
     try:
         os.mkdir(output_base_path)
@@ -623,10 +620,11 @@ def main(argv):
     dirlist = os.listdir(base_path)
 
     for dir in dirlist:
-        input_path = base_path + dir + "/*.png"
+        input_path = base_path + dir + "/*/*.png"
         output_path = output_base_path + dir + "/"
-        # produce_color_images(input_path, output_path, "synth2rgb_v7.10_2.pt", 2, argv)
-        produce_color_images(input_path, output_path, "color_transfer_v1.11_2.pth", 3, argv)
+        print(input_path)
+        produce_color_images(input_path, output_path, "synth2rgb_v10.08_1.pt", 1, argv)
+        # produce_color_images(input_path, output_path, "color_transfer_v1.11_2.pth", 3, argv)
 
     # create_patches(argv)
 
