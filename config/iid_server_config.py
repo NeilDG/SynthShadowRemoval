@@ -459,8 +459,8 @@ class IIDServerConfig():
 
         # TODO: Temporary - for quick experiment. K dataset repeats to lessen number of epochs, given <2000 images
         network_config[DATASET_REPEAT_KEY] = 40
-        self.general_configs["train_style_transfer"]["min_epochs"] = 25
-        self.general_configs["train_style_transfer"]["max_epochs"] = 30
+        self.general_configs["train_style_transfer"]["min_epochs"] = 30
+        self.general_configs["train_style_transfer"]["max_epochs"] = 35
 
         assert "v10" in constants.style_transfer_version, "Style transfer network version not recognized: " + constants.style_transfer_version
 
