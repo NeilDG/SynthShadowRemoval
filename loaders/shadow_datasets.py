@@ -80,6 +80,7 @@ class ShadowTrainDataset(data.Dataset):
                 rgb_ns = transforms.functional.crop(rgb_ns, i, j, h, w)
 
             rgb_ws, rgb_ns, shadow_map, shadow_matte = self.shadow_op.generate_shadow_map(rgb_ws, rgb_ns, False)
+            shadow_matte = 1.0 - shadow_matte
 
             rgb_ws_gray = kornia.color.rgb_to_grayscale(rgb_ws)
             rgb_ws = self.norm_op(rgb_ws)
@@ -135,6 +136,7 @@ class ShadowISTDDataset(data.Dataset):
 
             shadow_map = rgb_ns - rgb_ws
             shadow_matte = kornia.color.rgb_to_grayscale(shadow_map)
+            shadow_matte = 1.0 - shadow_matte
 
             rgb_ws_gray = kornia.color.rgb_to_grayscale(rgb_ws)
             rgb_ws = self.norm_op(rgb_ws)
