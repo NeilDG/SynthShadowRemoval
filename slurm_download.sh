@@ -11,6 +11,10 @@
 #About this script:
 #Download of dataset
 
+module load anaconda/3-2021.11
+module load cuda/10.1_cudnn-7.6.5
+source activate NeilGAN_V2
+
 pip install gdown
 srun python "gdown_download.py"
 
