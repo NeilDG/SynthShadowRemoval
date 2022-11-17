@@ -431,6 +431,7 @@ class IIDServerConfig():
         DROPOUT_KEY = "use_dropout"
         AUGMENT_KEY = "augment_mode"
         DATASET_REPEAT_KEY = "dataset_repeats"
+        MIX_ISTD_KEY = "mix_istd"
 
         #set defaults
         network_config[NETWORK_CONFIG_NUM] = 5
@@ -441,6 +442,7 @@ class IIDServerConfig():
         network_config[DROPOUT_KEY] = False
         network_config[AUGMENT_KEY] = "none"
         network_config[DATASET_REPEAT_KEY] = 1
+        network_config[MIX_ISTD_KEY] = 0.0  # percent to use ISTD
 
         # configure load sizes (GPU memory allocation of data) #for 128
         if (constants.server_config == 1):  # COARE
@@ -495,6 +497,15 @@ class IIDServerConfig():
             network_config[NUM_BLOCKS_KEY] = 3
             network_config[DATASET_REPEAT_KEY] = 35
 
+            self.general_configs["train_shadow"]["min_epochs"] = 5
+            self.general_configs["train_shadow"]["max_epochs"] = 20
+
+        elif (constants.shadow_removal_version == "v58.29"):
+            network_config[SYNTH_DATASET_VERSION] = "v34_places"
+            network_config[NETWORK_CONFIG_NUM] = 6
+            network_config[NUM_BLOCKS_KEY] = 3
+
+            network_config[DATASET_REPEAT_KEY] = 20
             self.general_configs["train_shadow"]["min_epochs"] = 5
             self.general_configs["train_shadow"]["max_epochs"] = 20
 

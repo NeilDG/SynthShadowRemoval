@@ -12,10 +12,11 @@
 #Download of dataset
 
 pip install gdown
-python "gdown_download.py"
+srun python "gdown_download.py"
 
-DATASET_NAME="v33_istd"
-OUTPUT_DIR="/home/jupyter-neil.delgallego/SynthWeather Dataset 10/"
+DATASET_NAME="v34_places"
+#OUTPUT_DIR="/home/jupyter-neil.delgallego/SynthWeather Dataset 10/"
+OUTPUT_DIR="/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
 echo "$OUTPUT_DIR/$DATASET_NAME.zip"
 
 zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
