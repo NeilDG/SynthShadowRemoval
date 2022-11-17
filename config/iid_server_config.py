@@ -540,8 +540,8 @@ class IIDServerConfig():
 
         # TODO: Temporary - for quick experiment. K dataset repeats to lessen number of epochs, given <2000 images
         network_config[DATASET_REPEAT_KEY] = 40
-        self.general_configs["train_style_transfer"]["min_epochs"] = 30
-        self.general_configs["train_style_transfer"]["max_epochs"] = 35
+        self.general_configs["train_style_transfer"]["min_epochs"] = 15
+        self.general_configs["train_style_transfer"]["max_epochs"] = 20
 
         assert "v10" in constants.style_transfer_version, "Style transfer network version not recognized: " + constants.style_transfer_version
 
@@ -612,6 +612,24 @@ class IIDServerConfig():
                 network_config[LOAD_SIZE_KEY] = 256
             else:  # RTX 3090
                 network_config[LOAD_SIZE_KEY] = 512
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY] = network_config[LOAD_SIZE_KEY]
+
+        elif (constants.style_transfer_version == "v10.10"):  # Cycle-GAN-CBAM
+            network_config[PATCH_SIZE_KEY] = 64
+            network_config[NETWORK_CONFIG_NUM] = 4
+            network_config[NUM_BLOCKS_KEY] = 10
+            network_config[NORM_MODE_KEY] = "instance"
+
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY] = 128
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY] = 340
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY] = 64
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY] = 128
 
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY] = network_config[LOAD_SIZE_KEY]

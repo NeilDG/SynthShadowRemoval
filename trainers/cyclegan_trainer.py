@@ -50,10 +50,10 @@ class DomainAdaptIterationTable():
         self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=1.0, id_weight=1.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=1)
 
         iteration = 7
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=10.0, id_weight=1.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=0)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=1.0, id_weight=0.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=0)
 
         iteration = 8
-        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=10.0, id_weight=1.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=1)
+        self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=1.0, id_weight=0.0, lpip_weight=0.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=1)
 
         iteration = 9
         self.iteration_table[str(iteration)] = IterationParameters(iteration, l1_weight=0.0, id_weight=0.0, lpip_weight=1.0, cycle_weight=10.0, adv_weight=1.0, disc_mode=0)
@@ -133,7 +133,7 @@ class CycleGANTrainer:
                 norm_layer = nn.BatchNorm2d
             self.G_X2Y = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks, norm_layer=norm_layer).to(self.gpu_device)
             self.G_Y2X = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=num_blocks, norm_layer=norm_layer).to(self.gpu_device)
-        else:
+        elif(net_config == 3):
             print("Using AdainGEN")
             params = {'dim': 64,  # number of filters in the bottommost layer
                       'mlp_dim': 256,  # number of filters in MLP
@@ -145,6 +145,11 @@ class CycleGANTrainer:
                       'pad_type': 'reflect'}
             self.G_X2Y = usi3d_gan.AdaINGen(input_dim=3, output_dim=3, params=params).to(self.gpu_device)
             self.G_Y2X = usi3d_gan.AdaINGen(input_dim=3, output_dim=3, params=params).to(self.gpu_device)
+
+        else:
+            print("Using Cycle GAN-CBAM")
+            self.G_X2Y = cycle_gan.Generator(n_residual_blocks=num_blocks, has_dropout=False, norm=norm_mode, use_cbam=True).to(self.gpu_device)
+            self.G_Y2X = cycle_gan.Generator(n_residual_blocks=num_blocks, has_dropout=False, norm=norm_mode, use_cbam=True).to(self.gpu_device)
 
 
         self.D_X = cycle_gan.Discriminator().to(self.gpu_device)  # use CycleGAN's discriminator
