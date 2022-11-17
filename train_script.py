@@ -2,21 +2,13 @@
 
 import os
 def train_relighting():
-    os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --train_mode=train_shadow_matte "
-              "--plot_enabled=0  --shadow_matte_network_version=\"v58.67\" --shadow_removal_version=\"v58.28\" "
+    os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=5000 --train_mode=train_shadow_matte "
+              "--plot_enabled=0  --shadow_matte_network_version=\"v58.68\" --shadow_removal_version=\"v58.28\" "
               "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
-    #
-    # os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=1000 --train_mode=train_shadow_matte "
-    #           "--plot_enabled=0  --shadow_matte_network_version=\"v58.68\" --shadow_removal_version=\"v58.28\" "
-    #           "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
-    #
-    # os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=1000 --train_mode=train_shadow_matte "
-    #           "--plot_enabled=0  --shadow_matte_network_version=\"v58.69\" --shadow_removal_version=\"v58.28\" "
-    #           "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
-    #
-    # os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=1000 --train_mode=train_shadow_matte "
-    #           "--plot_enabled=0  --shadow_matte_network_version=\"v58.70\" --shadow_removal_version=\"v58.28\" "
-    #           "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
+
+    os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=5000 --train_mode=train_shadow_matte "
+              "--plot_enabled=0  --shadow_matte_network_version=\"v58.70\" --shadow_removal_version=\"v58.28\" "
+              "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
 
 def train_domain_adaptation():
     # os.system("python \"cyclegan_main.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "

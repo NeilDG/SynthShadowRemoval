@@ -346,39 +346,51 @@ class IIDServerConfig():
             network_config[LOAD_SIZE_KEY_M] = 16
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
 
-
         elif (constants.shadow_matte_network_version == "v58.67"):
-            network_config[SYNTH_DATASET_VERSION] = "v32_istd_styled"
+            network_config[SYNTH_DATASET_VERSION] = "v32_istd_styled_1"
             self.general_configs["train_shadow_matte"]["patch_size"] = 64
-            network_config[NUM_BLOCKS_KEY] = 15
+            network_config[NUM_BLOCKS_KEY] = 3
 
-            network_config[LOAD_SIZE_KEY_M] = 48
+            # configure load sizes (GPU memory allocation of data)
+            if (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_M] = 64
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_M] = 128
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
 
             self.general_configs["train_shadow_matte"]["min_epochs"] = 15
             self.general_configs["train_shadow_matte"]["max_epochs"] = 20
 
         elif (constants.shadow_matte_network_version == "v58.68"):
-            network_config[SYNTH_DATASET_VERSION] = "v32_istd_styled_refined"
+            network_config[SYNTH_DATASET_VERSION] = "v32_istd_styled_2"
             self.general_configs["train_shadow_matte"]["patch_size"] = 64
-            network_config[NUM_BLOCKS_KEY] = 15
+            network_config[NUM_BLOCKS_KEY] = 3
 
-            network_config[LOAD_SIZE_KEY_M] = 48
+            # configure load sizes (GPU memory allocation of data)
+            if (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_M] = 64
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_M] = 128
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
 
             self.general_configs["train_shadow_matte"]["min_epochs"] = 15
             self.general_configs["train_shadow_matte"]["max_epochs"] = 20
 
         elif (constants.shadow_matte_network_version == "v58.69"):
-            network_config[SYNTH_DATASET_VERSION] = "v32_istd_styled"
-            self.general_configs["train_shadow_matte"]["patch_size"] = 128
+            network_config[SYNTH_DATASET_VERSION] = "v32_istd_styled_1"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 64
             network_config[NUM_BLOCKS_KEY] = 3
+            network_config[DROPOUT_KEY] = True
 
             # configure load sizes (GPU memory allocation of data)
             if (constants.server_config == 4):  # RTX 2080Ti
-                network_config[LOAD_SIZE_KEY_M] = 32
+                network_config[LOAD_SIZE_KEY_M] = 64
             else:  # RTX 3090
-                network_config[LOAD_SIZE_KEY_M] = 72
+                network_config[LOAD_SIZE_KEY_M] = 128
 
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
@@ -387,15 +399,16 @@ class IIDServerConfig():
             self.general_configs["train_shadow_matte"]["max_epochs"] = 20
 
         elif (constants.shadow_matte_network_version == "v58.70"):
-            network_config[SYNTH_DATASET_VERSION] = "v32_istd_styled"
-            self.general_configs["train_shadow_matte"]["patch_size"] = 128
-            network_config[NUM_BLOCKS_KEY] = 15
+            network_config[SYNTH_DATASET_VERSION] = "v32_istd_styled_2"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 64
+            network_config[NUM_BLOCKS_KEY] = 3
+            network_config[DROPOUT_KEY] = True
 
             # configure load sizes (GPU memory allocation of data)
             if (constants.server_config == 4):  # RTX 2080Ti
-                network_config[LOAD_SIZE_KEY_M] = 8
+                network_config[LOAD_SIZE_KEY_M] = 64
             else:  # RTX 3090
-                network_config[LOAD_SIZE_KEY_M] = 16
+                network_config[LOAD_SIZE_KEY_M] = 128
 
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
