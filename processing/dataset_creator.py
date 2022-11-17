@@ -19,7 +19,7 @@ import torchvision.utils as torchutils
 from loaders import dataset_loader
 import torchvision.transforms as transforms
 import constants
-from model import vanilla_cycle_gan as cycle_gan
+from model import vanilla_cycle_gan as cycle_gan, usi3d_gan
 from model import ffa_gan
 from model import unet_gan
 import kornia
@@ -369,14 +369,21 @@ def produce_color_images(INPUT_PATH, SAVE_PATH, CHECKPT_NAME, net_config, argv):
     # load color transfer
     if (net_config == 1):
         print("Using vanilla cycle GAN")
-        color_transfer_gan = cycle_gan.Generator(n_residual_blocks=6, has_dropout=False).to(device)
+        color_transfer_gan = cycle_gan.Generator(n_residual_blocks=10, has_dropout=False, norm="instance").to(device)
     elif (net_config == 2):
         print("Using U-Net GAN")
         color_transfer_gan = unet_gan.UnetGenerator(input_nc=3, output_nc=3, num_downs=0, norm_layer=nn.InstanceNorm2d).to(device)
-    elif (net_config == 3):
-        print("Using SynthDehazing CycleGAN")
-        # color_transfer_gan = cycle_gan.SynthDehazingGenerator(downsampling_blocks=2, n_residual_blocks=10, has_dropout=False).to(device)
-        color_transfer_gan = cycle_gan.Generator(n_residual_blocks=10, has_dropout=False, norm="instance").to(device)
+    elif (net_config == 4):
+        params = {'dim': 64,  # number of filters in the bottommost layer
+                 'mlp_dim': 256,  # number of filters in MLP
+                 'style_dim': 8,  # length of style code
+                 'n_layer': 3,  # number of layers in feature merger/splitor
+                 'activ': 'relu',  # activation function [relu/lrelu/prelu/selu/tanh]
+                 'n_downsample': 2,  # number of downsampling layers in content encoder
+                 'n_res': 4,  # number of residual blocks in content encoder/decoder
+                 'pad_type': 'reflect'}
+        color_transfer_gan = usi3d_gan.AdaINGen(input_dim=3, output_dim=3, params=params).to(device)
+        print("Using ADAIN-GEN")
     else:
         print("Using Stable CycleGAN")
 
@@ -610,10 +617,7 @@ def main(argv):
     # produce_color_images("E:/SynthWeather Dataset 6/azimuth/144deg/rgb/", "E:/SynthWeather Dataset 6/azimuth/144deg/rgb - styled/", "synth2rgb_v4.07_3.pt", 2, argv)
     # produce_color_images("E:/SynthWeather Dataset 6/no_shadows/*.png", "E:/SynthWeather Dataset 6/no_shadows_styled/", "synth2rgb_v4.07_3.pt", 2, argv)
 
-    # base_path = "E:/SynthWeather Dataset 10/synth_city/rgb/"
-    base_path = "E:/SynthWeather Dataset 10/v22/rgb_noshadows/"
-    # output_base_path = "E:/SynthWeather Dataset 8/train_rgb_styled/"
-    # output_base_path = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
+    base_path = "E:/SynthWeather Dataset 10/v32_istd/"
     output_base_path = "E:/SynthWeather Dataset 10/temp/"
     try:
         os.mkdir(output_base_path)
@@ -623,10 +627,11 @@ def main(argv):
     dirlist = os.listdir(base_path)
 
     for dir in dirlist:
-        input_path = base_path + dir + "/*.png"
+        input_path = base_path + dir + "/*/*.png"
         output_path = output_base_path + dir + "/"
-        # produce_color_images(input_path, output_path, "synth2rgb_v7.10_2.pt", 2, argv)
-        produce_color_images(input_path, output_path, "color_transfer_v1.11_2.pth", 3, argv)
+        print(input_path)
+        produce_color_images(input_path, output_path, "synth2rgb_v10.03_3.pt", 4, argv)
+        # produce_color_images(input_path, output_path, "color_transfer_v1.11_2.pth", 3, argv)
 
     # create_patches(argv)
 
