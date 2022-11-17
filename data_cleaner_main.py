@@ -16,7 +16,7 @@ parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
 parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:0")
 parser.add_option('--shadow_matte_network_version', type=str, default="v58.34")
 parser.add_option('--shadow_removal_version', type=str, default="v58.28")
-parser.add_option('--dataset_version_to_refine', type=str, default="v33_istd")
+parser.add_option('--dataset_version_to_refine', type=str, default="v32_istd_styled")
 parser.add_option('--iteration', type=int, help="Style version?", default="1")
 parser.add_option('--num_workers', type=int, help="Workers", default="12")
 parser.add_option('--train_mode', type=str, default="all") #all, train_shadow_matte, train_shadow
