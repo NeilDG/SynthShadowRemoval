@@ -18,13 +18,13 @@ class IIDServerConfig():
         # COARE, CCS CLOUD, GCLOUD, RTX 2080TI, RTX 3090
         if(constants.server_config <= 5):
             self.general_configs = {"train_style_transfer" : {"min_epochs" : 5, "max_epochs" : 25},
-                                    "train_shadow_matte": {"min_epochs": 5, "max_epochs" : 15, "patch_size": 128},
-                                    "train_shadow": {"min_epochs": 10 ,"max_epochs" : 80, "patch_size": 128}}
+                                    "train_shadow_matte": {"min_epochs": 5, "max_epochs" : 15},
+                                    "train_shadow": {"min_epochs": 10 ,"max_epochs" : 80}}
         #debug
         if(constants.debug_run == 1):
             self.general_configs = {"train_style_transfer": {"min_epochs": 1, "max_epochs": 25},
-                                    "train_shadow_matte": {"min_epochs": 1, "max_epochs": 15, "patch_size": 128},
-                                    "train_shadow": {"min_epochs": 1, "max_epochs": 80, "patch_size": 128}}
+                                    "train_shadow_matte": {"min_epochs": 1, "max_epochs": 15},
+                                    "train_shadow": {"min_epochs": 1, "max_epochs": 80}}
 
 
         self.update_version_config()
@@ -71,7 +71,7 @@ class IIDServerConfig():
         network_config[NETWORK_CONFIG_NUM] = 5
         network_config[NC_KEY] = 3
         network_config[NUM_BLOCKS_KEY] = 15
-        network_config[SYNTH_DATASET_VERSION] = "v20_refined"
+        network_config[SYNTH_DATASET_VERSION] = "v32_istd"
         network_config[WEIGHT_DECAY_KEY] = 0.0
         network_config[DROPOUT_KEY] = False
         network_config[AUGMENT_KEY] = "none"
@@ -94,10 +94,8 @@ class IIDServerConfig():
 
         # configure batch size. NOTE: Batch size must be equal or larger than load size
         network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
-        self.general_configs["train_shadow_matte"]["min_epochs"] = 60
-        self.general_configs["train_shadow_matte"]["max_epochs"] = 65
 
-        assert "v58" in constants.shadow_matte_network_version, "Shadow matte network version not recognized: " + constants.shadow_matte_network_version
+        assert "v60" in constants.shadow_matte_network_version, "Shadow matte network version not recognized: " + constants.shadow_matte_network_version
 
         #TODO: Temporary - for quick experiment. K dataset repeats to lessen number of epochs, given <2000 images
         network_config[DATASET_REPEAT_KEY] = 20
