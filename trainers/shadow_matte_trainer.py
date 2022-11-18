@@ -247,6 +247,7 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 input_ws = input_map["rgb"]
 
             rgb2sm = self.G_SM_predictor(input_ws)
+            # rgb2sm = 1.0 - rgb2sm
 
         return rgb2sm
 
