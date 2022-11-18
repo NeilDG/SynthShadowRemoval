@@ -100,7 +100,7 @@ class IIDServerConfig():
         #TODO: Temporary - for quick experiment. K dataset repeats to lessen number of epochs, given <2000 images
         network_config[DATASET_REPEAT_KEY] = 30
         self.general_configs["train_shadow_matte"]["min_epochs"] = 20
-        self.general_configs["train_shadow_matte"]["max_epochs"] = 30
+        self.general_configs["train_shadow_matte"]["max_epochs"] = 25
 
         if (constants.shadow_matte_network_version == "v60.01"):
             network_config[SYNTH_DATASET_VERSION] = "v32_istd_styled_1"
