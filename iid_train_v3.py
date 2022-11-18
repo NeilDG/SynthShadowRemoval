@@ -104,7 +104,7 @@ def train_shadow(tf, device, opts):
     print("Network config: ", network_config)
 
     mode = "train_shadow"
-    patch_size = general_config[mode]["patch_size"]
+    patch_size = network_config["patch_size"]
     dataset_version = network_config["dataset_version"]
 
     # assert dataset_version == "v17", "Cannot identify dataset version."
@@ -160,14 +160,13 @@ def train_shadow(tf, device, opts):
                     tf.visdom_plot(mode, iteration)
                     tf.visdom_visualize(mode, input_map, "Train")
 
-                    _, rgb_ws, rgb_ns, rgb_ws_gray, shadow_map, shadow_matte = next(itertools.cycle(test_loader_train))
+                    _, rgb_ws, rgb_ns, shadow_map, shadow_matte = next(itertools.cycle(test_loader_train))
                     rgb_ws = rgb_ws.to(device)
                     rgb_ns = rgb_ns.to(device)
-                    rgb_ws_gray = rgb_ws_gray.to(device)
                     shadow_map = shadow_map.to(device)
                     shadow_matte = shadow_matte.to(device)
 
-                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "rgb_ws_gray" : rgb_ws_gray, "shadow_map": shadow_map, "shadow_matte": shadow_matte}
+                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns , "shadow_map": shadow_map, "shadow_matte": shadow_matte}
                     tf.visdom_visualize(mode, input_map, "Test Synthetic")
 
                     input_map = {"rgb": rgb_ws_istd, "rgb_ns": rgb_ns_istd, "shadow_matte" : matte_istd}
