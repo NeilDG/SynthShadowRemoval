@@ -191,6 +191,7 @@ class IIDServerConfig():
         network_config = {}
         NETWORK_CONFIG_NUM = "net_config"
         NC_KEY = "nc"
+        PATCH_SIZE_KEY = "patch_size"
         NUM_BLOCKS_KEY = "num_blocks"
         LOAD_SIZE_KEY_Z = "load_size_z"
         BATCH_SIZE_KEY_Z = "batch_size_z"
@@ -202,10 +203,11 @@ class IIDServerConfig():
         MIX_ISTD_KEY = "mix_istd"
 
         #set defaults
-        network_config[NETWORK_CONFIG_NUM] = 5
+        network_config[PATCH_SIZE_KEY] = 64
+        network_config[NETWORK_CONFIG_NUM] = 6
         network_config[NC_KEY] = 3
         network_config[NUM_BLOCKS_KEY] = 3
-        network_config[SYNTH_DATASET_VERSION] = "v17"
+        network_config[SYNTH_DATASET_VERSION] = "v34_places"
         network_config[WEIGHT_DECAY_KEY] = 0.0
         network_config[DROPOUT_RATE_KEY] = 0.0
         network_config[AUGMENT_KEY] = "none"
@@ -227,55 +229,22 @@ class IIDServerConfig():
         #configure batch size. NOTE: Batch size must be equal or larger than load size
         network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
 
-        assert "v58" in constants.shadow_removal_version, "Shadow network version not recognized: " + constants.shadow_removal_version
+        assert "v60" in constants.shadow_removal_version, "Shadow network version not recognized: " + constants.shadow_removal_version
 
-        if (constants.shadow_removal_version == "v58.01"):
-            network_config[SYNTH_DATASET_VERSION] = "v20_refined"
-            network_config[NETWORK_CONFIG_NUM] = 6
-            network_config[NUM_BLOCKS_KEY] = 3
+        # TODO: Temporary - for quick experiment. K dataset repeats to lessen number of epochs, given <2000 images
+        network_config[DATASET_REPEAT_KEY] = 30
+        self.general_configs["train_shadow"]["min_epochs"] = 5
+        self.general_configs["train_shadow"]["max_epochs"] = 10
 
-        elif (constants.shadow_removal_version == "v58.02"):
-            network_config[SYNTH_DATASET_VERSION] = "v20_refined"
-            network_config[NETWORK_CONFIG_NUM] = 7
-            network_config[NUM_BLOCKS_KEY] = 3
-
-        elif (constants.shadow_removal_version == "v58.05"):
-            network_config[SYNTH_DATASET_VERSION] = "v8"
-            network_config[NUM_BLOCKS_KEY] = 3
-            network_config[NETWORK_CONFIG_NUM] = 6
-            self.general_configs["train_shadow"]["min_epochs"] = 20
-            self.general_configs["train_shadow"]["max_epochs"] = 25
-
-        elif (constants.shadow_removal_version == "v58.06"):
-            network_config[SYNTH_DATASET_VERSION] = "v8"
-            network_config[NUM_BLOCKS_KEY] = 3
-            network_config[NETWORK_CONFIG_NUM] = 6
-
-        elif (constants.shadow_removal_version == "v58.28"):
-            network_config[SYNTH_DATASET_VERSION] = "v26"
-            network_config[NETWORK_CONFIG_NUM] = 6
-            network_config[NUM_BLOCKS_KEY] = 3
-
-            self.general_configs["train_shadow"]["min_epochs"] = 5
-            self.general_configs["train_shadow"]["max_epochs"] = 20
-
-        elif (constants.shadow_removal_version == "v58.28_istdtuned"):
-            network_config[SYNTH_DATASET_VERSION] = "v_istd"
-            network_config[NETWORK_CONFIG_NUM] = 6
-            network_config[NUM_BLOCKS_KEY] = 3
-            network_config[DATASET_REPEAT_KEY] = 35
-
-            self.general_configs["train_shadow"]["min_epochs"] = 5
-            self.general_configs["train_shadow"]["max_epochs"] = 20
-
-        elif (constants.shadow_removal_version == "v58.29"):
+        if (constants.shadow_removal_version == "v60.01_places"):
             network_config[SYNTH_DATASET_VERSION] = "v34_places"
-            network_config[NETWORK_CONFIG_NUM] = 6
-            network_config[NUM_BLOCKS_KEY] = 3
 
-            network_config[DATASET_REPEAT_KEY] = 20
-            self.general_configs["train_shadow"]["min_epochs"] = 5
-            self.general_configs["train_shadow"]["max_epochs"] = 20
+        elif (constants.shadow_removal_version == "v60.01_istd"):
+            network_config[SYNTH_DATASET_VERSION] = "v34_istd"
+
+        elif (constants.shadow_removal_version == "v60.01_srd"):
+            network_config[SYNTH_DATASET_VERSION] = "v34_srd"
+
 
         return network_config
 
