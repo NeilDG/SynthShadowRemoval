@@ -49,9 +49,6 @@ class ShadowTrainDataset(data.Dataset):
                 transforms.Resize(constants.TEST_IMAGE_SIZE),
                 transforms.ToTensor()])
 
-
-        self.noise_op = K.RandomGaussianNoise(p=1.0, mean=0.0, std=0.02)
-
     def __getitem__(self, idx):
         file_name = self.img_list_a[idx].split("/")[-1].split(".png")[0]
         try:
@@ -62,10 +59,11 @@ class ShadowTrainDataset(data.Dataset):
 
             #add gaussian noise to WS
             if("random_exposure" in self.network_config["augment_mode"]):
-                rgb_ws = rgb_ws * np.random.uniform(1.001, 1.1)
+                rgb_ws = rgb_ws * np.random.uniform(1.001, 1.25)
 
             if ("random_noise" in self.network_config["augment_mode"]):
-                rgb_ws = torch.squeeze(self.noise_op(rgb_ws))
+                noise_op = K.RandomGaussianNoise(p=1.0, mean=0.0, std=np.random.uniform(0.0, 0.15))
+                rgb_ws = torch.squeeze(noise_op(rgb_ws))
 
             torch.set_rng_state(state)
             rgb_ns = cv2.imread(self.img_list_b[idx])
@@ -80,7 +78,8 @@ class ShadowTrainDataset(data.Dataset):
                 rgb_ns = transforms.functional.crop(rgb_ns, i, j, h, w)
 
             rgb_ws, rgb_ns, shadow_map, shadow_matte = self.shadow_op.generate_shadow_map(rgb_ws, rgb_ns, False)
-            shadow_matte = 1.0 - shadow_matte
+            if(self.network_config["invert_sm"] == True):
+                shadow_matte = 1.0 - shadow_matte
 
             rgb_ws_gray = kornia.color.rgb_to_grayscale(rgb_ws)
             rgb_ws = self.norm_op(rgb_ws)
@@ -98,7 +97,7 @@ class ShadowTrainDataset(data.Dataset):
             shadow_map = None
             shadow_matte = None
 
-        return file_name, rgb_ws, rgb_ns, rgb_ws_gray, shadow_map, shadow_matte
+        return file_name, rgb_ws, rgb_ns, shadow_map, shadow_matte
 
     def __len__(self):
         return self.img_length
@@ -120,6 +119,9 @@ class ShadowISTDDataset(data.Dataset):
             transforms.Resize((240, 320)),
             transforms.ToTensor()])
 
+        sc_instance = iid_server_config.IIDServerConfig.getInstance()
+        self.network_config = sc_instance.interpret_shadow_matte_params_from_version()
+
     def __getitem__(self, idx):
         file_name = self.img_list_a[idx].split("/")[-1].split(".png")[0]
 
@@ -136,7 +138,8 @@ class ShadowISTDDataset(data.Dataset):
 
             shadow_map = rgb_ns - rgb_ws
             shadow_matte = kornia.color.rgb_to_grayscale(shadow_map)
-            shadow_matte = 1.0 - shadow_matte
+            if (self.network_config["invert_sm"] == True):
+                shadow_matte = 1.0 - shadow_matte
 
             rgb_ws_gray = kornia.color.rgb_to_grayscale(rgb_ws)
             rgb_ws = self.norm_op(rgb_ws)
@@ -153,7 +156,7 @@ class ShadowISTDDataset(data.Dataset):
             shadow_mask = None
             shadow_matte = None
 
-        return file_name, rgb_ws, rgb_ns, rgb_ws_gray, shadow_matte
+        return file_name, rgb_ws, rgb_ns, shadow_matte
 
     def __len__(self):
         return self.img_length
@@ -173,6 +176,9 @@ class ShadowSRDDataset(data.Dataset):
             transforms.Resize((160, 210)),
             transforms.ToTensor()])
 
+        sc_instance = iid_server_config.IIDServerConfig.getInstance()
+        self.network_config = sc_instance.interpret_shadow_matte_params_from_version()
+
     def __getitem__(self, idx):
         file_name = self.img_list_a[idx].split("/")[-1].split(".")[0]
 
@@ -187,6 +193,8 @@ class ShadowSRDDataset(data.Dataset):
 
             shadow_map = rgb_ns - rgb_ws
             shadow_matte = kornia.color.rgb_to_grayscale(shadow_map)
+            if (self.network_config["invert_sm"] == True):
+                shadow_matte = 1.0 - shadow_matte
 
             rgb_ws_gray = kornia.color.rgb_to_grayscale(rgb_ws)
             rgb_ws = self.norm_op(rgb_ws)
@@ -202,7 +210,7 @@ class ShadowSRDDataset(data.Dataset):
             rgb_ws_gray = None
             shadow_matte = None
 
-        return file_name, rgb_ws, rgb_ns, rgb_ws_gray, shadow_matte
+        return file_name, rgb_ws, rgb_ns, shadow_matte
 
     def __len__(self):
         return self.img_length

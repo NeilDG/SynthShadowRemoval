@@ -320,8 +320,8 @@ class TesterClass():
 
         return rgb2ns, rgb2sm
 
-    def test_shadow_matte(self, rgb_ws, rgb_ws_gray, shadow_matte, prefix, show_images, opts):
-        rgb2sm = self.shadow_m.test({"rgb": rgb_ws, "rgb_ws_gray": rgb_ws_gray})
+    def test_shadow_matte(self, rgb_ws, shadow_matte, prefix, show_images, opts):
+        rgb2sm = self.shadow_m.test({"rgb": rgb_ws})
 
         # normalize everything
         rgb_ws = tensor_utils.normalize_to_01(rgb_ws)

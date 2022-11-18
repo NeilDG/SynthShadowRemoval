@@ -48,8 +48,7 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         self.load_size = network_config["load_size_m"]
         self.batch_size = network_config["batch_size_m"]
-        self.patch_size = general_config["train_shadow_matte"]["patch_size"]
-        self.use_grayscale = network_config["use_grayscale"]
+        self.patch_size = network_config["patch_size"]
         self.use_istd_pool = network_config["use_istd_pool"]
 
         if(self.use_istd_pool):
@@ -149,10 +148,7 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.caption_dict_t[self.TEST_LOSS_KEY] = "Test L1 loss per iteration"
 
     def train(self, epoch, iteration, input_map, target_map):
-        if(self.use_grayscale):
-            input_ws = input_map["rgb_ws_gray"]
-        else:
-            input_ws = input_map["rgb"]
+        input_ws = input_map["rgb"]
         target_tensor = target_map["shadow_matte"]
         accum_batch_size = self.load_size * iteration
 
@@ -198,15 +194,17 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 self.fp16_scaler.update()
 
                 # what to put to losses dict for visdom reporting?
-                self.losses_dict_s[constants.G_LOSS_KEY].append(errG.item())
-                self.losses_dict_s[constants.D_OVERALL_LOSS_KEY].append(errD.item())
-                self.losses_dict_s[constants.LIKENESS_LOSS_KEY].append(SM_likeness_loss.item())
-                self.losses_dict_s[constants.LPIP_LOSS_KEY].append(SM_lpip_loss.item())
-                self.losses_dict_s[constants.G_ADV_LOSS_KEY].append(SM_adv_loss.item())
-                self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY].append(D_SM_fake_loss.item())
-                self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_SM_real_loss.item())
-                self.losses_dict_s[self.MASK_LOSS_KEY].append(SM_masking_loss.item())
-                self.losses_dict_s[self.ISTD_SM_LOSS_KEY].append(SM_istd_loss.item())
+                if (iteration > 50):
+                    # what to put to losses dict for visdom reporting?
+                    self.losses_dict_s[constants.G_LOSS_KEY].append(errG.item())
+                    self.losses_dict_s[constants.D_OVERALL_LOSS_KEY].append(errD.item())
+                    self.losses_dict_s[constants.LIKENESS_LOSS_KEY].append(SM_likeness_loss.item())
+                    self.losses_dict_s[constants.LPIP_LOSS_KEY].append(SM_lpip_loss.item())
+                    self.losses_dict_s[constants.G_ADV_LOSS_KEY].append(SM_adv_loss.item())
+                    self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY].append(D_SM_fake_loss.item())
+                    self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_SM_real_loss.item())
+                    self.losses_dict_s[self.MASK_LOSS_KEY].append(SM_masking_loss.item())
+                    self.losses_dict_s[self.ISTD_SM_LOSS_KEY].append(SM_istd_loss.item())
 
                 #perform validation test and early stopping
                 rgb2sm_istd = self.test_istd(input_map)
@@ -233,7 +231,6 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         # print("Testing on ISTD dataset.")
 
         input_map_new = {"rgb": input_map["rgb_ws_istd"],
-                         "rgb_ws_gray" : input_map["gray_istd"],
                          "shadow_matte": input_map["matte_istd"]}
 
         return self.test(input_map_new)
@@ -241,10 +238,7 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def test(self, input_map):
         with torch.no_grad():
             self.G_SM_predictor.eval()
-            if (self.use_grayscale):
-                input_ws = input_map["rgb_ws_gray"]
-            else:
-                input_ws = input_map["rgb"]
+            input_ws = input_map["rgb"]
 
             rgb2sm = self.G_SM_predictor(input_ws)
             # rgb2sm = 1.0 - rgb2sm
@@ -256,10 +250,7 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.visdom_reporter.plot_train_test_loss("train_test_loss", iteration, self.losses_dict_t, self.caption_dict_t, self.NETWORK_CHECKPATH)
 
     def visdom_visualize(self, input_map, label="Train"):
-        if (self.use_grayscale):
-            input_ws = input_map["rgb_ws_gray"]
-        else:
-            input_ws = input_map["rgb"]
+        input_ws = input_map["rgb"]
 
         matte_tensor = input_map["shadow_matte"]
         rgb_ns = input_map["rgb_ns"]
