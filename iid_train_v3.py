@@ -44,7 +44,7 @@ def update_config(opts):
 
     ## COARE
     if (constants.server_config == 1):
-        opts.num_workers = 6
+        opts.num_workers = 2
         print("Using COARE configuration. Workers: ", opts.num_workers)
         constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
         constants.rgb_dir_ws = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"

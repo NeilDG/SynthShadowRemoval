@@ -30,7 +30,7 @@ sbatch visdom_run.slurm
 sbatch -w saliksik-cpu-23 visdom_run.slurm
 sbatch -w saliksik-cpu-23 --dependency=afterany:335892 visdom_run.slurm
 
-sbatch --dependency=afterany:338810 script_1.slurm
+sbatch --dependency=afterany:342880 script_1.slurm
 sbatch --dependency=afterany:336942 script_2.slurm
 sbatch --dependency=afterany:338540 script_2.slurm
 
@@ -61,7 +61,7 @@ sbatch script_20.slurm
 sbatch --dependency=afterany:342338 script_debug.slurm
 sbatch --dependency=afterany:342351 script_1.slurm
 sbatch -w saliksik-gpu-06 slurm_install_gpu.slurm
-sbatch -w saliksik-gpu-03 script_1.slurm
+sbatch -w saliksik-gpu-01 script_1.slurm
 sbatch -w saliksik-gpu-04 script_2.slurm
 sbatch -w saliksik-gpu-05 script_3.slurm
 sbatch -w saliksik-gpu-04 script_4.slurm
@@ -76,7 +76,7 @@ clear
 //Check all
 squeue -a
 squeue -u neil.delgallego
-
+squeue -w "saliksik-gpu-01, saliksik-gpu-02, saliksik-gpu-03, saliksik-gpu-04, saliksik-gpu-05, saliksik-gpu-06"
 //For cancelling job
 scancel <jobid>
 

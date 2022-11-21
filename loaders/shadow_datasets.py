@@ -14,7 +14,7 @@ from config import iid_server_config
 from transforms import shadow_map_transforms
 
 class ShadowTrainDataset(data.Dataset):
-    def __init__(self, img_length, img_list_a, img_list_b, transform_config, patch_size = 0):
+    def __init__(self, img_length, img_list_a, img_list_b, transform_config, train_mode, patch_size = 0):
         self.img_length = img_length
         self.img_list_a = img_list_a
         self.img_list_b = img_list_b
@@ -25,7 +25,10 @@ class ShadowTrainDataset(data.Dataset):
         self.norm_op = transforms.Normalize((0.5, ), (0.5, ))
 
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
-        self.network_config = sc_instance.interpret_shadow_matte_params_from_version()
+        if(train_mode == "train_shadow_matte"):
+            self.network_config = sc_instance.interpret_shadow_matte_params_from_version()
+        else:
+            self.network_config = sc_instance.interpret_shadow_network_params_from_version()
 
         if (self.network_config["augment_mode"] == "augmix" and self.transform_config == 1):
             self.initial_op = transforms.Compose([
@@ -103,7 +106,7 @@ class ShadowTrainDataset(data.Dataset):
         return self.img_length
 
 class ShadowISTDDataset(data.Dataset):
-    def __init__(self, img_length, img_list_a, img_list_b, img_list_c, transform_config):
+    def __init__(self, img_length, img_list_a, img_list_b, img_list_c, transform_config, train_mode):
         self.img_length = img_length
         self.img_list_a = img_list_a
         self.img_list_b = img_list_b
@@ -120,7 +123,10 @@ class ShadowISTDDataset(data.Dataset):
             transforms.ToTensor()])
 
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
-        self.network_config = sc_instance.interpret_shadow_matte_params_from_version()
+        if (train_mode == "train_shadow_matte"):
+            self.network_config = sc_instance.interpret_shadow_matte_params_from_version()
+        else:
+            self.network_config = sc_instance.interpret_shadow_network_params_from_version()
 
     def __getitem__(self, idx):
         file_name = self.img_list_a[idx].split("/")[-1].split(".png")[0]
@@ -162,7 +168,7 @@ class ShadowISTDDataset(data.Dataset):
         return self.img_length
 
 class ShadowSRDDataset(data.Dataset):
-    def __init__(self, img_length, img_list_a, img_list_b, transform_config):
+    def __init__(self, img_length, img_list_a, img_list_b, transform_config, train_mode):
         self.img_length = img_length
         self.img_list_a = img_list_a
         self.img_list_b = img_list_b
@@ -177,7 +183,10 @@ class ShadowSRDDataset(data.Dataset):
             transforms.ToTensor()])
 
         sc_instance = iid_server_config.IIDServerConfig.getInstance()
-        self.network_config = sc_instance.interpret_shadow_matte_params_from_version()
+        if (train_mode == "train_shadow_matte"):
+            self.network_config = sc_instance.interpret_shadow_matte_params_from_version()
+        else:
+            self.network_config = sc_instance.interpret_shadow_network_params_from_version()
 
     def __getitem__(self, idx):
         file_name = self.img_list_a[idx].split("/")[-1].split(".")[0]
