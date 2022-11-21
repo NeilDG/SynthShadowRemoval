@@ -2,7 +2,7 @@
 #SBATCH -J Z1
 #SBATCH --partition=gpu
 #SBATCH --qos=12c-1h_2gpu
-#SBATCH --cpus-per-task=6
+#SBATCH --cpus-per-task=2
 #SBATCH -G 1
 #SBATCH --ntasks=1
 #SBATCH --output=script_1.out

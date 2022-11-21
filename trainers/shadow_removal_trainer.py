@@ -216,6 +216,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def test(self, input_map):
         with torch.no_grad():
+            self.G_SM_predictor.eval()
+
             input_ws = input_map["rgb"]
             matte_tensor = input_map["shadow_matte"]
             input_ws = torch.cat([input_ws, matte_tensor], 1)
