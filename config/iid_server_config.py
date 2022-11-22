@@ -150,6 +150,14 @@ class IIDServerConfig():
             else:  # RTX 3090
                 network_config[LOAD_SIZE_KEY_M] = 16
 
+        elif (constants.shadow_matte_network_version == "v60.09"):
+            network_config[SYNTH_DATASET_VERSION] = "v34_places"
+            network_config[PATCH_SIZE_KEY] = 64
+
+        elif (constants.shadow_matte_network_version == "v60.10"):
+            network_config[SYNTH_DATASET_VERSION] = "v35_places"
+            network_config[PATCH_SIZE_KEY] = 64
+
 
         return network_config
 
