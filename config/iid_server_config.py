@@ -65,7 +65,6 @@ class IIDServerConfig():
         DATASET_REPEAT_KEY = "dataset_repeats"
         MIX_ISTD_KEY = "mix_istd"
         USE_ISTD_POOL_KEY = "use_istd_pool"
-        INVERT_SM_KEY = "invert_sm"
         PATCH_SIZE_KEY = "patch_size"
 
         # set defaults
@@ -80,7 +79,6 @@ class IIDServerConfig():
         network_config[DATASET_REPEAT_KEY] = 1
         network_config[MIX_ISTD_KEY] = 0.0 # percent to use ISTD
         network_config[USE_ISTD_POOL_KEY] = False
-        network_config[INVERT_SM_KEY] = False
 
         # configure load sizes (GPU memory allocation of data) #for 128
         if (constants.server_config == 1):  # COARE
@@ -95,71 +93,36 @@ class IIDServerConfig():
         # configure batch size. NOTE: Batch size must be equal or larger than load size
         network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
 
-        assert "v58.28" in constants.shadow_matte_network_version or "v60" in constants.shadow_matte_network_version, "Shadow matte network version not recognized: " + constants.shadow_matte_network_version
+        assert "v58.28" in constants.shadow_matte_network_version or "v58.65" in constants.shadow_matte_network_version or "v60" in constants.shadow_matte_network_version, "Shadow matte network version not recognized: " + constants.shadow_matte_network_version
 
         #TODO: Temporary - for quick experiment. K dataset repeats to lessen number of epochs, given <2000 images
         network_config[DATASET_REPEAT_KEY] = 30
-        self.general_configs["train_shadow_matte"]["min_epochs"] = 20
-        self.general_configs["train_shadow_matte"]["max_epochs"] = 25
+        self.general_configs["train_shadow_matte"]["min_epochs"] = 10
+        self.general_configs["train_shadow_matte"]["max_epochs"] = 15
 
         if (constants.shadow_matte_network_version == "v58.28"):
             network_config[SYNTH_DATASET_VERSION] = "v_istd"
             network_config[NUM_BLOCKS_KEY] = 15
 
-        if (constants.shadow_matte_network_version == "v60.01"):
-            network_config[SYNTH_DATASET_VERSION] = "v32_istd_styled_1"
-            network_config[PATCH_SIZE_KEY] = 64
-            network_config[INVERT_SM_KEY] = True
-        elif (constants.shadow_matte_network_version == "v60.02"):
-            network_config[SYNTH_DATASET_VERSION] = "v32_istd_styled_2"
-            network_config[PATCH_SIZE_KEY] = 64
-            network_config[INVERT_SM_KEY] = True
+        elif (constants.shadow_matte_network_version == "v58.65"):
+            network_config[SYNTH_DATASET_VERSION] = "v32_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 256
+            network_config[AUGMENT_KEY] = ["random_noise", "random_exposure"]
 
-        elif (constants.shadow_matte_network_version == "v60.03"):
-            network_config[SYNTH_DATASET_VERSION] = "v32_istd_styled_1"
-            network_config[PATCH_SIZE_KEY] = 64
-            network_config[INVERT_SM_KEY] = True
-            network_config[PATCH_SIZE_KEY] = 256
-            # configure load sizes (GPU memory allocation of data) #for 128
-            if (constants.server_config == 1):  # COARE
-                network_config[LOAD_SIZE_KEY_M] = 16
-            elif (constants.server_config == 2):  # CCS JUPYTER
-                network_config[LOAD_SIZE_KEY_M] = 16
-            elif (constants.server_config == 4):  # RTX 2080Ti
-                network_config[LOAD_SIZE_KEY_M] = 8
-            else:  # RTX 3090
-                network_config[LOAD_SIZE_KEY_M] = 16
-
-            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[NUM_BLOCKS_KEY] = 3
+            network_config[LOAD_SIZE_KEY_M] = 16
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
-        elif (constants.shadow_matte_network_version == "v60.04"):
-            network_config[SYNTH_DATASET_VERSION] = "v32_istd_styled_2"
-            network_config[PATCH_SIZE_KEY] = 64
-            network_config[INVERT_SM_KEY] = True
-            network_config[PATCH_SIZE_KEY] = 256
-            # configure load sizes (GPU memory allocation of data) #for 128
-            if (constants.server_config == 1):  # COARE
-                network_config[LOAD_SIZE_KEY_M] = 16
-            elif (constants.server_config == 2):  # CCS JUPYTER
-                network_config[LOAD_SIZE_KEY_M] = 16
-            elif (constants.server_config == 4):  # RTX 2080Ti
-                network_config[LOAD_SIZE_KEY_M] = 8
-            else:  # RTX 3090
-                network_config[LOAD_SIZE_KEY_M] = 16
 
-        if (constants.shadow_matte_network_version == "v60.05"):
+        elif (constants.shadow_matte_network_version == "v60.05"):
             network_config[SYNTH_DATASET_VERSION] = "v32_istd_styled_1"
             network_config[PATCH_SIZE_KEY] = 64
-            network_config[INVERT_SM_KEY] = False
         elif (constants.shadow_matte_network_version == "v60.06"):
             network_config[SYNTH_DATASET_VERSION] = "v32_istd_styled_2"
             network_config[PATCH_SIZE_KEY] = 64
-            network_config[INVERT_SM_KEY] = False
 
         elif (constants.shadow_matte_network_version == "v60.07"):
             network_config[SYNTH_DATASET_VERSION] = "v32_istd_styled_1"
             network_config[PATCH_SIZE_KEY] = 64
-            network_config[INVERT_SM_KEY] = False
             network_config[PATCH_SIZE_KEY] = 256
             # configure load sizes (GPU memory allocation of data) #for 128
             if (constants.server_config == 1):  # COARE
@@ -176,7 +139,6 @@ class IIDServerConfig():
         elif (constants.shadow_matte_network_version == "v60.08"):
             network_config[SYNTH_DATASET_VERSION] = "v32_istd_styled_2"
             network_config[PATCH_SIZE_KEY] = 64
-            network_config[INVERT_SM_KEY] = False
             network_config[PATCH_SIZE_KEY] = 256
             # configure load sizes (GPU memory allocation of data) #for 128
             if (constants.server_config == 1):  # COARE
@@ -205,7 +167,6 @@ class IIDServerConfig():
         AUGMENT_KEY = "augment_mode"
         DATASET_REPEAT_KEY = "dataset_repeats"
         MIX_ISTD_KEY = "mix_istd"
-        INVERT_SM_KEY = "invert_sm"
 
         #set defaults
         network_config[PATCH_SIZE_KEY] = 64
@@ -213,7 +174,6 @@ class IIDServerConfig():
         network_config[NC_KEY] = 3
         network_config[NUM_BLOCKS_KEY] = 3
         network_config[SYNTH_DATASET_VERSION] = "v34_places"
-        network_config[INVERT_SM_KEY] = False
         network_config[WEIGHT_DECAY_KEY] = 0.0
         network_config[DROPOUT_RATE_KEY] = 0.0
         network_config[AUGMENT_KEY] = "none"
