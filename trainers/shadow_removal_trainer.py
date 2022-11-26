@@ -249,13 +249,11 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def load_saved_state(self):
         try:
             checkpoint = torch.load(self.NETWORK_CHECKPATH, map_location=self.gpu_device)
-            print("Loaded shadow network: ", self.NETWORK_CHECKPATH)
         except:
             # check if a .checkpt is available, load it
             try:
                 checkpt_name = 'checkpoint/' + self.NETWORK_VERSION + ".pt.checkpt"
                 checkpoint = torch.load(checkpt_name, map_location=self.gpu_device)
-                print("Loaded shadow network: ", checkpt_name)
             except:
                 checkpoint = None
                 print("No existing checkpoint file found. Creating new shadow network: ", self.NETWORK_CHECKPATH)
@@ -265,6 +263,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             self.stopper_method.update_last_metric(checkpoint[constants.LAST_METRIC_KEY])
             self.G_SM_predictor.load_state_dict(checkpoint[constants.GENERATOR_KEY + "Z"])
             self.D_SM_discriminator.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "Z"])
+
+            print("Loaded shadow removal network: ", self.NETWORK_CHECKPATH, "Epoch: ", checkpoint["epoch"])
 
     def save_states(self, epoch, iteration, is_temp:bool):
         save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
