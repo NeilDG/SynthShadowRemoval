@@ -84,6 +84,8 @@ def update_config(opts):
         constants.ws_istd ="C:/Datasets/ISTD_Dataset/test/test_A/*.png"
         constants.ns_istd = "C:/Datasets/ISTD_Dataset/test/test_C/*.png"
         constants.mask_istd = "C:/Datasets/ISTD_Dataset/test/test_B/*.png"
+        constants.ws_srd = "C:/Datasets/SRD_Test/srd/shadow/*.jpg"
+        constants.ns_srd = "C:/Datasets/SRD_Test/srd/shadow_free/*.jpg"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers)
     else:
@@ -94,6 +96,8 @@ def update_config(opts):
         constants.ws_istd = "E:/ISTD_Dataset/test/test_A/*.png"
         constants.ns_istd = "E:/ISTD_Dataset/test/test_C/*.png"
         constants.mask_istd = "E:/ISTD_Dataset/test/test_B/*.png"
+        constants.ws_srd = "E:/SRD_Test/srd/shadow/*.jpg"
+        constants.ns_srd = "E:/SRD_Test/srd/shadow_free/*.jpg"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)
 
 def train_shadow(tf, device, opts):
