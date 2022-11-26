@@ -57,9 +57,9 @@ class NetworkCreator():
                       'pad_type': 'reflect'}
             G_A = usi3d_gan.AdaINGen(input_dim=input_nc, output_dim=3, params=params, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
         elif(net_config == 5):
-            G_A = ffa_gan.FFA(input_nc, num_blocks, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
+            G_A = ffa_gan.FFA(input_nc, num_blocks, dropout_rate=network_config["dropout_rate"]).to(self.gpu_device)
         elif(net_config == 6):
-            G_A = ffa_gan.FFABase(num_blocks, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
+            G_A = ffa_gan.FFABase(num_blocks, dropout_rate=network_config["dropout_rate"]).to(self.gpu_device)
         elif (net_config == 7):
             params = {'dim': 64,  # number of filters in the bottommost layer
                       'mlp_dim': 256,  # number of filters in MLP
@@ -97,10 +97,8 @@ class NetworkCreator():
                       'n_res': num_blocks,  # number of residual blocks in content encoder/decoder
                       'pad_type': 'reflect'}
             G_Z = usi3d_gan.AdaINGen(input_dim=input_nc, output_dim=1, params=params).to(self.gpu_device)
-        elif (net_config == 5):
-            G_Z = ffa_gan.FFAGrey(num_blocks, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
         else:
-            G_Z = ffa_gan.FFAInputGrey(num_blocks, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
+            G_Z = ffa_gan.FFAGrey(num_blocks, dropout_rate=network_config["dropout_rate"]).to(self.gpu_device)
 
         D_Z = cycle_gan.Discriminator(input_nc=1).to(self.gpu_device)  # use CycleGAN's discriminator
 

@@ -48,9 +48,9 @@ class Block(nn.Module):
         self.calayer = CALayer(dim)
         self.palayer = PALayer(dim)
 
-        if (FFAGlobalConfig.getInstance().GLOBAL_USE_DROPOUT == True):
-            self.dropout = nn.Dropout2d(p=0.4)
-            print("FFA Net using Dropout")
+        self.dropout_rate = FFAGlobalConfig.getInstance().DROPOUT_RATE
+        self.dropout = nn.Dropout2d(p=self.dropout_rate)
+        print("FFA Net using Dropout. Rate: " ,self.dropout_rate)
 
     def forward(self, x):
         res = self.act1(self.conv1(x))
@@ -58,8 +58,7 @@ class Block(nn.Module):
         res = self.conv2(res)
         res = self.calayer(res)
         res = self.palayer(res)
-        if(FFAGlobalConfig.getInstance().GLOBAL_USE_DROPOUT == True):
-            res = self.dropout(res)
+        res = self.dropout(res)
         res += x
         return res
 
@@ -89,7 +88,7 @@ class FFAWithBackbone(nn.Module):
 
 class FFAGlobalConfig:
     _sharedInstance = None
-    GLOBAL_USE_DROPOUT = False
+    DROPOUT_RATE = 0.0
 
     @staticmethod
     def initialize():
@@ -101,11 +100,11 @@ class FFAGlobalConfig:
         return FFAGlobalConfig._sharedInstance
 
 class FFA(nn.Module):
-    def __init__(self, gps, blocks, use_dropout=False, conv=default_conv):
+    def __init__(self, gps, blocks, dropout_rate=0.0, conv=default_conv):
         super(FFA, self).__init__()
         FFAGlobalConfig.initialize()
-        FFAGlobalConfig.getInstance().GLOBAL_USE_DROPOUT = use_dropout
-        print("USE DROPOUT? ", FFAGlobalConfig.getInstance().GLOBAL_USE_DROPOUT)
+        FFAGlobalConfig.getInstance().DROPOUT_RATE = dropout_rate
+        print("DROPOUT RATE? ", FFAGlobalConfig.getInstance().DROPOUT_RATE)
 
         self.gps = gps
         self.dim = 64
@@ -146,11 +145,11 @@ class FFA(nn.Module):
         return x + input
 
 class FFABase(nn.Module):
-    def __init__(self, blocks, use_dropout=False, conv=default_conv):
+    def __init__(self, blocks, dropout_rate=0.0, conv=default_conv):
         super(FFABase, self).__init__()
         FFAGlobalConfig.initialize()
-        FFAGlobalConfig.getInstance().GLOBAL_USE_DROPOUT = use_dropout
-        print("USE DROPOUT? ", FFAGlobalConfig.getInstance().GLOBAL_USE_DROPOUT)
+        FFAGlobalConfig.getInstance().DROPOUT_RATE = dropout_rate
+        print("DROPOUT RATE? ", FFAGlobalConfig.getInstance().DROPOUT_RATE)
 
         self.gps = 4
         self.dim = 64
@@ -189,11 +188,11 @@ class FFABase(nn.Module):
         return x
 
 class FFAConcat(nn.Module):
-    def __init__(self, blocks, use_dropout=False, conv=default_conv):
+    def __init__(self, blocks, dropout_rate=0.0, conv=default_conv):
         super(FFAConcat, self).__init__()
         FFAGlobalConfig.initialize()
-        FFAGlobalConfig.getInstance().GLOBAL_USE_DROPOUT = use_dropout
-        print("USE DROPOUT? ", FFAGlobalConfig.getInstance().GLOBAL_USE_DROPOUT)
+        FFAGlobalConfig.getInstance().DROPOUT_RATE = dropout_rate
+        print("DROPOUT RATE? ", FFAGlobalConfig.getInstance().DROPOUT_RATE)
 
         self.gps = 4
         self.dim = 64
@@ -231,53 +230,12 @@ class FFAConcat(nn.Module):
         x = self.post(out)
         return x + input
 
-class FFAInputGrey(nn.Module):
-    def __init__(self, blocks, use_dropout=False, conv=default_conv):
-        super(FFAInputGrey, self).__init__()
-        FFAGlobalConfig.initialize()
-        FFAGlobalConfig.getInstance().GLOBAL_USE_DROPOUT = use_dropout
-        print("USE DROPOUT? ", FFAGlobalConfig.getInstance().GLOBAL_USE_DROPOUT)
-
-        self.gps = 1
-        self.dim = 64
-        kernel_size = 3
-        pre_process = [conv(self.gps, self.dim, kernel_size)]
-        self.g1 = Group(conv, self.dim, kernel_size, blocks=blocks)
-        # self.g2 = Group(conv, self.dim, kernel_size, blocks=blocks)
-        # self.g3 = Group(conv, self.dim, kernel_size, blocks=blocks)
-        self.ca = nn.Sequential(*[
-            nn.AdaptiveAvgPool2d(1),
-            nn.Conv2d(self.dim * self.gps, self.dim // 16, 1, padding=0),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(self.dim // 16, self.dim * self.gps, 1, padding=0, bias=True),
-            nn.Sigmoid()
-        ])
-        self.palayer = PALayer(self.dim)
-
-        post_precess = [
-            conv(self.dim, self.dim, kernel_size),
-            conv(self.dim, 1, kernel_size)]
-
-        self.pre = nn.Sequential(*pre_process)
-        self.post = nn.Sequential(*post_precess)
-
-    def forward(self, x1):
-        #print("X1 shape: ", np.shape(x1))
-        x = self.pre(x1)
-        res1 = self.g1(x)
-        w = self.ca(torch.cat([res1], dim=1))
-        w = w.view(-1, self.gps, self.dim)[:, :, :, None, None]
-        out = w[:, 0, ::] * res1
-        out = self.palayer(out)
-        x = self.post(out)
-        return x
-
 class FFAGrey(nn.Module):
-    def __init__(self, blocks, use_dropout=False, conv=default_conv):
+    def __init__(self, blocks, dropout_rate=0.0, conv=default_conv):
         super(FFAGrey, self).__init__()
         FFAGlobalConfig.initialize()
-        FFAGlobalConfig.getInstance().GLOBAL_USE_DROPOUT = use_dropout
-        print("USE DROPOUT? ", FFAGlobalConfig.getInstance().GLOBAL_USE_DROPOUT)
+        FFAGlobalConfig.getInstance().DROPOUT_RATE = dropout_rate
+        print("DROPOUT RATE? ", FFAGlobalConfig.getInstance().DROPOUT_RATE)
 
         self.gps = 3
         self.dim = 64

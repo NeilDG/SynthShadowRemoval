@@ -178,14 +178,15 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 self.fp16_scaler.update()
 
                 # what to put to losses dict for visdom reporting?
-                self.losses_dict_s[constants.G_LOSS_KEY].append(errG.item())
-                self.losses_dict_s[constants.D_OVERALL_LOSS_KEY].append(errD.item())
-                self.losses_dict_s[constants.LIKENESS_LOSS_KEY].append(SM_likeness_loss.item())
-                self.losses_dict_s[constants.LPIP_LOSS_KEY].append(SM_lpip_loss.item())
-                self.losses_dict_s[constants.G_ADV_LOSS_KEY].append(SM_adv_loss.item())
-                self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY].append(D_SM_fake_loss.item())
-                self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_SM_real_loss.item())
-                self.losses_dict_s[self.MASK_LOSS_KEY].append(SM_masking_loss.item())
+                if (iteration > 50):
+                    self.losses_dict_s[constants.G_LOSS_KEY].append(errG.item())
+                    self.losses_dict_s[constants.D_OVERALL_LOSS_KEY].append(errD.item())
+                    self.losses_dict_s[constants.LIKENESS_LOSS_KEY].append(SM_likeness_loss.item())
+                    self.losses_dict_s[constants.LPIP_LOSS_KEY].append(SM_lpip_loss.item())
+                    self.losses_dict_s[constants.G_ADV_LOSS_KEY].append(SM_adv_loss.item())
+                    self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY].append(D_SM_fake_loss.item())
+                    self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_SM_real_loss.item())
+                    self.losses_dict_s[self.MASK_LOSS_KEY].append(SM_masking_loss.item())
 
                 #perform validation test and early stopping
                 rgb2ns_istd = self.test_istd(input_map)
