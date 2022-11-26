@@ -119,7 +119,7 @@ class AdaINGen(nn.Module):
         pad_type = params['pad_type']
         mlp_dim = params['mlp_dim']
         AdainGlobalConfig.initialize()
-        AdainGlobalConfig.getInstance().GLOBAL_USE_DROPOUT = use_dropout
+        AdainGlobalConfig.getInstance().DROPOUT_RATE = use_dropout
 
         # style encoder
         self.enc_style = StyleEncoder(4, input_dim, dim, style_dim, norm='none', activ=activ, pad_type=pad_type)
@@ -339,7 +339,7 @@ class ResBlock(nn.Module):
         model += [Conv2dBlock(dim, dim, 3, 1, 1, norm=norm, activation=activation, pad_type=pad_type)]
         model += [Conv2dBlock(dim, dim, 3, 1, 1, norm=norm, activation='none', pad_type=pad_type)]
 
-        if (AdainGlobalConfig.getInstance().GLOBAL_USE_DROPOUT == True):
+        if (AdainGlobalConfig.getInstance().DROPOUT_RATE == True):
             print("Using dropout in ADAINGEN")
             model += [nn.Dropout2d(p=0.4)]
 

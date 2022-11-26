@@ -304,10 +304,9 @@ class TesterClass():
 
         self.visdom_reporter.plot_text(display_text)
 
-    def infer_shadow_results(self, rgb_ws, shadow_matte, debug_policy):
-        if (debug_policy == 1):
+    def infer_shadow_results(self, rgb_ws, shadow_matte, mode):
+        if (mode == "train_shadow"):
             # only test shadow removal
-            # shadow_matte = tensor_utils.normalize_to_01(shadow_matte)
             input_map = {"rgb": rgb_ws, "shadow_matte": shadow_matte}
             rgb2ns = self.shadow_t.test(input_map)
 
@@ -320,8 +319,8 @@ class TesterClass():
 
         return rgb2ns, rgb2sm
 
-    def test_shadow_matte(self, rgb_ws, rgb_ws_gray, shadow_matte, prefix, show_images, opts):
-        rgb2sm = self.shadow_m.test({"rgb": rgb_ws, "rgb_ws_gray": rgb_ws_gray})
+    def test_shadow_matte(self, rgb_ws, shadow_matte, prefix, show_images, opts):
+        rgb2sm = self.shadow_m.test({"rgb": rgb_ws})
 
         # normalize everything
         rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
@@ -351,8 +350,8 @@ class TesterClass():
         self.mae_list_sm.clear()
 
 
-    def test_shadow(self, rgb_ws, rgb_ns, shadow_matte, prefix, show_images, debug_policy, opts):
-        rgb2ns, rgb2sm = self.infer_shadow_results(rgb_ws, shadow_matte, debug_policy)
+    def test_shadow(self, rgb_ws, rgb_ns, shadow_matte, prefix, show_images, mode, opts):
+        rgb2ns, rgb2sm = self.infer_shadow_results(rgb_ws, shadow_matte, mode)
 
         # normalize everything
         rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
@@ -382,10 +381,10 @@ class TesterClass():
 
 
     #for ISTD
-    def test_istd_shadow(self, file_name, rgb_ws, rgb_ns, shadow_matte, show_images, save_image_results, debug_policy, opts):
+    def test_istd_shadow(self, file_name, rgb_ws, rgb_ns, shadow_matte, show_images, save_image_results, mode, opts):
         ### NOTE: ISTD-NS (No Shadows) image already has a different lighting!!! This isn't reported in the dataset. Consider using ISTD-NS as the unmasked region to avoid bias in results.
         ### MAE discrepancy vs ISTD-WS is at 11.055!
-        rgb2ns, rgb2sm = self.infer_shadow_results(rgb_ws, shadow_matte, debug_policy)
+        rgb2ns, rgb2sm = self.infer_shadow_results(rgb_ws, shadow_matte, mode)
 
         # normalize everything
         rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
@@ -427,8 +426,8 @@ class TesterClass():
         self.ssim_list_rgb.append(ssim_rgb)
         self.mae_list_rgb.append(mae_rgb)
 
-    def test_srd(self, file_name, rgb_ws, rgb_ns, shadow_matte, show_images, save_image_results, debug_policy, opts):
-        rgb2ns, rgb2sm = self.infer_shadow_results(rgb_ws, shadow_matte, debug_policy)
+    def test_srd(self, file_name, rgb_ws, rgb_ns, shadow_matte, show_images, save_image_results, mode, opts):
+        rgb2ns, rgb2sm = self.infer_shadow_results(rgb_ws, shadow_matte, mode)
 
         # normalize everything
         rgb_ws = tensor_utils.normalize_to_01(rgb_ws)

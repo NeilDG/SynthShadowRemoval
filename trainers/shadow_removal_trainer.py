@@ -178,14 +178,15 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 self.fp16_scaler.update()
 
                 # what to put to losses dict for visdom reporting?
-                self.losses_dict_s[constants.G_LOSS_KEY].append(errG.item())
-                self.losses_dict_s[constants.D_OVERALL_LOSS_KEY].append(errD.item())
-                self.losses_dict_s[constants.LIKENESS_LOSS_KEY].append(SM_likeness_loss.item())
-                self.losses_dict_s[constants.LPIP_LOSS_KEY].append(SM_lpip_loss.item())
-                self.losses_dict_s[constants.G_ADV_LOSS_KEY].append(SM_adv_loss.item())
-                self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY].append(D_SM_fake_loss.item())
-                self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_SM_real_loss.item())
-                self.losses_dict_s[self.MASK_LOSS_KEY].append(SM_masking_loss.item())
+                if (iteration > 50):
+                    self.losses_dict_s[constants.G_LOSS_KEY].append(errG.item())
+                    self.losses_dict_s[constants.D_OVERALL_LOSS_KEY].append(errD.item())
+                    self.losses_dict_s[constants.LIKENESS_LOSS_KEY].append(SM_likeness_loss.item())
+                    self.losses_dict_s[constants.LPIP_LOSS_KEY].append(SM_lpip_loss.item())
+                    self.losses_dict_s[constants.G_ADV_LOSS_KEY].append(SM_adv_loss.item())
+                    self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY].append(D_SM_fake_loss.item())
+                    self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_SM_real_loss.item())
+                    self.losses_dict_s[self.MASK_LOSS_KEY].append(SM_masking_loss.item())
 
                 #perform validation test and early stopping
                 rgb2ns_istd = self.test_istd(input_map)
@@ -216,6 +217,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def test(self, input_map):
         with torch.no_grad():
+            self.G_SM_predictor.eval()
+
             input_ws = input_map["rgb"]
             matte_tensor = input_map["shadow_matte"]
             input_ws = torch.cat([input_ws, matte_tensor], 1)
@@ -246,13 +249,11 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def load_saved_state(self):
         try:
             checkpoint = torch.load(self.NETWORK_CHECKPATH, map_location=self.gpu_device)
-            print("Loaded shadow network: ", self.NETWORK_CHECKPATH)
         except:
             # check if a .checkpt is available, load it
             try:
                 checkpt_name = 'checkpoint/' + self.NETWORK_VERSION + ".pt.checkpt"
                 checkpoint = torch.load(checkpt_name, map_location=self.gpu_device)
-                print("Loaded shadow network: ", checkpt_name)
             except:
                 checkpoint = None
                 print("No existing checkpoint file found. Creating new shadow network: ", self.NETWORK_CHECKPATH)
@@ -262,6 +263,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             self.stopper_method.update_last_metric(checkpoint[constants.LAST_METRIC_KEY])
             self.G_SM_predictor.load_state_dict(checkpoint[constants.GENERATOR_KEY + "Z"])
             self.D_SM_discriminator.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "Z"])
+
+            print("Loaded shadow removal network: ", self.NETWORK_CHECKPATH, "Epoch: ", checkpoint["epoch"])
 
     def save_states(self, epoch, iteration, is_temp:bool):
         save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}

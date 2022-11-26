@@ -34,7 +34,7 @@ parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
 parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
 parser.add_option('--img_vis_enabled', type=int, default=1)
-parser.add_option('--debug_policy', type=int, default=0)
+parser.add_option('--train_mode', type=str, default="all") #all, train_shadow_matte, train_shadow
 parser.add_option('--input_path', type=str)
 parser.add_option('--output_path', type=str)
 parser.add_option('--img_size', type=int, default=(256, 256))
@@ -114,12 +114,11 @@ def test_shadow_matte(dataset_tester, opts):
 
     print("Dataset path: ", rgb_dir_ws, rgb_dir_ns)
     shadow_loader, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
-    for i, (_, rgb_ws, _, rgb_ws_gray, _, shadow_matte) in enumerate(shadow_loader, 0):
+    for i, (_, rgb_ws, _, _, shadow_matte) in enumerate(shadow_loader, 0):
         rgb_ws = rgb_ws.to(device)
-        rgb_ws_gray = rgb_ws_gray.to(device)
         shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_shadow_matte(rgb_ws, rgb_ws_gray, shadow_matte, "Train", opts.img_vis_enabled, opts)
+        dataset_tester.test_shadow_matte(rgb_ws, shadow_matte, "Train", opts.img_vis_enabled, opts)
         if (i % 16 == 0):
             break
 
@@ -127,12 +126,11 @@ def test_shadow_matte(dataset_tester, opts):
 
     # ISTD test dataset
     shadow_loader, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, 8, opts)
-    for i, (_, rgb_ws, _, rgb_ws_gray, shadow_matte) in enumerate(shadow_loader, 0):
+    for i, (_, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
         rgb_ws = rgb_ws.to(device)
-        rgb_ws_gray = rgb_ws_gray.to(device)
         shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_shadow_matte(rgb_ws, rgb_ws_gray, shadow_matte, "ISTD", opts.img_vis_enabled, opts)
+        dataset_tester.test_shadow_matte(rgb_ws, shadow_matte, "ISTD", opts.img_vis_enabled, opts)
         # break
 
     dataset_tester.print_shadow_matte_performance("SM - ISTD", opts)
@@ -141,7 +139,7 @@ def test_shadow_removal(dataset_tester, opts):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
 
     sc_instance = iid_server_config.IIDServerConfig.getInstance()
-    network_config = sc_instance.interpret_shadow_matte_params_from_version()
+    network_config = sc_instance.interpret_shadow_network_params_from_version()
     sc_instance.update_version_config()
 
     dataset_version = network_config["dataset_version"]
@@ -153,12 +151,12 @@ def test_shadow_removal(dataset_tester, opts):
     # SHADOW dataset test
     # Using train dataset
     shadow_loader, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
-    for i, (_, rgb_ws, rgb_ns, _, _, shadow_matte) in enumerate(shadow_loader, 0):
+    for i, (_, rgb_ws, rgb_ns, _, shadow_matte) in enumerate(shadow_loader, 0):
         rgb_ws = rgb_ws.to(device)
         rgb_ns = rgb_ns.to(device)
         shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_shadow(rgb_ws, rgb_ns, shadow_matte, "Train", opts.img_vis_enabled, opts.debug_policy, opts)
+        dataset_tester.test_shadow(rgb_ws, rgb_ns, shadow_matte, "Train", opts.img_vis_enabled, opts.train_mode, opts)
         if (i % 16 == 0):
             break
 
@@ -166,24 +164,24 @@ def test_shadow_removal(dataset_tester, opts):
 
     # ISTD test dataset
     shadow_loader, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, 8, opts)
-    for i, (file_name, rgb_ws, rgb_ns, _, shadow_matte) in enumerate(shadow_loader, 0):
+    for i, (file_name, rgb_ws, rgb_ns, shadow_matte) in enumerate(shadow_loader, 0):
         rgb_ws_tensor = rgb_ws.to(device)
         rgb_ns_tensor = rgb_ns.to(device)
         shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.debug_policy, opts)
+        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.train_mode, opts)
         # break
 
     dataset_tester.print_ave_shadow_performance("ISTD", opts)
 
     # SRD test dataset
     shadow_loader, _ = dataset_loader.load_srd_dataset(constants.ws_srd, constants.ns_srd, 8, opts)
-    for i, (file_name, rgb_ws, rgb_ns, _, shadow_matte) in enumerate(shadow_loader, 0):
+    for i, (file_name, rgb_ws, rgb_ns, shadow_matte) in enumerate(shadow_loader, 0):
         rgb_ws_tensor = rgb_ws.to(device)
         rgb_ns_tensor = rgb_ns.to(device)
         shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_srd(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.debug_policy, opts)
+        dataset_tester.test_srd(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.train_mode, opts)
         # break
 
     dataset_tester.print_ave_shadow_performance("SRD", opts)
@@ -216,8 +214,13 @@ def main(argv):
     shadow_t = tf.get_shadow_trainer()
 
     dataset_tester = TesterClass(shadow_m, shadow_t)
-    test_shadow_matte(dataset_tester, opts)
-    # test_shadow_removal(dataset_tester, opts)
+    if(opts.train_mode == "train_shadow_matte"):
+        test_shadow_matte(dataset_tester, opts)
+    elif(opts.train_mode == "train_shadow"):
+        test_shadow_removal(dataset_tester, opts)
+    else:
+        test_shadow_matte(dataset_tester, opts)
+        test_shadow_removal(dataset_tester, opts)
 
 
 if __name__ == "__main__":
