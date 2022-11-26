@@ -135,6 +135,17 @@ def test_shadow_matte(dataset_tester, opts):
 
     dataset_tester.print_shadow_matte_performance("SM - ISTD", opts)
 
+    #SRD test dataset
+    shadow_loader, _ = dataset_loader.load_istd_dataset(constants.ws_srd, constants.ns_srd, constants.mask_istd, 8, opts)
+    for i, (_, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
+        rgb_ws = rgb_ws.to(device)
+        shadow_matte = shadow_matte.to(device)
+
+        dataset_tester.test_shadow_matte(rgb_ws, shadow_matte, "SRD", opts.img_vis_enabled, opts)
+        # break
+
+    dataset_tester.print_shadow_matte_performance("SM - SRD", opts)
+
 def test_shadow_removal(dataset_tester, opts):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
 

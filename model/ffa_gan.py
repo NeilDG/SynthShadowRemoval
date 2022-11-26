@@ -50,7 +50,7 @@ class Block(nn.Module):
 
         self.dropout_rate = FFAGlobalConfig.getInstance().DROPOUT_RATE
         self.dropout = nn.Dropout2d(p=self.dropout_rate)
-        print("FFA Net using Dropout. Rate: " ,self.dropout_rate)
+        # print("FFA Net using Dropout. Rate: " ,self.dropout_rate)
 
     def forward(self, x):
         res = self.act1(self.conv1(x))

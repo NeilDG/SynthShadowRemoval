@@ -164,6 +164,12 @@ class IIDServerConfig():
             network_config[WEIGHT_DECAY_KEY] = 0.0
             network_config[DROPOUT_RATE_KEY] = 0.0
             network_config[AUGMENT_KEY] = []
+            network_config[DATASET_REPEAT_KEY] = 120
+
+        elif (constants.shadow_matte_network_version == "v60.12_srd"):
+            network_config[SYNTH_DATASET_VERSION] = "v_srd"
+            network_config[PATCH_SIZE_KEY] = 64
+            network_config[DATASET_REPEAT_KEY] = 120
 
 
         return network_config
