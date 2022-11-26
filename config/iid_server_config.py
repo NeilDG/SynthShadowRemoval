@@ -196,7 +196,7 @@ class IIDServerConfig():
         elif (constants.server_config == 4):  # RTX 2080Ti
             network_config[LOAD_SIZE_KEY_Z] = 64
         else:  # RTX 3090
-            network_config[LOAD_SIZE_KEY_Z] = 96
+            network_config[LOAD_SIZE_KEY_Z] = 128
 
         #configure batch size. NOTE: Batch size must be equal or larger than load size
         network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
