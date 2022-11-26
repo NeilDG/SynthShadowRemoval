@@ -88,7 +88,7 @@ class IIDServerConfig():
         elif (constants.server_config == 4):  # RTX 2080Ti
             network_config[LOAD_SIZE_KEY_M] = 64
         else:  # RTX 3090
-            network_config[LOAD_SIZE_KEY_M] = 128
+            network_config[LOAD_SIZE_KEY_M] = 96
 
         # configure batch size. NOTE: Batch size must be equal or larger than load size
         network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
@@ -215,7 +215,7 @@ class IIDServerConfig():
         network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
 
 
-        assert "v60" in constants.shadow_removal_version, "Shadow network version not recognized: " + constants.shadow_removal_version
+        assert "v58" in constants.shadow_removal_version or "v60" in constants.shadow_removal_version, "Shadow network version not recognized: " + constants.shadow_removal_version
 
         # TODO: Temporary - for quick experiment. K dataset repeats to lessen number of epochs, given <2000 images
         network_config[DATASET_REPEAT_KEY] = 30
