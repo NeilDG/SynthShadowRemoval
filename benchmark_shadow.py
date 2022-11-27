@@ -192,11 +192,12 @@ def measure_performance(path_list, ns_path, mask_path, opts):
         mean_mae_lab_ns = np.round(np.mean(mae_lab_ns), 4)
         mean_rmse_lab_ns = np.round(np.mean(rmse_lab_ns), 4)
 
-        print("Model name: ", model_name, " Mean PSNR: ", mean_psnr, " Mean MAE: ", mean_mae, " Mean MAE Lab: ", mean_mae_lab,
-              "\nModel name: ", model_name, " Mean PSNR (WS): ", mean_psnr_ws, " Mean MAE (WS): ", mean_mae_ws, " Mean MAE Lab (WS): ", mean_mae_lab_ws,
-              "\nModel name: ", model_name, " Mean PSNR (NS): ", mean_psnr_ns, " Mean MAE (NS): ", mean_mae_ns, " Mean MAE Lab (NS): ", mean_mae_lab_ns)
+        # print("Model name: ", model_name, " Mean PSNR: ", mean_psnr, " Mean MAE: ", mean_mae, " Mean MAE Lab: ", mean_mae_lab,
+        #       "\nModel name: ", model_name, " Mean PSNR (WS): ", mean_psnr_ws, " Mean MAE (WS): ", mean_mae_ws, " Mean MAE Lab (WS): ", mean_mae_lab_ws,
+        #       "\nModel name: ", model_name, " Mean PSNR (NS): ", mean_psnr_ns, " Mean MAE (NS): ", mean_mae_ns, " Mean MAE Lab (NS): ", mean_mae_lab_ns)
 
-        print("Model name: ", model_name, " Mean RMSE: ", mean_rmse, " Mean RMSE Lab: ", mean_rmse_lab,
+        print("Model name: ", model_name, " Mean PSNR: ", mean_psnr, " Mean PSNR (WS): ", mean_psnr_ws, " Mean PSNR (NS): ", mean_psnr_ns,
+              "\nModel name: ", model_name, " Mean RMSE: ", mean_rmse, " Mean RMSE Lab: ", mean_rmse_lab,
               "\nModel name: ", model_name, " Mean RMSE (WS): ", mean_rmse_ws, " Mean RMSE Lab (WS): ", mean_rmse_lab_ws,
               "\nModel name: ", model_name, " Mean RMSE (NS): ", mean_rmse_ns, " Mean RMSE Lab (NS): ", mean_rmse_lab_ns)
 
@@ -344,6 +345,7 @@ def main(argv):
 
     # for SRD
     ns_path = "E:/SRD_Test/srd/shadow_free/*.jpg"
+    mask_path = "E:/SRD_Test/srd/mask/*.jpg"
 
     sbu_all_list = [
     "E:/SRD_Test/srd/shadow/*.jpg",
@@ -356,9 +358,8 @@ def main(argv):
     "./comparison/SRD Dataset/SynShadow-DHAN/*.png",
     "./comparison/SRD Dataset/OURS/*.png"]
 
-    measure_srd_performance(sbu_all_list, ns_path, opts)
     # measure_performance(sbu_all_list, ns_path, mask_path, opts)
-    # save_img_copies_for_results(sbu_all_list, ns_path, "SRD Dataset", (160, 210), opts)
+    save_img_copies_for_results(sbu_all_list, ns_path, "SRD Dataset", (160, 210), opts)
 
 
 

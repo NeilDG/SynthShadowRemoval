@@ -81,8 +81,8 @@ def update_config(opts):
     elif (constants.server_config == 4):
         opts.num_workers = 6
         constants.DATASET_PLACES_PATH = "C:/Datasets/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
-        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
         constants.ws_istd = "C:/Datasets/ISTD_Dataset/test/test_A/*.png"
         constants.ns_istd = "C:/Datasets/ISTD_Dataset/test/test_C/*.png"
         constants.mask_istd = "C:/Datasets/ISTD_Dataset/test/test_B/*.png"
@@ -91,8 +91,8 @@ def update_config(opts):
     else:
         opts.num_workers = 12
         constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "E:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
-        constants.rgb_dir_ns = "E:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws = "E:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        constants.rgb_dir_ns = "E:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
         constants.albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)

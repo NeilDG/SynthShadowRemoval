@@ -88,7 +88,7 @@ class IIDServerConfig():
         elif (constants.server_config == 4):  # RTX 2080Ti
             network_config[LOAD_SIZE_KEY_M] = 64
         else:  # RTX 3090
-            network_config[LOAD_SIZE_KEY_M] = 96
+            network_config[LOAD_SIZE_KEY_M] = 128
 
         # configure batch size. NOTE: Batch size must be equal or larger than load size
         network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
@@ -122,7 +122,6 @@ class IIDServerConfig():
 
         elif (constants.shadow_matte_network_version == "v60.07"):
             network_config[SYNTH_DATASET_VERSION] = "v32_istd_styled_1"
-            network_config[PATCH_SIZE_KEY] = 64
             network_config[PATCH_SIZE_KEY] = 256
             # configure load sizes (GPU memory allocation of data) #for 128
             if (constants.server_config == 1):  # COARE
@@ -138,7 +137,6 @@ class IIDServerConfig():
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
         elif (constants.shadow_matte_network_version == "v60.08"):
             network_config[SYNTH_DATASET_VERSION] = "v32_istd_styled_2"
-            network_config[PATCH_SIZE_KEY] = 64
             network_config[PATCH_SIZE_KEY] = 256
             # configure load sizes (GPU memory allocation of data) #for 128
             if (constants.server_config == 1):  # COARE
