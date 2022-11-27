@@ -3,12 +3,12 @@
 import os
 def train_relighting():
     os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
-              "--plot_enabled=0  --shadow_matte_network_version=\"v60.11_srd\" --shadow_removal_version=\"v60.02_places\" "
-              "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
-
-    os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
              "--plot_enabled=0  --shadow_matte_network_version=\"v60.05\" --shadow_removal_version=\"v60.02_places\" "
              "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
+
+    os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
+              "--plot_enabled=0  --shadow_matte_network_version=\"v60.13_srd\" --shadow_removal_version=\"v60.02_places\" "
+              "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
 
 def train_domain_adaptation():
     # os.system("python \"cyclegan_main.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
@@ -55,7 +55,7 @@ def train_unlit():
 def main():
     train_relighting()
     # train_domain_adaptation()
-    os.system("shutdown /s /t 1")
+    # os.system("shutdown /s /t 1")
 
 
 if __name__ == "__main__":

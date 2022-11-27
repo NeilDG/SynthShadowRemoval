@@ -16,13 +16,15 @@ module load cuda/10.1_cudnn-7.6.5
 source activate NeilGAN_V2
 
 pip install gdown
-srun python "gdown_download.py"
+run python "gdown_download.py"
 
 DATASET_NAME="v34_places"
-#OUTPUT_DIR="/home/jupyter-neil.delgallego/SynthWeather Dataset 10/"
-OUTPUT_DIR="/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
+OUTPUT_DIR="/home/jupyter-neil.delgallego/SynthWeather Dataset 10/"
+#OUTPUT_DIR="/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
 echo "$OUTPUT_DIR/$DATASET_NAME.zip"
 
 zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
 mv "$OUTPUT_DIR/$DATASET_NAME+fixed" "$OUTPUT_DIR/$DATASET_NAME"
+
+run python "ccs1_main.py"

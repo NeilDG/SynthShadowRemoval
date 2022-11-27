@@ -1,7 +1,7 @@
 import gdown
 
-# output_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/"
-output_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
+output_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/"
+# output_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
 
 #V34_PLACES
 #z00
