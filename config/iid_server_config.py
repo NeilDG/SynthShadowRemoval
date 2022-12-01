@@ -117,6 +117,20 @@ class IIDServerConfig():
             self.general_configs["train_shadow_end2end"]["patch_size"] = 64
             network_config[NUM_BLOCKS_KEY] = 15
 
+        if (constants.shadow_removal_version == "v59.05"):
+            network_config[SYNTH_DATASET_VERSION] = "v34_places"
+            self.general_configs["train_shadow_end2end"]["patch_size"] = 64
+            network_config[NUM_BLOCKS_KEY] = 15
+
+            network_config[AUGMENT_KEY] = "none"
+
+        elif (constants.shadow_removal_version == "v59.06"):
+            network_config[SYNTH_DATASET_VERSION] = "v34_places"
+            self.general_configs["train_shadow_end2end"]["patch_size"] = 64
+            network_config[NUM_BLOCKS_KEY] = 15
+
+            network_config[AUGMENT_KEY] = "augmix"
+
         return network_config
 
     def interpret_style_transfer_config_from_version(self):
