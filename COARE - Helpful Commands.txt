@@ -101,8 +101,8 @@ gdown https://drive.google.com/uc?id=1B6erEfeB2_n_KYP5GtCQU-DHGE1bKEVE
 gdown https://drive.google.com/drive/folders/1CMz2flknC81dX3xlKBgNP34NJAQ651DB --fuzzy --o "./v26_base/"
 unzip "v26.zip" -d "SynthWeather Dataset 10/"
 
-rm -rf "NeuralNets-GenerativeExperiment-V59.XX.XX"
-rm -rf "SynthWeather Dataset 10"
+rm -rf "NeuralNets-GenerativeExperiment-V58.38.XX"
+rm -rf "Places Dataset"
 rm -rf "/home/neil_delgallego/SynthWeather Dataset 10"
 
 

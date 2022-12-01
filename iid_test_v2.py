@@ -305,16 +305,16 @@ class TesterClass():
         self.visdom_reporter.plot_text(display_text)
 
     def infer_shadow_results(self, rgb_ws, shadow_matte, mode):
-        # if (mode == "train_shadow"):
-        #     # only test shadow removal
-        #     input_map = {"rgb": rgb_ws, "shadow_matte": shadow_matte}
-        #     rgb2ns = self.shadow_t.test(input_map)
-        #     rgb2sm = None
-        # else:
+        if (mode == "train_shadow"):
+            # only test shadow removal
+            input_map = {"rgb": rgb_ws, "shadow_matte": shadow_matte}
+            rgb2ns = self.shadow_t.test(input_map)
+            rgb2sm = None
+        else:
             # test shadow matte inference + shadow removal
-        rgb2sm = self.shadow_m.test({"rgb": rgb_ws})
-        input_map = {"rgb": rgb_ws, "shadow_matte": rgb2sm}
-        rgb2ns = self.shadow_t.test(input_map)
+            rgb2sm = self.shadow_m.test({"rgb": rgb_ws})
+            input_map = {"rgb": rgb_ws, "shadow_matte": rgb2sm}
+            rgb2ns = self.shadow_t.test(input_map)
 
         return rgb2ns, rgb2sm
 
