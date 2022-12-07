@@ -207,12 +207,14 @@ class IIDServerConfig():
         elif (constants.shadow_matte_network_version == "v60.15_places"):
             network_config[SYNTH_DATASET_VERSION] = "v36_places"
             network_config[PATCH_SIZE_KEY] = 64
+            network_config[WEIGHT_DECAY_KEY] = 0.0
 
             self.general_configs["train_shadow_matte"]["min_epochs"] = 5
             self.general_configs["train_shadow_matte"]["max_epochs"] = 10
 
         elif (constants.shadow_matte_network_version == "v60.16_places"):
             network_config[SYNTH_DATASET_VERSION] = "v36_places"
+            network_config[WEIGHT_DECAY_KEY] = 0.0
 
             self.general_configs["train_shadow_matte"]["min_epochs"] = 5
             self.general_configs["train_shadow_matte"]["max_epochs"] = 10
