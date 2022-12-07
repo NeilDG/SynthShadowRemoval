@@ -228,6 +228,34 @@ class IIDServerConfig():
             else:  # RTX 3090
                 network_config[LOAD_SIZE_KEY_M] = 16
 
+        elif (constants.shadow_matte_network_version == "v60.17_places"):
+            network_config[SYNTH_DATASET_VERSION] = "v36_places"
+            network_config[PATCH_SIZE_KEY] = 64
+            network_config[AUGMENT_KEY] = ["augmix", "random_noise", "random_exposure"]
+
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 5
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 10
+
+
+        elif (constants.shadow_matte_network_version == "v60.18_places"):
+            network_config[SYNTH_DATASET_VERSION] = "v36_places"
+
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 5
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 10
+
+            network_config[PATCH_SIZE_KEY] = 256
+            network_config[AUGMENT_KEY] = ["augmix", "random_noise", "random_exposure"]
+
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_M] = 16
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_M] = 16
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_M] = 8
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_M] = 16
+
 
         return network_config
 
