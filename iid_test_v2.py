@@ -309,7 +309,6 @@ class TesterClass():
             # only test shadow removal
             input_map = {"rgb": rgb_ws, "shadow_matte": shadow_matte}
             rgb2ns = self.shadow_t.test(input_map)
-
             rgb2sm = None
         else:
             # test shadow matte inference + shadow removal

@@ -81,8 +81,8 @@ def update_config(opts):
     elif (constants.server_config == 4):
         opts.num_workers = 6
         constants.DATASET_PLACES_PATH = "C:/Datasets/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
-        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
         constants.ws_istd = "C:/Datasets/ISTD_Dataset/test/test_A/*.png"
         constants.ns_istd = "C:/Datasets/ISTD_Dataset/test/test_C/*.png"
         constants.mask_istd = "C:/Datasets/ISTD_Dataset/test/test_B/*.png"
@@ -91,8 +91,8 @@ def update_config(opts):
     else:
         opts.num_workers = 12
         constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "E:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
-        constants.rgb_dir_ns = "E:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws = "E:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        constants.rgb_dir_ns = "E:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
         constants.albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
         constants.unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)
@@ -134,6 +134,17 @@ def test_shadow_matte(dataset_tester, opts):
         # break
 
     dataset_tester.print_shadow_matte_performance("SM - ISTD", opts)
+
+    #SRD test dataset
+    shadow_loader, _ = dataset_loader.load_istd_dataset(constants.ws_srd, constants.ns_srd, constants.mask_istd, 8, opts)
+    for i, (_, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
+        rgb_ws = rgb_ws.to(device)
+        shadow_matte = shadow_matte.to(device)
+
+        dataset_tester.test_shadow_matte(rgb_ws, shadow_matte, "SRD", opts.img_vis_enabled, opts)
+        # break
+
+    dataset_tester.print_shadow_matte_performance("SM - SRD", opts)
 
 def test_shadow_removal(dataset_tester, opts):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")

@@ -3,19 +3,12 @@
 clear
 
 //For directories
-scratch2/Synth Hazy 3 - Patch
-cd scratch2/NeuralNets-GenerativeExperiment
-cd scratch2/NeuralNets-GenerativeExperiment-2
-cd scratch2/NeuralNets-GenerativeExperiment-3
-cd scratch2/NeuralNets-GenerativeExperiment-4
-cd scratch2/NeuralNets-GenerativeExperiment-5
-cd scratch2/NeuralNets-GenerativeExperiment-6
-cd scratch2/NeuralNets-GenerativeExperiment-V58.38.XX
+cd scratch2/NeuralNets-GenerativeExperiment-V60.XX.XX
 cd scratch2/Visdom
 unzip "scratch2/SynthWeather Dataset 10.zip"
 
-git clone -b "workspace/V58.38.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "scratch2/NeuralNets-GenerativeExperiment-V58.38.XX"
-rm -rf "/scratch1/scratch2/neil.delgallego/NeuralNets-GenerativeExperiment-V58.XX.XX"
+git clone -b "workspace/V60.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "scratch2/NeuralNets-GenerativeExperiment-V60.XX.XX"
+rm -rf "/scratch1/scratch2/neil.delgallego/NeuralNets-GenerativeExperiment-V60.XX.XX"
 rm -rf "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
 
 gdown https://drive.google.com/uc?id=1B6erEfeB2_n_KYP5GtCQU-DHGE1bKEVE --o "scratch2/SynthWeather Dataset 10/"
@@ -88,11 +81,11 @@ export XDG_RUNTIME_DIR=/scratch1/scratch2/neil.delgallego/Visdom/
 saliksik.asti.dost.gov.ph:8097
 
 //CCS SERVER-JUPYTERHUB
-git clone -b "workspace/V58.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "NeuralNets-GenerativeExperiment-V58.XX.XX"
+git clone -b "workspace/V60.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "NeuralNets-GenerativeExperiment-V60.XX.XX"
 git clone -b "workspace/V58.38.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "NeuralNets-GenerativeExperiment-V58.38.XX"
 git switch "workspace/V44.XX.XX"
 cd NeuralNets-GenerativeExperiment-V58.38.XX
-cd NeuralNets-GenerativeExperiment-V59.XX.XX
+cd NeuralNets-GenerativeExperiment-V60.XX.XX
 python "ccs1_main.py"
 python "ccs2_main.py"
 
@@ -101,8 +94,8 @@ gdown https://drive.google.com/uc?id=1B6erEfeB2_n_KYP5GtCQU-DHGE1bKEVE
 gdown https://drive.google.com/drive/folders/1CMz2flknC81dX3xlKBgNP34NJAQ651DB --fuzzy --o "./v26_base/"
 unzip "v26.zip" -d "SynthWeather Dataset 10/"
 
-rm -rf "NeuralNets-GenerativeExperiment-V50.XX.XX"
-rm -rf "SynthWeather Dataset 9"
+rm -rf "NeuralNets-GenerativeExperiment-V58.38.XX"
+rm -rf "Places Dataset"
 rm -rf "/home/neil_delgallego/SynthWeather Dataset 10"
 
 

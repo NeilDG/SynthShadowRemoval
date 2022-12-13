@@ -35,7 +35,7 @@ class ShadowTrainDataset(data.Dataset):
         else:
             self.patch_size = constants.TEST_IMAGE_SIZE
 
-        if (self.network_config["augment_mode"] == "augmix" and self.transform_config == 1):
+        if ("augmix" in self.network_config["augment_mode"] and self.transform_config == 1):
             self.initial_op = transforms.Compose([
                 transforms.ToPILImage(),
                 transforms.Resize(constants.TEST_IMAGE_SIZE),
@@ -43,7 +43,7 @@ class ShadowTrainDataset(data.Dataset):
                 transforms.RandomVerticalFlip(0.5),
                 transforms.AugMix(),
                 transforms.ToTensor()])
-        elif (self.network_config["augment_mode"] == "trivial_augment_wide" and self.transform_config == 1):
+        elif ("trivial_augment_wide" in self.network_config["augment_mode"] and self.transform_config == 1):
             self.initial_op = transforms.Compose([
                 transforms.ToPILImage(),
                 transforms.Resize(constants.TEST_IMAGE_SIZE),

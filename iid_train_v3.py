@@ -79,21 +79,25 @@ def update_config(opts):
     elif (constants.server_config == 4):
         opts.num_workers = 6
         constants.DATASET_PLACES_PATH = "C:/Datasets/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
-        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
         constants.ws_istd ="C:/Datasets/ISTD_Dataset/test/test_A/*.png"
         constants.ns_istd = "C:/Datasets/ISTD_Dataset/test/test_C/*.png"
         constants.mask_istd = "C:/Datasets/ISTD_Dataset/test/test_B/*.png"
+        constants.ws_srd = "C:/Datasets/SRD_Test/srd/shadow/*.jpg"
+        constants.ns_srd = "C:/Datasets/SRD_Test/srd/shadow_free/*.jpg"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers)
     else:
         opts.num_workers = 12
         constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "E:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
-        constants.rgb_dir_ns = "E:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws = "E:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        constants.rgb_dir_ns = "E:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
         constants.ws_istd = "E:/ISTD_Dataset/test/test_A/*.png"
         constants.ns_istd = "E:/ISTD_Dataset/test/test_C/*.png"
         constants.mask_istd = "E:/ISTD_Dataset/test/test_B/*.png"
+        constants.ws_srd = "E:/SRD_Test/srd/shadow/*.jpg"
+        constants.ns_srd = "E:/SRD_Test/srd/shadow_free/*.jpg"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)
 
 def train_shadow(tf, device, opts):
@@ -114,7 +118,11 @@ def train_shadow(tf, device, opts):
 
     train_loader, dataset_count = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, constants.ws_istd, constants.ns_istd, load_size, opts)
     test_loader_train, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
-    test_loader_istd, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, load_size, opts)
+
+    if(dataset_version == "v_srd"):
+        test_loader_istd, _ = dataset_loader.load_istd_dataset(constants.ws_srd, constants.ns_srd, constants.mask_istd, load_size, opts)
+    else:
+        test_loader_istd, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, load_size, opts)
 
     iteration = 0
     start_epoch = sc_instance.get_last_epoch_from_mode(mode)
@@ -195,7 +203,10 @@ def train_shadow_matte(tf, device, opts):
     train_loader_synth, dataset_count = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, constants.ws_istd, constants.ns_istd, load_size, opts)
     train_loader_istd, _ = dataset_loader.load_istd_train_dataset(constants.ws_istd, constants.ns_istd, patch_size, load_size, opts)
     test_loader_train, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
-    test_loader_istd, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, load_size, opts)
+    if (dataset_version == "v_srd"):
+        test_loader_istd, _ = dataset_loader.load_istd_dataset(constants.ws_srd, constants.ns_srd, constants.mask_istd, load_size, opts)
+    else:
+        test_loader_istd, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, load_size, opts)
 
     iteration = 0
     start_epoch = sc_instance.get_last_epoch_from_mode(mode)
