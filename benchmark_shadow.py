@@ -340,8 +340,8 @@ def main(argv):
     ns_path = "E:/ISTD_Dataset/test/test_C/*.png"
     mask_path = "E:/ISTD_Dataset/test/test_B/*.png"
 
-    measure_performance(istd_all_list, ns_path, mask_path, opts)
-    save_img_copies_for_results(istd_all_list, ns_path, "ISTD Dataset", (240, 320), opts)
+    # measure_performance(istd_all_list, ns_path, mask_path, opts)
+    # save_img_copies_for_results(istd_all_list, ns_path, "ISTD Dataset", (240, 320), opts)
 
     # for SRD
     ns_path = "E:/SRD_Test/srd/shadow_free/*.jpg"
