@@ -231,6 +231,7 @@ class IIDServerConfig():
             network_config[SYNTH_DATASET_VERSION] = "v36_places"
             network_config[WEIGHT_DECAY_KEY] = 0.0
 
+            network_config[DATASET_REPEAT_KEY] = 10
             self.general_configs["train_shadow_matte"]["min_epochs"] = 5
             self.general_configs["train_shadow_matte"]["max_epochs"] = 10
 
@@ -250,6 +251,7 @@ class IIDServerConfig():
             network_config[PATCH_SIZE_KEY] = 64
             network_config[AUGMENT_KEY] = ["augmix", "random_noise", "random_exposure"]
 
+            network_config[DATASET_REPEAT_KEY] = 10
             self.general_configs["train_shadow_matte"]["min_epochs"] = 5
             self.general_configs["train_shadow_matte"]["max_epochs"] = 10
 
