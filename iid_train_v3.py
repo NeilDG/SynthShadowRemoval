@@ -52,6 +52,8 @@ def update_config(opts):
         constants.ws_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_A/*.png"
         constants.ns_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_C/*.png"
         constants.mask_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_B/*.png"
+        constants.ws_srd = "/scratch1/scratch2/neil.delgallego/SRD_Test/srd/shadow/*.jpg"
+        constants.ns_srd = "/scratch1/scratch2/neil.delgallego/SRD_Test/srd/shadow_free/*.jpg"
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
