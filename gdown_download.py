@@ -5,48 +5,50 @@ output_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/"
 
 #V34_PLACES
 #z00
-url = "https://drive.google.com/uc?id=1MkYqYi7A452coECRkET8Oi-Hh3H8BY6Y"
+direct_link = "https://drive.google.com/file/d/1bJW50J_j15KZUy_5YvrvLiC-TftaB9IG/view?usp=share_link"
+id = direct_link.split("/d/")[1].split("/")[0]
+url = "https://drive.google.com/uc?id="+id
 gdown.download(url, output=output_dir, use_cookies=False)
 
 #z01
-url = "https://drive.google.com/uc?id=1MB-wO5mWooawe0YEFpcuGffxWXRm4tCG"
+direct_link = "https://drive.google.com/file/d/1bJo10uzWENAewnyOm9xPxVAUuOKMbXjF/view?usp=share_link"
+id = direct_link.split("/d/")[1].split("/")[0]
+url = "https://drive.google.com/uc?id="+id
 gdown.download(url, output=output_dir, use_cookies=False)
 
 #z02
-url = "https://drive.google.com/uc?id=1MEwOq9dx4-IpD8TJUXy0ny5kuQrVjJ83"
+direct_link = "https://drive.google.com/file/d/1bJs5IX8jMd385z8Yy3cAHarcnDuM0Q3J/view?usp=share_link"
+id = direct_link.split("/d/")[1].split("/")[0]
+url = "https://drive.google.com/uc?id="+id
 gdown.download(url, output=output_dir, use_cookies=False)
 
 #z03
-url = "https://drive.google.com/uc?id=1MI8kDxgvxa9pHkR9kc8-a-G_AxXL3xRX"
+direct_link = "https://drive.google.com/file/d/1bJwCyK9TYRJXo43sUKgnB8AjZRWDHk_C/view?usp=share_link"
+id = direct_link.split("/d/")[1].split("/")[0]
+url = "https://drive.google.com/uc?id="+id
 gdown.download(url, output=output_dir, use_cookies=False)
 
 #z04
-url = "https://drive.google.com/uc?id=1MIN8bxXXWOwK19MxmXjD8gjnbURTsXOm"
+direct_link = "https://drive.google.com/file/d/1bK-6XrrE1vwAbixOceAygOV87FPWs5ni/view?usp=share_link"
+id = direct_link.split("/d/")[1].split("/")[0]
+url = "https://drive.google.com/uc?id="+id
 gdown.download(url, output=output_dir, use_cookies=False)
 
 #z05
-url = "https://drive.google.com/uc?id=1MK1Vgyfoan4evwophFyXptX-wIqC4d-k"
+direct_link = "https://drive.google.com/file/d/1bKD2W-sIaTZjO7bJ04-lBhFOpJzaVlKx/view?usp=share_link"
+id = direct_link.split("/d/")[1].split("/")[0]
+url = "https://drive.google.com/uc?id="+id
 gdown.download(url, output=output_dir, use_cookies=False)
 
 #z06
-url = "https://drive.google.com/uc?id=1MRIsMeZDsAP_vpuNlFRu4JssZ52jj5CG"
+direct_link = "https://drive.google.com/file/d/1bLKTZ5AGOyf42dytbzG5v9RA3wmFYXmM/view?usp=share_link"
+id = direct_link.split("/d/")[1].split("/")[0]
+url = "https://drive.google.com/uc?id="+id
 gdown.download(url, output=output_dir, use_cookies=False)
-
 
 #z07
-url = "https://drive.google.com/uc?id=1MWLoLYUfRKOfBdXliSOTWCpJY1IVaXcL"
-gdown.download(url, output=output_dir, use_cookies=False)
-
-
-#z08
-url = "https://drive.google.com/uc?id=1MZ9v77M2z2Xel1BSQvR9dLxlO_jrGUEl"
-gdown.download(url, output=output_dir, use_cookies=False)
-
-#z09
-url = "https://drive.google.com/uc?id=1MZBE-S28MuA861TZC4D_FTZP2uWGFiW0"
-gdown.download(url, output=output_dir, use_cookies=False)
-
-#z10
-url = "https://drive.google.com/uc?id=1MbyVvqVp2tz9X2yca9V9N_Md1fHL83kf"
+direct_link = "https://drive.google.com/file/d/1bLUQRYVeZKuwUEM4ugI5O3eAs4ympH0z/view?usp=share_link"
+id = direct_link.split("/d/")[1].split("/")[0]
+url = "https://drive.google.com/uc?id="+id
 gdown.download(url, output=output_dir, use_cookies=False)
 
