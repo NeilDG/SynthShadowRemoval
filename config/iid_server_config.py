@@ -219,6 +219,44 @@ class IIDServerConfig():
             else:  # RTX 3090
                 network_config[LOAD_SIZE_KEY_M] = 32
 
+        elif (constants.shadow_matte_network_version == "v60.16_srd"):
+            network_config[SYNTH_DATASET_VERSION] = "v_srd"
+            network_config[WEIGHT_DECAY_KEY] = 0.0
+            network_config[DROPOUT_RATE_KEY] = 0.0
+            network_config[AUGMENT_KEY] = []
+            network_config[DATASET_REPEAT_KEY] = 120
+            network_config[NUM_BLOCKS_KEY] = 6
+
+            network_config[PATCH_SIZE_KEY] = 256
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_M] = 12
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_M] = 12
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_M] = 4
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_M] = 12
+
+        elif (constants.shadow_matte_network_version == "v60.17_srd"):
+            network_config[SYNTH_DATASET_VERSION] = "v_srd"
+            network_config[WEIGHT_DECAY_KEY] = 0.0
+            network_config[DROPOUT_RATE_KEY] = 0.0
+            network_config[AUGMENT_KEY] = []
+            network_config[DATASET_REPEAT_KEY] = 120
+            network_config[NUM_BLOCKS_KEY] = 9
+
+            network_config[PATCH_SIZE_KEY] = 256
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_M] = 8
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_M] = 8
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_M] = 4
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_M] = 8
+
         elif (constants.shadow_matte_network_version == "v60.15_places"):
             network_config[SYNTH_DATASET_VERSION] = "v36_places"
             network_config[PATCH_SIZE_KEY] = 64
