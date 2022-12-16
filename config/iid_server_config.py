@@ -230,13 +230,13 @@ class IIDServerConfig():
             network_config[PATCH_SIZE_KEY] = 256
             # configure load sizes (GPU memory allocation of data) #for 128
             if (constants.server_config == 1):  # COARE
-                network_config[LOAD_SIZE_KEY_M] = 12
+                network_config[LOAD_SIZE_KEY_M] = 8
             elif (constants.server_config == 2):  # CCS JUPYTER
-                network_config[LOAD_SIZE_KEY_M] = 12
+                network_config[LOAD_SIZE_KEY_M] = 8
             elif (constants.server_config == 4):  # RTX 2080Ti
                 network_config[LOAD_SIZE_KEY_M] = 4
             else:  # RTX 3090
-                network_config[LOAD_SIZE_KEY_M] = 12
+                network_config[LOAD_SIZE_KEY_M] = 8
 
         elif (constants.shadow_matte_network_version == "v60.17_srd"):
             network_config[SYNTH_DATASET_VERSION] = "v_srd"
