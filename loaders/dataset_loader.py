@@ -105,6 +105,8 @@ def load_shadow_train_dataset(ws_path, ns_path, ws_istd_path, ns_istd_path, load
     initial_ws_list = assemble_img_list(ws_path, opts)
     initial_ns_list = assemble_img_list(ns_path, opts)
 
+    print("Length: ", len(initial_ws_list), len(initial_ns_list))
+
     temp_list = list(zip(initial_ws_list, initial_ns_list))
     random.shuffle(temp_list)
     initial_ws_list, initial_ns_list = zip(*temp_list)

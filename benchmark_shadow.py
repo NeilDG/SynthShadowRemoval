@@ -321,7 +321,7 @@ def save_img_copies_for_results(results_list, ns_path, dataset_name, target_size
             rgb_img = cv2.cvtColor(rgb_img, cv2.COLOR_BGR2RGB)
             rgb_img = transform_op(rgb_img)
 
-            print(folder_dir + file_name)
+            # print(folder_dir + file_name)
             torchvision.utils.save_image(rgb_img, folder_dir + file_name)
 
 def main(argv):
@@ -340,8 +340,8 @@ def main(argv):
     ns_path = "E:/ISTD_Dataset/test/test_C/*.png"
     mask_path = "E:/ISTD_Dataset/test/test_B/*.png"
 
-    # measure_performance(istd_all_list, ns_path, mask_path, opts)
-    # save_img_copies_for_results(istd_all_list, ns_path, "ISTD Dataset", (240, 320), opts)
+    measure_performance(istd_all_list, ns_path, mask_path, opts)
+    save_img_copies_for_results(istd_all_list, ns_path, "ISTD Dataset", (240, 320), opts)
 
     # for SRD
     ns_path = "E:/SRD_Test/srd/shadow_free/*.jpg"

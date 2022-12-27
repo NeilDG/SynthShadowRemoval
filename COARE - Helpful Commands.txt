@@ -94,9 +94,10 @@ gdown https://drive.google.com/uc?id=1B6erEfeB2_n_KYP5GtCQU-DHGE1bKEVE
 gdown https://drive.google.com/drive/folders/1CMz2flknC81dX3xlKBgNP34NJAQ651DB --fuzzy --o "./v26_base/"
 unzip "v26.zip" -d "SynthWeather Dataset 10/"
 
-rm -rf "NeuralNets-GenerativeExperiment-V58.38.XX"
+rm -rf "NeuralNets-GenerativeExperiment-V59.XX.XX"
+rm -rf "NeuralNets-GenerativeExperiment-V60.XX.XX"
 rm -rf "Places Dataset"
-rm -rf "/home/neil_delgallego/SynthWeather Dataset 10"
+rm -rf "SynthWeather Dataset 10"
 
 
 zip -r "checkpoints.zip" "rgb2albedo_v9.01_7.pt" "rgb2albedo_v9.01_8.pt" "rgb2albedo_v9.01_9.pt" "rgb2albedo_v9.01_10.pt" "rgb2albedo_v9.01_11.pt" "rgb2albedo_v9.01_12.pt" "rgb2albedo_v9.01_13.pt" "rgb2albedo_v9.01_14.pt" \

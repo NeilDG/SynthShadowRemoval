@@ -47,17 +47,19 @@ def update_config(opts):
         opts.num_workers = 6
         print("Using COARE configuration. Workers: ", opts.num_workers)
         constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
-        constants.rgb_dir_ns = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        constants.rgb_dir_ns = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
         constants.ws_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_A/*.png"
         constants.ns_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_C/*.png"
         constants.mask_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_B/*.png"
+        constants.ws_srd = "/scratch1/scratch2/neil.delgallego/SRD_Test/srd/shadow/*.jpg"
+        constants.ns_srd = "/scratch1/scratch2/neil.delgallego/SRD_Test/srd/shadow_free/*.jpg"
 
     # CCS JUPYTER
     elif (constants.server_config == 2):
         constants.num_workers = 6
-        constants.rgb_dir_ws = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
-        constants.rgb_dir_ns = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        constants.rgb_dir_ns = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
         constants.DATASET_PLACES_PATH = "/home/jupyter-neil.delgallego/Places Dataset/*.jpg"
         constants.ws_istd = "/home/jupyter-neil.delgallego/ISTD_Dataset/test/test_A/*.png"
         constants.ns_istd = "/home/jupyter-neil.delgallego/ISTD_Dataset/test/test_C/*.png"
@@ -70,8 +72,8 @@ def update_config(opts):
         opts.num_workers = 8
         print("Using GCloud configuration. Workers: ", opts.num_workers)
         constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "/home/neil_delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
-        constants.rgb_dir_ns = "/home/neil_delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
+        constants.rgb_dir_ws = "/home/neil_delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        constants.rgb_dir_ns = "/home/neil_delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
         constants.ws_istd = "/home/neil_delgallego/ISTD_Dataset/test/test_A/*.png"
         constants.ns_istd = "/home/neil_delgallego/ISTD_Dataset/test/test_C/*.png"
         constants.mask_istd = "/home/neil_delgallego/ISTD_Dataset/test/test_B/*.png"
@@ -200,6 +202,8 @@ def train_shadow_matte(tf, device, opts):
 
     load_size = network_config["load_size_m"]
 
+    print("Dataset path WS: ", rgb_dir_ws)
+    print("Dataset path NS: ", rgb_dir_ns)
     train_loader_synth, dataset_count = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, constants.ws_istd, constants.ns_istd, load_size, opts)
     train_loader_istd, _ = dataset_loader.load_istd_train_dataset(constants.ws_istd, constants.ns_istd, patch_size, load_size, opts)
     test_loader_train, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
