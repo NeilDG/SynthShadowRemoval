@@ -296,12 +296,13 @@ class IIDServerConfig():
 
         elif (constants.shadow_matte_network_version == "v60.18_places"):
             network_config[SYNTH_DATASET_VERSION] = "v36_places"
-
-            self.general_configs["train_shadow_matte"]["min_epochs"] = 5
-            self.general_configs["train_shadow_matte"]["max_epochs"] = 10
-
             network_config[PATCH_SIZE_KEY] = 256
             network_config[AUGMENT_KEY] = ["augmix", "random_noise", "random_exposure"]
+            network_config[WEIGHT_DECAY_KEY] = 0.0
+
+            network_config[DATASET_REPEAT_KEY] = 10
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 5
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 10
 
             # configure load sizes (GPU memory allocation of data) #for 128
             if (constants.server_config == 1):  # COARE
@@ -312,6 +313,28 @@ class IIDServerConfig():
                 network_config[LOAD_SIZE_KEY_M] = 8
             else:  # RTX 3090
                 network_config[LOAD_SIZE_KEY_M] = 16
+
+        elif (constants.shadow_matte_network_version == "v60.19_places"):
+            network_config[SYNTH_DATASET_VERSION] = "v36_places"
+            network_config[PATCH_SIZE_KEY] = 256
+            network_config[AUGMENT_KEY] = ["augmix", "random_noise", "random_exposure"]
+            network_config[WEIGHT_DECAY_KEY] = 0.0
+
+            network_config[DATASET_REPEAT_KEY] = 10
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 5
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 10
+
+            network_config[NUM_BLOCKS_KEY] = 6
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_M] = 12
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_M] = 12
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_M] = 8
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_M] = 12
+
 
 
         return network_config

@@ -2,9 +2,13 @@
 
 import os
 def train_relighting():
-    os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow\" "
-              "--plot_enabled=0  --shadow_matte_network_version=\"v60.15_places\" --shadow_removal_version=\"v60.15_synshadow\" "
+    os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
+              "--plot_enabled=0  --shadow_matte_network_version=\"v60.19_places\" --shadow_removal_version=\"v60.01_srd\" "
               "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
+
+    # os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow\" "
+    #           "--plot_enabled=0  --shadow_matte_network_version=\"v60.15_places\" --shadow_removal_version=\"v60.15_synshadow\" "
+    #           "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
 
     os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow\" "
               "--plot_enabled=0  --shadow_matte_network_version=\"v60.15_places\" --shadow_removal_version=\"v60.16_synshadow\" "
@@ -12,10 +16,6 @@ def train_relighting():
 
     os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow\" "
               "--plot_enabled=0  --shadow_matte_network_version=\"v60.15_places\" --shadow_removal_version=\"v60.12_places\" "
-              "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
-
-    os.system("python \"iid_train_v3.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
-              "--plot_enabled=0  --shadow_matte_network_version=\"v60.17_places\" --shadow_removal_version=\"v60.01_srd\" "
               "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
 
 def train_domain_adaptation():
