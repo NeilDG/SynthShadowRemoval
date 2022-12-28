@@ -223,7 +223,7 @@ def train_shadow_matte(tf, device, opts):
     #compute total progress
     needed_progress = int((general_config[mode]["max_epochs"]) * (dataset_count / load_size))
     current_progress = int(start_epoch * (dataset_count / load_size))
-    pbar = tqdm(total=needed_progress)
+    pbar = tqdm(total=needed_progress, disable=constants.disable_progress_bar)
     pbar.update(current_progress)
 
     for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
