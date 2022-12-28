@@ -313,6 +313,7 @@ class IIDServerConfig():
                 network_config[LOAD_SIZE_KEY_M] = 8
             else:  # RTX 3090
                 network_config[LOAD_SIZE_KEY_M] = 16
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
 
         elif (constants.shadow_matte_network_version == "v60.19_places"):
             network_config[SYNTH_DATASET_VERSION] = "v36_places"
@@ -334,6 +335,16 @@ class IIDServerConfig():
                 network_config[LOAD_SIZE_KEY_M] = 8
             else:  # RTX 3090
                 network_config[LOAD_SIZE_KEY_M] = 12
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+
+        elif (constants.shadow_matte_network_version == "v58.65"):
+            network_config[SYNTH_DATASET_VERSION] = "v32_istd"
+            self.general_configs["train_shadow_matte"]["patch_size"] = 256
+            network_config[AUGMENT_KEY] = ["random_noise", "random_exposure"]
+
+            network_config[NUM_BLOCKS_KEY] = 3
+            network_config[LOAD_SIZE_KEY_M] = 16
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
 
 
 
