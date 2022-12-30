@@ -318,7 +318,7 @@ class TesterClass():
 
         return rgb2ns, rgb2sm
 
-    def test_shadow_matte(self, rgb_ws, shadow_matte, prefix, show_images, opts):
+    def test_shadow_matte(self, file_name, rgb_ws, shadow_matte, prefix, show_images, save_image_results, opts):
         rgb2sm = self.shadow_m.test({"rgb": rgb_ws})
 
         # normalize everything
@@ -332,8 +332,21 @@ class TesterClass():
             self.visdom_reporter.plot_image(shadow_matte, prefix + " WS Shadow Matte Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration))
             self.visdom_reporter.plot_image(rgb2sm, prefix + " WS Shadow Matte-Like Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration))
 
-        mae = nn.L1Loss()
+        if (save_image_results == 1):
+            if(prefix == "ISTD"):
+                path = "./comparison/ISTD Dataset/OURS/"
+            else:
+                path = "./comparison/SRD Dataset/OURS/"
+            matte_path = path + "/matte-like/"
+            gt_path = path + "/matte/"
+            for i in range(0, np.size(file_name)):
+                shadow_matte_path = matte_path + file_name[i] + ".png"
+                torchvision.utils.save_image(rgb2sm[i], shadow_matte_path)
 
+                # gt_matte_path = gt_path + file_name[i] + ".png"
+                # torchvision.utils.save_image(shadow_matte[i], gt_matte_path)
+
+        mae = nn.L1Loss()
         # shadow matte
         mae_sm = np.round(mae(rgb2sm, shadow_matte).cpu(), 4)
         self.mae_list_sm.append(mae_sm)
