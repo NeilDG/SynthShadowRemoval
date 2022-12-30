@@ -368,8 +368,7 @@ class TesterClass():
             mask_path = "E:/SRD_Test/srd/mask/"
 
             for i in range(0, np.size(file_name)):
-                print("To load: ", mask_path + file_name[i] + ".jpg")
-                shadow_mask = transform_op(cv2.cvtColor(cv2.imread(mask_path + file_name[i] + ".jpg"), cv2.COLOR_BGR2GRAY))
+                shadow_mask = transform_op(cv2.cvtColor(cv2.imread(mask_path + file_name[i]), cv2.COLOR_BGR2GRAY))
                 shadow_mask = shadow_mask.to(device)
                 # print("Shapes: ", np.shape(rgb2sm[i]), np.shape(shadow_mask), np.shape(shadow_matte[i]))
                 mae_sm_ws = np.round(mae(rgb2sm[i] * shadow_mask, shadow_matte[i] * shadow_mask).cpu(), 4)
