@@ -280,6 +280,24 @@ def load_shadow_test_dataset(ws_path, ns_path, opts):
 
     return data_loader, len(ws_list)
 
+def load_shadow_matte_dataset(ws_path, sm_path, opts):
+    ws_list = assemble_img_list(ws_path, opts)
+    sm_list = assemble_img_list(sm_path, opts)
+
+    img_length = len(ws_list)
+    print("Length of images: %d %d" % (len(ws_list), len(sm_list)))
+
+    data_loader = torch.utils.data.DataLoader(
+        shadow_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 2, opts.train_mode),
+        batch_size=8,
+        num_workers=1,
+        pin_memory=True,
+        pin_memory_device=opts.cuda_device,
+        shuffle=False
+    )
+
+    return data_loader, len(ws_list)
+
 def load_istd_train_dataset(ws_path, ns_path, patch_size, load_size, opts):
     ws_istd_list = assemble_img_list(ws_path, opts)
     ns_istd_list = assemble_img_list(ns_path, opts)
