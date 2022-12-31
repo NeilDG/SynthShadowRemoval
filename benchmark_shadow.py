@@ -371,41 +371,40 @@ def run_sm_report(opts):
 def main(argv):
     (opts, args) = parser.parse_args(argv)
 
-    run_sm_report(opts)
-    # istd_all_list = [
-    # # "E:/ISTD_Dataset/test/test_A/*.png",
-    # # "./comparison/ISTD Dataset/SID_PAMI/*.png",
-    # # "./comparison/ISTD Dataset/DC-ShadowNet_ISTD/*.png",
-    # # "./comparison/ISTD Dataset/BMNET_2022_ISTD/*.png",
-    # # "./comparison/ISTD Dataset/AAAI_2020_ISTD/*.png",
-    # # "./comparison/ISTD Dataset/AAAI_2020+_ISTD/*.png",
-    # # "./comparison/ISTD Dataset/SynShadow-SP+M/*.png",
-    # # "./comparison/ISTD Dataset/SynShadow-DHAN/*.png",
-    # "./comparison/ISTD Dataset/OURS/*.png"]
-    #
-    # ns_path = "E:/ISTD_Dataset/test/test_C/*.png"
-    # mask_path = "E:/ISTD_Dataset/test/test_B/*.png"
-    #
-    # measure_performance(istd_all_list, ns_path, mask_path, opts)
-    # save_img_copies_for_results(istd_all_list, ns_path, "ISTD Dataset", (240, 320), opts)
-    #
-    # # for SRD
-    # ns_path = "E:/SRD_Test/srd/shadow_free/*.jpg"
-    # mask_path = "E:/SRD_Test/srd/mask/*.jpg"
-    #
-    # sbu_all_list = [
-    # # "E:/SRD_Test/srd/shadow/*.jpg",
-    # # "./comparison/SRD Dataset/SID_PAMI/*.png",
-    # # "./comparison/SRD Dataset/DC-ShadowNet/*.png",
-    # # "./comparison/SRD Dataset/BMNET_2022/*.jpg",
-    # # "./comparison/SRD Dataset/AAAI_2020_SRD/*.jpg",
-    # # "./comparison/SRD Dataset/AAAI_2020+_SRD/*.jpg",
-    # # "./comparison/SRD Dataset/SynShadow-SP+M/*.png",
-    # # "./comparison/SRD Dataset/SynShadow-DHAN/*.png",
-    # "./comparison/SRD Dataset/OURS/*.png"]
-    #
-    # measure_performance(sbu_all_list, ns_path, mask_path, opts)
-    # save_img_copies_for_results(sbu_all_list, ns_path, "SRD Dataset", (160, 210), opts)
+    istd_all_list = [
+    # "E:/ISTD_Dataset/test/test_A/*.png",
+    # "./comparison/ISTD Dataset/SID_PAMI/*.png",
+    # "./comparison/ISTD Dataset/DC-ShadowNet_ISTD/*.png",
+    # "./comparison/ISTD Dataset/BMNET_2022_ISTD/*.png",
+    # "./comparison/ISTD Dataset/AAAI_2020_ISTD/*.png",
+    # "./comparison/ISTD Dataset/AAAI_2020+_ISTD/*.png",
+    # "./comparison/ISTD Dataset/SynShadow-SP+M/*.png",
+    # "./comparison/ISTD Dataset/SynShadow-DHAN/*.png",
+    "./comparison/ISTD Dataset/OURS/*.png"]
+
+    ns_path = "E:/ISTD_Dataset/test/test_C/*.png"
+    mask_path = "E:/ISTD_Dataset/test/test_B/*.png"
+
+    measure_performance(istd_all_list, ns_path, mask_path, opts)
+    save_img_copies_for_results(istd_all_list, ns_path, "ISTD Dataset", (240, 320), opts)
+
+    # for SRD
+    ns_path = "E:/SRD_Test/srd/shadow_free/*.jpg"
+    mask_path = "E:/SRD_Test/srd/mask/*.jpg"
+
+    sbu_all_list = [
+    # "E:/SRD_Test/srd/shadow/*.jpg",
+    # "./comparison/SRD Dataset/SID_PAMI/*.png",
+    # "./comparison/SRD Dataset/DC-ShadowNet/*.png",
+    # "./comparison/SRD Dataset/BMNET_2022/*.jpg",
+    # "./comparison/SRD Dataset/AAAI_2020_SRD/*.jpg",
+    # "./comparison/SRD Dataset/AAAI_2020+_SRD/*.jpg",
+    # "./comparison/SRD Dataset/SynShadow-SP+M/*.png",
+    # "./comparison/SRD Dataset/SynShadow-DHAN/*.png",
+    "./comparison/SRD Dataset/OURS/*.png"]
+
+    measure_performance(sbu_all_list, ns_path, mask_path, opts)
+    save_img_copies_for_results(sbu_all_list, ns_path, "SRD Dataset", (160, 210), opts)
 
 
 

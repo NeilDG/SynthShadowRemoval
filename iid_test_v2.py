@@ -442,7 +442,7 @@ class TesterClass():
 
         if(save_image_results == 1):
             path = "./comparison/ISTD Dataset/OURS/"
-            matte_path = path + "/matte/"
+            matte_path = path + "/matte-like/"
             for i in range(0, np.size(file_name)):
                 impath = path + file_name[i] + ".png"
                 torchvision.utils.save_image(rgb2ns[i], impath)
