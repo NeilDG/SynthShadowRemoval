@@ -56,8 +56,8 @@ sbatch script_20.slurm
 sbatch --dependency=afterany:342338 script_debug.slurm
 sbatch --dependency=afterany:342351 script_1.slurm
 sbatch -w saliksik-gpu-06 slurm_install_gpu.slurm
-sbatch -w saliksik-gpu-04 script_1.slurm
-sbatch -w saliksik-gpu-05 script_2.slurm
+sbatch -w saliksik-gpu-02 script_1.slurm
+sbatch -w saliksik-gpu-06 script_2.slurm
 sbatch -w saliksik-gpu-05 script_3.slurm
 sbatch -w saliksik-gpu-04 script_4.slurm
 sbatch -w saliksik-gpu-05 script_5.slurm
