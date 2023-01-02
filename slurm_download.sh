@@ -32,7 +32,7 @@ then
   OUTPUT_DIR="/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
 else
   OUTPUT_DIR="/home/jupyter-neil.delgallego/SynthWeather Dataset 10/"
-
+fi
 echo "$OUTPUT_DIR/$DATASET_NAME.zip"
 
 zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
@@ -43,3 +43,4 @@ rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 if [ $SERVER_CONFIG==2 ]
 then
   python "ccs1_main.py"
+fi
