@@ -4,10 +4,12 @@ clear
 
 //For directories
 cd scratch2/NeuralNets-GenerativeExperiment-V60.XX.XX
+cd scratch2/NeuralNets-GenerativeExperiment-V60.XX.XX-2
 cd scratch2/Visdom
 unzip "scratch2/SynthWeather Dataset 10.zip"
 
 git clone -b "workspace/V60.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "scratch2/NeuralNets-GenerativeExperiment-V60.XX.XX"
+git clone -b "workspace/V60.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "scratch2/NeuralNets-GenerativeExperiment-V60.XX.XX-2"
 rm -rf "/scratch1/scratch2/neil.delgallego/NeuralNets-GenerativeExperiment-V60.XX.XX"
 rm -rf "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
 
@@ -15,7 +17,7 @@ gdown https://drive.google.com/uc?id=1B6erEfeB2_n_KYP5GtCQU-DHGE1bKEVE --o "scra
 mv "/scratch1/scratch2/neil.delgallego/NeuralNets-GenerativeExperiment-V58.XX.XX/v26" "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v26"
 
 //Execute job
-sbatch --dependency=afterany:335484 slurm_download.slurm
+sbatch --dependency=afterany:361283 slurm_download.slurm
 sbatch slurm_download.slurm
 sbatch slurm_install.slurm
 sbatch slurm_visdom_test.slurm
@@ -23,8 +25,8 @@ sbatch visdom_run.slurm
 sbatch -w saliksik-cpu-23 visdom_run.slurm
 sbatch -w saliksik-cpu-23 --dependency=afterany:335892 visdom_run.slurm
 
-sbatch --dependency=afterany:342880 script_1.slurm
-sbatch --dependency=afterany:336942 script_2.slurm
+sbatch --dependency=afterany:361283 script_1.slurm
+sbatch --dependency=afterany:361283 script_2.slurm
 sbatch --dependency=afterany:338540 script_2.slurm
 
 
