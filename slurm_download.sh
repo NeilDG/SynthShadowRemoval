@@ -10,7 +10,7 @@
 
 #About this script:
 #Download of dataset
-SERVER_CONFIG=1 #1 = COARE, 2 = CCS Cloud
+SERVER_CONFIG=2 #1 = COARE, 2 = CCS Cloud
 
 module load anaconda/3-2021.11
 module load cuda/10.1_cudnn-7.6.5

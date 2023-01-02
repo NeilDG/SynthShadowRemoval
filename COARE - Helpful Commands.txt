@@ -100,6 +100,7 @@ rm -rf "NeuralNets-GenerativeExperiment-V59.XX.XX"
 rm -rf "NeuralNets-GenerativeExperiment-V60.XX.XX"
 rm -rf "Places Dataset"
 rm -rf "SynthWeather Dataset 10"
+mkdir "SynthWeather Dataset 10"
 
 
 zip -r "checkpoints.zip" "rgb2albedo_v9.01_7.pt" "rgb2albedo_v9.01_8.pt" "rgb2albedo_v9.01_9.pt" "rgb2albedo_v9.01_10.pt" "rgb2albedo_v9.01_11.pt" "rgb2albedo_v9.01_12.pt" "rgb2albedo_v9.01_13.pt" "rgb2albedo_v9.01_14.pt" \
