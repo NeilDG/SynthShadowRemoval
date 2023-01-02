@@ -20,9 +20,9 @@ pip install --upgrade --no-cache-dir gdown
 
 if [ $SERVER_CONFIG == 1 ]
 then
-  srun python "gdown_download.py"
+  srun python "gdown_download.py" --server_config=$SERVER_CONFIG
 else
-  python "gdown_download.py"
+  python "gdown_download.py" --server_config=$SERVER_CONFIG
 fi
 
 DATASET_NAME="v50_places"
