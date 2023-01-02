@@ -25,7 +25,7 @@ else
   python "gdown_download.py" --server_config=$SERVER_CONFIG
 fi
 
-DATASET_NAME="v44_places"
+DATASET_NAME="v51_places"
 
 if [ $SERVER_CONFIG == 1 ]
 then
