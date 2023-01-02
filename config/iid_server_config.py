@@ -800,6 +800,27 @@ class IIDServerConfig():
             # configure batch size. NOTE: Batch size must be equal or larger than load size
             network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
 
+        elif (constants.shadow_removal_version == "v60.18_places"):
+            network_config[SYNTH_DATASET_VERSION] = "v44_places"
+            network_config[DATASET_REPEAT_KEY] = 10
+            self.general_configs["train_shadow"]["min_epochs"] = 5
+            self.general_configs["train_shadow"]["max_epochs"] = 10
+            network_config[AUGMENT_KEY] = ["augmix", "random_noise", "random_exposure"]
+
+            network_config[PATCH_SIZE_KEY] = 128
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_Z] = 64
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_Z] = 96
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_Z] = 32
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_Z] = 64
+
+            # configure batch size. NOTE: Batch size must be equal or larger than load size
+            network_config[BATCH_SIZE_KEY_Z] = network_config[LOAD_SIZE_KEY_Z]
+
 
         return network_config
 
