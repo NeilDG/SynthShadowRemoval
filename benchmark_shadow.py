@@ -372,7 +372,7 @@ def main(argv):
     (opts, args) = parser.parse_args(argv)
 
     istd_all_list = [
-    # "E:/ISTD_Dataset/test/test_A/*.png",
+    "E:/ISTD_Dataset/test/test_A/*.png",
     # "./comparison/ISTD Dataset/SID_PAMI/*.png",
     # "./comparison/ISTD Dataset/DC-ShadowNet_ISTD/*.png",
     # "./comparison/ISTD Dataset/BMNET_2022_ISTD/*.png",
@@ -393,7 +393,7 @@ def main(argv):
     mask_path = "E:/SRD_Test/srd/mask/*.jpg"
 
     sbu_all_list = [
-    # "E:/SRD_Test/srd/shadow/*.jpg",
+    "E:/SRD_Test/srd/shadow/*.jpg",
     # "./comparison/SRD Dataset/SID_PAMI/*.png",
     # "./comparison/SRD Dataset/DC-ShadowNet/*.png",
     # "./comparison/SRD Dataset/BMNET_2022/*.jpg",
