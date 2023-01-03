@@ -16,49 +16,49 @@ def main(argv):
 
     #V51_PLACES
     #z00
-    direct_link = "https://drive.google.com/file/d/1Deq_EoLmv1p45WfcCM57RuXMPYtb0YET/view?usp=share_link"
+    direct_link = "https://drive.google.com/file/d/1RJnBHIthwDmpTf9Q0U-LF0r_dgfXQtAf/view?usp=share_link"
     id = direct_link.split("/d/")[1].split("/")[0]
     url = "https://drive.google.com/uc?id="+id
     gdown.download(url, output=output_dir, use_cookies=False)
 
     #z01
-    direct_link = "https://drive.google.com/file/d/1Dc1pQXuHsVaA4VP7aOpzJ4iMgt4fvkM0/view?usp=share_link"
+    direct_link = "https://drive.google.com/file/d/1RJpR7yVphEgp35HdlkZil0u9SaVoHJYO/view?usp=share_link"
     id = direct_link.split("/d/")[1].split("/")[0]
     url = "https://drive.google.com/uc?id="+id
     gdown.download(url, output=output_dir, use_cookies=False)
 
     #z02
-    direct_link = "https://drive.google.com/file/d/1DcCHAorozGF1XLHcOWzYNPBEfpe0BHSL/view?usp=share_link"
+    direct_link = "https://drive.google.com/file/d/1RJrGhcRSE2VIdN7Jztr3WdVPxtu8-Jca/view?usp=share_link"
     id = direct_link.split("/d/")[1].split("/")[0]
     url = "https://drive.google.com/uc?id="+id
     gdown.download(url, output=output_dir, use_cookies=False)
 
     #z03
-    direct_link = "https://drive.google.com/file/d/1DcicH9ewQ0yxa0H0GlA2TWQI-3f6veum/view?usp=share_link"
+    direct_link = "https://drive.google.com/file/d/1RJy76bRQqeIgCcH5v6PzSqDR9aXaZFdr/view?usp=share_link"
     id = direct_link.split("/d/")[1].split("/")[0]
     url = "https://drive.google.com/uc?id="+id
     gdown.download(url, output=output_dir, use_cookies=False)
 
     #z04
-    direct_link = "https://drive.google.com/file/d/1Dd28m9SGlP0mS5SpU63RM2yu3iXnedmV/view?usp=share_link"
+    direct_link = "https://drive.google.com/file/d/1RL6GJN-HYjw4j0S4VCzb8m0OvHcV5q9j/view?usp=share_link"
     id = direct_link.split("/d/")[1].split("/")[0]
     url = "https://drive.google.com/uc?id="+id
     gdown.download(url, output=output_dir, use_cookies=False)
 
     #z05
-    direct_link = "https://drive.google.com/file/d/1De8xF5r0tV9ZqUgYnQI3mqbTu5kXToEt/view?usp=share_link"
+    direct_link = "https://drive.google.com/file/d/1RLWeqmhSivId9EDbu2EFnCt6xk5vOSxt/view?usp=share_link"
     id = direct_link.split("/d/")[1].split("/")[0]
     url = "https://drive.google.com/uc?id="+id
     gdown.download(url, output=output_dir, use_cookies=False)
 
     #z06
-    direct_link = "https://drive.google.com/file/d/1DeUMBueAz6Ubw4Mf1jA1iH34HO9RBBMT/view?usp=share_link"
+    direct_link = "https://drive.google.com/file/d/1RLjqBjbpKCTBy_wWFF3halgyvzdyVaLR/view?usp=share_link"
     id = direct_link.split("/d/")[1].split("/")[0]
     url = "https://drive.google.com/uc?id="+id
     gdown.download(url, output=output_dir, use_cookies=False)
 
     # z07
-    direct_link = "https://drive.google.com/file/d/1DellHV0sr4z3IA4qVMV24H6ShBMRzL1_/view?usp=share_link"
+    direct_link = "https://drive.google.com/file/d/1RLx1CvbmyB43ICP-61h-C-n5a_5NGcLi/view?usp=share_link"
     id = direct_link.split("/d/")[1].split("/")[0]
     url = "https://drive.google.com/uc?id="+id
     gdown.download(url, output=output_dir, use_cookies=False)
