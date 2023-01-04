@@ -21,6 +21,6 @@ source activate NeilGAN_V2
 
 srun python iid_train_v3.py \
 --shadow_matte_network_version="v60.17_srd" --shadow_removal_version="v60.17_places" --shadow_matte_iteration=$ITERATION --shadow_removal_iteration=4 \
---server_config=1 --plot_enabled=0 --img_to_load=-1 --train_mode=train_shadow
+--server_config=1 --plot_enabled=0 --img_to_load=-1 --train_mode=train_shadow_matte
 
 conda deactivate
