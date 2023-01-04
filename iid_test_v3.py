@@ -114,11 +114,11 @@ def test_shadow_matte(dataset_tester, opts):
 
     print("Dataset path: ", rgb_dir_ws, rgb_dir_ns)
     shadow_loader, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
-    for i, (_, rgb_ws, _, _, shadow_matte) in enumerate(shadow_loader, 0):
+    for i, (file_name, rgb_ws, _, _, shadow_matte) in enumerate(shadow_loader, 0):
         rgb_ws = rgb_ws.to(device)
         shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_shadow_matte(rgb_ws, shadow_matte, "Train", opts.img_vis_enabled, opts)
+        dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "Train", opts.img_vis_enabled, False, opts)
         if (i % 16 == 0):
             break
 
@@ -126,22 +126,22 @@ def test_shadow_matte(dataset_tester, opts):
 
     # ISTD test dataset
     shadow_loader, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, 8, opts)
-    for i, (_, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
+    for i, (file_name, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
         rgb_ws = rgb_ws.to(device)
         shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_shadow_matte(rgb_ws, shadow_matte, "ISTD", opts.img_vis_enabled, opts)
+        dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "ISTD", opts.img_vis_enabled, True, opts)
         # break
 
     dataset_tester.print_shadow_matte_performance("SM - ISTD", opts)
 
     #SRD test dataset
     shadow_loader, _ = dataset_loader.load_istd_dataset(constants.ws_srd, constants.ns_srd, constants.mask_istd, 8, opts)
-    for i, (_, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
+    for i, (file_name, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
         rgb_ws = rgb_ws.to(device)
         shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_shadow_matte(rgb_ws, shadow_matte, "SRD", opts.img_vis_enabled, opts)
+        dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "SRD", opts.img_vis_enabled, True, opts)
         # break
 
     dataset_tester.print_shadow_matte_performance("SM - SRD", opts)

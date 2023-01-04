@@ -45,6 +45,8 @@ def update_config(opts):
     ## COARE
     if (constants.server_config == 1):
         opts.num_workers = 6
+        constants.disable_progress_bar = True #disable progress bar logging in COARE
+
         print("Using COARE configuration. Workers: ", opts.num_workers)
         constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
         constants.rgb_dir_ws = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
@@ -135,7 +137,7 @@ def train_shadow(tf, device, opts):
     # compute total progress
     needed_progress = int((general_config[mode]["max_epochs"]) * (dataset_count / load_size))
     current_progress = int(start_epoch * (dataset_count / load_size))
-    pbar = tqdm(total=needed_progress)
+    pbar = tqdm(total=needed_progress, disable = constants.disable_progress_bar)
     pbar.update(current_progress)
 
     for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
@@ -221,7 +223,7 @@ def train_shadow_matte(tf, device, opts):
     #compute total progress
     needed_progress = int((general_config[mode]["max_epochs"]) * (dataset_count / load_size))
     current_progress = int(start_epoch * (dataset_count / load_size))
-    pbar = tqdm(total=needed_progress)
+    pbar = tqdm(total=needed_progress, disable=constants.disable_progress_bar)
     pbar.update(current_progress)
 
     for epoch in range(start_epoch, general_config[mode]["max_epochs"]):

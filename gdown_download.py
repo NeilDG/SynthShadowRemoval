@@ -1,54 +1,68 @@
+import sys
+
 import gdown
+from optparse import OptionParser
 
-output_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/"
-# output_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
+parser = OptionParser()
+parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
 
-#V48_PLACES
-#z00
-direct_link = "https://drive.google.com/file/d/1fRh9fT3YUAYSKTARFk4mII97464iZUcG/view?usp=share_link"
-id = direct_link.split("/d/")[1].split("/")[0]
-url = "https://drive.google.com/uc?id="+id
-gdown.download(url, output=output_dir, use_cookies=False)
+def main(argv):
+    (opts, args) = parser.parse_args(argv)
 
-#z01
-direct_link = "https://drive.google.com/file/d/1fP6gkACkj4t_mL3baBZMXGlYLcz1RJ-m/view?usp=share_link"
-id = direct_link.split("/d/")[1].split("/")[0]
-url = "https://drive.google.com/uc?id="+id
-gdown.download(url, output=output_dir, use_cookies=False)
+    if(opts.server_config == 1):
+        output_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
+    else:
+        output_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/"
 
-#z02
-direct_link = "https://drive.google.com/file/d/1fPKpqmoHRYf9L8BQTrY8dNkHlg6bfFWJ/view?usp=share_link"
-id = direct_link.split("/d/")[1].split("/")[0]
-url = "https://drive.google.com/uc?id="+id
-gdown.download(url, output=output_dir, use_cookies=False)
+    #V51_PLACES
+    #z00
+    direct_link = "https://drive.google.com/file/d/1RJnBHIthwDmpTf9Q0U-LF0r_dgfXQtAf/view?usp=share_link"
+    id = direct_link.split("/d/")[1].split("/")[0]
+    url = "https://drive.google.com/uc?id="+id
+    gdown.download(url, output=output_dir, use_cookies=False)
 
-#z03
-direct_link = "https://drive.google.com/file/d/1fPQ2q6J91ei_lprGOl5hbfwKtT9odTKY/view?usp=share_link"
-id = direct_link.split("/d/")[1].split("/")[0]
-url = "https://drive.google.com/uc?id="+id
-gdown.download(url, output=output_dir, use_cookies=False)
+    #z01
+    direct_link = "https://drive.google.com/file/d/1RJpR7yVphEgp35HdlkZil0u9SaVoHJYO/view?usp=share_link"
+    id = direct_link.split("/d/")[1].split("/")[0]
+    url = "https://drive.google.com/uc?id="+id
+    gdown.download(url, output=output_dir, use_cookies=False)
 
-#z04
-direct_link = "https://drive.google.com/file/d/1fQ9tt-0Tf2Y7jiKYN8jX7kB5eZTFQKZg/view?usp=share_link"
-id = direct_link.split("/d/")[1].split("/")[0]
-url = "https://drive.google.com/uc?id="+id
-gdown.download(url, output=output_dir, use_cookies=False)
+    #z02
+    direct_link = "https://drive.google.com/file/d/1RJrGhcRSE2VIdN7Jztr3WdVPxtu8-Jca/view?usp=share_link"
+    id = direct_link.split("/d/")[1].split("/")[0]
+    url = "https://drive.google.com/uc?id="+id
+    gdown.download(url, output=output_dir, use_cookies=False)
 
-#z05
-direct_link = "https://drive.google.com/file/d/1fQD5skpZ7Z26cqMgd5wafx54JauDXJQ6/view?usp=share_link"
-id = direct_link.split("/d/")[1].split("/")[0]
-url = "https://drive.google.com/uc?id="+id
-gdown.download(url, output=output_dir, use_cookies=False)
+    #z03
+    direct_link = "https://drive.google.com/file/d/1RJy76bRQqeIgCcH5v6PzSqDR9aXaZFdr/view?usp=share_link"
+    id = direct_link.split("/d/")[1].split("/")[0]
+    url = "https://drive.google.com/uc?id="+id
+    gdown.download(url, output=output_dir, use_cookies=False)
 
-#z06
-direct_link = "https://drive.google.com/file/d/1fQgkgX1i5g0T1pO53hkegodvBswdzgzQ/view?usp=share_link"
-id = direct_link.split("/d/")[1].split("/")[0]
-url = "https://drive.google.com/uc?id="+id
-gdown.download(url, output=output_dir, use_cookies=False)
+    #z04
+    direct_link = "https://drive.google.com/file/d/1RL6GJN-HYjw4j0S4VCzb8m0OvHcV5q9j/view?usp=share_link"
+    id = direct_link.split("/d/")[1].split("/")[0]
+    url = "https://drive.google.com/uc?id="+id
+    gdown.download(url, output=output_dir, use_cookies=False)
 
-#z07
-direct_link = "https://drive.google.com/file/d/1fRL9HYFBI0g4jRQ_mWLxvoD5jV4_Uafa/view?usp=share_link"
-id = direct_link.split("/d/")[1].split("/")[0]
-url = "https://drive.google.com/uc?id="+id
-gdown.download(url, output=output_dir, use_cookies=False)
+    #z05
+    direct_link = "https://drive.google.com/file/d/1RLWeqmhSivId9EDbu2EFnCt6xk5vOSxt/view?usp=share_link"
+    id = direct_link.split("/d/")[1].split("/")[0]
+    url = "https://drive.google.com/uc?id="+id
+    gdown.download(url, output=output_dir, use_cookies=False)
+
+    #z06
+    direct_link = "https://drive.google.com/file/d/1RLjqBjbpKCTBy_wWFF3halgyvzdyVaLR/view?usp=share_link"
+    id = direct_link.split("/d/")[1].split("/")[0]
+    url = "https://drive.google.com/uc?id="+id
+    gdown.download(url, output=output_dir, use_cookies=False)
+
+    # z07
+    direct_link = "https://drive.google.com/file/d/1RLx1CvbmyB43ICP-61h-C-n5a_5NGcLi/view?usp=share_link"
+    id = direct_link.split("/d/")[1].split("/")[0]
+    url = "https://drive.google.com/uc?id="+id
+    gdown.download(url, output=output_dir, use_cookies=False)
+
+if __name__ == "__main__":
+    main(sys.argv)
 

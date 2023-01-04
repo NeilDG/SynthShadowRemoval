@@ -262,3 +262,43 @@ class ShadowTestDataset(data.Dataset):
 
     def __len__(self):
         return self.img_length
+
+class ShadowMatteDataset(data.Dataset):
+    def __init__(self, img_length, matte_list_like, matte_list_gt, img_list_mask):
+        self.img_length = img_length
+        self.img_list_a = matte_list_like
+        self.img_list_b = matte_list_gt
+        self.img_list_mask = img_list_mask
+
+        self.transform_op = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize(constants.TEST_IMAGE_SIZE),
+            transforms.ToTensor()])
+
+    def __getitem__(self, idx):
+        file_name = self.img_list_a[idx].split("/")[-1].split(".png")[0]
+
+        try:
+            matte_like = cv2.imread(self.img_list_a[idx])
+            matte_like = cv2.cvtColor(matte_like, cv2.COLOR_BGR2GRAY)
+            matte_like = self.transform_op(matte_like)
+
+            matte = cv2.imread(self.img_list_b[idx])
+            matte = cv2.cvtColor(matte, cv2.COLOR_BGR2GRAY)
+            matte = self.transform_op(matte)
+
+            shadow_mask = cv2.imread(self.img_list_mask[idx])
+            shadow_mask = cv2.cvtColor(shadow_mask, cv2.COLOR_BGR2GRAY)
+            shadow_mask = self.transform_op(shadow_mask)
+
+
+        except:
+            print("Failed to load: ", self.img_list_a[idx], self.img_list_b[idx], self.img_list_mask[idx])
+            matte_like = None
+            matte = None
+            shadow_mask = None
+
+        return file_name, matte_like, matte, shadow_mask
+
+    def __len__(self):
+        return self.img_length

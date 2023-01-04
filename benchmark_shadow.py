@@ -12,6 +12,7 @@ import torchvision.transforms as transforms
 import torchvision.transforms.functional
 import constants
 from loaders import dataset_loader
+from loaders import shadow_datasets
 
 parser = OptionParser()
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
@@ -104,6 +105,38 @@ class ShadowSRDDataset(data.Dataset):
 
     def __len__(self):
         return self.img_length
+
+def measure_sm_performance(path_list, matte_path, mask_path, opts):
+    for ns_like_path in path_list:
+        model_name = ns_like_path.split("/")[-2]
+        matte_like_list = dataset_loader.assemble_img_list(ns_like_path, opts)
+        matte_list = dataset_loader.assemble_img_list(matte_path, opts)
+        mask_list = dataset_loader.assemble_img_list(mask_path, opts)
+
+        img_length = len(matte_like_list)
+        print("%s: Length of images: %d %d" % (model_name, len(matte_like_list), len(matte_list)))
+
+        data_loader = torch.utils.data.DataLoader(
+            shadow_datasets.ShadowMatteDataset(img_length, matte_like_list, matte_list, mask_list),
+            batch_size=len(matte_like_list),
+            num_workers=1,
+            shuffle=False
+        )
+
+        mae_loss = nn.L1Loss()
+        mse_loss = nn.MSELoss()
+
+        _, matte_like, matte, shadow_mask = next(iter(data_loader))
+        mean_mae_rgb = mae_loss(matte_like, matte).item()
+        mean_mae_rgb = np.round(mean_mae_rgb, 4) * 100.0
+
+        #WS regions
+        mean_mae_rgb_ws = mae_loss(matte_like * shadow_mask, matte * shadow_mask).item()
+        mean_mae_rgb_ws = np.round(mean_mae_rgb_ws, 4) * 100.0
+
+        print("---------------------------- Performance reports for shadow-matte ----------------------------")
+        print(" Model name: ", model_name, " Mean MAE RGB: ", mean_mae_rgb, " Mean MAE RGB (WS): ", mean_mae_rgb_ws)
+        # print(" Model name: ", model_name, " Mean RMSE Lab: ", mean_rmse_lab, " Mean RMSE Lab (WS): ", mean_rmse_lab_ws)
 
 def measure_performance(path_list, ns_path, mask_path, opts):
     for ns_like_path in path_list:
@@ -324,8 +357,20 @@ def save_img_copies_for_results(results_list, ns_path, dataset_name, target_size
             # print(folder_dir + file_name)
             torchvision.utils.save_image(rgb_img, folder_dir + file_name)
 
+def run_sm_report(opts):
+    base_path = "G:/My Drive/PHD RESEARCH/Manuscript - Shadow Removal/Article/figures/reports/Shadow Matte/"
+    istd_gt_list = base_path + "ISTD GT/*.png"
+    mask_path = "E:/ISTD_Dataset/test/test_B/*.png"
+
+    istd_compare_list = [base_path + "v1_synshadow/ISTD/*.png",
+                         base_path + "v2_synshadow/ISTD/*.png",
+                         # base_path + "v3_synshadow/ISTD/*.png",
+                         base_path + "v_istd/ISTD/*.png"]
+
+    measure_sm_performance(istd_compare_list, istd_gt_list, mask_path, opts)
 def main(argv):
     (opts, args) = parser.parse_args(argv)
+
     istd_all_list = [
     # "E:/ISTD_Dataset/test/test_A/*.png",
     # "./comparison/ISTD Dataset/SID_PAMI/*.png",

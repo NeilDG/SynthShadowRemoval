@@ -203,6 +203,7 @@ class TesterClass():
         self.mae_list_rgb = []
 
         self.mae_list_sm = []
+        self.mae_list_sm_ws = []
 
     def test_own_dataset(self, rgb_ws_tensor, rgb_ns_tensor, unlit_tensor, albedo_tensor, shading_tensor, shadow_tensor, opts):
         input = {"rgb": rgb_ws_tensor, "unlit": unlit_tensor, "albedo": albedo_tensor}
@@ -318,7 +319,8 @@ class TesterClass():
 
         return rgb2ns, rgb2sm
 
-    def test_shadow_matte(self, rgb_ws, shadow_matte, prefix, show_images, opts):
+    def test_shadow_matte(self, file_name, rgb_ws, shadow_matte, prefix, show_images, save_image_results, opts):
+        device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
         rgb2sm = self.shadow_m.test({"rgb": rgb_ws})
 
         # normalize everything
@@ -328,25 +330,61 @@ class TesterClass():
 
         if (show_images == 1):
             self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration))
-            # self.visdom_reporter.plot_image(rgb_ws_gray, prefix + " WS (Grey) Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration))
             self.visdom_reporter.plot_image(shadow_matte, prefix + " WS Shadow Matte Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration))
             self.visdom_reporter.plot_image(rgb2sm, prefix + " WS Shadow Matte-Like Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration))
 
-        mae = nn.L1Loss()
+        if (save_image_results == 1):
+            if(prefix == "ISTD"):
+                path = "./comparison/ISTD Dataset/OURS/"
+            else:
+                path = "./comparison/SRD Dataset/OURS/"
+            matte_path = path + "/matte-like/"
+            gt_path = path + "/matte/"
+            for i in range(0, np.size(file_name)):
+                shadow_matte_path = matte_path + file_name[i] + ".png"
+                torchvision.utils.save_image(rgb2sm[i], shadow_matte_path)
 
+                # gt_matte_path = gt_path + file_name[i] + ".png"
+                # torchvision.utils.save_image(shadow_matte[i], gt_matte_path)
+
+        mae = nn.L1Loss()
         # shadow matte
         mae_sm = np.round(mae(rgb2sm, shadow_matte).cpu(), 4)
         self.mae_list_sm.append(mae_sm)
+        if(prefix == "ISTD"):
+            input_shape = np.shape(rgb2sm[0])
+            transform_op = transforms.Compose([transforms.ToPILImage(), transforms.Resize((input_shape[1], input_shape[2])), transforms.ToTensor()])
+            mask_path = "E:/ISTD_Dataset/test/test_B/"
+
+            for i in range(0, np.size(file_name)):
+                shadow_mask = transform_op(cv2.cvtColor(cv2.imread(mask_path + file_name[i] + ".png"), cv2.COLOR_BGR2GRAY))
+                shadow_mask = shadow_mask.to(device)
+                # print("Shapes: ", np.shape(rgb2sm[i]), np.shape(shadow_mask), np.shape(shadow_matte[i]))
+                mae_sm_ws = np.round(mae(rgb2sm[i] * shadow_mask, shadow_matte[i] * shadow_mask).cpu(), 4)
+                self.mae_list_sm_ws.append(mae_sm_ws)
+        elif (prefix == "SRD"):
+            input_shape = np.shape(rgb2sm[0])
+            transform_op = transforms.Compose([transforms.ToPILImage(), transforms.Resize((input_shape[1], input_shape[2])), transforms.ToTensor()])
+            mask_path = "E:/SRD_Test/srd/mask/"
+
+            for i in range(0, np.size(file_name)):
+                shadow_mask = transform_op(cv2.cvtColor(cv2.imread(mask_path + file_name[i]), cv2.COLOR_BGR2GRAY))
+                shadow_mask = shadow_mask.to(device)
+                # print("Shapes: ", np.shape(rgb2sm[i]), np.shape(shadow_mask), np.shape(shadow_matte[i]))
+                mae_sm_ws = np.round(mae(rgb2sm[i] * shadow_mask, shadow_matte[i] * shadow_mask).cpu(), 4)
+                self.mae_list_sm_ws.append(mae_sm_ws)
 
     def print_shadow_matte_performance(self, prefix, opts):
-        ave_mae_sm = np.round(np.mean(self.mae_list_sm) * 255.0, 4)
+        ave_mae_sm = np.round(np.mean(self.mae_list_sm) * 100.0, 4)
+        ave_mae_sm_ws = np.round(np.mean(self.mae_list_sm_ws) * 100.0, 4)
 
         display_text = prefix + " - Versions: " + opts.shadow_matte_network_version + "_" + str(opts.shadow_matte_iteration) + \
-                       "<br> MAE Error (SM): " + str(ave_mae_sm)
+                       "<br> MAE Error (SM): " + str(ave_mae_sm) + "<br> MAE Error (SM WS): " + str(ave_mae_sm_ws)
 
         self.visdom_reporter.plot_text(display_text)
 
         self.mae_list_sm.clear()
+        self.mae_list_sm_ws.clear()
 
 
     def test_shadow(self, rgb_ws, rgb_ns, shadow_matte, prefix, show_images, mode, opts):
@@ -404,7 +442,7 @@ class TesterClass():
 
         if(save_image_results == 1):
             path = "./comparison/ISTD Dataset/OURS/"
-            matte_path = path + "/matte/"
+            matte_path = path + "/matte-like/"
             for i in range(0, np.size(file_name)):
                 impath = path + file_name[i] + ".png"
                 torchvision.utils.save_image(rgb2ns[i], impath)
