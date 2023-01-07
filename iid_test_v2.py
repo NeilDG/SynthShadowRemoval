@@ -342,10 +342,13 @@ class TesterClass():
             gt_path = path + "/matte/"
             for i in range(0, np.size(file_name)):
                 shadow_matte_path = matte_path + file_name[i] + ".png"
-                torchvision.utils.save_image(rgb2sm[i], shadow_matte_path)
+                torchvision.utils.save_image(rgb2sm[i], shadow_matte_path, normalize=True)
+
+                gt_matte_path = gt_path + file_name[i] + ".png"
+                torchvision.utils.save_image(shadow_matte[i], gt_matte_path, normalize=True)
 
                 # gt_matte_path = gt_path + file_name[i] + ".png"
-                # torchvision.utils.save_image(shadow_matte[i], gt_matte_path)
+                # torchvision.utils.save_image(rgb_ws[i], gt_matte_path, normalize=False)
 
         mae = nn.L1Loss()
         # shadow matte

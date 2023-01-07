@@ -25,7 +25,7 @@ else
   python "gdown_download.py" --server_config=$SERVER_CONFIG
 fi
 
-DATASET_NAME="v47_places"
+DATASET_NAME="v45_places"
 
 if [ $SERVER_CONFIG == 1 ]
 then
@@ -43,5 +43,5 @@ rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 
 if [ $SERVER_CONFIG == 2 ]
 then
-  python "ccs2_main.py"
+  python "ccs1_main.py"
 fi
