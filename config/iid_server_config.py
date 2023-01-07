@@ -527,6 +527,49 @@ class IIDServerConfig():
             network_config[LOAD_SIZE_KEY_M] = 128
             network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
 
+        elif (constants.shadow_matte_network_version == "v60.31_places"):
+            network_config[SYNTH_DATASET_VERSION] = "v50_places"
+            network_config[PATCH_SIZE_KEY] = 256
+            network_config[AUGMENT_KEY] = ["augmix", "random_noise", "random_exposure"]
+            network_config[WEIGHT_DECAY_KEY] = 0.0
+
+            network_config[DATASET_REPEAT_KEY] = 10
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 20
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 25
+
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_M] = 16
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_M] = 16
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_M] = 8
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_M] = 16
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+
+        elif (constants.shadow_matte_network_version == "v60.32_places"):
+            network_config[SYNTH_DATASET_VERSION] = "v50_places"
+            network_config[PATCH_SIZE_KEY] = 256
+            network_config[AUGMENT_KEY] = ["augmix", "random_noise", "random_exposure"]
+            network_config[WEIGHT_DECAY_KEY] = 0.0
+
+            network_config[DATASET_REPEAT_KEY] = 10
+            self.general_configs["train_shadow_matte"]["min_epochs"] = 20
+            self.general_configs["train_shadow_matte"]["max_epochs"] = 25
+
+            network_config[NUM_BLOCKS_KEY] = 6
+            # configure load sizes (GPU memory allocation of data) #for 128
+            if (constants.server_config == 1):  # COARE
+                network_config[LOAD_SIZE_KEY_M] = 12
+            elif (constants.server_config == 2):  # CCS JUPYTER
+                network_config[LOAD_SIZE_KEY_M] = 12
+            elif (constants.server_config == 4):  # RTX 2080Ti
+                network_config[LOAD_SIZE_KEY_M] = 8
+            else:  # RTX 3090
+                network_config[LOAD_SIZE_KEY_M] = 12
+            network_config[BATCH_SIZE_KEY_M] = network_config[LOAD_SIZE_KEY_M]
+
 
 
         return network_config
