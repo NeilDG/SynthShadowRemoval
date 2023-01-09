@@ -202,6 +202,9 @@ class TesterClass():
         self.ssim_list_rgb = []
         self.mae_list_rgb = []
 
+        self.rmse_list_lab = []
+        self.rmse_list_lab_ws = []
+
         self.mae_list_sm = []
         self.mae_list_sm_ws = []
 
@@ -415,13 +418,19 @@ class TesterClass():
         mae = nn.L1Loss()
         mae_rgb = np.round(mae(rgb2ns, rgb_ns).cpu(), 4)
 
+        mse = nn.MSELoss()
+        mse_lab = np.round(mse(kornia.color.rgb_to_lab(rgb2ns), kornia.color.rgb_to_lab(rgb_ns)).cpu(), 4)
+        rmse_lab = torch.sqrt(mse_lab)
+
         self.psnr_list_rgb.append(psnr_rgb)
         self.ssim_list_rgb.append(ssim_rgb)
         self.mae_list_rgb.append(mae_rgb)
+        self.rmse_list_lab.append(rmse_lab)
 
 
     #for ISTD
     def test_istd_shadow(self, file_name, rgb_ws, rgb_ns, shadow_matte, show_images, save_image_results, mode, opts):
+        device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
         ### NOTE: ISTD-NS (No Shadows) image already has a different lighting!!! This isn't reported in the dataset. Consider using ISTD-NS as the unmasked region to avoid bias in results.
         ### MAE discrepancy vs ISTD-WS is at 11.055!
         rgb2ns, rgb2sm = self.infer_shadow_results(rgb_ws, shadow_matte, mode)
@@ -443,9 +452,16 @@ class TesterClass():
             self.visdom_reporter.plot_image(rgb_ns, "ISTD NS Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration) + " " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
             self.visdom_reporter.plot_image(rgb2ns, "ISTD NS-Like Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration) + " " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
 
+        mae = nn.L1Loss()
+        mse = nn.MSELoss()
         if(save_image_results == 1):
             path = "./comparison/ISTD Dataset/OURS/"
             matte_path = path + "/matte-like/"
+
+            input_shape = np.shape(rgb2ns[0])
+            transform_op = transforms.Compose([transforms.ToPILImage(), transforms.Resize((input_shape[1], input_shape[2])), transforms.ToTensor()])
+            mask_path = "E:/ISTD_Dataset/test/test_B/"
+
             for i in range(0, np.size(file_name)):
                 impath = path + file_name[i] + ".png"
                 torchvision.utils.save_image(rgb2ns[i], impath)
@@ -455,18 +471,27 @@ class TesterClass():
 
                 # print("Saving ISTD result as: ", file_name[i])
 
+                shadow_mask = transform_op(cv2.cvtColor(cv2.imread(mask_path + file_name[i] + ".png"), cv2.COLOR_BGR2GRAY))
+                shadow_mask = shadow_mask.to(device)
+                # print("Shapes: ", np.shape(rgb2sm[i]), np.shape(shadow_mask), np.shape(shadow_matte[i]))
+                rmse_lab_ws = np.round(mse(kornia.color.rgb_to_lab(rgb2ns * shadow_mask), kornia.color.rgb_to_lab(rgb_ns * shadow_mask)).cpu(), 4)
+                self.rmse_list_lab_ws.append(rmse_lab_ws)
+
 
         psnr_rgb = np.round(kornia.metrics.psnr(rgb2ns, rgb_ns, max_val=1.0).item(), 4)
         ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb2ns, rgb_ns, 5).item(), 4)
 
-        mae = nn.L1Loss()
         mae_rgb = np.round(mae(rgb2ns, rgb_ns).cpu(), 4)
+        mse_lab = np.round(mse(kornia.color.rgb_to_lab(rgb2ns), kornia.color.rgb_to_lab(rgb_ns)).cpu(), 4)
+        rmse_lab = torch.sqrt(mse_lab)
 
         self.psnr_list_rgb.append(psnr_rgb)
         self.ssim_list_rgb.append(ssim_rgb)
         self.mae_list_rgb.append(mae_rgb)
+        self.rmse_list_lab.append(rmse_lab)
 
     def test_srd(self, file_name, rgb_ws, rgb_ns, shadow_matte, show_images, save_image_results, mode, opts):
+        device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
         rgb2ns, rgb2sm = self.infer_shadow_results(rgb_ws, shadow_matte, mode)
 
         # normalize everything
@@ -486,38 +511,57 @@ class TesterClass():
             self.visdom_reporter.plot_image(rgb_ns, "SRD NS Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
             self.visdom_reporter.plot_image(rgb2ns, "SRD NS-Like Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
 
+        mae = nn.L1Loss()
+        mse = nn.MSELoss()
+
         if(save_image_results == 1):
             path = "./comparison/SRD Dataset/OURS/"
             matte_path = path + "/matte-like/"
+
+            input_shape = np.shape(rgb2ns[0])
+            transform_op = transforms.Compose([transforms.ToPILImage(), transforms.Resize((input_shape[1], input_shape[2])), transforms.ToTensor()])
+            mask_path = "E:/SRD_Test/srd/mask/"
+
             for i in range(0, np.size(file_name)):
                 impath = path + file_name[i] + ".png"
                 torchvision.utils.save_image(rgb2ns[i], impath)
 
                 if(rgb2sm != None):
-                    shadow_matte_path = matte_path + file_name[i] + ".jpeg"
+                    shadow_matte_path = mask_path + file_name[i]
                     torchvision.utils.save_image(rgb2sm[i], shadow_matte_path)
+
+                    # print("Mask path: " + (mask_path + file_name[i] + ".jpg"))
+                    shadow_mask = transform_op(cv2.cvtColor(cv2.imread(mask_path + file_name[i] + ".jpg"), cv2.COLOR_BGR2GRAY))
+                    shadow_mask = shadow_mask.to(device)
+                    # print("Shapes: ", np.shape(rgb2sm[i]), np.shape(shadow_mask), np.shape(shadow_matte[i]))
+                    rmse_lab_ws = np.round(mse(kornia.color.rgb_to_lab(rgb2ns * shadow_mask), kornia.color.rgb_to_lab(rgb_ns * shadow_mask)).cpu(), 4)
+                    self.rmse_list_lab_ws.append(rmse_lab_ws)
 
         psnr_rgb = np.round(kornia.metrics.psnr(rgb2ns, rgb_ns, max_val=1.0).item(), 4)
         ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb2ns, rgb_ns, 5).item(), 4)
 
-        mae = nn.L1Loss()
         mae_rgb = np.round(mae(rgb2ns, rgb_ns).cpu(), 4)
+        mse_lab = np.round(mse(kornia.color.rgb_to_lab(rgb2ns), kornia.color.rgb_to_lab(rgb_ns)).cpu(), 4)
+        rmse_lab = torch.sqrt(mse_lab)
 
         self.psnr_list_rgb.append(psnr_rgb)
         self.ssim_list_rgb.append(ssim_rgb)
         self.mae_list_rgb.append(mae_rgb)
+        self.rmse_list_lab.append(rmse_lab)
 
     def print_ave_shadow_performance(self, prefix, opts):
         ave_psnr_rgb = np.round(np.mean(self.psnr_list_rgb), 4)
         ave_ssim_rgb = np.round(np.mean(self.ssim_list_rgb), 4)
         ave_mae_rgb = np.round(np.mean(self.mae_list_rgb) * 255.0, 4)
-
         ave_mae_sm = np.round(np.mean(self.mae_list_sm) * 255.0, 4)
+        ave_rmse_lab = np.round(np.mean(self.rmse_list_lab), 4)
+        ave_rmse_lab_ws = np.round(np.mean(self.rmse_list_lab_ws), 4)
 
         display_text = prefix + " - Versions: " + opts.shadow_matte_network_version + "_" + str(opts.shadow_matte_iteration) + \
                        "<br>" + opts.shadow_removal_version + "_" + str(opts.shadow_removal_iteration) + \
                        "<br> MAE Error (SM): " + str(ave_mae_sm) + "<br> MAE Error (RGB): " +str(ave_mae_rgb) + \
-                       "<br> RGB Reconstruction PSNR: " + str(ave_psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ave_ssim_rgb)
+                       "<br> RGB Reconstruction PSNR: " + str(ave_psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ave_ssim_rgb) + \
+                       "<br> Lab RMSE: " + str(ave_rmse_lab) + "<br> Lab RMSE WS: " +str(ave_rmse_lab_ws)
 
         self.visdom_reporter.plot_text(display_text)
 
