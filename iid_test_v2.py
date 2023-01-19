@@ -466,8 +466,8 @@ class TesterClass():
                 impath = path + file_name[i] + ".png"
                 torchvision.utils.save_image(rgb2ns[i], impath)
 
-                shadow_matte_path = matte_path + file_name[i] + ".jpeg"
-                torchvision.utils.save_image(shadow_matte[i], shadow_matte_path)
+                # shadow_matte_path = matte_path + file_name[i] + ".jpeg"
+                # torchvision.utils.save_image(shadow_matte[i], shadow_matte_path)
 
                 # print("Saving ISTD result as: ", file_name[i])
 
@@ -526,12 +526,13 @@ class TesterClass():
                 impath = path + file_name[i] + ".png"
                 torchvision.utils.save_image(rgb2ns[i], impath)
 
-                if(rgb2sm != None):
-                    shadow_matte_path = mask_path + file_name[i]
-                    torchvision.utils.save_image(rgb2sm[i], shadow_matte_path)
+                # shadow_matte_path = matte_path + file_name[i]
+                # torchvision.utils.save_image(shadow_matte[i], shadow_matte_path)
 
+                shadow_mask = cv2.imread(mask_path + file_name[i] + ".jpg")
+                if(shadow_mask is not None):
                     # print("Mask path: " + (mask_path + file_name[i] + ".jpg"))
-                    shadow_mask = transform_op(cv2.cvtColor(cv2.imread(mask_path + file_name[i] + ".jpg"), cv2.COLOR_BGR2GRAY))
+                    shadow_mask = transform_op(cv2.cvtColor(shadow_mask, cv2.COLOR_BGR2GRAY))
                     shadow_mask = shadow_mask.to(device)
                     # print("Shapes: ", np.shape(rgb2sm[i]), np.shape(shadow_mask), np.shape(shadow_matte[i]))
                     rmse_lab_ws = np.round(mse(kornia.color.rgb_to_lab(rgb2ns * shadow_mask), kornia.color.rgb_to_lab(rgb_ns * shadow_mask)).cpu(), 4)
@@ -557,8 +558,11 @@ class TesterClass():
         ave_rmse_lab = np.round(np.mean(self.rmse_list_lab), 4)
         ave_rmse_lab_ws = np.round(np.mean(self.rmse_list_lab_ws), 4)
 
+        network_config = iid_server_config.IIDServerConfig.getInstance().interpret_shadow_network_params_from_version()
+
         display_text = prefix + " - Versions: " + opts.shadow_matte_network_version + "_" + str(opts.shadow_matte_iteration) + \
                        "<br>" + opts.shadow_removal_version + "_" + str(opts.shadow_removal_iteration) + \
+                       "<br>" + network_config["dataset_version"] + \
                        "<br> MAE Error (SM): " + str(ave_mae_sm) + "<br> MAE Error (RGB): " +str(ave_mae_rgb) + \
                        "<br> RGB Reconstruction PSNR: " + str(ave_psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ave_ssim_rgb) + \
                        "<br> Lab RMSE: " + str(ave_rmse_lab) + "<br> Lab RMSE WS: " +str(ave_rmse_lab_ws)
@@ -569,6 +573,8 @@ class TesterClass():
         self.ssim_list_rgb.clear()
         self.mae_list_rgb.clear()
         self.mae_list_sm.clear()
+        self.rmse_list_lab_ws.clear()
+        self.rmse_list_lab.clear()
 
     def test_iiw(self, file_name, rgb_tensor, opts):
         input = {"rgb": rgb_tensor}
