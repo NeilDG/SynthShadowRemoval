@@ -333,7 +333,7 @@ class RealWorldDataset(data.Dataset):
 
 
         self.final_transform_op = transforms.Compose([
-            transforms.Resize(constants.TEST_IMAGE_SIZE),
+            transforms.Resize((512, 512)),
             transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ])

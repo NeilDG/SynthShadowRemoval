@@ -354,9 +354,15 @@ class TesterClass():
                 # torchvision.utils.save_image(rgb_ws[i], gt_matte_path, normalize=False)
 
         mae = nn.L1Loss()
+        mse = nn.MSELoss()
+
         # shadow matte
         mae_sm = np.round(mae(rgb2sm, shadow_matte).cpu(), 4)
         self.mae_list_sm.append(mae_sm)
+
+        rmse_sm = np.round(mse(rgb2sm, shadow_matte).cpu(), 4)
+        self.rmse_list_lab.append(torch.sqrt(rmse_sm))
+
         if(prefix == "ISTD"):
             input_shape = np.shape(rgb2sm[0])
             transform_op = transforms.Compose([transforms.ToPILImage(), transforms.Resize((input_shape[1], input_shape[2])), transforms.ToTensor()])
@@ -368,29 +374,76 @@ class TesterClass():
                 # print("Shapes: ", np.shape(rgb2sm[i]), np.shape(shadow_mask), np.shape(shadow_matte[i]))
                 mae_sm_ws = np.round(mae(rgb2sm[i] * shadow_mask, shadow_matte[i] * shadow_mask).cpu(), 4)
                 self.mae_list_sm_ws.append(mae_sm_ws)
+
+                rmse_sm_ws = np.round(mse(rgb2sm[i] * shadow_mask, shadow_matte[i] * shadow_mask).cpu(), 4)
+                self.rmse_list_lab_ws.append(torch.sqrt(rmse_sm_ws))
+
         elif (prefix == "SRD"):
             input_shape = np.shape(rgb2sm[0])
             transform_op = transforms.Compose([transforms.ToPILImage(), transforms.Resize((input_shape[1], input_shape[2])), transforms.ToTensor()])
             mask_path = "E:/SRD_Test/srd/mask/"
 
             for i in range(0, np.size(file_name)):
-                shadow_mask = transform_op(cv2.cvtColor(cv2.imread(mask_path + file_name[i]), cv2.COLOR_BGR2GRAY))
-                shadow_mask = shadow_mask.to(device)
-                # print("Shapes: ", np.shape(rgb2sm[i]), np.shape(shadow_mask), np.shape(shadow_matte[i]))
-                mae_sm_ws = np.round(mae(rgb2sm[i] * shadow_mask, shadow_matte[i] * shadow_mask).cpu(), 4)
-                self.mae_list_sm_ws.append(mae_sm_ws)
+                shadow_mask = cv2.imread(mask_path + file_name[i])
+                if (shadow_mask is not None):
+                    shadow_mask = transform_op(cv2.cvtColor(cv2.imread(mask_path + file_name[i]), cv2.COLOR_BGR2GRAY))
+                    shadow_mask = shadow_mask.to(device)
+                    # print("Shapes: ", np.shape(rgb2sm[i]), np.shape(shadow_mask), np.shape(shadow_matte[i]))
+                    mae_sm_ws = np.round(mae(rgb2sm[i] * shadow_mask, shadow_matte[i] * shadow_mask).cpu(), 4)
+                    self.mae_list_sm_ws.append(mae_sm_ws)
+
+                    rmse_sm_ws = np.round(mse(rgb2sm[i] * shadow_mask, shadow_matte[i] * shadow_mask).cpu(), 4)
+                    self.rmse_list_lab_ws.append(torch.sqrt(rmse_sm_ws))
 
     def print_shadow_matte_performance(self, prefix, opts):
         ave_mae_sm = np.round(np.mean(self.mae_list_sm) * 100.0, 4)
         ave_mae_sm_ws = np.round(np.mean(self.mae_list_sm_ws) * 100.0, 4)
 
+        ave_rmse_sm = np.round(np.mean(self.rmse_list_lab) * 100.0, 4)
+        ave_rmse_sm_ws = np.round(np.mean(self.rmse_list_lab_ws) * 100.0, 4)
+
+        network_config = iid_server_config.IIDServerConfig.getInstance().interpret_shadow_matte_params_from_version()
+
         display_text = prefix + " - Versions: " + opts.shadow_matte_network_version + "_" + str(opts.shadow_matte_iteration) + \
-                       "<br> MAE Error (SM): " + str(ave_mae_sm) + "<br> MAE Error (SM WS): " + str(ave_mae_sm_ws)
+                       "<br>" + network_config["dataset_version"] + \
+                       "<br> MAE Error (SM): " + str(ave_mae_sm) + "<br> MAE Error (SM WS): " + str(ave_mae_sm_ws) + \
+                       "<br> RMSE Error (SM): " + str(ave_rmse_sm) + "<br> RMSE Error (SM WS): " + str(ave_rmse_sm_ws)
 
         self.visdom_reporter.plot_text(display_text)
 
         self.mae_list_sm.clear()
         self.mae_list_sm_ws.clear()
+
+        self.rmse_list_lab.clear()
+        self.rmse_list_lab_ws.clear()
+
+    def test_any_image(self, file_name, rgb_ws, prefix, show_images, save_image_results, opts):
+        device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
+        rgb2sm = self.shadow_m.test({"rgb": rgb_ws})
+        input_map = {"rgb": rgb_ws, "shadow_matte": rgb2sm}
+        rgb2ns = self.shadow_t.test(input_map)
+
+        # normalize everything
+        rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
+        rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
+        rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
+
+        if (show_images == 1):
+            self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+            self.visdom_reporter.plot_image(rgb2ns, prefix + " NS (equation) Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+
+        if (save_image_results == 1):
+            path = "./comparison/"
+            matte_path = path + "/matte-like/"
+
+            for i in range(0, np.size(file_name)):
+                impath = path + file_name[i]
+                torchvision.utils.save_image(rgb2ns[i], impath)
+
+                # shadow_matte_path = matte_path + file_name[i] + ".jpeg"
+                # torchvision.utils.save_image(shadow_matte[i], shadow_matte_path)
+
+                # print("Saving ISTD result as: ", file_name[i])
 
 
     def test_shadow(self, rgb_ws, rgb_ns, shadow_matte, prefix, show_images, mode, opts):
@@ -426,7 +479,6 @@ class TesterClass():
         self.ssim_list_rgb.append(ssim_rgb)
         self.mae_list_rgb.append(mae_rgb)
         self.rmse_list_lab.append(rmse_lab)
-
 
     #for ISTD
     def test_istd_shadow(self, file_name, rgb_ws, rgb_ns, shadow_matte, show_images, save_image_results, mode, opts):
@@ -475,7 +527,7 @@ class TesterClass():
                 shadow_mask = shadow_mask.to(device)
                 # print("Shapes: ", np.shape(rgb2sm[i]), np.shape(shadow_mask), np.shape(shadow_matte[i]))
                 rmse_lab_ws = np.round(mse(kornia.color.rgb_to_lab(rgb2ns * shadow_mask), kornia.color.rgb_to_lab(rgb_ns * shadow_mask)).cpu(), 4)
-                self.rmse_list_lab_ws.append(rmse_lab_ws)
+                self.rmse_list_lab_ws.append(torch.sqrt(rmse_lab_ws))
 
 
         psnr_rgb = np.round(kornia.metrics.psnr(rgb2ns, rgb_ns, max_val=1.0).item(), 4)
@@ -536,7 +588,7 @@ class TesterClass():
                     shadow_mask = shadow_mask.to(device)
                     # print("Shapes: ", np.shape(rgb2sm[i]), np.shape(shadow_mask), np.shape(shadow_matte[i]))
                     rmse_lab_ws = np.round(mse(kornia.color.rgb_to_lab(rgb2ns * shadow_mask), kornia.color.rgb_to_lab(rgb_ns * shadow_mask)).cpu(), 4)
-                    self.rmse_list_lab_ws.append(rmse_lab_ws)
+                    self.rmse_list_lab_ws.append(torch.sqrt(rmse_lab_ws))
 
         psnr_rgb = np.round(kornia.metrics.psnr(rgb2ns, rgb_ns, max_val=1.0).item(), 4)
         ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb2ns, rgb_ns, 5).item(), 4)

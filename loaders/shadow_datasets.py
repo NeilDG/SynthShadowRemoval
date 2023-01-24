@@ -223,6 +223,40 @@ class ShadowSRDDataset(data.Dataset):
     def __len__(self):
         return self.img_length
 
+class PlacesDataset(data.Dataset):
+    def __init__(self, img_length, img_list_a, patch_size = 0):
+        self.img_length = img_length
+        self.img_list_a = img_list_a
+        self.patch_size = (patch_size, patch_size)
+
+        self.initial_op = transforms.Compose([
+            transforms.ToPILImage()])
+
+        self.final_transform_op = transforms.Compose([
+            transforms.Resize(constants.TEST_IMAGE_SIZE),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5,), (0.5,))
+        ])
+
+    def __getitem__(self, idx):
+        file_name = self.img_list_a[idx].split("/")[-1].split(".png")[0]
+
+        try:
+            rgb_ws = cv2.imread(self.img_list_a[idx])
+            rgb_ws = cv2.cvtColor(rgb_ws, cv2.COLOR_BGR2RGB)
+            rgb_ws = self.initial_op(rgb_ws)
+            rgb_ws = self.final_transform_op(rgb_ws)
+
+        except:
+            print("Failed to load: ", self.img_list_a[idx])
+            rgb_ws = None
+            rgb_ns = None
+
+        return file_name, rgb_ws
+
+    def __len__(self):
+        return self.img_length
+
 class ShadowTestDataset(data.Dataset):
     def __init__(self, img_length, img_list_a, img_list_b, patch_size = 0):
         self.img_length = img_length

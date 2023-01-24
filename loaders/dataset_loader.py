@@ -372,13 +372,16 @@ def load_iid_datasetv2_test(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, patch
 
     return data_loader
 
-def load_single_test_dataset(path_a):
+def load_single_test_dataset(path_a, opts):
     a_list = glob.glob(path_a)
+    random.shuffle(a_list)
+    if (opts.img_to_load > 0):
+        a_list = a_list[0: opts.img_to_load]
     print("Length of images: %d" % len(a_list))
 
     data_loader = torch.utils.data.DataLoader(
         image_dataset.RealWorldDataset(a_list),
-        batch_size=4,
+        batch_size=16,
         num_workers=1,
         shuffle=True
     )
