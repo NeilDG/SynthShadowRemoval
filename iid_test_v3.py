@@ -174,33 +174,34 @@ def test_shadow_removal(dataset_tester, opts):
     dataset_tester.print_ave_shadow_performance("Train Set", opts)
 
     # ISTD test dataset
-    # shadow_loader, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, 8, opts)
-    # for i, (file_name, rgb_ws, rgb_ns, shadow_matte) in enumerate(shadow_loader, 0):
-    #     rgb_ws_tensor = rgb_ws.to(device)
-    #     rgb_ns_tensor = rgb_ns.to(device)
-    #     shadow_matte = shadow_matte.to(device)
-    #
-    #     dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.train_mode, opts)
-    #     # break
-    #
-    # dataset_tester.print_ave_shadow_performance("ISTD", opts)
-    #
-    # # SRD test dataset
-    # shadow_loader, _ = dataset_loader.load_srd_dataset(constants.ws_srd, constants.ns_srd, 8, opts)
-    # for i, (file_name, rgb_ws, rgb_ns, shadow_matte) in enumerate(shadow_loader, 0):
-    #     rgb_ws_tensor = rgb_ws.to(device)
-    #     rgb_ns_tensor = rgb_ns.to(device)
-    #     shadow_matte = shadow_matte.to(device)
-    #
-    #     dataset_tester.test_srd(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.train_mode, opts)
-    #     # break
-    #
-    # dataset_tester.print_ave_shadow_performance("SRD", opts)
+    shadow_loader, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, 8, opts)
+    for i, (file_name, rgb_ws, rgb_ns, shadow_matte) in enumerate(shadow_loader, 0):
+        rgb_ws_tensor = rgb_ws.to(device)
+        rgb_ns_tensor = rgb_ns.to(device)
+        shadow_matte = shadow_matte.to(device)
 
-    shadow_loader = dataset_loader.load_single_test_dataset(constants.imgx_dir, opts)  # load PLACES
-    for i, (file_name, rgb_ws) in enumerate(shadow_loader, 0):
-        rgb_ws = rgb_ws.to(device)
-        dataset_tester.test_any_image(file_name, rgb_ws, "Places-365", opts.img_vis_enabled, 1, opts)
+        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.train_mode, opts)
+        # break
+
+    dataset_tester.print_ave_shadow_performance("ISTD", opts)
+
+    # SRD test dataset
+    shadow_loader, _ = dataset_loader.load_srd_dataset(constants.ws_srd, constants.ns_srd, 8, opts)
+    for i, (file_name, rgb_ws, rgb_ns, shadow_matte) in enumerate(shadow_loader, 0):
+        rgb_ws_tensor = rgb_ws.to(device)
+        rgb_ns_tensor = rgb_ns.to(device)
+        shadow_matte = shadow_matte.to(device)
+
+        dataset_tester.test_srd(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.train_mode, opts)
+        # break
+
+    dataset_tester.print_ave_shadow_performance("SRD", opts)
+
+    # PLACES test dataset
+    # shadow_loader = dataset_loader.load_single_test_dataset(constants.imgx_dir, opts)  # load PLACES
+    # for i, (file_name, rgb_ws) in enumerate(shadow_loader, 0):
+    #     rgb_ws = rgb_ws.to(device)
+    #     dataset_tester.test_any_image(file_name, rgb_ws, "Places-365", opts.img_vis_enabled, 1, opts)
 
 
 def main(argv):

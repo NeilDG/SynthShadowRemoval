@@ -10,9 +10,14 @@ def test_relighting():
     #           "--shadow_matte_iteration=1 --shadow_removal_iteration=1")
 
     os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
-              "--plot_enabled=1 --img_vis_enabled=1 --train_mode=train_shadow_matte "
-              "--shadow_matte_network_version=\"v60.34_istd\" --shadow_removal_version=\"v58.28\" "
+              "--plot_enabled=1 --img_vis_enabled=1 --train_mode=all "
+              "--shadow_matte_network_version=\"v60.34_istd\" --shadow_removal_version=\"v60.32_places\" "
               "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
+
+    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+    #           "--plot_enabled=1 --img_vis_enabled=1 --train_mode=all "
+    #           "--shadow_matte_network_version=\"v60.34_srd\" --shadow_removal_version=\"v60.32_places\" "
+    #           "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
 
     # os.system("python \"benchmark_shadow.py\" --img_to_load=-1")
 

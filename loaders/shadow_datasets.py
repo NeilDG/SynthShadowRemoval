@@ -180,7 +180,8 @@ class ShadowSRDDataset(data.Dataset):
 
         self.initial_op = transforms.Compose([
             transforms.ToPILImage(),
-            transforms.Resize((160, 210)),
+            transforms.Resize(constants.TEST_IMAGE_SIZE),
+            # transforms.Resize((160, 210)),
             transforms.ToTensor()])
 
         sc_instance = iid_server_config.IIDServerConfig.getInstance()

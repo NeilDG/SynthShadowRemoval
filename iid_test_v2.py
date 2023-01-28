@@ -492,6 +492,11 @@ class TesterClass():
         rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
         rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
         rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
+
+        resize_op = transforms.Resize((240, 320), transforms.InterpolationMode.BICUBIC)
+        rgb_ns = resize_op(rgb_ws)
+        rgb2ns = resize_op(rgb2ns)
+
         if(rgb2sm != None):
             rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
             shadow_matte = tensor_utils.normalize_to_01(shadow_matte)
@@ -551,6 +556,11 @@ class TesterClass():
         rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
         rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
         rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
+
+        resize_op = transforms.Resize((160, 210), transforms.InterpolationMode.BICUBIC)
+        rgb_ns = resize_op(rgb_ws)
+        rgb2ns = resize_op(rgb2ns)
+
         if (rgb2sm != None):
             rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
             shadow_matte = tensor_utils.normalize_to_01(shadow_matte)
