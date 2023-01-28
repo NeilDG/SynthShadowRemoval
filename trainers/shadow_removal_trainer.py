@@ -142,6 +142,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             # shadow map discriminator
             self.optimizerD.zero_grad()
             self.D_SM_discriminator.train()
+
             output = self.G_SM_predictor(input_ws)
 
             prediction = self.D_SM_discriminator(target_tensor)

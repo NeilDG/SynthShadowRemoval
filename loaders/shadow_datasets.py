@@ -121,8 +121,8 @@ class ShadowISTDDataset(data.Dataset):
 
         self.initial_op = transforms.Compose([
             transforms.ToPILImage(),
-            # transforms.Resize(constants.TEST_IMAGE_SIZE),
-            transforms.Resize((240, 320)),
+            transforms.Resize(constants.TEST_IMAGE_SIZE),
+            # transforms.Resize((240, 320)),
             transforms.ToTensor()])
 
         sc_instance = iid_server_config.IIDServerConfig.getInstance()

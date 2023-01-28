@@ -95,8 +95,8 @@ def update_config(opts):
     else:
         opts.num_workers = 12
         constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "E:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
-        constants.rgb_dir_ns = "E:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
+        constants.rgb_dir_ws = "X:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        constants.rgb_dir_ns = "X:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
         constants.ws_istd = "E:/ISTD_Dataset/test/test_A/*.png"
         constants.ns_istd = "E:/ISTD_Dataset/test/test_C/*.png"
         constants.mask_istd = "E:/ISTD_Dataset/test/test_B/*.png"

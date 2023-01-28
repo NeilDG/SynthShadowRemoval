@@ -91,10 +91,8 @@ def update_config(opts):
     else:
         opts.num_workers = 12
         constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "E:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
-        constants.rgb_dir_ns = "E:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
-        constants.albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
-        constants.unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
+        constants.rgb_dir_ws = "X:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        constants.rgb_dir_ns = "X:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)
 
 def test_shadow_matte(dataset_tester, opts):
