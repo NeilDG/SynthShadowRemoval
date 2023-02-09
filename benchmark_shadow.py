@@ -380,13 +380,15 @@ def main(argv):
     # "./comparison/ISTD Dataset/AAAI_2020+_ISTD/*.png",
     # "./comparison/ISTD Dataset/SynShadow-SP+M/*.png",
     # "./comparison/ISTD Dataset/SynShadow-DHAN/*.png",
-    "./comparison/ISTD Dataset/OURS/*.png"]
+    # "./comparison/ISTD Dataset/BMNET_Synth/*.png",
+    "./comparison/ISTD Dataset/OURS/*.png"
+    ]
 
     ns_path = "E:/ISTD_Dataset/test/test_C/*.png"
     mask_path = "E:/ISTD_Dataset/test/test_B/*.png"
 
     measure_performance(istd_all_list, ns_path, mask_path, opts)
-    save_img_copies_for_results(istd_all_list, ns_path, "ISTD Dataset", (240, 320), opts)
+    # save_img_copies_for_results(istd_all_list, ns_path, "ISTD Dataset", (240, 320), opts)
 
     # for SRD
     ns_path = "E:/SRD_Test/srd/shadow_free/*.jpg"
@@ -401,10 +403,12 @@ def main(argv):
     # "./comparison/SRD Dataset/AAAI_2020+_SRD/*.jpg",
     # "./comparison/SRD Dataset/SynShadow-SP+M/*.png",
     # "./comparison/SRD Dataset/SynShadow-DHAN/*.png",
-    "./comparison/SRD Dataset/OURS/*.png"]
+    # "./comparison/SRD Dataset/BMNET_Synth/*.png",
+    "./comparison/SRD Dataset/OURS/*.png"
+    ]
 
     measure_performance(sbu_all_list, ns_path, mask_path, opts)
-    save_img_copies_for_results(sbu_all_list, ns_path, "SRD Dataset", (160, 210), opts)
+    # save_img_copies_for_results(sbu_all_list, ns_path, "SRD Dataset", (160, 210), opts)
 
 
 
