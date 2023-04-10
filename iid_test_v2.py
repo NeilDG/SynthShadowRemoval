@@ -18,7 +18,7 @@ from transforms import iid_transforms
 import global_config
 from utils import plot_utils, tensor_utils
 from trainers import trainer_factory
-from custom_losses import whdr
+from losses import whdr
 import torchvision.transforms.functional
 
 parser = OptionParser()

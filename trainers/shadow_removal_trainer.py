@@ -1,6 +1,5 @@
 import torchvision.transforms.functional
 
-from config import iid_server_config
 from trainers import abstract_iid_trainer, early_stopper
 import kornia
 from model.modules import image_pool
@@ -15,7 +14,7 @@ from hyperparam_tables import shadow_iteration_table
 from transforms import iid_transforms, shadow_map_transforms
 from utils import plot_utils
 from utils import tensor_utils
-from custom_losses import ssim_loss, iid_losses
+from losses import ssim_loss, iid_losses
 import lpips
 
 class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):

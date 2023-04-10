@@ -2,8 +2,6 @@
 import os
 
 DATASET_PLACES_PATH = "E:/Places Dataset/"
-
-# PATCH_IMAGE_SIZE = (64, 64)
 TEST_IMAGE_SIZE = (256, 256)
 
 #========================================================================#
@@ -25,14 +23,10 @@ LAST_METRIC_KEY = "last_metric"
 
 plot_enabled = 1
 early_stop_threshold = 500
-min_epochs = 50
-num_epochs = 100
 disable_progress_bar = False
 
-#Running on local = 0, Running on COARE = 1, Running on CCS server = 2
-server_config = 0
-debug_run = 0
-num_workers = 12
+server_config = -1
+num_workers = -1
 
 albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
 rgb_dir_ws_styled = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
@@ -58,6 +52,16 @@ imgx_dir = "E:/Places Dataset/*.jpg"
 # imgy_dir = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"
 imgy_dir = "E:/SynthWeather Dataset 8/albedo/*.png"
 
-shadow_removal_version = "VXX.XX"
-shadow_matte_network_version = "VXX.XX"
+# shadow_removal_version = "VXX.XX"
+# shadow_matte_network_version = "VXX.XX"
 style_transfer_version = "VXX.XX"
+
+network_version = "VXX.XX"
+iteration = -1
+img_to_load = -1
+load_size = -1
+batch_size = -1
+train_mode = "all"
+last_epoch = 0
+
+

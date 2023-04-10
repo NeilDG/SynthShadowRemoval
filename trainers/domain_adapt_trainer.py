@@ -13,7 +13,7 @@ import numpy as np
 import torch.nn as nn
 from utils import plot_utils
 from utils import tensor_utils
-from custom_losses import ssim_loss
+from losses import ssim_loss
 import lpips
 
 class DomainAdaptIterationTable():

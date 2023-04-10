@@ -10,7 +10,7 @@ import kornia
 from pathlib import Path
 import kornia.augmentation as K
 
-from config import iid_server_config
+from config.network_config import ConfigHolder
 from transforms import shadow_map_transforms
 
 class ShadowTrainDataset(data.Dataset):
@@ -22,12 +22,7 @@ class ShadowTrainDataset(data.Dataset):
 
         self.shadow_op = shadow_map_transforms.ShadowMapTransforms()
         self.norm_op = transforms.Normalize((0.5, ), (0.5, ))
-
-        sc_instance = iid_server_config.IIDServerConfig.getInstance()
-        if(train_mode == "train_shadow_matte"):
-            self.network_config = sc_instance.interpret_shadow_matte_params_from_version()
-        else:
-            self.network_config = sc_instance.interpret_shadow_network_params_from_version()
+        self.network_config = ConfigHolder.getInstance().get_network_config()
 
         if(self.transform_config == 1):
             patch_size = self.network_config["patch_size"]
@@ -35,7 +30,7 @@ class ShadowTrainDataset(data.Dataset):
         else:
             self.patch_size = global_config.TEST_IMAGE_SIZE
 
-        if ("augmix" in self.network_config["augment_mode"] and self.transform_config == 1):
+        if ("augmix" in self.network_config["augment_key"] and self.transform_config == 1):
             self.initial_op = transforms.Compose([
                 transforms.ToPILImage(),
                 transforms.Resize(global_config.TEST_IMAGE_SIZE),
@@ -43,7 +38,7 @@ class ShadowTrainDataset(data.Dataset):
                 transforms.RandomVerticalFlip(0.5),
                 transforms.AugMix(),
                 transforms.ToTensor()])
-        elif ("trivial_augment_wide" in self.network_config["augment_mode"] and self.transform_config == 1):
+        elif ("trivial_augment_wide" in self.network_config["augment_key"] and self.transform_config == 1):
             self.initial_op = transforms.Compose([
                 transforms.ToPILImage(),
                 transforms.Resize(global_config.TEST_IMAGE_SIZE),
@@ -66,10 +61,10 @@ class ShadowTrainDataset(data.Dataset):
             rgb_ws = self.initial_op(rgb_ws)
 
             #add gaussian noise to WS
-            if("random_exposure" in self.network_config["augment_mode"]):
+            if("random_exposure" in self.network_config["augment_key"]):
                 rgb_ws = rgb_ws * np.random.uniform(1.001, 1.25)
 
-            if ("random_noise" in self.network_config["augment_mode"]):
+            if ("random_noise" in self.network_config["augment_key"]):
                 noise_op = K.RandomGaussianNoise(p=1.0, mean=0.0, std=np.random.uniform(0.0, 0.15))
                 rgb_ws = torch.squeeze(noise_op(rgb_ws))
 
@@ -118,18 +113,11 @@ class ShadowISTDDataset(data.Dataset):
 
         self.shadow_op = shadow_map_transforms.ShadowMapTransforms()
         self.norm_op = transforms.Normalize((0.5, ), (0.5, ))
-
         self.initial_op = transforms.Compose([
             transforms.ToPILImage(),
             transforms.Resize(global_config.TEST_IMAGE_SIZE),
             # transforms.Resize((240, 320)),
             transforms.ToTensor()])
-
-        sc_instance = iid_server_config.IIDServerConfig.getInstance()
-        if (train_mode == "train_shadow_matte"):
-            self.network_config = sc_instance.interpret_shadow_matte_params_from_version()
-        else:
-            self.network_config = sc_instance.interpret_shadow_network_params_from_version()
 
     def __getitem__(self, idx):
         file_name = self.img_list_a[idx].split("/")[-1].split(".png")[0]
@@ -183,12 +171,6 @@ class ShadowSRDDataset(data.Dataset):
             transforms.Resize(global_config.TEST_IMAGE_SIZE),
             # transforms.Resize((160, 210)),
             transforms.ToTensor()])
-
-        sc_instance = iid_server_config.IIDServerConfig.getInstance()
-        if (train_mode == "train_shadow_matte"):
-            self.network_config = sc_instance.interpret_shadow_matte_params_from_version()
-        else:
-            self.network_config = sc_instance.interpret_shadow_network_params_from_version()
 
     def __getitem__(self, idx):
         file_name = self.img_list_a[idx].split("/")[-1].split(".")[0]

@@ -1,5 +1,4 @@
 import global_config
-from config import iid_server_config
 from loaders import dataset_loader
 from model import embedding_network
 from model import ffa_gan as ffa
@@ -12,39 +11,32 @@ from trainers.shadow_removal_trainer import ShadowTrainer
 import torch
 
 class TrainerFactory():
-    def __init__(self, gpu_device, opts):
+    def __init__(self, gpu_device):
         self.gpu_device = gpu_device
-        self.g_lr = opts.g_lr
-        self.d_lr = opts.d_lr
-        self.opts = opts
         self.trainer_list = {}
 
-    def initialize_all_trainers(self, opts):
-        sc_instance = iid_server_config.IIDServerConfig.getInstance()
-        self.server_config = sc_instance.get_general_configs()
-        self.network_config = sc_instance.interpret_shadow_network_params_from_version()
-
+    def initialize_all_trainers(self):
         # self.trainer_list["train_shadow_mask"] = ShadowMaskTrainer(self.gpu_device, opts)
-        self.trainer_list["train_shadow_matte"] = ShadowMatteTrainer(self.gpu_device, opts)
-        self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device, opts)
+        self.trainer_list["train_shadow_matte"] = ShadowMatteTrainer(self.gpu_device)
+        # self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device)
         # self.trainer_list["train_shadow_refine"] = ShadowRefinementTrainer(self.gpu_device, opts)
 
-    def get_all_trainers(self, opts):
-        self.initialize_all_trainers(opts)
+    def get_all_trainers(self):
+        self.initialize_all_trainers()
         return self.trainer_list["train_shadow_matte"], self.trainer_list["train_shadow"]
 
-    def get_shadow_trainer(self):
-        if ("train_shadow" in self.trainer_list):
-            return self.trainer_list["train_shadow"]
-        else:
-            self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device, self.opts)
-            return self.trainer_list["train_shadow"]
+    # def get_shadow_trainer(self):
+    #     if ("train_shadow" in self.trainer_list):
+    #         return self.trainer_list["train_shadow"]
+    #     else:
+    #         self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device, self.opts)
+    #         return self.trainer_list["train_shadow"]
 
     def get_shadow_matte_trainer(self):
         if ("train_shadow_matte" in self.trainer_list):
             return self.trainer_list["train_shadow_matte"]
         else:
-            self.trainer_list["train_shadow_matte"] = ShadowMatteTrainer(self.gpu_device, self.opts)
+            self.trainer_list["train_shadow_matte"] = ShadowMatteTrainer(self.gpu_device)
             return self.trainer_list["train_shadow_matte"]
 
     def train(self, mode, epoch, iteration, input_map, target_map):

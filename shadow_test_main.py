@@ -20,7 +20,7 @@ from transforms import iid_transforms
 import global_config
 from utils import plot_utils, tensor_utils
 from trainers import trainer_factory
-from custom_losses import whdr
+from losses import whdr
 
 parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)

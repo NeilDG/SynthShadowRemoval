@@ -11,8 +11,8 @@ import global_config
 from utils import plot_utils
 from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
-from custom_losses import ssim_loss
-from custom_losses import vgg_loss_model as vgg_loss
+from losses import ssim_loss
+from losses import vgg_loss_model as vgg_loss
 import lpips
 from model import embedding_network
 

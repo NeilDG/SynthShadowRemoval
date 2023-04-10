@@ -13,8 +13,6 @@ import global_config
 import kornia
 from pathlib import Path
 
-from config import iid_server_config
-
 
 class ColorTransferDataset(data.Dataset):
     def __init__(self, image_list_a, path_b, path_segment, transform_config):
