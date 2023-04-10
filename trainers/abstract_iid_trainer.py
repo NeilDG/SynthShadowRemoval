@@ -2,7 +2,7 @@ from abc import abstractmethod
 
 import torch
 
-import constants
+import global_config
 from config import iid_server_config
 from model import embedding_network, densenet_gan, ffa_gan
 from model import vanilla_cycle_gan as cycle_gan

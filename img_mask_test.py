@@ -1,5 +1,5 @@
 from loaders import dataset_loader
-import constants
+import global_config
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np

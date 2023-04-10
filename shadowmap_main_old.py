@@ -9,7 +9,7 @@ import torch.nn.parallel
 import torch.utils.data
 import torchvision.utils as vutils
 
-import constants
+import global_config
 from loaders import dataset_loader
 from trainers import early_stopper
 from trainers import shadow_map_trainer

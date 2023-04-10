@@ -8,7 +8,7 @@ import torch
 import torch.nn.parallel
 import torch.utils.data
 import torchvision.utils as vutils
-import constants
+import global_config
 import kornia
 from loaders import dataset_loader
 from trainers import early_stopper

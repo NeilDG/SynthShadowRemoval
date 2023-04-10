@@ -7,7 +7,7 @@ import torch
 import torch.cuda.amp as amp
 import torch.nn as nn
 import torchvision.utils as vutils
-import constants
+import global_config
 from utils import plot_utils
 from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan

@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 import torchvision.transforms as transforms
 import torchvision.transforms.functional
 import torch.nn.functional as F
-import constants
+import global_config
 import kornia
 from pathlib import Path
 

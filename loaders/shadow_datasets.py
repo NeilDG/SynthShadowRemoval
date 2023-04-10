@@ -5,7 +5,7 @@ import numpy as np
 from torch.utils import data
 import torchvision.transforms as transforms
 import torchvision.transforms.functional
-import constants
+import global_config
 import kornia
 from pathlib import Path
 import kornia.augmentation as K
@@ -33,12 +33,12 @@ class ShadowTrainDataset(data.Dataset):
             patch_size = self.network_config["patch_size"]
             self.patch_size = (patch_size, patch_size)
         else:
-            self.patch_size = constants.TEST_IMAGE_SIZE
+            self.patch_size = global_config.TEST_IMAGE_SIZE
 
         if ("augmix" in self.network_config["augment_mode"] and self.transform_config == 1):
             self.initial_op = transforms.Compose([
                 transforms.ToPILImage(),
-                transforms.Resize(constants.TEST_IMAGE_SIZE),
+                transforms.Resize(global_config.TEST_IMAGE_SIZE),
                 transforms.RandomHorizontalFlip(0.5),
                 transforms.RandomVerticalFlip(0.5),
                 transforms.AugMix(),
@@ -46,7 +46,7 @@ class ShadowTrainDataset(data.Dataset):
         elif ("trivial_augment_wide" in self.network_config["augment_mode"] and self.transform_config == 1):
             self.initial_op = transforms.Compose([
                 transforms.ToPILImage(),
-                transforms.Resize(constants.TEST_IMAGE_SIZE),
+                transforms.Resize(global_config.TEST_IMAGE_SIZE),
                 transforms.RandomHorizontalFlip(0.5),
                 transforms.RandomVerticalFlip(0.5),
                 transforms.TrivialAugmentWide(),
@@ -54,7 +54,7 @@ class ShadowTrainDataset(data.Dataset):
         else:
             self.initial_op = transforms.Compose([
                 transforms.ToPILImage(),
-                transforms.Resize(constants.TEST_IMAGE_SIZE),
+                transforms.Resize(global_config.TEST_IMAGE_SIZE),
                 transforms.ToTensor()])
 
     def __getitem__(self, idx):
@@ -121,7 +121,7 @@ class ShadowISTDDataset(data.Dataset):
 
         self.initial_op = transforms.Compose([
             transforms.ToPILImage(),
-            transforms.Resize(constants.TEST_IMAGE_SIZE),
+            transforms.Resize(global_config.TEST_IMAGE_SIZE),
             # transforms.Resize((240, 320)),
             transforms.ToTensor()])
 
@@ -180,7 +180,7 @@ class ShadowSRDDataset(data.Dataset):
 
         self.initial_op = transforms.Compose([
             transforms.ToPILImage(),
-            transforms.Resize(constants.TEST_IMAGE_SIZE),
+            transforms.Resize(global_config.TEST_IMAGE_SIZE),
             # transforms.Resize((160, 210)),
             transforms.ToTensor()])
 
@@ -234,7 +234,7 @@ class PlacesDataset(data.Dataset):
             transforms.ToPILImage()])
 
         self.final_transform_op = transforms.Compose([
-            transforms.Resize(constants.TEST_IMAGE_SIZE),
+            transforms.Resize(global_config.TEST_IMAGE_SIZE),
             transforms.ToTensor(),
             transforms.Normalize((0.5,), (0.5,))
         ])
@@ -269,7 +269,7 @@ class ShadowTestDataset(data.Dataset):
             transforms.ToPILImage()])
 
         self.final_transform_op = transforms.Compose([
-            transforms.Resize(constants.TEST_IMAGE_SIZE),
+            transforms.Resize(global_config.TEST_IMAGE_SIZE),
             transforms.ToTensor(),
             transforms.Normalize((0.5,), (0.5,))
         ])
@@ -307,7 +307,7 @@ class ShadowMatteDataset(data.Dataset):
 
         self.transform_op = transforms.Compose([
             transforms.ToPILImage(),
-            transforms.Resize(constants.TEST_IMAGE_SIZE),
+            transforms.Resize(global_config.TEST_IMAGE_SIZE),
             transforms.ToTensor()])
 
     def __getitem__(self, idx):

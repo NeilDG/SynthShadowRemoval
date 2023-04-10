@@ -10,7 +10,7 @@ from torch import nn
 from torch.utils import data
 import torchvision.transforms as transforms
 import torchvision.transforms.functional
-import constants
+import global_config
 from loaders import dataset_loader
 from loaders import shadow_datasets
 

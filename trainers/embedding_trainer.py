@@ -3,7 +3,7 @@ import os
 import lpips
 from model import embedding_network, unet_gan, usi3d_gan
 from model import vanilla_cycle_gan as cycle_gan
-import constants
+import global_config
 import torch
 import torch.cuda.amp as amp
 import random

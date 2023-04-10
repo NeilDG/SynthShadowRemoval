@@ -13,7 +13,7 @@ from trainers import iid_trainer, paired_trainer
 from trainers import early_stopper
 from transforms import iid_transforms
 from utils import tensor_utils
-import constants
+import global_config
 from trainers import embedding_trainer
 
 parser = OptionParser()

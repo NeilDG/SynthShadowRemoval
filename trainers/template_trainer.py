@@ -3,7 +3,7 @@
 
 import os
 from model import vanilla_cycle_gan as cg
-import constants
+import global_config
 import torch
 import random
 import itertools

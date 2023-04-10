@@ -5,7 +5,7 @@
 import kornia
 from model import translator_gan
 from model import vanilla_cycle_gan as cycle_gan
-import constants
+import global_config
 import torch
 import torch.cuda.amp as amp
 import itertools
@@ -270,7 +270,7 @@ class DomainAdaptTrainer():
             self.visdom_reporter.plot_image(y2x, str(label) + " X Image Reconstruction - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
 
             self.visdom_reporter.plot_image(tensor_y, str(label) + " Input Y Images - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
-            self.visdom_reporter.plot_image(x2y, str(label) + " Y Image Reconstruction - " + constants.STYLE_TRANSFER_VERSION + constants.ITERATION)
+            self.visdom_reporter.plot_image(x2y, str(label) + " Y Image Reconstruction - " + constants.STYLE_TRANSFER_VERSION + global_config.ITERATION)
 
     def load_saved_state(self, checkpoint):
         self.G_X2Y.load_state_dict(checkpoint[constants.GENERATOR_KEY + "X2Y"])
@@ -281,7 +281,7 @@ class DomainAdaptTrainer():
         self.D_X.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "DX"])
         self.D_Y.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "DY"])
 
-        self.optimizerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY])
+        self.optimizerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + global_config.OPTIMIZER_KEY])
         self.optimizerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY])
         self.schedulerG.load_state_dict(checkpoint[constants.GENERATOR_KEY + "scheduler"])
         self.schedulerD.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "scheduler"])
@@ -307,10 +307,10 @@ class DomainAdaptTrainer():
         save_dict[constants.GENERATOR_KEY + "X2Y_D"] = netGX2Y_D_state_dict
         save_dict[constants.GENERATOR_KEY + "Y2X_D"] = netGY2X_D_state_dict
         save_dict[constants.DISCRIMINATOR_KEY + "DX"] = netDX_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "DY"] = netDY_state_dict
+        save_dict[global_config.DISCRIMINATOR_KEY + "DY"] = netDY_state_dict
 
         save_dict[constants.GENERATOR_KEY + constants.OPTIMIZER_KEY] = optimizerG_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY] = optimizerD_state_dict
+        save_dict[global_config.DISCRIMINATOR_KEY + constants.OPTIMIZER_KEY] = optimizerD_state_dict
 
         save_dict[constants.GENERATOR_KEY + "scheduler"] = schedulerG_state_dict
         save_dict[constants.DISCRIMINATOR_KEY + "scheduler"] = schedulerD_state_dict

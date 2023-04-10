@@ -9,7 +9,7 @@ from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
 from model import usi3d_gan
 from model.modules import image_pool
-import constants
+import global_config
 import torch
 import torch.cuda.amp as amp
 import itertools

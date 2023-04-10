@@ -1,7 +1,7 @@
 from config import iid_server_config
 from trainers import abstract_iid_trainer, early_stopper
 from model import unet_gan
-import constants
+import global_config
 import torch
 import torch.cuda.amp as amp
 import itertools

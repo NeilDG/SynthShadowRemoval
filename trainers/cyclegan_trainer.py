@@ -13,7 +13,7 @@ import torch.nn as nn
 import torchvision.utils as vutils
 from lpips import lpips
 
-import constants
+import global_config
 from config import iid_server_config
 from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
@@ -169,7 +169,7 @@ class CycleGANTrainer:
 
         self.fp16_scaler = amp.GradScaler()  # for automatic mixed precision
 
-        self.stopper_method = early_stopper.EarlyStopper(general_config["train_style_transfer"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, constants.early_stop_threshold, 99999.9)
+        self.stopper_method = early_stopper.EarlyStopper(general_config["train_style_transfer"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, global_config.early_stop_threshold, 99999.9)
         self.stop_result = False
 
         self.NETWORK_VERSION = sc_instance.get_version_config("style_transfer_version", "style_transfer_name", self.iteration)
@@ -177,32 +177,44 @@ class CycleGANTrainer:
         self.load_saved_state()
 
     def initialize_dict(self):
+        self.G_LOSS_KEY = "g_loss"
+        self.IDENTITY_LOSS_KEY = "id"
+        self.CYCLE_LOSS_KEY = "cyc"
+        self.G_ADV_LOSS_KEY = "g_adv"
+        self.LIKENESS_LOSS_KEY = "likeness"
+        self.SMOOTHNESS_LOSS_KEY = "smoothness"
+        self.D_OVERALL_LOSS_KEY = "d_loss"
+        self.D_A_REAL_LOSS_KEY = "d_real_a"
+        self. D_A_FAKE_LOSS_KEY = "d_fake_a"
+        self.D_B_REAL_LOSS_KEY = "d_real_b"
+        self.D_B_FAKE_LOSS_KEY = "d_fake_b"
+
         # what to store in visdom?
         self.losses_dict = {}
-        self.losses_dict[constants.G_LOSS_KEY] = []
-        self.losses_dict[constants.D_OVERALL_LOSS_KEY] = []
-        self.losses_dict[constants.IDENTITY_LOSS_KEY] = []
-        self.losses_dict[constants.LIKENESS_LOSS_KEY] = []
-        self.losses_dict[constants.SMOOTHNESS_LOSS_KEY] = []
-        self.losses_dict[constants.G_ADV_LOSS_KEY] = []
-        self.losses_dict[constants.D_A_FAKE_LOSS_KEY] = []
-        self.losses_dict[constants.D_A_REAL_LOSS_KEY] = []
-        self.losses_dict[constants.D_B_FAKE_LOSS_KEY] = []
-        self.losses_dict[constants.D_B_REAL_LOSS_KEY] = []
-        self.losses_dict[constants.CYCLE_LOSS_KEY] = []
+        self.losses_dict[self.G_LOSS_KEY] = []
+        self.losses_dict[self.D_OVERALL_LOSS_KEY] = []
+        self.losses_dict[self.IDENTITY_LOSS_KEY] = []
+        self.losses_dict[self.LIKENESS_LOSS_KEY] = []
+        self.losses_dict[self.SMOOTHNESS_LOSS_KEY] = []
+        self.losses_dict[self.G_ADV_LOSS_KEY] = []
+        self.losses_dict[self.D_A_FAKE_LOSS_KEY] = []
+        self.losses_dict[self.D_A_REAL_LOSS_KEY] = []
+        self.losses_dict[self.D_B_FAKE_LOSS_KEY] = []
+        self.losses_dict[self.D_B_REAL_LOSS_KEY] = []
+        self.losses_dict[self.CYCLE_LOSS_KEY] = []
 
         self.caption_dict = {}
-        self.caption_dict[constants.G_LOSS_KEY] = "G loss per iteration"
-        self.caption_dict[constants.D_OVERALL_LOSS_KEY] = "D loss per iteration"
-        self.caption_dict[constants.IDENTITY_LOSS_KEY] = "Identity loss per iteration"
-        self.caption_dict[constants.LIKENESS_LOSS_KEY] = "Likeness loss per iteration"
-        self.caption_dict[constants.SMOOTHNESS_LOSS_KEY] = "Smoothness loss per iteration"
-        self.caption_dict[constants.G_ADV_LOSS_KEY] = "G adv loss per iteration"
-        self.caption_dict[constants.D_A_FAKE_LOSS_KEY] = "D(A) fake loss per iteration"
-        self.caption_dict[constants.D_A_REAL_LOSS_KEY] = "D(A) real loss per iteration"
-        self.caption_dict[constants.D_B_FAKE_LOSS_KEY] = "D(B) fake loss per iteration"
-        self.caption_dict[constants.D_B_REAL_LOSS_KEY] = "D(B) real loss per iteration"
-        self.caption_dict[constants.CYCLE_LOSS_KEY] = "Cycle loss per iteration"
+        self.caption_dict[self.G_LOSS_KEY] = "G loss per iteration"
+        self.caption_dict[self.D_OVERALL_LOSS_KEY] = "D loss per iteration"
+        self.caption_dict[self.IDENTITY_LOSS_KEY] = "Identity loss per iteration"
+        self.caption_dict[self.LIKENESS_LOSS_KEY] = "Likeness loss per iteration"
+        self.caption_dict[self.SMOOTHNESS_LOSS_KEY] = "Smoothness loss per iteration"
+        self.caption_dict[self.G_ADV_LOSS_KEY] = "G adv loss per iteration"
+        self.caption_dict[self.D_A_FAKE_LOSS_KEY] = "D(A) fake loss per iteration"
+        self.caption_dict[self.D_A_REAL_LOSS_KEY] = "D(A) real loss per iteration"
+        self.caption_dict[self.D_B_FAKE_LOSS_KEY] = "D(B) fake loss per iteration"
+        self.caption_dict[self.D_B_REAL_LOSS_KEY] = "D(B) real loss per iteration"
+        self.caption_dict[self.CYCLE_LOSS_KEY] = "Cycle loss per iteration"
 
     def update_penalties(self, adv_weight, id_weight, likeness_weight, lpip_weight, cycle_weight):
         # what penalties to use for losses?
@@ -337,17 +349,17 @@ class CycleGANTrainer:
 
                 # what to put to losses dict for visdom reporting?
                 if(batch > 100):
-                    self.losses_dict[constants.G_LOSS_KEY].append(errG.item())
-                    self.losses_dict[constants.D_OVERALL_LOSS_KEY].append(errD.item())
-                    self.losses_dict[constants.IDENTITY_LOSS_KEY].append(A_identity_loss.item() + B_identity_loss.item())
-                    self.losses_dict[constants.LIKENESS_LOSS_KEY].append(B_likeness_loss.item())
-                    self.losses_dict[constants.SMOOTHNESS_LOSS_KEY].append(A_lpip_loss.item() + B_lpip_loss.item())
-                    self.losses_dict[constants.G_ADV_LOSS_KEY].append(A_adv_loss.item() + B_adv_loss.item())
-                    self.losses_dict[constants.D_A_FAKE_LOSS_KEY].append(D_A_fake_loss.item())
-                    self.losses_dict[constants.D_A_REAL_LOSS_KEY].append(D_A_real_loss.item())
-                    self.losses_dict[constants.D_B_FAKE_LOSS_KEY].append(D_B_fake_loss.item())
-                    self.losses_dict[constants.D_B_REAL_LOSS_KEY].append(D_B_real_loss.item())
-                    self.losses_dict[constants.CYCLE_LOSS_KEY].append(A_cycle_loss.item() + B_cycle_loss.item())
+                    self.losses_dict[self.G_LOSS_KEY].append(errG.item())
+                    self.losses_dict[self.D_OVERALL_LOSS_KEY].append(errD.item())
+                    self.losses_dict[self.IDENTITY_LOSS_KEY].append(A_identity_loss.item() + B_identity_loss.item())
+                    self.losses_dict[self.LIKENESS_LOSS_KEY].append(B_likeness_loss.item())
+                    self.losses_dict[self.SMOOTHNESS_LOSS_KEY].append(A_lpip_loss.item() + B_lpip_loss.item())
+                    self.losses_dict[self.G_ADV_LOSS_KEY].append(A_adv_loss.item() + B_adv_loss.item())
+                    self.losses_dict[self.D_A_FAKE_LOSS_KEY].append(D_A_fake_loss.item())
+                    self.losses_dict[self.D_A_REAL_LOSS_KEY].append(D_A_real_loss.item())
+                    self.losses_dict[self.D_B_FAKE_LOSS_KEY].append(D_B_fake_loss.item())
+                    self.losses_dict[self.D_B_REAL_LOSS_KEY].append(D_B_real_loss.item())
+                    self.losses_dict[self.CYCLE_LOSS_KEY].append(A_cycle_loss.item() + B_cycle_loss.item())
 
             x2y, _ = self.test(tensor_x, tensor_y)
             self.stopper_method.register_metric(x2y, tensor_y, epoch)
@@ -368,7 +380,7 @@ class CycleGANTrainer:
             return x2y, y2x
 
     def visdom_plot(self, iteration):
-        self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict, constants.style_transfer_version)
+        self.visdom_reporter.plot_finegrain_loss("a2b_loss", iteration, self.losses_dict, self.caption_dict, global_config.style_transfer_version)
 
     def visdom_visualize(self, tensor_x, tensor_y, label="Train"):
         with torch.no_grad():
@@ -382,13 +394,13 @@ class CycleGANTrainer:
             x2y2x = self.G_Y2X(x2y)
             y2x2y = self.G_X2Y(y2x)
 
-            self.visdom_reporter.plot_image(tensor_x, str(label) + " Input X Images - " + constants.style_transfer_version + str(self.iteration))
-            self.visdom_reporter.plot_image(x2y2x, str(label) + " Input X Cycle - " + constants.style_transfer_version + str(self.iteration))
-            self.visdom_reporter.plot_image(x2y, str(label) + " X2Y Transfer " + constants.style_transfer_version + str(self.iteration))
+            self.visdom_reporter.plot_image(tensor_x, str(label) + " Input X Images - " + global_config.style_transfer_version + str(self.iteration))
+            self.visdom_reporter.plot_image(x2y2x, str(label) + " Input X Cycle - " + global_config.style_transfer_version + str(self.iteration))
+            self.visdom_reporter.plot_image(x2y, str(label) + " X2Y Transfer " + global_config.style_transfer_version + str(self.iteration))
 
-            self.visdom_reporter.plot_image(tensor_y, str(label) + " Input Y Images - " + constants.style_transfer_version + str(self.iteration))
-            self.visdom_reporter.plot_image(y2x2y, str(label) + " Input Y Cycle - " + constants.style_transfer_version + str(self.iteration))
-            self.visdom_reporter.plot_image(y2x, str(label) + " Y2X Transfer - " + constants.style_transfer_version + str(self.iteration))
+            self.visdom_reporter.plot_image(tensor_y, str(label) + " Input Y Images - " + global_config.style_transfer_version + str(self.iteration))
+            self.visdom_reporter.plot_image(y2x2y, str(label) + " Input Y Cycle - " + global_config.style_transfer_version + str(self.iteration))
+            self.visdom_reporter.plot_image(y2x, str(label) + " Y2X Transfer - " + global_config.style_transfer_version + str(self.iteration))
 
     def load_saved_state(self):
         try:
@@ -406,23 +418,23 @@ class CycleGANTrainer:
 
         if (checkpoint != None):
             iid_server_config.IIDServerConfig.getInstance().store_epoch_from_checkpt("train_style_transfer", checkpoint["epoch"])
-            self.stopper_method.update_last_metric(checkpoint[constants.LAST_METRIC_KEY])
-            self.G_X2Y.load_state_dict(checkpoint[constants.GENERATOR_KEY + "A"])
-            self.G_Y2X.load_state_dict(checkpoint[constants.GENERATOR_KEY + "B"])
-            self.D_X.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "A"])
-            self.D_Y.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "B"])
+            self.stopper_method.update_last_metric(checkpoint[global_config.LAST_METRIC_KEY])
+            self.G_X2Y.load_state_dict(checkpoint[global_config.GENERATOR_KEY + "A"])
+            self.G_Y2X.load_state_dict(checkpoint[global_config.GENERATOR_KEY + "B"])
+            self.D_X.load_state_dict(checkpoint[global_config.DISCRIMINATOR_KEY + "A"])
+            self.D_Y.load_state_dict(checkpoint[global_config.DISCRIMINATOR_KEY + "B"])
 
     def save_states(self, epoch, iteration, is_temp:bool):
-        save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
+        save_dict = {'epoch': epoch, 'iteration': iteration, global_config.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
         netGA_state_dict = self.G_X2Y.state_dict()
         netGB_state_dict = self.G_Y2X.state_dict()
         netDA_state_dict = self.D_X.state_dict()
         netDB_state_dict = self.D_Y.state_dict()
 
-        save_dict[constants.GENERATOR_KEY + "A"] = netGA_state_dict
-        save_dict[constants.GENERATOR_KEY + "B"] = netGB_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "A"] = netDA_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "B"] = netDB_state_dict
+        save_dict[global_config.GENERATOR_KEY + "A"] = netGA_state_dict
+        save_dict[global_config.GENERATOR_KEY + "B"] = netGB_state_dict
+        save_dict[global_config.DISCRIMINATOR_KEY + "A"] = netDA_state_dict
+        save_dict[global_config.DISCRIMINATOR_KEY + "B"] = netDB_state_dict
 
         if (is_temp):
             torch.save(save_dict, self.NETWORK_CHECKPATH + ".checkpt")

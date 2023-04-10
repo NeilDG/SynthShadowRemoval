@@ -1,4 +1,4 @@
-import constants
+import global_config
 from config import iid_server_config
 from loaders import dataset_loader
 from model import embedding_network

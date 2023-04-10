@@ -4,7 +4,7 @@
 from model import ffa_gan as ffa, usi3d_gan
 from model import vanilla_cycle_gan as cycle_gan
 from model import unet_gan
-import constants
+import global_config
 import torch
 import torch.cuda.amp as amp
 import itertools

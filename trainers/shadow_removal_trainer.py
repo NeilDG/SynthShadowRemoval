@@ -5,7 +5,7 @@ from trainers import abstract_iid_trainer, early_stopper
 import kornia
 from model.modules import image_pool
 from model import vanilla_cycle_gan as cycle_gan
-import constants
+import global_config
 import torch
 import torch.cuda.amp as amp
 import itertools

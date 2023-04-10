@@ -15,7 +15,7 @@ from torchvision.transforms import transforms
 from config import iid_server_config
 from loaders import dataset_loader
 from transforms import iid_transforms
-import constants
+import global_config
 from utils import plot_utils, tensor_utils
 from trainers import trainer_factory
 from custom_losses import whdr

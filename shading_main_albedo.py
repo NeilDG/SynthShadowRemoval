@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from loaders import dataset_loader
 from trainers import shading_trainer
 from trainers import early_stopper
-import constants
+import global_config
 
 parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)

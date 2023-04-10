@@ -15,7 +15,7 @@ from model.modules import shadow_matte_pool
 from trainers import iid_trainer
 from trainers import early_stopper
 from transforms import iid_transforms
-import constants
+import global_config
 from utils import plot_utils
 from trainers import trainer_factory
 from tqdm import tqdm
@@ -38,70 +38,70 @@ parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
 parser.add_option('--train_mode', type=str, default="all") #all, train_shadow_matte, train_shadow
 
 def update_config(opts):
-    constants.server_config = opts.server_config
-    constants.plot_enabled = opts.plot_enabled
-    constants.debug_run = opts.debug_run
+    global_config.server_config = opts.server_config
+    global_config.plot_enabled = opts.plot_enabled
+    global_config.debug_run = opts.debug_run
 
     ## COARE
-    if (constants.server_config == 1):
+    if (global_config.server_config == 1):
         opts.num_workers = 6
-        constants.disable_progress_bar = True #disable progress bar logging in COARE
+        global_config.disable_progress_bar = True #disable progress bar logging in COARE
 
         print("Using COARE configuration. Workers: ", opts.num_workers)
-        constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
-        constants.rgb_dir_ns = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
-        constants.ws_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_A/*.png"
-        constants.ns_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_C/*.png"
-        constants.mask_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_B/*.png"
-        constants.ws_srd = "/scratch1/scratch2/neil.delgallego/SRD_Test/srd/shadow/*.jpg"
-        constants.ns_srd = "/scratch1/scratch2/neil.delgallego/SRD_Test/srd/shadow_free/*.jpg"
+        global_config.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
+        global_config.rgb_dir_ws = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        global_config.rgb_dir_ns = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
+        global_config.ws_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_A/*.png"
+        global_config.ns_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_C/*.png"
+        global_config.mask_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_B/*.png"
+        global_config.ws_srd = "/scratch1/scratch2/neil.delgallego/SRD_Test/srd/shadow/*.jpg"
+        global_config.ns_srd = "/scratch1/scratch2/neil.delgallego/SRD_Test/srd/shadow_free/*.jpg"
 
     # CCS JUPYTER
-    elif (constants.server_config == 2):
-        constants.num_workers = 6
-        constants.rgb_dir_ws = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
-        constants.rgb_dir_ns = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
-        constants.DATASET_PLACES_PATH = "/home/jupyter-neil.delgallego/Places Dataset/*.jpg"
-        constants.ws_istd = "/home/jupyter-neil.delgallego/ISTD_Dataset/test/test_A/*.png"
-        constants.ns_istd = "/home/jupyter-neil.delgallego/ISTD_Dataset/test/test_C/*.png"
-        constants.mask_istd = "/home/jupyter-neil.delgallego/ISTD_Dataset/test/test_B/*.png"
+    elif (global_config.server_config == 2):
+        global_config.num_workers = 6
+        global_config.rgb_dir_ws = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        global_config.rgb_dir_ns = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
+        global_config.DATASET_PLACES_PATH = "/home/jupyter-neil.delgallego/Places Dataset/*.jpg"
+        global_config.ws_istd = "/home/jupyter-neil.delgallego/ISTD_Dataset/test/test_A/*.png"
+        global_config.ns_istd = "/home/jupyter-neil.delgallego/ISTD_Dataset/test/test_C/*.png"
+        global_config.mask_istd = "/home/jupyter-neil.delgallego/ISTD_Dataset/test/test_B/*.png"
 
         print("Using CCS configuration. Workers: ", opts.num_workers)
 
     # GCLOUD
-    elif (constants.server_config == 3):
+    elif (global_config.server_config == 3):
         opts.num_workers = 8
         print("Using GCloud configuration. Workers: ", opts.num_workers)
-        constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "/home/neil_delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
-        constants.rgb_dir_ns = "/home/neil_delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
-        constants.ws_istd = "/home/neil_delgallego/ISTD_Dataset/test/test_A/*.png"
-        constants.ns_istd = "/home/neil_delgallego/ISTD_Dataset/test/test_C/*.png"
-        constants.mask_istd = "/home/neil_delgallego/ISTD_Dataset/test/test_B/*.png"
+        global_config.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/*.jpg"
+        global_config.rgb_dir_ws = "/home/neil_delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        global_config.rgb_dir_ns = "/home/neil_delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
+        global_config.ws_istd = "/home/neil_delgallego/ISTD_Dataset/test/test_A/*.png"
+        global_config.ns_istd = "/home/neil_delgallego/ISTD_Dataset/test/test_C/*.png"
+        global_config.mask_istd = "/home/neil_delgallego/ISTD_Dataset/test/test_B/*.png"
 
-    elif (constants.server_config == 4):
+    elif (global_config.server_config == 4):
         opts.num_workers = 6
-        constants.DATASET_PLACES_PATH = "C:/Datasets/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
-        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
-        constants.ws_istd ="C:/Datasets/ISTD_Dataset/test/test_A/*.png"
-        constants.ns_istd = "C:/Datasets/ISTD_Dataset/test/test_C/*.png"
-        constants.mask_istd = "C:/Datasets/ISTD_Dataset/test/test_B/*.png"
-        constants.ws_srd = "C:/Datasets/SRD_Test/srd/shadow/*.jpg"
-        constants.ns_srd = "C:/Datasets/SRD_Test/srd/shadow_free/*.jpg"
+        global_config.DATASET_PLACES_PATH = "C:/Datasets/Places Dataset/*.jpg"
+        global_config.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        global_config.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
+        global_config.ws_istd ="C:/Datasets/ISTD_Dataset/test/test_A/*.png"
+        global_config.ns_istd = "C:/Datasets/ISTD_Dataset/test/test_C/*.png"
+        global_config.mask_istd = "C:/Datasets/ISTD_Dataset/test/test_B/*.png"
+        global_config.ws_srd = "C:/Datasets/SRD_Test/srd/shadow/*.jpg"
+        global_config.ns_srd = "C:/Datasets/SRD_Test/srd/shadow_free/*.jpg"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers)
     else:
         opts.num_workers = 12
-        constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "X:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
-        constants.rgb_dir_ns = "X:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
-        constants.ws_istd = "E:/ISTD_Dataset/test/test_A/*.png"
-        constants.ns_istd = "E:/ISTD_Dataset/test/test_C/*.png"
-        constants.mask_istd = "E:/ISTD_Dataset/test/test_B/*.png"
-        constants.ws_srd = "E:/SRD_Test/srd/shadow/*.jpg"
-        constants.ns_srd = "E:/SRD_Test/srd/shadow_free/*.jpg"
+        global_config.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
+        global_config.rgb_dir_ws = "X:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        global_config.rgb_dir_ns = "X:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
+        global_config.ws_istd = "E:/ISTD_Dataset/test/test_A/*.png"
+        global_config.ns_istd = "E:/ISTD_Dataset/test/test_C/*.png"
+        global_config.mask_istd = "E:/ISTD_Dataset/test/test_B/*.png"
+        global_config.ws_srd = "E:/SRD_Test/srd/shadow/*.jpg"
+        global_config.ns_srd = "E:/SRD_Test/srd/shadow_free/*.jpg"
         print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)
 
 def train_shadow(tf, device, opts):
@@ -115,18 +115,18 @@ def train_shadow(tf, device, opts):
     dataset_version = network_config["dataset_version"]
 
     # assert dataset_version == "v17", "Cannot identify dataset version."
-    rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
-    rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
+    rgb_dir_ws = global_config.rgb_dir_ws.format(dataset_version=dataset_version)
+    rgb_dir_ns = global_config.rgb_dir_ns.format(dataset_version=dataset_version)
 
     load_size = network_config["load_size_z"]
 
-    train_loader, dataset_count = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, constants.ws_istd, constants.ns_istd, load_size, opts)
+    train_loader, dataset_count = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, global_config.ws_istd, global_config.ns_istd, load_size, opts)
     test_loader_train, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
 
     if(dataset_version == "v_srd"):
-        test_loader_istd, _ = dataset_loader.load_istd_dataset(constants.ws_srd, constants.ns_srd, constants.mask_istd, load_size, opts)
+        test_loader_istd, _ = dataset_loader.load_istd_dataset(global_config.ws_srd, global_config.ns_srd, global_config.mask_istd, load_size, opts)
     else:
-        test_loader_istd, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, load_size, opts)
+        test_loader_istd, _ = dataset_loader.load_istd_dataset(global_config.ws_istd, global_config.ns_istd, global_config.mask_istd, load_size, opts)
 
     iteration = 0
     start_epoch = sc_instance.get_last_epoch_from_mode(mode)
@@ -137,7 +137,7 @@ def train_shadow(tf, device, opts):
     # compute total progress
     needed_progress = int((general_config[mode]["max_epochs"]) * (dataset_count / load_size))
     current_progress = int(start_epoch * (dataset_count / load_size))
-    pbar = tqdm(total=needed_progress, disable = constants.disable_progress_bar)
+    pbar = tqdm(total=needed_progress, disable = global_config.disable_progress_bar)
     pbar.update(current_progress)
 
     for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
@@ -199,20 +199,20 @@ def train_shadow_matte(tf, device, opts):
     patch_size = network_config["patch_size"]
     dataset_version = network_config["dataset_version"]
 
-    rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
-    rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
+    rgb_dir_ws = global_config.rgb_dir_ws.format(dataset_version=dataset_version)
+    rgb_dir_ns = global_config.rgb_dir_ns.format(dataset_version=dataset_version)
 
     load_size = network_config["load_size_m"]
 
     print("Dataset path WS: ", rgb_dir_ws)
     print("Dataset path NS: ", rgb_dir_ns)
-    train_loader_synth, dataset_count = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, constants.ws_istd, constants.ns_istd, load_size, opts)
-    train_loader_istd, _ = dataset_loader.load_istd_train_dataset(constants.ws_istd, constants.ns_istd, patch_size, load_size, opts)
+    train_loader_synth, dataset_count = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, global_config.ws_istd, global_config.ns_istd, load_size, opts)
+    train_loader_istd, _ = dataset_loader.load_istd_train_dataset(global_config.ws_istd, global_config.ns_istd, patch_size, load_size, opts)
     test_loader_train, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
     if (dataset_version == "v_srd"):
-        test_loader_istd, _ = dataset_loader.load_istd_dataset(constants.ws_srd, constants.ns_srd, constants.mask_istd, load_size, opts)
+        test_loader_istd, _ = dataset_loader.load_istd_dataset(global_config.ws_srd, global_config.ns_srd, global_config.mask_istd, load_size, opts)
     else:
-        test_loader_istd, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, load_size, opts)
+        test_loader_istd, _ = dataset_loader.load_istd_dataset(global_config.ws_istd, global_config.ns_istd, global_config.mask_istd, load_size, opts)
 
     iteration = 0
     start_epoch = sc_instance.get_last_epoch_from_mode(mode)
@@ -223,7 +223,7 @@ def train_shadow_matte(tf, device, opts):
     #compute total progress
     needed_progress = int((general_config[mode]["max_epochs"]) * (dataset_count / load_size))
     current_progress = int(start_epoch * (dataset_count / load_size))
-    pbar = tqdm(total=needed_progress, disable=constants.disable_progress_bar)
+    pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
     pbar.update(current_progress)
 
     for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
@@ -281,7 +281,7 @@ def main(argv):
     update_config(opts)
     print(opts)
     print("=====================BEGIN============================")
-    print("Server config? %d Has GPU available? %d Count: %d" % (constants.server_config, torch.cuda.is_available(), torch.cuda.device_count()))
+    print("Server config? %d Has GPU available? %d Count: %d" % (global_config.server_config, torch.cuda.is_available(), torch.cuda.device_count()))
     print("Torch CUDA version: %s" % torch.version.cuda)
 
     manualSeed = 0
@@ -295,8 +295,8 @@ def main(argv):
 
     plot_utils.VisdomReporter.initialize()
 
-    constants.shadow_removal_version = opts.shadow_removal_version
-    constants.shadow_matte_network_version = opts.shadow_matte_network_version
+    global_config.shadow_removal_version = opts.shadow_removal_version
+    global_config.shadow_matte_network_version = opts.shadow_matte_network_version
     iid_server_config.IIDServerConfig.initialize()
 
     tf = trainer_factory.TrainerFactory(device, opts)

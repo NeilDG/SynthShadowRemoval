@@ -1,4 +1,4 @@
-import constants
+import global_config
 
 class IIDServerConfig():
     _sharedInstance = None

@@ -6,7 +6,7 @@ Created on Thu Jun 25 17:02:01 2020
 """
 from matplotlib.lines import Line2D
 
-import constants
+import global_config
 import numpy as np
 import matplotlib.pyplot as plt
 import torchvision.utils as vutils

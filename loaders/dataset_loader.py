@@ -11,7 +11,7 @@ import cv2
 import torchvision.transforms as transforms
 from tqdm import tqdm
 
-import constants
+import global_config
 from config import iid_server_config
 from loaders import image_dataset, shadow_datasets
 import os

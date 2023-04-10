@@ -2,14 +2,14 @@
 
 import os
 
-def test_relighting():
+def test_shadow():
     #DEFAULT - HIGHEST PERFORMING
-    # os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+    # os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 "
     #           "--plot_enabled=1 --img_vis_enabled=1 --train_mode=train_shadow "
     #           "--shadow_matte_network_version=\"v58.28\" --shadow_removal_version=\"v58.28\" "
     #           "--shadow_matte_iteration=1 --shadow_removal_iteration=1")
 
-    os.system("python \"iid_test_v3.py\" --server_config=5 --img_to_load=-1 "
+    os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 "
               "--plot_enabled=1 --img_vis_enabled=1 --train_mode=train_shadow "
               "--shadow_matte_network_version=\"v60.31_places\" --shadow_removal_version=\"v60.33_places\" "
               "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
@@ -30,7 +30,7 @@ def main():
     #           "--version_shadow_remap=\"shadow2relight_v1.07\" --iteration_s3=8 "
     #           "--mode=azimuth --light_color=\"255,255,255\" --test_code=100")
 
-    test_relighting()
+    test_shadow()
 
 
 
