@@ -94,26 +94,40 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         return self.l1_loss(pred_mask, target_mask)
 
     def initialize_dict(self):
+        self.G_LOSS_KEY = "g_loss"
+        self.IDENTITY_LOSS_KEY = "id"
+        self.CYCLE_LOSS_KEY = "cyc"
+        self.G_ADV_LOSS_KEY = "g_adv"
+        self.LIKENESS_LOSS_KEY = "likeness"
+        self.LPIP_LOSS_KEY = "lpip"
+        self.SMOOTHNESS_LOSS_KEY = "smoothness"
+        self.D_OVERALL_LOSS_KEY = "d_loss"
+        self.D_A_REAL_LOSS_KEY = "d_real_a"
+        self.D_A_FAKE_LOSS_KEY = "d_fake_a"
+        self.D_B_REAL_LOSS_KEY = "d_real_b"
+        self.D_B_FAKE_LOSS_KEY = "d_fake_b"
+        self.MASK_LOSS_KEY = "MASK_LOSS_KEY"
+        self.ISTD_SM_LOSS_KEY = "ISTD_SM_LOSS_KEY"
+
         # what to store in visdom?
         self.losses_dict_s = {}
-        self.losses_dict_s[constants.G_LOSS_KEY] = []
-        self.losses_dict_s[constants.D_OVERALL_LOSS_KEY] = []
-        self.losses_dict_s[constants.LIKENESS_LOSS_KEY] = []
-        self.losses_dict_s[constants.LPIP_LOSS_KEY] = []
-        self.losses_dict_s[constants.G_ADV_LOSS_KEY] = []
-        self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY] = []
-        self.losses_dict_s[constants.D_A_REAL_LOSS_KEY] = []
-        self.MASK_LOSS_KEY = "MASK_LOSS_KEY"
+        self.losses_dict_s[self.G_LOSS_KEY] = []
+        self.losses_dict_s[self.D_OVERALL_LOSS_KEY] = []
+        self.losses_dict_s[self.LIKENESS_LOSS_KEY] = []
+        self.losses_dict_s[self.LPIP_LOSS_KEY] = []
+        self.losses_dict_s[self.G_ADV_LOSS_KEY] = []
+        self.losses_dict_s[self.D_A_FAKE_LOSS_KEY] = []
+        self.losses_dict_s[self.D_A_REAL_LOSS_KEY] = []
         self.losses_dict_s[self.MASK_LOSS_KEY] = []
 
         self.caption_dict_s = {}
-        self.caption_dict_s[constants.G_LOSS_KEY] = "Shadow G loss per iteration"
-        self.caption_dict_s[constants.D_OVERALL_LOSS_KEY] = "D loss per iteration"
-        self.caption_dict_s[constants.LIKENESS_LOSS_KEY] = "L1 loss per iteration"
-        self.caption_dict_s[constants.LPIP_LOSS_KEY] = "LPIPS loss per iteration"
-        self.caption_dict_s[constants.G_ADV_LOSS_KEY] = "G adv loss per iteration"
-        self.caption_dict_s[constants.D_A_FAKE_LOSS_KEY] = "D fake loss per iteration"
-        self.caption_dict_s[constants.D_A_REAL_LOSS_KEY] = "D real loss per iteration"
+        self.caption_dict_s[self.G_LOSS_KEY] = "Shadow G loss per iteration"
+        self.caption_dict_s[self.D_OVERALL_LOSS_KEY] = "D loss per iteration"
+        self.caption_dict_s[self.LIKENESS_LOSS_KEY] = "L1 loss per iteration"
+        self.caption_dict_s[self.LPIP_LOSS_KEY] = "LPIPS loss per iteration"
+        self.caption_dict_s[self.G_ADV_LOSS_KEY] = "G adv loss per iteration"
+        self.caption_dict_s[self.D_A_FAKE_LOSS_KEY] = "D fake loss per iteration"
+        self.caption_dict_s[self.D_A_REAL_LOSS_KEY] = "D real loss per iteration"
         self.caption_dict_s[self.MASK_LOSS_KEY] = "Mask loss per iteration"
 
         # what to store in visdom?
@@ -180,13 +194,13 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
                 # what to put to losses dict for visdom reporting?
                 if (iteration > 50):
-                    self.losses_dict_s[constants.G_LOSS_KEY].append(errG.item())
-                    self.losses_dict_s[constants.D_OVERALL_LOSS_KEY].append(errD.item())
-                    self.losses_dict_s[constants.LIKENESS_LOSS_KEY].append(SM_likeness_loss.item())
-                    self.losses_dict_s[constants.LPIP_LOSS_KEY].append(SM_lpip_loss.item())
-                    self.losses_dict_s[constants.G_ADV_LOSS_KEY].append(SM_adv_loss.item())
-                    self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY].append(D_SM_fake_loss.item())
-                    self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_SM_real_loss.item())
+                    self.losses_dict_s[self.G_LOSS_KEY].append(errG.item())
+                    self.losses_dict_s[self.D_OVERALL_LOSS_KEY].append(errD.item())
+                    self.losses_dict_s[self.LIKENESS_LOSS_KEY].append(SM_likeness_loss.item())
+                    self.losses_dict_s[self.LPIP_LOSS_KEY].append(SM_lpip_loss.item())
+                    self.losses_dict_s[self.G_ADV_LOSS_KEY].append(SM_adv_loss.item())
+                    self.losses_dict_s[self.D_A_FAKE_LOSS_KEY].append(D_SM_fake_loss.item())
+                    self.losses_dict_s[self.D_A_REAL_LOSS_KEY].append(D_SM_real_loss.item())
                     self.losses_dict_s[self.MASK_LOSS_KEY].append(SM_masking_loss.item())
 
                 #perform validation test and early stopping
@@ -261,19 +275,19 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         if(checkpoint != None):
             iid_server_config.IIDServerConfig.getInstance().store_epoch_from_checkpt("train_shadow", checkpoint["epoch"])
-            self.stopper_method.update_last_metric(checkpoint[constants.LAST_METRIC_KEY])
-            self.G_SM_predictor.load_state_dict(checkpoint[constants.GENERATOR_KEY + "Z"])
-            self.D_SM_discriminator.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "Z"])
+            self.stopper_method.update_last_metric(checkpoint[global_config.LAST_METRIC_KEY])
+            self.G_SM_predictor.load_state_dict(checkpoint[global_config.GENERATOR_KEY + "Z"])
+            self.D_SM_discriminator.load_state_dict(checkpoint[global_config.DISCRIMINATOR_KEY + "Z"])
 
             print("Loaded shadow removal network: ", self.NETWORK_CHECKPATH, "Epoch: ", checkpoint["epoch"])
 
     def save_states(self, epoch, iteration, is_temp:bool):
-        save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
+        save_dict = {'epoch': epoch, 'iteration': iteration, global_config.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
         netGNS_state_dict = self.G_SM_predictor.state_dict()
         netDNS_state_dict = self.D_SM_discriminator.state_dict()
 
-        save_dict[constants.GENERATOR_KEY + "Z"] = netGNS_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "Z"] = netDNS_state_dict
+        save_dict[global_config.GENERATOR_KEY + "Z"] = netGNS_state_dict
+        save_dict[global_config.DISCRIMINATOR_KEY + "Z"] = netDNS_state_dict
 
         if (is_temp):
             torch.save(save_dict, self.NETWORK_CHECKPATH + ".checkpt")

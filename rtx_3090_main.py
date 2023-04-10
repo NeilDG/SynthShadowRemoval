@@ -21,7 +21,7 @@ def main():
     train_shadow_removal()
 
     # train_domain_adaptation()
-    os.system("shutdown /s /t 1")
+    # os.system("shutdown /s /t 1")
 
 
 if __name__ == "__main__":
