@@ -120,9 +120,6 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         accum_batch_size = self.load_size * iteration
 
         with amp.autocast():
-            if(self.use_istd_pool):
-                shadow_matte_pool.ShadowMattePool.getInstance().set_samples(input_map["matte_train_istd"])
-
             # shadow map discriminator
             self.optimizerD.zero_grad()
             self.D_SM_discriminator.train()

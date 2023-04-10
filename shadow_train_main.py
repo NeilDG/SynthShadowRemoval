@@ -212,7 +212,6 @@ def train_shadow_matte(device, opts):
     print("Dataset path NS: ", global_config.rgb_dir_ns)
 
     train_loader_synth, dataset_count = dataset_loader.load_shadow_train_dataset()
-    train_loader_istd, _ = dataset_loader.load_istd_train_dataset()
     test_loader_train, _ = dataset_loader.load_shadow_test_dataset()
     if (dataset_version == "v_srd"):
         test_loader_istd, _ = dataset_loader.load_istd_dataset()
@@ -227,23 +226,19 @@ def train_shadow_matte(device, opts):
     pbar.update(current_progress)
 
     for epoch in range(start_epoch, max_epochs):
-        for i, (train_data, train_data_istd, test_data) in enumerate(zip(train_loader_synth, itertools.cycle(train_loader_istd), itertools.cycle(test_loader_istd))):
+        for i, (train_data, test_data) in enumerate(zip(train_loader_synth, itertools.cycle(test_loader_istd))):
             _, rgb_ws, rgb_ns, shadow_map, shadow_matte = train_data
             rgb_ws = rgb_ws.to(device)
             rgb_ns = rgb_ns.to(device)
             shadow_map = shadow_map.to(device)
             shadow_matte = shadow_matte.to(device)
 
-            _, _, _, _, matte_train_istd = train_data_istd
-            matte_train_istd = matte_train_istd.to(device)
-
             _, rgb_ws_istd, rgb_ns_istd, matte_istd = test_data
             rgb_ws_istd = rgb_ws_istd.to(device)
             matte_istd = matte_istd.to(device)
 
             input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_map": shadow_map, "shadow_matte": shadow_matte,
-                         "rgb_ws_istd": rgb_ws_istd, "rgb_ns_istd": rgb_ns_istd, "matte_istd": matte_istd,
-                         "matte_train_istd" : matte_train_istd}
+                         "rgb_ws_istd": rgb_ws_istd, "rgb_ns_istd": rgb_ns_istd, "matte_istd": matte_istd}
             target_map = input_map
 
             tf.train(mode, epoch, iteration, input_map, target_map)
@@ -251,7 +246,7 @@ def train_shadow_matte(device, opts):
             if (tf.is_stop_condition_met(mode)):
                 break
 
-            if (iteration % 150 == 0):
+            if (iteration % opts.save_per_iter == 0):
                 tf.save(mode, epoch, iteration, True)
 
                 if (opts.plot_enabled == 1):
