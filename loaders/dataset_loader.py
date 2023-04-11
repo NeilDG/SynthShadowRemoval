@@ -252,7 +252,7 @@ def load_shadow_train_dataset():
     print("Length of images: %d %d. ISTD len: %d"  % (len(ws_list), len(ns_list), istd_len))
 
     data_loader = torch.utils.data.DataLoader(
-        shadow_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 1, global_config.train_mode),
+        shadow_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 1),
         batch_size=global_config.load_size,
         num_workers=int(global_config.num_workers / 2),
         shuffle=False,
@@ -272,7 +272,7 @@ def load_shadow_test_dataset():
     print("Length of images: %d %d" % (len(ws_list), len(ns_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        shadow_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 2, global_config.train_mode),
+        shadow_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 2),
         batch_size=8,
         num_workers=1,
         shuffle=False
@@ -280,15 +280,15 @@ def load_shadow_test_dataset():
 
     return data_loader, len(ws_list)
 
-def load_shadow_matte_dataset(ws_path, sm_path, opts):
-    ws_list = assemble_img_list(ws_path, opts)
-    sm_list = assemble_img_list(sm_path, opts)
+def load_shadow_matte_dataset(ws_path, sm_path):
+    ws_list = glob.glob(ws_path)
+    sm_list = glob.glob(sm_path)
 
     img_length = len(ws_list)
     print("Length of images: %d %d" % (len(ws_list), len(sm_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        shadow_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 2, opts.train_mode),
+        shadow_datasets.ShadowTrainDataset(img_length, ws_list, sm_list, 2),
         batch_size=8,
         num_workers=1,
         shuffle=False
@@ -304,7 +304,7 @@ def load_istd_train_dataset():
     print("Length of images: %d %d" % (len(ws_istd_list), len(ns_istd_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        shadow_datasets.ShadowTrainDataset(img_length, ws_istd_list, ns_istd_list, 1, global_config.train_mode),
+        shadow_datasets.ShadowTrainDataset(img_length, ws_istd_list, ns_istd_list, 1),
         batch_size=global_config.load_size,
         num_workers=4,
         shuffle=False
@@ -321,7 +321,7 @@ def load_istd_dataset():
     print("Length of images: %d %d %d" % (len(ws_istd_list), len(ns_istd_list), len(mask_istd_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        shadow_datasets.ShadowISTDDataset(img_length, ws_istd_list, ns_istd_list, mask_istd_list, 1, global_config.train_mode),
+        shadow_datasets.ShadowISTDDataset(img_length, ws_istd_list, ns_istd_list, mask_istd_list, 1),
         batch_size=global_config.load_size,
         num_workers=1,
         shuffle=False
@@ -337,7 +337,7 @@ def load_srd_dataset():
     print("Length of images: %d %d" % (len(ws_istd_list), len(ns_istd_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        shadow_datasets.ShadowSRDDataset(img_length, ws_istd_list, ns_istd_list, 1, global_config.train_mode),
+        shadow_datasets.ShadowSRDDataset(img_length, ws_istd_list, ns_istd_list, 1),
         batch_size=global_config.load_size,
         num_workers=1,
         shuffle=False

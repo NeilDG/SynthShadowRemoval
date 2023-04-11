@@ -23,77 +23,8 @@ from trainers import trainer_factory
 from losses import whdr
 import torchvision.transforms.functional
 
-parser = OptionParser()
-parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
-parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:0")
-parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
-parser.add_option('--version', type=str, default="")
-parser.add_option('--iteration', type=int, help="Style version?", default="1")
-parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
-parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
-parser.add_option('--num_workers', type=int, help="Workers", default="12")
-parser.add_option('--test_mode', type=int, help="Test mode?", default=0)
-parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
-parser.add_option('--input_path', type=str)
-parser.add_option('--output_path', type=str)
-parser.add_option('--img_size', type=int, default=(256, 256))
-
-def update_config(opts):
-    constants.server_config = opts.server_config
-    constants.ITERATION = str(opts.iteration)
-    constants.plot_enabled = opts.plot_enabled
-
-    ## COARE
-    if (constants.server_config == 1):
-        opts.num_workers = 6
-        print("Using COARE configuration. Workers: ", opts.num_workers)
-        constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
-        constants.rgb_dir_ws_styled = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.rgb_dir_ns_styled = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
-        constants.albedo_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/albedo/"
-        constants.unlit_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 8/unlit/"
-
-    # CCS JUPYTER
-    elif (constants.server_config == 2):
-        constants.num_workers = 6
-        constants.rgb_dir_ws_styled = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.rgb_dir_ns_styled = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
-        constants.albedo_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/albedo/"
-        constants.unlit_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 8/unlit/"
-        constants.DATASET_PLACES_PATH = constants.rgb_dir_ws_styled
-
-        print("Using CCS configuration. Workers: ", opts.num_workers)
-
-    # GCLOUD
-    elif (constants.server_config == 3):
-        opts.num_workers = 8
-        print("Using GCloud configuration. Workers: ", opts.num_workers)
-        constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/*.jpg"
-        constants.rgb_dir_ws_styled = "/home/neil_delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.albedo_dir = "/home/neil_delgallego/SynthWeather Dataset 8/albedo/"
-
-    elif (constants.server_config == 4):
-        opts.num_workers = 6
-        constants.DATASET_PLACES_PATH = "D:/Datasets/Places Dataset/*.jpg"
-        constants.rgb_dir_ws_styled = "D:/Datasets/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.albedo_dir = "D:/Datasets/SynthWeather Dataset 8/albedo/"
-
-        print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers)
-    else:
-        opts.num_workers = 12
-        constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
-        constants.rgb_dir_ws_styled = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-        constants.rgb_dir_ns_styled = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/"
-        constants.albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
-        constants.unlit_dir = "E:/SynthWeather Dataset 8/unlit/"
-        print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)
-
-
 class TesterClass():
     def __init__(self, shadow_m, shadow_t):
-        print("Initiating")
-        self.cgi_op = iid_transforms.CGITransform()
-        self.iid_op = iid_transforms.IIDTransform()
         self.visdom_reporter = plot_utils.VisdomReporter.getInstance()
 
         self.shadow_m = shadow_m
@@ -136,9 +67,9 @@ class TesterClass():
         rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
 
         if (show_images == 1):
-            self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration))
-            self.visdom_reporter.plot_image(shadow_matte, prefix + " WS Shadow Matte Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration))
-            self.visdom_reporter.plot_image(rgb2sm, prefix + " WS Shadow Matte-Like Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration))
+            self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + global_config.sm_network_version + str(global_config.sm_iteration))
+            self.visdom_reporter.plot_image(shadow_matte, prefix + " WS Shadow Matte Images - " + global_config.sm_network_version + str(global_config.sm_iteration))
+            self.visdom_reporter.plot_image(rgb2sm, prefix + " WS Shadow Matte-Like Images - " + global_config.sm_network_version + str(global_config.sm_iteration))
 
         if (save_image_results == 1):
             if(prefix == "ISTD"):
@@ -208,7 +139,7 @@ class TesterClass():
 
         network_config = iid_server_config.IIDServerConfig.getInstance().interpret_shadow_matte_params_from_version()
 
-        display_text = prefix + " - Versions: " + opts.shadow_matte_network_version + "_" + str(opts.shadow_matte_iteration) + \
+        display_text = prefix + " - Versions: " + global_config.sm_network_version + "_" + str(global_config.sm_iteration) + \
                        "<br>" + network_config["dataset_version"] + \
                        "<br> MAE Error (SM): " + str(ave_mae_sm) + "<br> MAE Error (SM WS): " + str(ave_mae_sm_ws) + \
                        "<br> RMSE Error (SM): " + str(ave_rmse_sm) + "<br> RMSE Error (SM WS): " + str(ave_rmse_sm_ws)
@@ -233,8 +164,8 @@ class TesterClass():
         rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
 
         if (show_images == 1):
-            self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
-            self.visdom_reporter.plot_image(rgb2ns, prefix + " NS (equation) Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+            self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + global_config.ns_network_version + str(global_config.sm_iteration))
+            self.visdom_reporter.plot_image(rgb2ns, prefix + " NS (equation) Images - " + global_config.ns_network_version + str(global_config.sm_iteration))
 
         if (save_image_results == 1):
             path = "./comparison/"
@@ -250,7 +181,7 @@ class TesterClass():
                 # print("Saving ISTD result as: ", file_name[i])
 
 
-    def test_shadow(self, rgb_ws, rgb_ns, shadow_matte, prefix, show_images, mode, opts):
+    def test_shadow(self, rgb_ws, rgb_ns, shadow_matte, prefix, show_images, mode):
         rgb2ns, rgb2sm = self.infer_shadow_results(rgb_ws, shadow_matte, mode)
 
         # normalize everything
@@ -261,13 +192,13 @@ class TesterClass():
         # rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
 
         if(show_images == 1):
-            self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+            self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + global_config.ns_network_version + str(global_config.sm_iteration))
             # self.visdom_reporter.plot_image(shadow_matte, "WS Shadow Matte Images - " + opts.shadow_network_version + str(opts.iteration))
             # if(rgb2sm != None):
             #     rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
             #     self.visdom_reporter.plot_image(rgb2sm, prefix + " WS Shadow Matte-Like Images - " + opts.shadow_network_version + str(opts.iteration))
-            self.visdom_reporter.plot_image(rgb_ns, prefix + " NS Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
-            self.visdom_reporter.plot_image(rgb2ns, prefix + " NS (equation) Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+            self.visdom_reporter.plot_image(rgb_ns, prefix + " NS Images - " + global_config.ns_network_version + str(global_config.sm_iteration))
+            self.visdom_reporter.plot_image(rgb2ns, prefix + " NS (equation) Images - " + global_config.ns_network_version + str(global_config.sm_iteration))
 
         psnr_rgb = np.round(kornia.metrics.psnr(rgb2ns, rgb_ns, max_val=1.0).item(), 4)
         ssim_rgb = np.round(1.0 - kornia.losses.ssim_loss(rgb2ns, rgb_ns, 5).item(), 4)
@@ -285,8 +216,8 @@ class TesterClass():
         self.rmse_list_lab.append(rmse_lab)
 
     #for ISTD
-    def test_istd_shadow(self, file_name, rgb_ws, rgb_ns, shadow_matte, show_images, save_image_results, mode, opts):
-        device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
+    def test_istd_shadow(self, file_name, rgb_ws, rgb_ns, shadow_matte, show_images, save_image_results, mode):
+        device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
         ### NOTE: ISTD-NS (No Shadows) image already has a different lighting!!! This isn't reported in the dataset. Consider using ISTD-NS as the unmasked region to avoid bias in results.
         ### MAE discrepancy vs ISTD-WS is at 11.055!
         rgb2ns, rgb2sm = self.infer_shadow_results(rgb_ws, shadow_matte, mode)
@@ -306,12 +237,12 @@ class TesterClass():
             shadow_matte = tensor_utils.normalize_to_01(shadow_matte)
 
         if(show_images == 1):
-            self.visdom_reporter.plot_image(rgb_ws, "ISTD WS Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration) + " " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
-            self.visdom_reporter.plot_image(shadow_matte, "ISTD Shadow Matte Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration) + " " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+            self.visdom_reporter.plot_image(rgb_ws, "ISTD WS Images - " + global_config.sm_network_version + str(global_config.sm_iteration) + " " + global_config.ns_network_version + str(global_config.sm_iteration))
+            self.visdom_reporter.plot_image(shadow_matte, "ISTD Shadow Matte Images - " + global_config.sm_network_version + str(global_config.sm_iteration) + " " + global_config.ns_network_version + str(global_config.sm_iteration))
             if (rgb2sm != None):
-                self.visdom_reporter.plot_image(rgb2sm, "ISTD Shadow Matte-Like Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration) + " " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
-            self.visdom_reporter.plot_image(rgb_ns, "ISTD NS Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration) + " " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
-            self.visdom_reporter.plot_image(rgb2ns, "ISTD NS-Like Images - " + opts.shadow_matte_network_version + str(opts.shadow_matte_iteration) + " " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+                self.visdom_reporter.plot_image(rgb2sm, "ISTD Shadow Matte-Like Images - " + global_config.sm_network_version + str(global_config.sm_iteration) + " " + global_config.ns_network_version + str(global_config.sm_iteration))
+            self.visdom_reporter.plot_image(rgb_ns, "ISTD NS Images - " + global_config.sm_network_version + str(global_config.sm_iteration) + " " + global_config.ns_network_version + str(global_config.sm_iteration))
+            self.visdom_reporter.plot_image(rgb2ns, "ISTD NS-Like Images - " + global_config.sm_network_version + str(global_config.sm_iteration) + " " + global_config.ns_network_version + str(global_config.sm_iteration))
 
         mae = nn.L1Loss()
         mse = nn.MSELoss()
@@ -351,8 +282,8 @@ class TesterClass():
         self.mae_list_rgb.append(mae_rgb)
         self.rmse_list_lab.append(rmse_lab)
 
-    def test_srd(self, file_name, rgb_ws, rgb_ns, shadow_matte, show_images, save_image_results, mode, opts):
-        device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
+    def test_srd(self, file_name, rgb_ws, rgb_ns, shadow_matte, show_images, save_image_results, mode):
+        device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
         rgb2ns, rgb2sm = self.infer_shadow_results(rgb_ws, shadow_matte, mode)
 
         # normalize everything
@@ -370,12 +301,12 @@ class TesterClass():
             shadow_matte = tensor_utils.normalize_to_01(shadow_matte)
 
         if(show_images == 1):
-            self.visdom_reporter.plot_image(rgb_ws, "SRD WS Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
-            self.visdom_reporter.plot_image(shadow_matte, "SRD Shadow Matte Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+            self.visdom_reporter.plot_image(rgb_ws, "SRD WS Images - " + global_config.ns_network_version + str(global_config.sm_iteration))
+            self.visdom_reporter.plot_image(shadow_matte, "SRD Shadow Matte Images - " + global_config.ns_network_version + str(global_config.sm_iteration))
             if (rgb2sm != None):
-                self.visdom_reporter.plot_image(rgb2sm, "SRD Shadow Matte-Like Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
-            self.visdom_reporter.plot_image(rgb_ns, "SRD NS Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
-            self.visdom_reporter.plot_image(rgb2ns, "SRD NS-Like Images - " + opts.shadow_removal_version + str(opts.shadow_removal_iteration))
+                self.visdom_reporter.plot_image(rgb2sm, "SRD Shadow Matte-Like Images - " + global_config.ns_network_version + str(global_config.sm_iteration))
+            self.visdom_reporter.plot_image(rgb_ns, "SRD NS Images - " + global_config.ns_network_version + str(global_config.sm_iteration))
+            self.visdom_reporter.plot_image(rgb2ns, "SRD NS-Like Images - " + global_config.ns_network_version + str(global_config.sm_iteration))
 
         mae = nn.L1Loss()
         mse = nn.MSELoss()
@@ -416,7 +347,7 @@ class TesterClass():
         self.mae_list_rgb.append(mae_rgb)
         self.rmse_list_lab.append(rmse_lab)
 
-    def print_ave_shadow_performance(self, prefix, opts):
+    def print_ave_shadow_performance(self, prefix):
         ave_psnr_rgb = np.round(np.mean(self.psnr_list_rgb), 4)
         ave_ssim_rgb = np.round(np.mean(self.ssim_list_rgb), 4)
         ave_mae_rgb = np.round(np.mean(self.mae_list_rgb) * 255.0, 4)
@@ -424,8 +355,8 @@ class TesterClass():
         ave_rmse_lab = np.round(np.mean(self.rmse_list_lab), 4)
         ave_rmse_lab_ws = np.round(np.mean(self.rmse_list_lab_ws), 4)
 
-        display_text = prefix + " - Versions: " + opts.shadow_matte_network_version + "_" + str(opts.shadow_matte_iteration) + \
-                       "<br>" + opts.shadow_removal_version + "_" + str(opts.shadow_removal_iteration) + \
+        display_text = prefix + " - Versions: " + global_config.sm_network_version + "_" + str(global_config.sm_iteration) + \
+                       "<br>" + global_config.ns_network_version + "_" + str(global_config.ns_iteration) + \
                        "<br> MAE Error (SM): " + str(ave_mae_sm) + "<br> MAE Error (RGB): " +str(ave_mae_rgb) + \
                        "<br> RGB Reconstruction PSNR: " + str(ave_psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ave_ssim_rgb) + \
                        "<br> Lab RMSE: " + str(ave_rmse_lab) + "<br> Lab RMSE WS: " +str(ave_rmse_lab_ws)

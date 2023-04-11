@@ -10,11 +10,10 @@ import kornia
 from pathlib import Path
 import kornia.augmentation as K
 
-from config.network_config import ConfigHolder
 from transforms import shadow_map_transforms
 
 class ShadowTrainDataset(data.Dataset):
-    def __init__(self, img_length, img_list_a, img_list_b, transform_config, train_mode):
+    def __init__(self, img_length, img_list_a, img_list_b, transform_config):
         self.img_length = img_length
         self.img_list_a = img_list_a
         self.img_list_b = img_list_b
@@ -22,7 +21,7 @@ class ShadowTrainDataset(data.Dataset):
 
         self.shadow_op = shadow_map_transforms.ShadowMapTransforms()
         self.norm_op = transforms.Normalize((0.5, ), (0.5, ))
-        self.network_config = ConfigHolder.getInstance().get_network_config()
+        self.network_config = global_config.network_config
 
         if(self.transform_config == 1):
             patch_size = self.network_config["patch_size"]
@@ -105,7 +104,7 @@ class ShadowTrainDataset(data.Dataset):
         return self.img_length
 
 class ShadowISTDDataset(data.Dataset):
-    def __init__(self, img_length, img_list_a, img_list_b, img_list_c, transform_config, train_mode):
+    def __init__(self, img_length, img_list_a, img_list_b, img_list_c, transform_config):
         self.img_length = img_length
         self.img_list_a = img_list_a
         self.img_list_b = img_list_b
@@ -121,7 +120,7 @@ class ShadowISTDDataset(data.Dataset):
             transforms.ToTensor()])
 
     def __getitem__(self, idx):
-        file_name = self.img_list_a[idx].split("/")[-1].split(".png")[0]
+        file_name = self.img_list_a[idx].split("\\")[-1].split(".png")[0]
 
         try:
             rgb_ws = cv2.imread(self.img_list_a[idx])
@@ -158,7 +157,7 @@ class ShadowISTDDataset(data.Dataset):
         return self.img_length
 
 class ShadowSRDDataset(data.Dataset):
-    def __init__(self, img_length, img_list_a, img_list_b, transform_config, train_mode):
+    def __init__(self, img_length, img_list_a, img_list_b, transform_config):
         self.img_length = img_length
         self.img_list_a = img_list_a
         self.img_list_b = img_list_b
@@ -174,7 +173,7 @@ class ShadowSRDDataset(data.Dataset):
             transforms.ToTensor()])
 
     def __getitem__(self, idx):
-        file_name = self.img_list_a[idx].split("/")[-1].split(".")[0]
+        file_name = self.img_list_a[idx].split("\\")[-1].split(".")[0]
 
         try:
             rgb_ws = cv2.imread(self.img_list_a[idx])

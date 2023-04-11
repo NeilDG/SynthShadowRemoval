@@ -2,38 +2,32 @@
 # For testing of GTA, CGI, and IIW test dataset performance
 ###
 
-import glob
 import sys
 from optparse import OptionParser
 import random
-import cv2
-import kornia
 import torch
 import torch.nn.parallel
 import torch.utils.data
 import numpy as np
 import yaml
 from yaml import SafeLoader
-
-import iid_test_v2
 from config.network_config import ConfigHolder
-from iid_test_v2 import TesterClass
+from testers.shadow_tester_class import TesterClass
 from loaders import dataset_loader
-from transforms import iid_transforms
 import global_config
-from utils import plot_utils, tensor_utils
+from utils import plot_utils
 from trainers import trainer_factory
-from losses import whdr
 
 parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
 parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:0")
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
 parser.add_option('--img_vis_enabled', type=int, default=1)
-parser.add_option('--shadow_matte_network_version', type=str, default="VXX.XX")
+parser.add_option('--shadow_matte_version', type=str, default="VXX.XX")
 parser.add_option('--shadow_removal_version', type=str, default="VXX.XX")
 parser.add_option('--shadow_matte_iteration', type=int, default="1")
 parser.add_option('--shadow_removal_iteration', type=int, default="1")
+parser.add_option('--train_mode', type=str, default="all") #all, train_shadow_matte, train_shadow
 
 def update_config(opts):
     global_config.server_config = opts.server_config
@@ -79,7 +73,7 @@ def update_config(opts):
 #         rgb_ws = rgb_ws.to(device)
 #         shadow_matte = shadow_matte.to(device)
 #
-#         dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "ISTD", opts.img_vis_enabled, True, opts)
+#         dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "ISTD", .img_vis_enabled, True, opts)
 #         # break
 #
 #     dataset_tester.print_shadow_matte_performance("SM - ISTD", opts)
@@ -99,54 +93,45 @@ def update_config(opts):
 
 def test_shadow_removal(dataset_tester, opts):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
+    print("Dataset path: ", global_config.rgb_dir_ws, global_config.rgb_dir_ns)
 
-    sc_instance = iid_server_config.IIDServerConfig.getInstance()
-    network_config = sc_instance.interpret_shadow_network_params_from_version()
-    sc_instance.update_version_config()
-
-    dataset_version = network_config["dataset_version"]
-
-    rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
-    rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
-
-    print("Dataset path: ", rgb_dir_ws, rgb_dir_ns)
     # SHADOW dataset test
     # Using train dataset
-    shadow_loader, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
+    shadow_loader, _ = dataset_loader.load_shadow_test_dataset()
     for i, (_, rgb_ws, rgb_ns, _, shadow_matte) in enumerate(shadow_loader, 0):
         rgb_ws = rgb_ws.to(device)
         rgb_ns = rgb_ns.to(device)
         shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_shadow(rgb_ws, rgb_ns, shadow_matte, "Train", opts.img_vis_enabled, opts.train_mode, opts)
+        dataset_tester.test_shadow(rgb_ws, rgb_ns, shadow_matte, "Train", opts.img_vis_enabled, opts.train_mode)
         if (i % 16 == 0):
             break
 
-    dataset_tester.print_ave_shadow_performance("Train Set", opts)
+    dataset_tester.print_ave_shadow_performance("Train Set")
 
     # ISTD test dataset
-    shadow_loader, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, 8, opts)
+    shadow_loader, _ = dataset_loader.load_istd_dataset()
     for i, (file_name, rgb_ws, rgb_ns, shadow_matte) in enumerate(shadow_loader, 0):
         rgb_ws_tensor = rgb_ws.to(device)
         rgb_ns_tensor = rgb_ns.to(device)
         shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.train_mode, opts)
+        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.train_mode)
         # break
 
-    dataset_tester.print_ave_shadow_performance("ISTD", opts)
+    dataset_tester.print_ave_shadow_performance("ISTD")
 
     # SRD test dataset
-    shadow_loader, _ = dataset_loader.load_srd_dataset(constants.ws_srd, constants.ns_srd, 8, opts)
+    shadow_loader, _ = dataset_loader.load_srd_dataset()
     for i, (file_name, rgb_ws, rgb_ns, shadow_matte) in enumerate(shadow_loader, 0):
         rgb_ws_tensor = rgb_ws.to(device)
         rgb_ns_tensor = rgb_ns.to(device)
         shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_srd(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.train_mode, opts)
+        dataset_tester.test_srd(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.train_mode)
         # break
 
-    dataset_tester.print_ave_shadow_performance("SRD", opts)
+    dataset_tester.print_ave_shadow_performance("SRD")
 
     # PLACES test dataset
     # shadow_loader = dataset_loader.load_single_test_dataset(constants.imgx_dir, opts)  # load PLACES
@@ -175,18 +160,22 @@ def main(argv):
     tf = trainer_factory.TrainerFactory(device)
 
     yaml_config = "./hyperparam_tables/{network_version}.yaml"
-    yaml_config = yaml_config.format(network_version=opts.shadow_matte_network_version)
+    yaml_config = yaml_config.format(network_version=opts.shadow_matte_version)
     hyperparam_path = "./hyperparam_tables/common_iter.yaml"
     with open(yaml_config) as f, open(hyperparam_path) as h:
         ConfigHolder.initialize(yaml.load(f, SafeLoader), yaml.load(h, SafeLoader))
 
+    global_config.sm_network_version = opts.shadow_matte_version
+    global_config.sm_iteration = opts.shadow_matte_iteration
     shadow_m_config = ConfigHolder.getInstance().get_network_config()
     shadow_m = tf.get_shadow_matte_trainer()
 
     print("---------------------------------------------------------------------------")
-    print("Successfully loaded shadow matte network: ", opts.shadow_matte_network_version, str(opts.shadow_matte_iteration))
+    print("Successfully loaded shadow matte network: ", opts.shadow_matte_version, str(opts.shadow_matte_iteration))
     print("Network config: ", shadow_m_config)
     print("---------------------------------------------------------------------------")
+
+    ConfigHolder.destroy()  # for security, destroy config holder since it should no longer be needed
 
     yaml_config = "./hyperparam_tables/{network_version}.yaml"
     yaml_config = yaml_config.format(network_version=opts.shadow_removal_version)
@@ -194,7 +183,10 @@ def main(argv):
     with open(yaml_config) as f, open(hyperparam_path) as h:
         ConfigHolder.initialize(yaml.load(f, SafeLoader), yaml.load(h, SafeLoader))
 
+    global_config.ns_network_version = opts.shadow_removal_version
+    global_config.ns_iteration = opts.shadow_removal_iteration
     shadow_t_config = ConfigHolder.getInstance().get_network_config()
+    global_config.network_config = shadow_t_config
     shadow_t = tf.get_shadow_trainer()
 
     print("---------------------------------------------------------------------------")
@@ -202,10 +194,15 @@ def main(argv):
     print("Network config: ", shadow_t_config)
     print("---------------------------------------------------------------------------")
 
+    dataset_version = shadow_t_config["dataset_version"]
+    global_config.rgb_dir_ws = global_config.rgb_dir_ws.format(dataset_version=dataset_version)
+    global_config.rgb_dir_ns = global_config.rgb_dir_ns.format(dataset_version=dataset_version)
+    print("Dataset path: ", global_config.rgb_dir_ws, global_config.rgb_dir_ns)
+
     ConfigHolder.destroy() #for security, destroy config holder since it should no longer be needed
 
-    # dataset_tester = TesterClass(shadow_m, shadow_t)
-    # test_shadow_removal(dataset_tester, opts)
+    dataset_tester = TesterClass(shadow_m, shadow_t)
+    test_shadow_removal(dataset_tester, opts)
 
     # if(opts.train_mode == "train_shadow_matte"):
     #     test_shadow_matte(dataset_tester, opts)

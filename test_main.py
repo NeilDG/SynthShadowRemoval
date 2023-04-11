@@ -17,8 +17,9 @@ def test_shadow():
     # os.system("python \"benchmark_shadow.py\" --img_to_load=-1")
 
     #FOR TESTING
-    os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 --img_vis_enabled=1 "
-              "--shadow_matte_network_version=\"rgb2sm_v61.00\" --shadow_removal_version=\"rgb2ns_v61.00_places\" "
+    os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 "
+              "--img_vis_enabled=1 --train_mode=train_shadow "
+              "--shadow_matte_version=\"rgb2sm_v61.00\" --shadow_removal_version=\"rgb2ns_v61.00_places\" "
               "--shadow_matte_iteration=1 --shadow_removal_iteration=1")
 
 

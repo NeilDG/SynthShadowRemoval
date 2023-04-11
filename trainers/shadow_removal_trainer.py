@@ -24,7 +24,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.initialize_train_config()
 
     def initialize_train_config(self):
-        self.iteration = global_config.iteration
+        self.iteration = global_config.ns_iteration
         config_holder = ConfigHolder.getInstance()
         network_config = config_holder.get_network_config()
 
@@ -48,7 +48,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.schedulerG = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG, patience=1000000 / self.batch_size, threshold=0.00005)
         self.schedulerD = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD, patience=1000000 / self.batch_size, threshold=0.00005)
 
-        self.NETWORK_VERSION = config_holder.get_version_name()
+        self.NETWORK_VERSION = config_holder.get_ns_version_name()
         self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
         self.load_saved_state()
 
@@ -217,7 +217,6 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         self.visdom_reporter.plot_image(input_ws, str(label) + " RGB (With Shadows) Images - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(matte_tensor, str(label) + " Shadow Matte Images - " + self.NETWORK_VERSION + str(self.iteration))
-
         self.visdom_reporter.plot_image(rgb2ns, str(label) + " RGB (No Shadows-Like) images - " + self.NETWORK_VERSION + str(self.iteration))
         if("rgb_ns" in input_map):
             input_ns = input_map["rgb_ns"]

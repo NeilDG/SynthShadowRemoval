@@ -24,7 +24,7 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.initialize_train_config()
 
     def initialize_train_config(self):
-        self.iteration = global_config.iteration
+        self.iteration = global_config.sm_iteration
         config_holder = ConfigHolder.getInstance()
         network_config = config_holder.get_network_config()
 
@@ -54,7 +54,7 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.schedulerG = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG, patience=1000000 / self.batch_size, threshold=0.00005)
         self.schedulerD = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD, patience=1000000 / self.batch_size, threshold=0.00005)
 
-        self.NETWORK_VERSION = config_holder.get_version_name()
+        self.NETWORK_VERSION = config_holder.get_sm_version_name()
         self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
         self.load_saved_state()
 

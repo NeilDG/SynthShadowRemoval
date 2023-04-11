@@ -56,12 +56,17 @@ imgy_dir = "E:/SynthWeather Dataset 8/albedo/*.png"
 # shadow_matte_network_version = "VXX.XX"
 style_transfer_version = "VXX.XX"
 
-network_version = "VXX.XX"
-iteration = -1
+sm_network_version = "VXX.XX"
+sm_iteration = -1
+ns_network_version = "VXX.XX"
+ns_iteration = -1
+network_config = None
+
 img_to_load = -1
 load_size = -1
 batch_size = -1
 train_mode = "all"
 last_epoch = 0
+
 
 

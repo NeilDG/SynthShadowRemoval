@@ -38,29 +38,29 @@ class TrainerFactory():
         else:
             self.trainer_list["train_shadow_matte"] = ShadowMatteTrainer(self.gpu_device)
             return self.trainer_list["train_shadow_matte"]
-
-    def train(self, mode, epoch, iteration, input_map, target_map):
-        self.trainer_list[mode].train(epoch, iteration, input_map, target_map)
-
-    def test(self, mode, input_map):
-        self.trainer_list[mode].test(input_map)
-
-    def is_stop_condition_met(self, mode):
-        return self.trainer_list[mode].is_stop_condition_met()
-
-    def visdom_plot(self, mode, iteration):
-        if (self.trainer_list[mode] != None):
-            self.trainer_list[mode].visdom_plot(iteration)
-
-    def visdom_visualize(self, mode, input_map, label = "Train"):
-        if(self.trainer_list[mode] != None):
-            self.trainer_list[mode].visdom_visualize(input_map, label)
-
-    def visdom_infer(self, mode, input_map):
-        if(self.trainer_list[mode] != None):
-            self.trainer_list[mode].visdom_infer(input_map)
-
-    def save(self, mode, epoch, iteration, is_temp:bool):
-        if(self.trainer_list[mode] != None):
-            self.trainer_list[mode].save_states(epoch, iteration, is_temp)
+    #
+    # def train(self, mode, epoch, iteration, input_map, target_map):
+    #     self.trainer_list[mode].train(epoch, iteration, input_map, target_map)
+    #
+    # def test(self, mode, input_map):
+    #     self.trainer_list[mode].test(input_map)
+    #
+    # def is_stop_condition_met(self, mode):
+    #     return self.trainer_list[mode].is_stop_condition_met()
+    #
+    # def visdom_plot(self, mode, iteration):
+    #     if (self.trainer_list[mode] != None):
+    #         self.trainer_list[mode].visdom_plot(iteration)
+    #
+    # def visdom_visualize(self, mode, input_map, label = "Train"):
+    #     if(self.trainer_list[mode] != None):
+    #         self.trainer_list[mode].visdom_visualize(input_map, label)
+    #
+    # def visdom_infer(self, mode, input_map):
+    #     if(self.trainer_list[mode] != None):
+    #         self.trainer_list[mode].visdom_infer(input_map)
+    #
+    # def save(self, mode, epoch, iteration, is_temp:bool):
+    #     if(self.trainer_list[mode] != None):
+    #         self.trainer_list[mode].save_states(epoch, iteration, is_temp)
 

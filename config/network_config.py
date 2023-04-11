@@ -17,16 +17,17 @@ class ConfigHolder():
         return ConfigHolder._sharedInstance
 
     def __init__(self, yaml_data, hyperparam_data):
-        self.yaml_config = yaml_data
+        # self.yaml_config = yaml_data
+        global_config.network_config = yaml_data
         self.hyperparam_config = hyperparam_data
 
     def get_network_config(self):
-        return self.yaml_config
+        return global_config.network_config
 
     def get_network_attribute(self, key, default):
-        if(key in self.yaml_config):
+        if(key in global_config.network_config):
             # print("Key ", key, " found. Returning ", self.yaml_config[key])
-            return self.yaml_config[key]
+            return global_config.network_config[key]
         else:
             return default
 
@@ -40,8 +41,14 @@ class ConfigHolder():
         else:
             return 0.0
 
-    def get_version_name(self):
-        network_version = global_config.network_version
-        iteration = global_config.iteration
+    def get_sm_version_name(self):
+        network_version = global_config.sm_network_version
+        iteration = global_config.sm_iteration
+
+        return str(network_version) + "_" + str(iteration)
+
+    def get_ns_version_name(self):
+        network_version = global_config.ns_network_version
+        iteration = global_config.ns_iteration
 
         return str(network_version) + "_" + str(iteration)
