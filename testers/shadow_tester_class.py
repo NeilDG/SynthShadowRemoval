@@ -19,7 +19,6 @@ from loaders import dataset_loader
 from transforms import iid_transforms
 import global_config
 from utils import plot_utils, tensor_utils
-from trainers import trainer_factory
 from losses import whdr
 import torchvision.transforms.functional
 
@@ -137,10 +136,7 @@ class TesterClass():
         ave_rmse_sm = np.round(np.mean(self.rmse_list_lab) * 100.0, 4)
         ave_rmse_sm_ws = np.round(np.mean(self.rmse_list_lab_ws) * 100.0, 4)
 
-        network_config = iid_server_config.IIDServerConfig.getInstance().interpret_shadow_matte_params_from_version()
-
         display_text = prefix + " - Versions: " + global_config.sm_network_version + "_" + str(global_config.sm_iteration) + \
-                       "<br>" + network_config["dataset_version"] + \
                        "<br> MAE Error (SM): " + str(ave_mae_sm) + "<br> MAE Error (SM WS): " + str(ave_mae_sm_ws) + \
                        "<br> RMSE Error (SM): " + str(ave_rmse_sm) + "<br> RMSE Error (SM WS): " + str(ave_rmse_sm_ws)
 

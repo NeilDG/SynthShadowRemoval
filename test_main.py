@@ -18,7 +18,7 @@ def test_shadow():
 
     #FOR TESTING
     os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 "
-              "--img_vis_enabled=1 --train_mode=train_shadow "
+              "--img_vis_enabled=1 --train_mode=all "
               "--shadow_matte_version=\"rgb2sm_v61.00\" --shadow_removal_version=\"rgb2ns_v61.00_places\" "
               "--shadow_matte_iteration=1 --shadow_removal_iteration=1")
 

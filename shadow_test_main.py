@@ -16,8 +16,8 @@ from testers.shadow_tester_class import TesterClass
 from loaders import dataset_loader
 import global_config
 from utils import plot_utils
-from trainers import trainer_factory
 from tqdm import tqdm
+from trainers import shadow_matte_trainer, shadow_removal_trainer
 
 parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
@@ -160,7 +160,6 @@ def main(argv):
     print("Device: %s" % device)
 
     plot_utils.VisdomReporter.initialize()
-    tf = trainer_factory.TrainerFactory(device)
 
     yaml_config = "./hyperparam_tables/{network_version}.yaml"
     yaml_config = yaml_config.format(network_version=opts.shadow_matte_version)
@@ -171,7 +170,7 @@ def main(argv):
     global_config.sm_network_version = opts.shadow_matte_version
     global_config.sm_iteration = opts.shadow_matte_iteration
     shadow_m_config = ConfigHolder.getInstance().get_network_config()
-    shadow_m = tf.get_shadow_matte_trainer()
+    shadow_m = shadow_matte_trainer.ShadowMatteTrainer(device)
 
     print("---------------------------------------------------------------------------")
     print("Successfully loaded shadow matte network: ", opts.shadow_matte_version, str(opts.shadow_matte_iteration))
@@ -190,7 +189,7 @@ def main(argv):
     global_config.ns_iteration = opts.shadow_removal_iteration
     shadow_t_config = ConfigHolder.getInstance().get_network_config()
     global_config.network_config = shadow_t_config
-    shadow_t = tf.get_shadow_trainer()
+    shadow_t = shadow_removal_trainer.ShadowTrainer(device)
 
     print("---------------------------------------------------------------------------")
     print("Successfully loaded shadow removal network: ", opts.shadow_removal_version, str(opts.shadow_removal_iteration))

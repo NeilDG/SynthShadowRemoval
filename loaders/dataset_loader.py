@@ -165,7 +165,7 @@ def clean_dataset_using_std_mean(ws_path, ns_path, basis_mean, basis_std):
 
     tensor_op = transforms.Compose([
         transforms.ToPILImage(),
-        transforms.Resize(constants.TEST_IMAGE_SIZE),
+        transforms.Resize(global_config.TEST_IMAGE_SIZE),
         transforms.ToTensor()])
 
     num_saved = 0
