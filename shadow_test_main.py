@@ -12,8 +12,11 @@ import torch
 import torch.nn.parallel
 import torch.utils.data
 import numpy as np
+import yaml
+from yaml import SafeLoader
+
 import iid_test_v2
-from config import iid_server_config
+from config.network_config import ConfigHolder
 from iid_test_v2 import TesterClass
 from loaders import dataset_loader
 from transforms import iid_transforms
@@ -26,123 +29,71 @@ parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
 parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:0")
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
+parser.add_option('--img_vis_enabled', type=int, default=1)
 parser.add_option('--shadow_matte_network_version', type=str, default="VXX.XX")
 parser.add_option('--shadow_removal_version', type=str, default="VXX.XX")
 parser.add_option('--shadow_matte_iteration', type=int, default="1")
 parser.add_option('--shadow_removal_iteration', type=int, default="1")
-parser.add_option('--g_lr', type=float, help="LR", default="0.0002")
-parser.add_option('--d_lr', type=float, help="LR", default="0.0002")
-parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
-parser.add_option('--img_vis_enabled', type=int, default=1)
-parser.add_option('--train_mode', type=str, default="all") #all, train_shadow_matte, train_shadow
-parser.add_option('--input_path', type=str)
-parser.add_option('--output_path', type=str)
-parser.add_option('--img_size', type=int, default=(256, 256))
-
-# version_a ="v13.07"
-# iteration_a = 8
-# version_s = "v12.07"
-# iteration_s = 15
-# version_z = "v16.10"
-# iteration_z = 10
 
 def update_config(opts):
-    constants.server_config = opts.server_config
-    constants.plot_enabled = opts.plot_enabled
+    global_config.server_config = opts.server_config
+    global_config.img_to_load = opts.img_to_load
+    global_config.num_workers = 12
+    global_config.load_size = 128
+    global_config.batch_size = 128
+    global_config.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
+    global_config.rgb_dir_ws = "X:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+    global_config.rgb_dir_ns = "X:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
+    print("Using HOME RTX3090 configuration. Workers: ", global_config.num_workers)
 
-    ## COARE
-    if (constants.server_config == 1):
-        opts.num_workers = 6
-        print("Using COARE configuration. Workers: ", opts.num_workers)
-        constants.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
-        constants.rgb_dir_ns = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
-        constants.ws_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_A/*.png"
-        constants.ns_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_C/*.png"
-
-    # CCS JUPYTER
-    elif (constants.server_config == 2):
-        constants.num_workers = 6
-        constants.rgb_dir_ws = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
-        constants.rgb_dir_ns = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
-        constants.DATASET_PLACES_PATH = constants.rgb_dir_ws
-        constants.ws_istd = constants.rgb_dir_ws
-        constants.ns_istd = constants.rgb_dir_ns
-
-        print("Using CCS configuration. Workers: ", opts.num_workers)
-
-    # GCLOUD
-    elif (constants.server_config == 3):
-        opts.num_workers = 8
-        print("Using GCloud configuration. Workers: ", opts.num_workers)
-        constants.DATASET_PLACES_PATH = "/home/neil_delgallego/Places Dataset/*.jpg"
-        constants.rgb_dir_ws_styled = "/home/neil_delgallego/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
-
-    elif (constants.server_config == 4):
-        opts.num_workers = 6
-        constants.DATASET_PLACES_PATH = "C:/Datasets/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
-        constants.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
-        constants.ws_istd = "C:/Datasets/ISTD_Dataset/test/test_A/*.png"
-        constants.ns_istd = "C:/Datasets/ISTD_Dataset/test/test_C/*.png"
-        constants.mask_istd = "C:/Datasets/ISTD_Dataset/test/test_B/*.png"
-
-        print("Using HOME RTX2080Ti configuration. Workers: ", opts.num_workers)
-    else:
-        opts.num_workers = 12
-        constants.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
-        constants.rgb_dir_ws = "X:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
-        constants.rgb_dir_ns = "X:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
-        print("Using HOME RTX3090 configuration. Workers: ", opts.num_workers)
-
-def test_shadow_matte(dataset_tester, opts):
-    device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
-
-    sc_instance = iid_server_config.IIDServerConfig.getInstance()
-    sc_instance.update_version_config()
-    network_config = sc_instance.interpret_shadow_matte_params_from_version()
-    general_config = sc_instance.get_general_configs()
-    print("General config:", general_config)
-    print("Network config: ", network_config)
-
-    dataset_version = network_config["dataset_version"]
-
-    rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
-    rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
-
-    print("Dataset path: ", rgb_dir_ws, rgb_dir_ns)
-    shadow_loader, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
-    for i, (file_name, rgb_ws, _, _, shadow_matte) in enumerate(shadow_loader, 0):
-        rgb_ws = rgb_ws.to(device)
-        shadow_matte = shadow_matte.to(device)
-
-        dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "Train", opts.img_vis_enabled, False, opts)
-        if (i % 16 == 0):
-            break
-
-    dataset_tester.print_shadow_matte_performance("SM - Train Set", opts)
-
-    # ISTD test dataset
-    shadow_loader, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, 8, opts)
-    for i, (file_name, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
-        rgb_ws = rgb_ws.to(device)
-        shadow_matte = shadow_matte.to(device)
-
-        dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "ISTD", opts.img_vis_enabled, True, opts)
-        # break
-
-    dataset_tester.print_shadow_matte_performance("SM - ISTD", opts)
-
-    #SRD test dataset
-    shadow_loader, _ = dataset_loader.load_istd_dataset(constants.ws_srd, constants.ns_srd, constants.mask_istd, 8, opts)
-    for i, (file_name, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
-        rgb_ws = rgb_ws.to(device)
-        shadow_matte = shadow_matte.to(device)
-
-        dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "SRD", opts.img_vis_enabled, True, opts)
-        # break
-
-    dataset_tester.print_shadow_matte_performance("SM - SRD", opts)
+# def test_shadow_matte(dataset_tester, opts):
+#     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
+#
+#     sc_instance = iid_server_config.IIDServerConfig.getInstance()
+#     sc_instance.update_version_config()
+#     network_config = sc_instance.interpret_shadow_matte_params_from_version()
+#     general_config = sc_instance.get_general_configs()
+#     print("General config:", general_config)
+#     print("Network config: ", network_config)
+#
+#     dataset_version = network_config["dataset_version"]
+#
+#     rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
+#     rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
+#
+#     print("Dataset path: ", rgb_dir_ws, rgb_dir_ns)
+#     shadow_loader, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
+#     for i, (file_name, rgb_ws, _, _, shadow_matte) in enumerate(shadow_loader, 0):
+#         rgb_ws = rgb_ws.to(device)
+#         shadow_matte = shadow_matte.to(device)
+#
+#         dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "Train", opts.img_vis_enabled, False, opts)
+#         if (i % 16 == 0):
+#             break
+#
+#     dataset_tester.print_shadow_matte_performance("SM - Train Set", opts)
+#
+#     # ISTD test dataset
+#     shadow_loader, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, 8, opts)
+#     for i, (file_name, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
+#         rgb_ws = rgb_ws.to(device)
+#         shadow_matte = shadow_matte.to(device)
+#
+#         dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "ISTD", opts.img_vis_enabled, True, opts)
+#         # break
+#
+#     dataset_tester.print_shadow_matte_performance("SM - ISTD", opts)
+#
+#     #SRD test dataset
+#     shadow_loader, _ = dataset_loader.load_istd_dataset(constants.ws_srd, constants.ns_srd, constants.mask_istd, 8, opts)
+#     for i, (file_name, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
+#         rgb_ws = rgb_ws.to(device)
+#         shadow_matte = shadow_matte.to(device)
+#
+#         dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "SRD", opts.img_vis_enabled, True, opts)
+#         # break
+#
+#     dataset_tester.print_shadow_matte_performance("SM - SRD", opts)
 
 
 
@@ -209,7 +160,7 @@ def main(argv):
     update_config(opts)
     print(opts)
     print("=====================BEGIN============================")
-    print("Server config? %d Has GPU available? %d Count: %d" % (constants.server_config, torch.cuda.is_available(), torch.cuda.device_count()))
+    print("Server config? %d Has GPU available? %d Count: %d" % (global_config.server_config, torch.cuda.is_available(), torch.cuda.device_count()))
     print("Torch CUDA version: %s" % torch.version.cuda)
 
     manualSeed = 0
@@ -220,25 +171,49 @@ def main(argv):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
     print("Device: %s" % device)
 
-    print(constants.rgb_dir_ws_styled, constants.albedo_dir)
     plot_utils.VisdomReporter.initialize()
+    tf = trainer_factory.TrainerFactory(device)
 
-    constants.shadow_matte_network_version = opts.shadow_matte_network_version
-    constants.shadow_removal_version = opts.shadow_removal_version
+    yaml_config = "./hyperparam_tables/{network_version}.yaml"
+    yaml_config = yaml_config.format(network_version=opts.shadow_matte_network_version)
+    hyperparam_path = "./hyperparam_tables/common_iter.yaml"
+    with open(yaml_config) as f, open(hyperparam_path) as h:
+        ConfigHolder.initialize(yaml.load(f, SafeLoader), yaml.load(h, SafeLoader))
 
-    iid_server_config.IIDServerConfig.initialize()
-    tf = trainer_factory.TrainerFactory(device, opts)
+    shadow_m_config = ConfigHolder.getInstance().get_network_config()
     shadow_m = tf.get_shadow_matte_trainer()
+
+    print("---------------------------------------------------------------------------")
+    print("Successfully loaded shadow matte network: ", opts.shadow_matte_network_version, str(opts.shadow_matte_iteration))
+    print("Network config: ", shadow_m_config)
+    print("---------------------------------------------------------------------------")
+
+    yaml_config = "./hyperparam_tables/{network_version}.yaml"
+    yaml_config = yaml_config.format(network_version=opts.shadow_removal_version)
+    hyperparam_path = "./hyperparam_tables/common_iter.yaml"
+    with open(yaml_config) as f, open(hyperparam_path) as h:
+        ConfigHolder.initialize(yaml.load(f, SafeLoader), yaml.load(h, SafeLoader))
+
+    shadow_t_config = ConfigHolder.getInstance().get_network_config()
     shadow_t = tf.get_shadow_trainer()
 
-    dataset_tester = TesterClass(shadow_m, shadow_t)
-    if(opts.train_mode == "train_shadow_matte"):
-        test_shadow_matte(dataset_tester, opts)
-    elif(opts.train_mode == "train_shadow"):
-        test_shadow_removal(dataset_tester, opts)
-    else:
-        test_shadow_matte(dataset_tester, opts)
-        test_shadow_removal(dataset_tester, opts)
+    print("---------------------------------------------------------------------------")
+    print("Successfully loaded shadow removal network: ", opts.shadow_removal_version, str(opts.shadow_removal_iteration))
+    print("Network config: ", shadow_t_config)
+    print("---------------------------------------------------------------------------")
+
+    ConfigHolder.destroy() #for security, destroy config holder since it should no longer be needed
+
+    # dataset_tester = TesterClass(shadow_m, shadow_t)
+    # test_shadow_removal(dataset_tester, opts)
+
+    # if(opts.train_mode == "train_shadow_matte"):
+    #     test_shadow_matte(dataset_tester, opts)
+    # elif(opts.train_mode == "train_shadow"):
+    #     test_shadow_removal(dataset_tester, opts)
+    # else:
+    #     test_shadow_matte(dataset_tester, opts)
+    #     test_shadow_removal(dataset_tester, opts)
 
 
 if __name__ == "__main__":

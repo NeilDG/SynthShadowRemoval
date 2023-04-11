@@ -9,6 +9,10 @@ class ConfigHolder():
             ConfigHolder._sharedInstance = ConfigHolder(yaml_data, hyperparam_data)
 
     @staticmethod
+    def destroy():
+        ConfigHolder._sharedInstance = None
+
+    @staticmethod
     def getInstance():
         return ConfigHolder._sharedInstance
 
