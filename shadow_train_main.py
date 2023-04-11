@@ -207,7 +207,10 @@ def train_shadow_matte(device, opts):
     print("Torch CUDA version: %s" % torch.version.cuda)
 
     network_config = ConfigHolder.getInstance().get_network_config()
-    tf = trainer_factory.TrainerFactory(device)
+    global_config.sm_network_version = opts.network_version
+    global_config.sm_iteration = opts.iteration
+
+    tf = shadow_matte_trainer.ShadowMatteTrainer(device)
 
     mode = "train_shadow_matte"
     iteration = 0
@@ -215,7 +218,7 @@ def train_shadow_matte(device, opts):
     print("---------------------------------------------------------------------------")
     print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
     print("Network config: ", network_config)
-    print("General config: ", global_config.network_version, global_config.iteration, global_config.img_to_load, global_config.load_size, global_config.batch_size, global_config.train_mode, global_config.last_epoch)
+    print("General config: ", global_config.sm_network_version, global_config.sm_iteration, global_config.img_to_load, global_config.load_size, global_config.batch_size, global_config.train_mode, global_config.last_epoch)
     print("---------------------------------------------------------------------------")
 
     dataset_version = network_config["dataset_version"]
@@ -254,17 +257,17 @@ def train_shadow_matte(device, opts):
                          "rgb_ws_istd": rgb_ws_istd, "rgb_ns_istd": rgb_ns_istd, "matte_istd": matte_istd}
             target_map = input_map
 
-            tf.train(mode, epoch, iteration, input_map, target_map)
+            tf.train(epoch, iteration, input_map, target_map)
 
-            if (tf.is_stop_condition_met(mode)):
+            if (tf.is_stop_condition_met()):
                 break
 
             if (iteration % opts.save_per_iter == 0):
-                tf.save(mode, epoch, iteration, True)
+                tf.save_states(epoch, iteration, True)
 
                 if (opts.plot_enabled == 1):
-                    tf.visdom_plot(mode, iteration)
-                    tf.visdom_visualize(mode, input_map, "Train")
+                    tf.visdom_plot(iteration)
+                    tf.visdom_visualize(input_map, "Train")
 
                     _, rgb_ws, rgb_ns, shadow_map, shadow_matte = next(itertools.cycle(test_loader_train))
                     rgb_ws = rgb_ws.to(device)
@@ -272,15 +275,15 @@ def train_shadow_matte(device, opts):
                     shadow_matte = shadow_matte.to(device)
 
                     input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_matte": shadow_matte}
-                    tf.visdom_visualize(mode, input_map, "Test Synthetic")
+                    tf.visdom_visualize(input_map, "Test Synthetic")
 
                     input_map = {"rgb": rgb_ws_istd, "rgb_ns" : rgb_ns_istd, "shadow_matte": matte_istd}
-                    tf.visdom_visualize(mode, input_map, "Test ISTD")
+                    tf.visdom_visualize(input_map, "Test ISTD")
 
             iteration = iteration + 1
             pbar.update(1)
 
-        if (tf.is_stop_condition_met(mode)):
+        if (tf.is_stop_condition_met()):
             break
 
     pbar.close()
