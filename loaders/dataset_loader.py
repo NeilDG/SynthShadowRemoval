@@ -237,7 +237,8 @@ def load_shadow_train_dataset():
         ws_list += initial_ws_list
         ns_list += initial_ns_list
 
-    if(network_config["mix_istd"] > 0.0):
+    mix_istd = ConfigHolder.getInstance().get_network_attribute("mix_istd", 0.0)
+    if(mix_istd > 0.0):
         synth_len = int(len(ws_list) * network_config["mix_istd"]) #add N% istd
         istd_len = 0
         while istd_len < synth_len:

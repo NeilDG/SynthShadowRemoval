@@ -13,9 +13,15 @@ class NetworkCreator():
     def __init__(self, gpu_device):
         self.gpu_device = gpu_device
 
-    def initialize_rgb_network(self, net_config, num_blocks, input_nc):
-        sc_instance = iid_server_config.IIDServerConfig.getInstance()
-        network_config = sc_instance.interpret_shadow_network_params_from_version()
+    def initialize_rgb_network(self):
+        config_holder = ConfigHolder.getInstance()
+        network_config = config_holder.get_network_config()
+
+        net_config = network_config["model_type"]
+        input_nc = network_config["input_nc"]
+        num_blocks = network_config["num_blocks"]
+        dropout_rate = network_config["dropout_rate"]
+
         if (net_config == 1):
             G_A = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
         elif (net_config == 2):
@@ -33,9 +39,9 @@ class NetworkCreator():
                       'pad_type': 'reflect'}
             G_A = usi3d_gan.AdaINGen(input_dim=input_nc, output_dim=3, params=params, use_dropout=network_config["use_dropout"]).to(self.gpu_device)
         elif(net_config == 5):
-            G_A = ffa_gan.FFA(input_nc, num_blocks, dropout_rate=network_config["dropout_rate"]).to(self.gpu_device)
+            G_A = ffa_gan.FFA(input_nc, num_blocks, dropout_rate=dropout_rate).to(self.gpu_device)
         elif(net_config == 6):
-            G_A = ffa_gan.FFABase(num_blocks, dropout_rate=network_config["dropout_rate"]).to(self.gpu_device)
+            G_A = ffa_gan.FFABase(num_blocks, dropout_rate=dropout_rate).to(self.gpu_device)
         elif (net_config == 7):
             params = {'dim': 64,  # number of filters in the bottommost layer
                       'mlp_dim': 256,  # number of filters in MLP

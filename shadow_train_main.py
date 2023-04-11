@@ -96,42 +96,55 @@ def update_config(opts):
         global_config.ns_srd = "E:/SRD_Test/srd/shadow_free/*.jpg"
         print("Using HOME RTX3090 configuration. Workers: ", global_config.num_workers)
 
-def train_shadow(tf, device, opts):
-    general_config = sc_instance.get_general_configs()
-    network_config = sc_instance.interpret_shadow_network_params_from_version()
-    print("General config:", general_config)
-    print("Network config: ", network_config)
+def train_shadow(device, opts):
+    yaml_config = "./hyperparam_tables/{network_version}.yaml"
+    yaml_config = yaml_config.format(network_version=opts.network_version)
+    hyperparam_path = "./hyperparam_tables/common_iter.yaml"
+    with open(yaml_config) as f, open(hyperparam_path) as h:
+        ConfigHolder.initialize(yaml.load(f, SafeLoader), yaml.load(h, SafeLoader))
+
+    update_config(opts)
+    print(opts)
+    print("=====================BEGIN============================")
+    print("Server config? %d Has GPU available? %d Count: %d" % (global_config.server_config, torch.cuda.is_available(), torch.cuda.device_count()))
+    print("Torch CUDA version: %s" % torch.version.cuda)
+
+    network_config = ConfigHolder.getInstance().get_network_config()
+    tf = trainer_factory.TrainerFactory(device)
+    tf.initialize_all_trainers()
 
     mode = "train_shadow"
-    dataset_version = network_config["dataset_version"]
-
-    # assert dataset_version == "v17", "Cannot identify dataset version."
-    rgb_dir_ws = global_config.rgb_dir_ws.format(dataset_version=dataset_version)
-    rgb_dir_ns = global_config.rgb_dir_ns.format(dataset_version=dataset_version)
-
-    load_size = network_config["load_size_z"]
-
-    train_loader, dataset_count = dataset_loader.load_shadow_train_dataset(rgb_dir_ws, rgb_dir_ns, global_config.ws_istd, global_config.ns_istd, load_size, opts)
-    test_loader_train, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
-
-    if(dataset_version == "v_srd"):
-        test_loader_istd, _ = dataset_loader.load_istd_dataset(global_config.ws_srd, global_config.ns_srd, global_config.mask_istd, load_size, opts)
-    else:
-        test_loader_istd, _ = dataset_loader.load_istd_dataset(global_config.ws_istd, global_config.ns_istd, global_config.mask_istd, load_size, opts)
-
     iteration = 0
-    start_epoch = sc_instance.get_last_epoch_from_mode(mode)
+    start_epoch = global_config.last_epoch
     print("---------------------------------------------------------------------------")
     print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
+    print("Network config: ", network_config)
+    print("General config: ", global_config.network_version, global_config.iteration, global_config.img_to_load, global_config.load_size, global_config.batch_size, global_config.train_mode, global_config.last_epoch)
     print("---------------------------------------------------------------------------")
 
+    # assert dataset_version == "v17", "Cannot identify dataset version."
+    dataset_version = network_config["dataset_version"]
+    global_config.rgb_dir_ws = global_config.rgb_dir_ws.format(dataset_version=dataset_version)
+    global_config.rgb_dir_ns = global_config.rgb_dir_ns.format(dataset_version=dataset_version)
+    print("Dataset path WS: ", global_config.rgb_dir_ws)
+    print("Dataset path NS: ", global_config.rgb_dir_ns)
+
+    train_loader, dataset_count = dataset_loader.load_shadow_train_dataset()
+    test_loader_train, _ = dataset_loader.load_shadow_test_dataset()
+
+    if(dataset_version == "v_srd"):
+        test_loader_istd, _ = dataset_loader.load_istd_dataset()
+    else:
+        test_loader_istd, _ = dataset_loader.load_istd_dataset()
+
     # compute total progress
-    needed_progress = int((general_config[mode]["max_epochs"]) * (dataset_count / load_size))
-    current_progress = int(start_epoch * (dataset_count / load_size))
-    pbar = tqdm(total=needed_progress, disable = global_config.disable_progress_bar)
+    max_epochs = network_config["max_epochs"]
+    needed_progress = int(max_epochs * (dataset_count / global_config.load_size))
+    current_progress = int(start_epoch * (dataset_count / global_config.load_size))
+    pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
     pbar.update(current_progress)
 
-    for epoch in range(start_epoch, general_config[mode]["max_epochs"]):
+    for epoch in range(start_epoch, network_config["max_epochs"]):
         for i, (train_data, test_data) in enumerate(zip(train_loader, itertools.cycle(test_loader_istd))):
             _, rgb_ws, rgb_ns, shadow_map, shadow_matte = train_data
             rgb_ws = rgb_ws.to(device)
@@ -148,11 +161,14 @@ def train_shadow(tf, device, opts):
                          "rgb_ws_istd" : rgb_ws_istd, "rgb_ns_istd" : rgb_ns_istd, "matte_istd" : matte_istd}
             target_map = input_map
 
+            iteration = iteration + 1
+            pbar.update(1)
+
             tf.train(mode, epoch, iteration, input_map, target_map)
             if (tf.is_stop_condition_met(mode)):
                 break
 
-            if (i % 300 == 0):
+            if (i % opts.save_per_iter == 0):
                 tf.save(mode, epoch, iteration, True)
 
                 if (opts.plot_enabled == 1):
@@ -171,8 +187,6 @@ def train_shadow(tf, device, opts):
                     input_map = {"rgb": rgb_ws_istd, "rgb_ns": rgb_ns_istd, "shadow_matte" : matte_istd}
                     tf.visdom_visualize(mode, input_map, "Test ISTD")
 
-            iteration = iteration + 1
-            pbar.update(1)
 
         if (tf.is_stop_condition_met(mode)):
             break
@@ -282,16 +296,14 @@ def main(argv):
     torch.manual_seed(manualSeed)
     np.random.seed(manualSeed)
 
-    assert opts.train_mode == "all" or opts.train_mode == "train_shadow" or opts.train_mode == "train_shadow_matte", "Unrecognized train mode: " + opts.train_mode
+    assert opts.train_mode == "train_shadow" or opts.train_mode == "train_shadow_matte", "Unrecognized train mode: " + opts.train_mode
     plot_utils.VisdomReporter.initialize()
 
-    if(opts.train_mode == "all"):
-        train_shadow_matte(device, opts)
-        train_shadow(tf, device, opts)
-    elif (opts.train_mode == "train_shadow_matte"):
+
+    if (opts.train_mode == "train_shadow_matte"):
         train_shadow_matte(device, opts)
     elif(opts.train_mode == "train_shadow"):
-        train_shadow(tf, device, opts)
+        train_shadow(device, opts)
 
 
 if __name__ == "__main__":

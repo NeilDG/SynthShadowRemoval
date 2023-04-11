@@ -60,18 +60,19 @@ class ShadowTrainDataset(data.Dataset):
             state = torch.get_rng_state()
             rgb_ws = self.initial_op(rgb_ws)
 
-            #add gaussian noise to WS
-            if("random_exposure" in self.network_config["augment_key"]):
-                rgb_ws = rgb_ws * np.random.uniform(1.001, 1.25)
-
-            if ("random_noise" in self.network_config["augment_key"]):
-                noise_op = K.RandomGaussianNoise(p=1.0, mean=0.0, std=np.random.uniform(0.0, 0.15))
-                rgb_ws = torch.squeeze(noise_op(rgb_ws))
-
             torch.set_rng_state(state)
             rgb_ns = cv2.imread(self.img_list_b[idx])
             rgb_ns = cv2.cvtColor(rgb_ns, cv2.COLOR_BGR2RGB)
             rgb_ns = self.initial_op(rgb_ns)
+
+            #add gaussian noise to WS
+            if("random_exposure" in self.network_config["augment_key"]):
+                rgb_ws = rgb_ws * np.random.uniform(1.000, 1.25)
+
+            if ("random_noise" in self.network_config["augment_key"]):
+                noise_op = K.RandomGaussianNoise(p=1.0, mean=np.random.uniform(0.0, 1.0), std=np.random.uniform(0.0, 1.0))
+                rgb_ws = torch.squeeze(noise_op(rgb_ws))
+                rgb_ns = torch.squeeze(noise_op(rgb_ns)) #TODO: Observe if it's wise to also add noise to RGB_ns. Hypothesis: Must add noise as well so SMs are clean.
 
             if (self.transform_config == 1):
                 crop_indices = transforms.RandomCrop.get_params(rgb_ws, output_size=self.patch_size)

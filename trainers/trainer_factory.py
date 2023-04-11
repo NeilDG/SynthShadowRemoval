@@ -18,19 +18,19 @@ class TrainerFactory():
     def initialize_all_trainers(self):
         # self.trainer_list["train_shadow_mask"] = ShadowMaskTrainer(self.gpu_device, opts)
         self.trainer_list["train_shadow_matte"] = ShadowMatteTrainer(self.gpu_device)
-        # self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device)
+        self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device)
         # self.trainer_list["train_shadow_refine"] = ShadowRefinementTrainer(self.gpu_device, opts)
 
     def get_all_trainers(self):
         self.initialize_all_trainers()
         return self.trainer_list["train_shadow_matte"], self.trainer_list["train_shadow"]
 
-    # def get_shadow_trainer(self):
-    #     if ("train_shadow" in self.trainer_list):
-    #         return self.trainer_list["train_shadow"]
-    #     else:
-    #         self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device, self.opts)
-    #         return self.trainer_list["train_shadow"]
+    def get_shadow_trainer(self):
+        if ("train_shadow" in self.trainer_list):
+            return self.trainer_list["train_shadow"]
+        else:
+            self.trainer_list["train_shadow"] = ShadowTrainer(self.gpu_device)
+            return self.trainer_list["train_shadow"]
 
     def get_shadow_matte_trainer(self):
         if ("train_shadow_matte" in self.trainer_list):

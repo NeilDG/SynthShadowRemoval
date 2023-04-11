@@ -25,7 +25,6 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
     def initialize_train_config(self):
         self.iteration = global_config.iteration
-        # self.it_table = shadow_iteration_table.ShadowIterationTable()
         config_holder = ConfigHolder.getInstance()
         network_config = config_holder.get_network_config()
 
