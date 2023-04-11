@@ -273,7 +273,7 @@ def load_shadow_test_dataset():
 
     data_loader = torch.utils.data.DataLoader(
         shadow_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 2),
-        batch_size=8,
+        batch_size=global_config.test_size,
         num_workers=1,
         shuffle=False
     )
@@ -322,7 +322,7 @@ def load_istd_dataset():
 
     data_loader = torch.utils.data.DataLoader(
         shadow_datasets.ShadowISTDDataset(img_length, ws_istd_list, ns_istd_list, mask_istd_list, 1),
-        batch_size=global_config.load_size,
+        batch_size=global_config.test_size,
         num_workers=1,
         shuffle=False
     )
@@ -338,7 +338,7 @@ def load_srd_dataset():
 
     data_loader = torch.utils.data.DataLoader(
         shadow_datasets.ShadowSRDDataset(img_length, ws_istd_list, ns_istd_list, 1),
-        batch_size=global_config.load_size,
+        batch_size=global_config.test_size,
         num_workers=1,
         shuffle=False
     )

@@ -32,6 +32,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.shadow_op = shadow_map_transforms.ShadowMapTransforms()
         self.fp16_scaler = amp.GradScaler()  # for automatic mixed precision
         self.common_losses = common_losses.LossRepository(self.gpu_device, self.iteration)
+        self.l1_loss = nn.L1Loss()
 
         self.visdom_reporter = plot_utils.VisdomReporter.getInstance()
         self.load_size = global_config.load_size
@@ -180,8 +181,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 rgb2ns_istd = tensor_utils.normalize_to_01(rgb2ns_istd)
                 target_tensor = tensor_utils.normalize_to_01(target_tensor)
                 istd_ns_test = tensor_utils.normalize_to_01(istd_ns_test)
-                self.losses_dict_t[self.TRAIN_LOSS_KEY].append(self.common_losses.compute_l1_loss(rgb2ns, target_tensor).item())
-                self.losses_dict_t[self.TEST_LOSS_KEY].append(self.common_losses.compute_l1_loss(rgb2ns_istd, istd_ns_test).item())
+                self.losses_dict_t[self.TRAIN_LOSS_KEY].append(self.l1_loss(rgb2ns, target_tensor).item())
+                self.losses_dict_t[self.TEST_LOSS_KEY].append(self.l1_loss(rgb2ns_istd, istd_ns_test).item())
 
     def is_stop_condition_met(self):
         return self.stop_result

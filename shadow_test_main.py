@@ -17,6 +17,7 @@ from loaders import dataset_loader
 import global_config
 from utils import plot_utils
 from trainers import trainer_factory
+from tqdm import tqdm
 
 parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
@@ -33,8 +34,7 @@ def update_config(opts):
     global_config.server_config = opts.server_config
     global_config.img_to_load = opts.img_to_load
     global_config.num_workers = 12
-    global_config.load_size = 128
-    global_config.batch_size = 128
+    global_config.test_size = 256
     global_config.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
     global_config.rgb_dir_ws = "X:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
     global_config.rgb_dir_ns = "X:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
@@ -97,14 +97,17 @@ def test_shadow_removal(dataset_tester, opts):
 
     # SHADOW dataset test
     # Using train dataset
-    shadow_loader, _ = dataset_loader.load_shadow_test_dataset()
+    shadow_loader, dataset_count = dataset_loader.load_shadow_test_dataset()
+    needed_progress = int(dataset_count / global_config.test_size)
+    pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
     for i, (_, rgb_ws, rgb_ns, _, shadow_matte) in enumerate(shadow_loader, 0):
         rgb_ws = rgb_ws.to(device)
         rgb_ns = rgb_ns.to(device)
         shadow_matte = shadow_matte.to(device)
 
         dataset_tester.test_shadow(rgb_ws, rgb_ns, shadow_matte, "Train", opts.img_vis_enabled, opts.train_mode)
-        if (i % 16 == 0):
+        pbar.update(1)
+        if ((i + 1) % 8 == 0):
             break
 
     dataset_tester.print_ave_shadow_performance("Train Set")

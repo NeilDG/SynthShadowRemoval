@@ -65,6 +65,7 @@ network_config = None
 img_to_load = -1
 load_size = -1
 batch_size = -1
+test_size = 8
 train_mode = "all"
 last_epoch = 0
 

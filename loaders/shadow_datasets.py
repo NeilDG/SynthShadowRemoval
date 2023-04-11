@@ -69,9 +69,9 @@ class ShadowTrainDataset(data.Dataset):
                 rgb_ws = rgb_ws * np.random.uniform(1.000, 1.25)
 
             if ("random_noise" in self.network_config["augment_key"]):
-                noise_op = K.RandomGaussianNoise(p=1.0, mean=np.random.uniform(0.0, 1.0), std=np.random.uniform(0.0, 1.0))
-                rgb_ws = torch.squeeze(noise_op(rgb_ws))
-                rgb_ns = torch.squeeze(noise_op(rgb_ns)) #TODO: Observe if it's wise to also add noise to RGB_ns. Hypothesis: Must add noise as well so SMs are clean.
+                noise_op = K.RandomGaussianNoise(p=1.0, mean=np.random.uniform(0.0, 0.25), std=np.random.uniform(0.0, 0.25))
+                rgb_ws = torch.clip(torch.squeeze(noise_op(rgb_ws)), 0.0, 1.0)
+                rgb_ns = torch.clip(torch.squeeze(noise_op(rgb_ns, params=noise_op._params)), 0.0, 1.0) #TODO: Observe if it's wise to also add noise to RGB_ns. Hypothesis: Must add noise as well so SMs are clean.
 
             if (self.transform_config == 1):
                 crop_indices = transforms.RandomCrop.get_params(rgb_ws, output_size=self.patch_size)
@@ -82,9 +82,7 @@ class ShadowTrainDataset(data.Dataset):
 
             rgb_ws, rgb_ns, shadow_map, shadow_matte = self.shadow_op.generate_shadow_map(rgb_ws, rgb_ns, False)
 
-            rgb_ws_gray = kornia.color.rgb_to_grayscale(rgb_ws)
             rgb_ws = self.norm_op(rgb_ws)
-            rgb_ws_gray = self.norm_op(rgb_ws_gray)
             rgb_ns = self.norm_op(rgb_ns)
             shadow_map = self.norm_op(shadow_map)
             shadow_matte = self.norm_op(shadow_matte)
@@ -93,7 +91,6 @@ class ShadowTrainDataset(data.Dataset):
             print("Failed to load: ", self.img_list_a[idx], self.img_list_b[idx])
             print("ERROR: ", e)
             rgb_ws = None
-            rgb_ws_gray = None
             rgb_ns = None
             shadow_map = None
             shadow_matte = None
