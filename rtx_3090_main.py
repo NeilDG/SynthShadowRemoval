@@ -3,18 +3,21 @@
 import os
 
 def train_shadow_matte():
+    os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
+              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2sm_v61.01\" --iteration=1")
+
+    #FOR TESTING
     # os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
-    #           "--plot_enabled=0  --shadow_matte_network_version=\"v60.16_srd\" --shadow_removal_version=\"v60.15_synshadow\" "
+    #           "--plot_enabled=1 --save_per_iter=50 --network_version=\"rgb2sm_v61.01\" --iteration=1")
+
+def train_shadow_removal():
+    # os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow\" "
+    #           "--plot_enabled=0  --shadow_matte_network_version=\"v60.32_places\" --shadow_removal_version=\"v60.33_places\" "
     #           "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
 
     #FOR TESTING
-    os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=1000 --train_mode=\"train_shadow_matte\" "
-              "--plot_enabled=1 --save_per_iter=20 --network_version=\"rgb2sm_v61.00\" --iteration=1")
-
-def train_shadow_removal():
     os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow\" "
-              "--plot_enabled=0  --shadow_matte_network_version=\"v60.32_places\" --shadow_removal_version=\"v60.33_places\" "
-              "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
+              "--plot_enabled=1 --save_per_iter=50 --network_version=\"rgb2ns_v61.00_places\" --iteration=1")
 
 def train_domain_adaptation():
     os.system("python \"cyclegan_main.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "

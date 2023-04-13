@@ -40,54 +40,51 @@ def update_config(opts):
     global_config.rgb_dir_ns = "X:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
     print("Using HOME RTX3090 configuration. Workers: ", global_config.num_workers)
 
-# def test_shadow_matte(dataset_tester, opts):
-#     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
-#
-#     sc_instance = iid_server_config.IIDServerConfig.getInstance()
-#     sc_instance.update_version_config()
-#     network_config = sc_instance.interpret_shadow_matte_params_from_version()
-#     general_config = sc_instance.get_general_configs()
-#     print("General config:", general_config)
-#     print("Network config: ", network_config)
-#
-#     dataset_version = network_config["dataset_version"]
-#
-#     rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
-#     rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
-#
-#     print("Dataset path: ", rgb_dir_ws, rgb_dir_ns)
-#     shadow_loader, _ = dataset_loader.load_shadow_test_dataset(rgb_dir_ws, rgb_dir_ns, opts)
-#     for i, (file_name, rgb_ws, _, _, shadow_matte) in enumerate(shadow_loader, 0):
-#         rgb_ws = rgb_ws.to(device)
-#         shadow_matte = shadow_matte.to(device)
-#
-#         dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "Train", opts.img_vis_enabled, False, opts)
-#         if (i % 16 == 0):
-#             break
-#
-#     dataset_tester.print_shadow_matte_performance("SM - Train Set", opts)
-#
-#     # ISTD test dataset
-#     shadow_loader, _ = dataset_loader.load_istd_dataset(constants.ws_istd, constants.ns_istd, constants.mask_istd, 8, opts)
-#     for i, (file_name, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
-#         rgb_ws = rgb_ws.to(device)
-#         shadow_matte = shadow_matte.to(device)
-#
-#         dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "ISTD", .img_vis_enabled, True, opts)
-#         # break
-#
-#     dataset_tester.print_shadow_matte_performance("SM - ISTD", opts)
-#
-#     #SRD test dataset
-#     shadow_loader, _ = dataset_loader.load_istd_dataset(constants.ws_srd, constants.ns_srd, constants.mask_istd, 8, opts)
-#     for i, (file_name, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
-#         rgb_ws = rgb_ws.to(device)
-#         shadow_matte = shadow_matte.to(device)
-#
-#         dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "SRD", opts.img_vis_enabled, True, opts)
-#         # break
-#
-#     dataset_tester.print_shadow_matte_performance("SM - SRD", opts)
+def test_shadow_matte(dataset_tester, opts):
+    device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
+    print("Dataset path: ", global_config.rgb_dir_ws, global_config.rgb_dir_ns)
+
+    shadow_loader, dataset_count = dataset_loader.load_shadow_test_dataset()
+    needed_progress = int(dataset_count / global_config.test_size)
+    pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
+    for i, (file_name, rgb_ws, _, _, shadow_matte) in enumerate(shadow_loader, 0):
+        rgb_ws = rgb_ws.to(device)
+        shadow_matte = shadow_matte.to(device)
+
+        dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "Train", opts.img_vis_enabled, False, opts)
+        pbar.update(1)
+        if (i % 16 == 0):
+            break
+
+    dataset_tester.print_shadow_matte_performance("SM - Train Set", opts)
+
+    # ISTD test dataset
+    shadow_loader, dataset_count = dataset_loader.load_istd_dataset()
+    needed_progress = int(dataset_count / global_config.test_size)
+    pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
+    for i, (file_name, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
+        rgb_ws = rgb_ws.to(device)
+        shadow_matte = shadow_matte.to(device)
+
+        dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "ISTD", opts.img_vis_enabled, True, opts)
+        pbar.update(1)
+        # break
+
+    dataset_tester.print_shadow_matte_performance("SM - ISTD", opts)
+
+    #SRD test dataset
+    shadow_loader, dataset_count = dataset_loader.load_istd_dataset()
+    needed_progress = int(dataset_count / global_config.test_size)
+    pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
+    for i, (file_name, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
+        rgb_ws = rgb_ws.to(device)
+        shadow_matte = shadow_matte.to(device)
+
+        dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "SRD", opts.img_vis_enabled, True, opts)
+        pbar.update(1)
+        # break
+
+    dataset_tester.print_shadow_matte_performance("SM - SRD", opts)
 
 
 
@@ -204,15 +201,14 @@ def main(argv):
     ConfigHolder.destroy() #for security, destroy config holder since it should no longer be needed
 
     dataset_tester = TesterClass(shadow_m, shadow_t)
-    test_shadow_removal(dataset_tester, opts)
 
-    # if(opts.train_mode == "train_shadow_matte"):
-    #     test_shadow_matte(dataset_tester, opts)
-    # elif(opts.train_mode == "train_shadow"):
-    #     test_shadow_removal(dataset_tester, opts)
-    # else:
-    #     test_shadow_matte(dataset_tester, opts)
-    #     test_shadow_removal(dataset_tester, opts)
+    if(opts.train_mode == "train_shadow_matte"):
+        test_shadow_matte(dataset_tester, opts)
+    elif(opts.train_mode == "train_shadow"):
+        test_shadow_removal(dataset_tester, opts)
+    else:
+        test_shadow_matte(dataset_tester, opts)
+        test_shadow_removal(dataset_tester, opts)
 
 
 if __name__ == "__main__":

@@ -137,6 +137,7 @@ class TesterClass():
         ave_rmse_sm_ws = np.round(np.mean(self.rmse_list_lab_ws) * 100.0, 4)
 
         display_text = prefix + " - Versions: " + global_config.sm_network_version + "_" + str(global_config.sm_iteration) + \
+                        "<br> Epoch: " +str(global_config.last_epoch) + \
                        "<br> MAE Error (SM): " + str(ave_mae_sm) + "<br> MAE Error (SM WS): " + str(ave_mae_sm_ws) + \
                        "<br> RMSE Error (SM): " + str(ave_rmse_sm) + "<br> RMSE Error (SM WS): " + str(ave_rmse_sm_ws)
 
