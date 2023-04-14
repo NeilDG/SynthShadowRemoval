@@ -32,6 +32,7 @@ albedo_dir = "E:/SynthWeather Dataset 8/albedo/"
 rgb_dir_ws_styled = "E:/SynthWeather Dataset 8/train_rgb_styled/*/*.png"
 rgb_dir_ns_styled = "E:/SynthWeather Dataset 8/train_rgb_noshadows_styled/*/*.png"
 
+
 rgb_dir_ws = ""
 rgb_dir_ns = ""
 
@@ -60,14 +61,17 @@ sm_network_version = "VXX.XX"
 sm_iteration = -1
 ns_network_version = "VXX.XX"
 ns_iteration = -1
-network_config = None
+
+sm_network_config = None
+ns_network_config = None
 
 img_to_load = -1
 load_size = -1
 batch_size = -1
-test_size = 8
+test_size = -1
 train_mode = "all"
-last_epoch = 0
-
+last_epoch_sm = 0
+last_epoch_ns = 0
+dataset_target = ""
 
 

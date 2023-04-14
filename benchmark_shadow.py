@@ -37,7 +37,7 @@ class ShadowDataset(data.Dataset):
 
         self.transform_op = transforms.Compose([
             transforms.ToPILImage(),
-            transforms.Resize(constants.TEST_IMAGE_SIZE),
+            transforms.Resize(global_config.TEST_IMAGE_SIZE),
             transforms.ToTensor()])
 
     def __getitem__(self, idx):
@@ -76,7 +76,7 @@ class ShadowSRDDataset(data.Dataset):
 
         self.transform_op = transforms.Compose([
             transforms.ToPILImage(),
-            transforms.Resize(constants.TEST_IMAGE_SIZE),
+            transforms.Resize(global_config.TEST_IMAGE_SIZE),
             transforms.ToTensor()])
 
     def __getitem__(self, idx):
@@ -106,44 +106,12 @@ class ShadowSRDDataset(data.Dataset):
     def __len__(self):
         return self.img_length
 
-def measure_sm_performance(path_list, matte_path, mask_path, opts):
+def measure_performance(path_list, ns_path, mask_path):
     for ns_like_path in path_list:
         model_name = ns_like_path.split("/")[-2]
-        matte_like_list = dataset_loader.assemble_img_list(ns_like_path, opts)
-        matte_list = dataset_loader.assemble_img_list(matte_path, opts)
-        mask_list = dataset_loader.assemble_img_list(mask_path, opts)
-
-        img_length = len(matte_like_list)
-        print("%s: Length of images: %d %d" % (model_name, len(matte_like_list), len(matte_list)))
-
-        data_loader = torch.utils.data.DataLoader(
-            shadow_datasets.ShadowMatteDataset(img_length, matte_like_list, matte_list, mask_list),
-            batch_size=len(matte_like_list),
-            num_workers=1,
-            shuffle=False
-        )
-
-        mae_loss = nn.L1Loss()
-        mse_loss = nn.MSELoss()
-
-        _, matte_like, matte, shadow_mask = next(iter(data_loader))
-        mean_mae_rgb = mae_loss(matte_like, matte).item()
-        mean_mae_rgb = np.round(mean_mae_rgb, 4) * 100.0
-
-        #WS regions
-        mean_mae_rgb_ws = mae_loss(matte_like * shadow_mask, matte * shadow_mask).item()
-        mean_mae_rgb_ws = np.round(mean_mae_rgb_ws, 4) * 100.0
-
-        print("---------------------------- Performance reports for shadow-matte ----------------------------")
-        print(" Model name: ", model_name, " Mean MAE RGB: ", mean_mae_rgb, " Mean MAE RGB (WS): ", mean_mae_rgb_ws)
-        # print(" Model name: ", model_name, " Mean RMSE Lab: ", mean_rmse_lab, " Mean RMSE Lab (WS): ", mean_rmse_lab_ws)
-
-def measure_performance(path_list, ns_path, mask_path, opts):
-    for ns_like_path in path_list:
-        model_name = ns_like_path.split("/")[-2]
-        ns_like_list = dataset_loader.assemble_img_list(ns_like_path, opts)
-        ns_list = dataset_loader.assemble_img_list(ns_path, opts)
-        mask_list = dataset_loader.assemble_img_list(mask_path, opts)
+        ns_like_list = dataset_loader.assemble_img_list(ns_like_path)
+        ns_list = dataset_loader.assemble_img_list(ns_path)
+        mask_list = dataset_loader.assemble_img_list(mask_path)
 
         img_length = len(ns_like_list)
         print("%s: Length of images: %d %d" % (model_name, len(ns_like_list), len(ns_list)))
@@ -387,14 +355,14 @@ def main(argv):
     ns_path = "E:/ISTD_Dataset/test/test_C/*.png"
     mask_path = "E:/ISTD_Dataset/test/test_B/*.png"
 
-    measure_performance(istd_all_list, ns_path, mask_path, opts)
+    measure_performance(istd_all_list, ns_path, mask_path)
     # save_img_copies_for_results(istd_all_list, ns_path, "ISTD Dataset", (240, 320), opts)
 
     # for SRD
     ns_path = "E:/SRD_Test/srd/shadow_free/*.jpg"
     mask_path = "E:/SRD_Test/srd/mask/*.jpg"
 
-    sbu_all_list = [
+    srd_all_list = [
     # "E:/SRD_Test/srd/shadow/*.jpg",
     # "./comparison/SRD Dataset/SID_PAMI/*.png",
     # "./comparison/SRD Dataset/DC-ShadowNet/*.png",
@@ -407,7 +375,7 @@ def main(argv):
     "./comparison/SRD Dataset/OURS/*.png"
     ]
 
-    measure_performance(sbu_all_list, ns_path, mask_path, opts)
+    measure_performance(srd_all_list, ns_path, mask_path)
     # save_img_copies_for_results(sbu_all_list, ns_path, "SRD Dataset", (160, 210), opts)
 
 

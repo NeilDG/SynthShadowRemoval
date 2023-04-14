@@ -172,31 +172,28 @@ class ShadowSRDDataset(data.Dataset):
     def __getitem__(self, idx):
         file_name = self.img_list_a[idx].split("\\")[-1].split(".")[0]
 
-        try:
-            rgb_ws = cv2.imread(self.img_list_a[idx])
-            rgb_ws = cv2.cvtColor(rgb_ws, cv2.COLOR_BGR2RGB)
-            rgb_ws = self.initial_op(rgb_ws)
+        # try:
+        rgb_ws = cv2.imread(self.img_list_a[idx])
+        rgb_ws = cv2.cvtColor(rgb_ws, cv2.COLOR_BGR2RGB)
+        rgb_ws = self.initial_op(rgb_ws)
 
-            rgb_ns = cv2.imread(self.img_list_b[idx])
-            rgb_ns = cv2.cvtColor(rgb_ns, cv2.COLOR_BGR2RGB)
-            rgb_ns = self.initial_op(rgb_ns)
+        rgb_ns = cv2.imread(self.img_list_b[idx])
+        rgb_ns = cv2.cvtColor(rgb_ns, cv2.COLOR_BGR2RGB)
+        rgb_ns = self.initial_op(rgb_ns)
 
-            shadow_map = rgb_ns - rgb_ws
-            shadow_matte = kornia.color.rgb_to_grayscale(shadow_map)
+        shadow_map = rgb_ns - rgb_ws
+        shadow_matte = kornia.color.rgb_to_grayscale(shadow_map)
 
-            rgb_ws_gray = kornia.color.rgb_to_grayscale(rgb_ws)
-            rgb_ws = self.norm_op(rgb_ws)
-            rgb_ws_gray = self.norm_op(rgb_ws_gray)
-            rgb_ns = self.norm_op(rgb_ns)
-            shadow_matte = self.norm_op(shadow_matte)
+        rgb_ws = self.norm_op(rgb_ws)
+        rgb_ns = self.norm_op(rgb_ns)
+        shadow_matte = self.norm_op(shadow_matte)
 
-        except Exception as e:
-            print("Failed to load: ", self.img_list_a[idx], self.img_list_b[idx])
-            print("ERROR: ", e)
-            rgb_ws = None
-            rgb_ns = None
-            rgb_ws_gray = None
-            shadow_matte = None
+        # except Exception as e:
+        #     print("Failed to load: ", self.img_list_a[idx], self.img_list_b[idx])
+        #     print("ERROR: ", e)
+        #     rgb_ws = None
+        #     rgb_ns = None
+        #     shadow_matte = None
 
         return file_name, rgb_ws, rgb_ns, shadow_matte
 

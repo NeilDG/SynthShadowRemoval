@@ -29,12 +29,14 @@ parser.add_option('--shadow_removal_version', type=str, default="VXX.XX")
 parser.add_option('--shadow_matte_iteration', type=int, default="1")
 parser.add_option('--shadow_removal_iteration', type=int, default="1")
 parser.add_option('--train_mode', type=str, default="all") #all, train_shadow_matte, train_shadow
+parser.add_option('--dataset_target', type=str, default="all") #all, train, istd, srd, usr
 
 def update_config(opts):
     global_config.server_config = opts.server_config
     global_config.img_to_load = opts.img_to_load
+    global_config.dataset_target = opts.dataset_target
     global_config.num_workers = 12
-    global_config.test_size = 256
+    global_config.test_size = 128
     global_config.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
     global_config.rgb_dir_ws = "X:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
     global_config.rgb_dir_ns = "X:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
@@ -42,96 +44,112 @@ def update_config(opts):
 
 def test_shadow_matte(dataset_tester, opts):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
-    print("Dataset path: ", global_config.rgb_dir_ws, global_config.rgb_dir_ns)
 
-    shadow_loader, dataset_count = dataset_loader.load_shadow_test_dataset()
-    needed_progress = int(dataset_count / global_config.test_size)
-    pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
-    for i, (file_name, rgb_ws, _, _, shadow_matte) in enumerate(shadow_loader, 0):
-        rgb_ws = rgb_ws.to(device)
-        shadow_matte = shadow_matte.to(device)
+    global_config.rgb_dir_ws = global_config.rgb_dir_ws.format(dataset_version=global_config.sm_network_config["dataset_version"])
+    global_config.rgb_dir_ns = global_config.rgb_dir_ns.format(dataset_version=global_config.sm_network_config["dataset_version"])
+    print("Dataset path WS: ", global_config.rgb_dir_ws)
+    print("Dataset path NS: ", global_config.rgb_dir_ns)
 
-        dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "Train", opts.img_vis_enabled, False, opts)
-        pbar.update(1)
-        if (i % 16 == 0):
-            break
+    if(global_config.dataset_target == "all" or global_config.dataset_target == "train"):
+        shadow_loader, dataset_count = dataset_loader.load_shadow_test_dataset()
+        needed_progress = int(dataset_count / global_config.test_size)
+        pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
+        for i, (file_name, rgb_ws, _, _, shadow_matte) in enumerate(shadow_loader, 0):
+            rgb_ws = rgb_ws.to(device)
+            shadow_matte = shadow_matte.to(device)
 
-    dataset_tester.print_shadow_matte_performance("SM - Train Set", opts)
+            dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "Train", opts.img_vis_enabled, False, opts)
+            pbar.update(1)
+            if (i % 16 == 0):
+                break
+
+        dataset_tester.print_shadow_matte_performance("SM - Train Set", opts)
 
     # ISTD test dataset
-    shadow_loader, dataset_count = dataset_loader.load_istd_dataset()
-    needed_progress = int(dataset_count / global_config.test_size)
-    pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
-    for i, (file_name, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
-        rgb_ws = rgb_ws.to(device)
-        shadow_matte = shadow_matte.to(device)
+    if (global_config.dataset_target == "all" or global_config.dataset_target == "istd"):
+        shadow_loader, dataset_count = dataset_loader.load_istd_dataset()
+        needed_progress = int(dataset_count / global_config.test_size)
+        pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
+        for i, (file_name, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
+            rgb_ws = rgb_ws.to(device)
+            shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "ISTD", opts.img_vis_enabled, True, opts)
-        pbar.update(1)
-        # break
+            dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "ISTD", opts.img_vis_enabled, True, opts)
+            pbar.update(1)
+            # break
 
-    dataset_tester.print_shadow_matte_performance("SM - ISTD", opts)
+        dataset_tester.print_shadow_matte_performance("SM - ISTD", opts)
 
     #SRD test dataset
-    shadow_loader, dataset_count = dataset_loader.load_istd_dataset()
-    needed_progress = int(dataset_count / global_config.test_size)
-    pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
-    for i, (file_name, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
-        rgb_ws = rgb_ws.to(device)
-        shadow_matte = shadow_matte.to(device)
+    if (global_config.dataset_target == "all" or global_config.dataset_target == "srd"):
+        shadow_loader, dataset_count = dataset_loader.load_srd_dataset()
+        needed_progress = int(dataset_count / global_config.test_size)
+        pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
+        for i, (file_name, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
+            rgb_ws = rgb_ws.to(device)
+            shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "SRD", opts.img_vis_enabled, True, opts)
-        pbar.update(1)
-        # break
+            dataset_tester.test_shadow_matte(file_name, rgb_ws, shadow_matte, "SRD", opts.img_vis_enabled, True, opts)
+            pbar.update(1)
+            # break
 
-    dataset_tester.print_shadow_matte_performance("SM - SRD", opts)
+        dataset_tester.print_shadow_matte_performance("SM - SRD", opts)
 
 
 
 def test_shadow_removal(dataset_tester, opts):
     device = torch.device(opts.cuda_device if (torch.cuda.is_available()) else "cpu")
-    print("Dataset path: ", global_config.rgb_dir_ws, global_config.rgb_dir_ns)
+
+    update_config(opts)
+    global_config.rgb_dir_ws = global_config.rgb_dir_ws.format(dataset_version=global_config.ns_network_config["dataset_version"])
+    global_config.rgb_dir_ns = global_config.rgb_dir_ns.format(dataset_version=global_config.ns_network_config["dataset_version"])
+    print("NS shadow removal DS version: ", global_config.ns_network_config["dataset_version"])
+    print("Dataset path WS: ", global_config.rgb_dir_ws)
+    print("Dataset path NS: ", global_config.rgb_dir_ns)
 
     # SHADOW dataset test
     # Using train dataset
-    shadow_loader, dataset_count = dataset_loader.load_shadow_test_dataset()
-    needed_progress = int(dataset_count / global_config.test_size)
-    pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
-    for i, (_, rgb_ws, rgb_ns, _, shadow_matte) in enumerate(shadow_loader, 0):
-        rgb_ws = rgb_ws.to(device)
-        rgb_ns = rgb_ns.to(device)
-        shadow_matte = shadow_matte.to(device)
+    if (global_config.dataset_target == "all" or global_config.dataset_target == "train"):
+        shadow_loader, dataset_count = dataset_loader.load_shadow_test_dataset()
+        needed_progress = int(dataset_count / global_config.test_size)
+        pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
+        for i, (_, rgb_ws, rgb_ns, _, shadow_matte) in enumerate(shadow_loader, 0):
+            rgb_ws = rgb_ws.to(device)
+            rgb_ns = rgb_ns.to(device)
+            shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_shadow(rgb_ws, rgb_ns, shadow_matte, "Train", opts.img_vis_enabled, opts.train_mode)
-        pbar.update(1)
-        if ((i + 1) % 8 == 0):
-            break
+            dataset_tester.test_shadow(rgb_ws, rgb_ns, shadow_matte, "Train", opts.img_vis_enabled, opts.train_mode)
+            pbar.update(1)
+            if ((i + 1) % 4 == 0):
+                break
 
-    dataset_tester.print_ave_shadow_performance("Train Set")
+        dataset_tester.print_ave_shadow_performance("Train Set")
 
     # ISTD test dataset
-    shadow_loader, _ = dataset_loader.load_istd_dataset()
-    for i, (file_name, rgb_ws, rgb_ns, shadow_matte) in enumerate(shadow_loader, 0):
-        rgb_ws_tensor = rgb_ws.to(device)
-        rgb_ns_tensor = rgb_ns.to(device)
-        shadow_matte = shadow_matte.to(device)
+    if (global_config.dataset_target == "all" or global_config.dataset_target == "istd"):
+        shadow_loader, _ = dataset_loader.load_istd_dataset()
+        for i, (file_name, rgb_ws, rgb_ns, shadow_matte) in enumerate(shadow_loader, 0):
+            rgb_ws_tensor = rgb_ws.to(device)
+            rgb_ns_tensor = rgb_ns.to(device)
+            shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.train_mode)
-        # break
+            dataset_tester.test_istd_shadow(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.train_mode)
+            # break
 
-    dataset_tester.print_ave_shadow_performance("ISTD")
+        dataset_tester.print_ave_shadow_performance("ISTD")
 
     # SRD test dataset
-    shadow_loader, _ = dataset_loader.load_srd_dataset()
-    for i, (file_name, rgb_ws, rgb_ns, shadow_matte) in enumerate(shadow_loader, 0):
-        rgb_ws_tensor = rgb_ws.to(device)
-        rgb_ns_tensor = rgb_ns.to(device)
-        shadow_matte = shadow_matte.to(device)
+    if (global_config.dataset_target == "all" or global_config.dataset_target == "srd"):
+        shadow_loader, _ = dataset_loader.load_srd_dataset()
+        for i, (file_name, rgb_ws, rgb_ns, shadow_matte) in enumerate(shadow_loader, 0):
+            rgb_ws_tensor = rgb_ws.to(device)
+            rgb_ns_tensor = rgb_ns.to(device)
+            shadow_matte = shadow_matte.to(device)
 
-        dataset_tester.test_srd(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.train_mode)
-        # break
+            dataset_tester.test_srd(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.train_mode)
+            # break
 
-    dataset_tester.print_ave_shadow_performance("SRD")
+        dataset_tester.print_ave_shadow_performance("SRD")
 
     # PLACES test dataset
     # shadow_loader = dataset_loader.load_single_test_dataset(constants.imgx_dir, opts)  # load PLACES
@@ -166,12 +184,12 @@ def main(argv):
 
     global_config.sm_network_version = opts.shadow_matte_version
     global_config.sm_iteration = opts.shadow_matte_iteration
-    shadow_m_config = ConfigHolder.getInstance().get_network_config()
+    global_config.sm_network_config = ConfigHolder.getInstance().get_network_config()
     shadow_m = shadow_matte_trainer.ShadowMatteTrainer(device)
 
     print("---------------------------------------------------------------------------")
     print("Successfully loaded shadow matte network: ", opts.shadow_matte_version, str(opts.shadow_matte_iteration))
-    print("Network config: ", shadow_m_config)
+    print("Network config: ", global_config.sm_network_config)
     print("---------------------------------------------------------------------------")
 
     ConfigHolder.destroy()  # for security, destroy config holder since it should no longer be needed
@@ -184,19 +202,13 @@ def main(argv):
 
     global_config.ns_network_version = opts.shadow_removal_version
     global_config.ns_iteration = opts.shadow_removal_iteration
-    shadow_t_config = ConfigHolder.getInstance().get_network_config()
-    global_config.network_config = shadow_t_config
+    global_config.ns_network_config = ConfigHolder.getInstance().get_network_config()
     shadow_t = shadow_removal_trainer.ShadowTrainer(device)
 
     print("---------------------------------------------------------------------------")
     print("Successfully loaded shadow removal network: ", opts.shadow_removal_version, str(opts.shadow_removal_iteration))
-    print("Network config: ", shadow_t_config)
+    print("Network config: ", global_config.ns_network_config)
     print("---------------------------------------------------------------------------")
-
-    dataset_version = shadow_t_config["dataset_version"]
-    global_config.rgb_dir_ws = global_config.rgb_dir_ws.format(dataset_version=dataset_version)
-    global_config.rgb_dir_ns = global_config.rgb_dir_ns.format(dataset_version=dataset_version)
-    print("Dataset path: ", global_config.rgb_dir_ws, global_config.rgb_dir_ns)
 
     ConfigHolder.destroy() #for security, destroy config holder since it should no longer be needed
 

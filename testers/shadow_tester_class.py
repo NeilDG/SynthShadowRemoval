@@ -118,9 +118,9 @@ class TesterClass():
             mask_path = "E:/SRD_Test/srd/mask/"
 
             for i in range(0, np.size(file_name)):
-                shadow_mask = cv2.imread(mask_path + file_name[i])
-                if (shadow_mask is not None):
-                    shadow_mask = transform_op(cv2.cvtColor(cv2.imread(mask_path + file_name[i]), cv2.COLOR_BGR2GRAY))
+                temp = cv2.imread(mask_path + file_name[i] + ".jpg")
+                if (temp is not None):
+                    shadow_mask = transform_op(cv2.cvtColor(temp, cv2.COLOR_BGR2GRAY))
                     shadow_mask = shadow_mask.to(device)
                     # print("Shapes: ", np.shape(rgb2sm[i]), np.shape(shadow_mask), np.shape(shadow_matte[i]))
                     mae_sm_ws = np.round(mae(rgb2sm[i] * shadow_mask, shadow_matte[i] * shadow_mask).cpu(), 4)
@@ -137,7 +137,7 @@ class TesterClass():
         ave_rmse_sm_ws = np.round(np.mean(self.rmse_list_lab_ws) * 100.0, 4)
 
         display_text = prefix + " - Versions: " + global_config.sm_network_version + "_" + str(global_config.sm_iteration) + \
-                        "<br> Epoch: " +str(global_config.last_epoch) + \
+                        "<br> Epoch: " +str(global_config.last_epoch_sm) + \
                        "<br> MAE Error (SM): " + str(ave_mae_sm) + "<br> MAE Error (SM WS): " + str(ave_mae_sm_ws) + \
                        "<br> RMSE Error (SM): " + str(ave_rmse_sm) + "<br> RMSE Error (SM WS): " + str(ave_rmse_sm_ws)
 
@@ -226,7 +226,7 @@ class TesterClass():
         rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
 
         resize_op = transforms.Resize((240, 320), transforms.InterpolationMode.BICUBIC)
-        rgb_ns = resize_op(rgb_ws)
+        rgb_ns = resize_op(rgb_ns)
         rgb2ns = resize_op(rgb2ns)
 
         if(rgb2sm != None):
@@ -290,7 +290,7 @@ class TesterClass():
         rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
 
         resize_op = transforms.Resize((160, 210), transforms.InterpolationMode.BICUBIC)
-        rgb_ns = resize_op(rgb_ws)
+        rgb_ns = resize_op(rgb_ns)
         rgb2ns = resize_op(rgb2ns)
 
         if (rgb2sm != None):
@@ -354,6 +354,7 @@ class TesterClass():
 
         display_text = prefix + " - Versions: " + global_config.sm_network_version + "_" + str(global_config.sm_iteration) + \
                        "<br>" + global_config.ns_network_version + "_" + str(global_config.ns_iteration) + \
+                        "<br> Epoch: " + str(global_config.last_epoch_ns) + \
                        "<br> MAE Error (SM): " + str(ave_mae_sm) + "<br> MAE Error (RGB): " +str(ave_mae_rgb) + \
                        "<br> RGB Reconstruction PSNR: " + str(ave_psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ave_ssim_rgb) + \
                        "<br> Lab RMSE: " + str(ave_rmse_lab) + "<br> Lab RMSE WS: " +str(ave_rmse_lab_ws)
