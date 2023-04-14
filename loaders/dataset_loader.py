@@ -345,6 +345,21 @@ def load_srd_dataset():
 
     return data_loader, len(ws_istd_list)
 
+def load_usr_dataset():
+    ws_list = glob.glob(global_config.usr_test)
+
+    img_length = len(ws_list)
+    print("Length of images: %d" % len(ws_list))
+
+    data_loader = torch.utils.data.DataLoader(
+        shadow_datasets.ShadowUSRTestDataset(img_length, ws_list, 1),
+        batch_size=global_config.test_size,
+        num_workers=1,
+        shuffle=False
+    )
+
+    return data_loader, len(ws_list)
+
 def load_single_test_dataset(path_a, opts):
     a_list = glob.glob(path_a)
     random.shuffle(a_list)

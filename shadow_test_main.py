@@ -63,7 +63,7 @@ def test_shadow_matte(dataset_tester, opts):
             if (i % 16 == 0):
                 break
 
-        dataset_tester.print_shadow_matte_performance("SM - Train Set", opts)
+        dataset_tester.print_shadow_matte_performance("SM - Train Set")
 
     # ISTD test dataset
     if (global_config.dataset_target == "all" or global_config.dataset_target == "istd"):
@@ -78,7 +78,7 @@ def test_shadow_matte(dataset_tester, opts):
             pbar.update(1)
             # break
 
-        dataset_tester.print_shadow_matte_performance("SM - ISTD", opts)
+        dataset_tester.print_shadow_matte_performance("SM - ISTD")
 
     #SRD test dataset
     if (global_config.dataset_target == "all" or global_config.dataset_target == "srd"):
@@ -93,7 +93,18 @@ def test_shadow_matte(dataset_tester, opts):
             pbar.update(1)
             # break
 
-        dataset_tester.print_shadow_matte_performance("SM - SRD", opts)
+        dataset_tester.print_shadow_matte_performance("SM - SRD")
+
+    if (global_config.dataset_target == "all" or global_config.dataset_target == "usr"):
+        shadow_loader, dataset_count = dataset_loader.load_usr_dataset()
+        needed_progress = int(dataset_count / global_config.test_size)
+        pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
+        for i, (file_name, rgb_ws) in enumerate(shadow_loader, 0):
+            rgb_ws = rgb_ws.to(device)
+
+            dataset_tester.test_shadow_matte_usr(file_name, rgb_ws, "USR", opts.img_vis_enabled, True)
+            pbar.update(1)
+            # break
 
 
 
@@ -147,6 +158,16 @@ def test_shadow_removal(dataset_tester, opts):
             shadow_matte = shadow_matte.to(device)
 
             dataset_tester.test_srd(file_name, rgb_ws_tensor, rgb_ns_tensor, shadow_matte, opts.img_vis_enabled, 1, opts.train_mode)
+            # break
+
+        dataset_tester.print_ave_shadow_performance("SRD")
+
+    if (global_config.dataset_target == "all" or global_config.dataset_target == "usr"):
+        shadow_loader, _ = dataset_loader.load_usr_dataset()
+        for i, (file_name, rgb_ws) in enumerate(shadow_loader, 0):
+            rgb_ws_tensor = rgb_ws.to(device)
+
+            dataset_tester.test_usr(file_name, rgb_ws_tensor, opts.img_vis_enabled, 1)
             # break
 
         dataset_tester.print_ave_shadow_performance("SRD")

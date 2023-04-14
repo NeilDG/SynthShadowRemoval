@@ -49,6 +49,11 @@ ns_srd = "E:/SRD_Test/srd/shadow_free/*.jpg"
 # ws_srd = "E:/SRD_REMOVAL_RESULTS/rawA/*.png"
 # ns_srd = "E:/SRD_REMOVAL_RESULTS/rawC/*.png"
 
+#NOTE that USR is unpaired
+ws_usr = "E:/USR Shadow Dataset/shadow_train/*.jpg"
+ns_usr = "E:/USR Shadow Dataset/shadow_free/*.jpg"
+usr_test = "E:/USR Shadow Dataset/shadow_test/*.jpg"
+
 imgx_dir = "E:/Places Dataset/*.jpg"
 # imgy_dir = "E:/SynthWeather Dataset 8/train_rgb/*/*.png"
 imgy_dir = "E:/SynthWeather Dataset 8/albedo/*.png"

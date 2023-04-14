@@ -209,16 +209,17 @@ def train_shadow_matte(device, opts):
     network_config = ConfigHolder.getInstance().get_network_config()
     global_config.sm_network_version = opts.network_version
     global_config.sm_iteration = opts.iteration
+    global_config.test_size = 8
 
     tf = shadow_matte_trainer.ShadowMatteTrainer(device)
 
     mode = "train_shadow_matte"
     iteration = 0
-    start_epoch = global_config.last_epoch
+    start_epoch = global_config.last_epoch_sm
     print("---------------------------------------------------------------------------")
     print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
     print("Network config: ", network_config)
-    print("General config: ", global_config.sm_network_version, global_config.sm_iteration, global_config.img_to_load, global_config.load_size, global_config.batch_size, global_config.train_mode, global_config.last_epoch)
+    print("General config: ", global_config.sm_network_version, global_config.sm_iteration, global_config.img_to_load, global_config.load_size, global_config.batch_size, global_config.train_mode, global_config.last_epoch_sm)
     print("---------------------------------------------------------------------------")
 
     dataset_version = network_config["dataset_version"]

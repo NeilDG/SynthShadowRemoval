@@ -73,8 +73,11 @@ class TesterClass():
         if (save_image_results == 1):
             if(prefix == "ISTD"):
                 path = "./comparison/ISTD Dataset/OURS/"
-            else:
+            elif(prefix == "SRD"):
                 path = "./comparison/SRD Dataset/OURS/"
+            else:
+                path = "./comparison/USR Dataset/OURS/"
+
             matte_path = path + "/matte-like/"
             gt_path = path + "/matte/"
             for i in range(0, np.size(file_name)):
@@ -129,7 +132,26 @@ class TesterClass():
                     rmse_sm_ws = np.round(mse(rgb2sm[i] * shadow_mask, shadow_matte[i] * shadow_mask).cpu(), 4)
                     self.rmse_list_lab_ws.append(torch.sqrt(rmse_sm_ws))
 
-    def print_shadow_matte_performance(self, prefix, opts):
+    def test_shadow_matte_usr(self, file_name, rgb_ws, prefix, show_images, save_image_results):
+        rgb2sm = self.shadow_m.test({"rgb": rgb_ws})
+
+        # normalize everything
+        rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
+        rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
+
+        if (show_images == 1):
+            self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + global_config.sm_network_version + str(global_config.sm_iteration))
+            self.visdom_reporter.plot_image(rgb2sm, prefix + " WS Shadow Matte-Like Images - " + global_config.sm_network_version + str(global_config.sm_iteration))
+
+        if (save_image_results == 1):
+            path = "./comparison/USR Dataset/OURS/"
+            matte_path = path + "/matte-like/"
+
+            for i in range(0, np.size(file_name)):
+                shadow_matte_path = matte_path + file_name[i] + ".png"
+                torchvision.utils.save_image(rgb2sm[i], shadow_matte_path, normalize=True)
+
+    def print_shadow_matte_performance(self, prefix):
         ave_mae_sm = np.round(np.mean(self.mae_list_sm) * 100.0, 4)
         ave_mae_sm_ws = np.round(np.mean(self.mae_list_sm_ws) * 100.0, 4)
 
@@ -186,14 +208,9 @@ class TesterClass():
         rgb_ns = tensor_utils.normalize_to_01(rgb_ns)
         rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
         rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
-        # rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
 
         if(show_images == 1):
             self.visdom_reporter.plot_image(rgb_ws, prefix + " WS Images - " + global_config.ns_network_version + str(global_config.sm_iteration))
-            # self.visdom_reporter.plot_image(shadow_matte, "WS Shadow Matte Images - " + opts.shadow_network_version + str(opts.iteration))
-            # if(rgb2sm != None):
-            #     rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
-            #     self.visdom_reporter.plot_image(rgb2sm, prefix + " WS Shadow Matte-Like Images - " + opts.shadow_network_version + str(opts.iteration))
             self.visdom_reporter.plot_image(rgb_ns, prefix + " NS Images - " + global_config.ns_network_version + str(global_config.sm_iteration))
             self.visdom_reporter.plot_image(rgb2ns, prefix + " NS (equation) Images - " + global_config.ns_network_version + str(global_config.sm_iteration))
 
@@ -343,6 +360,36 @@ class TesterClass():
         self.ssim_list_rgb.append(ssim_rgb)
         self.mae_list_rgb.append(mae_rgb)
         self.rmse_list_lab.append(rmse_lab)
+
+    def test_usr(self, file_name, rgb_ws, show_images, save_image_results):
+        device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
+        rgb2ns, rgb2sm = self.infer_shadow_results(rgb_ws, None, "all")
+
+        # normalize everything
+        rgb_ws = tensor_utils.normalize_to_01(rgb_ws)
+        rgb2ns = tensor_utils.normalize_to_01(rgb2ns)
+        rgb2ns = torch.clip(rgb2ns, 0.0, 1.0)
+
+        if (rgb2sm != None):
+            rgb2sm = tensor_utils.normalize_to_01(rgb2sm)
+
+        if(show_images == 1):
+            self.visdom_reporter.plot_image(rgb_ws, "SRD WS Images - " + global_config.ns_network_version + str(global_config.sm_iteration))
+            if (rgb2sm != None):
+                self.visdom_reporter.plot_image(rgb2sm, "SRD Shadow Matte-Like Images - " + global_config.ns_network_version + str(global_config.sm_iteration))
+            self.visdom_reporter.plot_image(rgb2ns, "SRD NS-Like Images - " + global_config.ns_network_version + str(global_config.sm_iteration))
+
+
+        if(save_image_results == 1):
+            path = "./comparison/USR Dataset/OURS/"
+            matte_path = path + "/matte-like/"
+
+            input_shape = np.shape(rgb2ns[0])
+            transform_op = transforms.Compose([transforms.ToPILImage(), transforms.Resize((input_shape[1], input_shape[2])), transforms.ToTensor()])
+
+            for i in range(0, np.size(file_name)):
+                impath = path + file_name[i] + ".png"
+                torchvision.utils.save_image(rgb2ns[i], impath)
 
     def print_ave_shadow_performance(self, prefix):
         ave_psnr_rgb = np.round(np.mean(self.psnr_list_rgb), 4)

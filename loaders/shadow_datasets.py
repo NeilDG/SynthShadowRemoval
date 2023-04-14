@@ -172,7 +172,6 @@ class ShadowSRDDataset(data.Dataset):
     def __getitem__(self, idx):
         file_name = self.img_list_a[idx].split("\\")[-1].split(".")[0]
 
-        # try:
         rgb_ws = cv2.imread(self.img_list_a[idx])
         rgb_ws = cv2.cvtColor(rgb_ws, cv2.COLOR_BGR2RGB)
         rgb_ws = self.initial_op(rgb_ws)
@@ -188,14 +187,35 @@ class ShadowSRDDataset(data.Dataset):
         rgb_ns = self.norm_op(rgb_ns)
         shadow_matte = self.norm_op(shadow_matte)
 
-        # except Exception as e:
-        #     print("Failed to load: ", self.img_list_a[idx], self.img_list_b[idx])
-        #     print("ERROR: ", e)
-        #     rgb_ws = None
-        #     rgb_ns = None
-        #     shadow_matte = None
-
         return file_name, rgb_ws, rgb_ns, shadow_matte
+
+    def __len__(self):
+        return self.img_length
+
+class ShadowUSRTestDataset(data.Dataset):
+    def __init__(self, img_length, img_list_a, transform_config):
+        self.img_length = img_length
+        self.img_list_a = img_list_a
+        self.transform_config = transform_config
+
+        self.shadow_op = shadow_map_transforms.ShadowMapTransforms()
+        self.norm_op = transforms.Normalize((0.5, ), (0.5, ))
+
+        self.initial_op = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize(global_config.TEST_IMAGE_SIZE),
+            transforms.ToTensor()])
+
+    def __getitem__(self, idx):
+        file_name = self.img_list_a[idx].split("\\")[-1].split(".")[0]
+
+        rgb_ws = cv2.imread(self.img_list_a[idx])
+        rgb_ws = cv2.cvtColor(rgb_ws, cv2.COLOR_BGR2RGB)
+        rgb_ws = self.initial_op(rgb_ws)
+
+        rgb_ws = self.norm_op(rgb_ws)
+
+        return file_name, rgb_ws
 
     def __len__(self):
         return self.img_length
