@@ -92,6 +92,14 @@ cd NeuralNets-GenerativeExperiment-V61.XX.XX
 cd NeuralNets-GenerativeExperiment-V61.XX.XX-2
 python "ccs1_main.py"
 python "ccs2_main.py"
+python3 "titan1_main.py"
+python3 "titan2_main.py"
+python3 "titan3_main.py"
+
+export http_proxy=http://proxy.dlsu.edu.ph:80
+export https_proxy=http://proxy.dlsu.edu.ph:80
+export ftp_proxy=http://proxy.dlsu.edu.ph:80
+
 
 //FOR DOWNLOAD DATASET, TRY GDRIVE
 gdown https://drive.google.com/uc?id=1B6erEfeB2_n_KYP5GtCQU-DHGE1bKEVE
