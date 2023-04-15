@@ -9,8 +9,12 @@ parser.add_option('--server_config', type=int, help="Is running on COARE?", defa
 def main(argv):
     (opts, args) = parser.parse_args(argv)
 
-    if(opts.server_config == 1):
-        output_dir = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
+    if (opts.server_config == 0):
+        output_dir = "/scratch3/neil.delgallego/SynthWeather Dataset 10/"
+    elif (opts.server_config == 4):
+        output_dir = "D:/NeilDG/Datasets/SynthWeather Dataset 10/"
+    elif (opts.server_config == 3):
+        output_dir = "/home/neildelgallego/SynthWeather Dataset 10/"
     else:
         output_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/"
 

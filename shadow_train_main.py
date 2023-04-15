@@ -35,7 +35,7 @@ def update_config(opts):
     network_config = config_holder.get_network_config()
 
     ## COARE
-    if (global_config.server_config == 1):
+    if (global_config.server_config == 0):
         global_config.num_workers = 6
         global_config.disable_progress_bar = True #disable progress bar logging in COARE
         global_config.load_size = network_config["load_size"][0]
@@ -52,7 +52,7 @@ def update_config(opts):
         global_config.ns_srd = "/scratch1/scratch2/neil.delgallego/SRD_Test/srd/shadow_free/*.jpg"
 
     # CCS JUPYTER
-    elif (global_config.server_config == 2):
+    elif (global_config.server_config == 1):
         global_config.num_workers = 20
         global_config.load_size = network_config["load_size"][1]
         global_config.batch_size = network_config["batch_size"][1]
@@ -65,7 +65,7 @@ def update_config(opts):
 
         print("Using CCS configuration. Workers: ", global_config.num_workers)
 
-    elif (global_config.server_config == 3):
+    elif (global_config.server_config == 2):
         global_config.num_workers = 6
         global_config.load_size = network_config["load_size"][2]
         global_config.batch_size = network_config["batch_size"][2]
@@ -79,6 +79,21 @@ def update_config(opts):
         global_config.ns_srd = "C:/Datasets/SRD_Test/srd/shadow_free/*.jpg"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", global_config.num_workers)
+
+    elif (global_config.server_config == 3): #TITAN 3060
+        global_config.num_workers = 4
+        global_config.load_size = network_config["load_size"][2]
+        global_config.batch_size = network_config["batch_size"][2]
+        global_config.DATASET_PLACES_PATH = "C:/Datasets/Places Dataset/*.jpg"
+        global_config.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        global_config.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
+        global_config.ws_istd ="C:/Datasets/ISTD_Dataset/test/test_A/*.png"
+        global_config.ns_istd = "C:/Datasets/ISTD_Dataset/test/test_C/*.png"
+        global_config.mask_istd = "C:/Datasets/ISTD_Dataset/test/test_B/*.png"
+        global_config.ws_srd = "C:/Datasets/SRD_Test/srd/shadow/*.jpg"
+        global_config.ns_srd = "C:/Datasets/SRD_Test/srd/shadow_free/*.jpg"
+
+        print("Using TITAN configuration. Workers: ", global_config.num_workers)
 
     else:
         global_config.num_workers = 12

@@ -10,7 +10,7 @@
 
 #About this script:
 #Download of dataset
-SERVER_CONFIG=2 #1 = COARE, 2 = CCS Cloud
+SERVER_CONFIG=3
 
 module load anaconda/3-2021.11
 module load cuda/10.1_cudnn-7.6.5
@@ -39,9 +39,15 @@ fi
 
 DATASET_NAME="v46_places"
 
-if [ $SERVER_CONFIG == 1 ]
+if [ $SERVER_CONFIG == 0 ]
 then
-  OUTPUT_DIR="/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
+  OUTPUT_DIR="/scratch3/neil.delgallego/SynthWeather Dataset 10/"
+elif [ $SERVER_CONFIG == 4 ]
+then
+  OUTPUT_DIR="D:/NeilDG/Datasets/SynthWeather Dataset 10/"
+elif [ $SERVER_CONFIG == 3 ]
+then
+  OUTPUT_DIR="/home/neildelgallego/SynthWeather Dataset 10/"
 else
   OUTPUT_DIR="/home/jupyter-neil.delgallego/SynthWeather Dataset 10/"
 fi
