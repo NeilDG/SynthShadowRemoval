@@ -11,7 +11,7 @@ import torchvision.transforms as transforms
 from tqdm import tqdm
 
 import global_config
-from loaders import image_dataset, shadow_datasets
+from loaders import image_datasets, shadow_datasets
 import os
 from loaders import dataset_loader
 

@@ -52,3 +52,9 @@ class ConfigHolder():
         iteration = global_config.ns_iteration
 
         return str(network_version) + "_" + str(iteration)
+
+    def get_st_version_name(self):
+        network_version = global_config.style_transfer_version
+        iteration = global_config.st_iteration
+
+        return str(network_version) + "_" + str(iteration)

@@ -20,8 +20,8 @@ parser.add_option('--server_config', type=int, help="Is running on COARE?", defa
 parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:0")
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
 parser.add_option('--network_version', type=str, default="VXX.XX")
-parser.add_option('--iteration', type=int, default="1")
-parser.add_option('--save_per_iter', type=int, default="500")
+parser.add_option('--iteration', type=int, default=1)
+parser.add_option('--save_per_iter', type=int, default=500)
 parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
 parser.add_option('--train_mode', type=str, default="all") #all, train_shadow_matte, train_shadow
 
@@ -87,11 +87,11 @@ def update_config(opts):
         global_config.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
         global_config.rgb_dir_ws = "X:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
         global_config.rgb_dir_ns = "X:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
-        global_config.ws_istd = "E:/ISTD_Dataset/test/test_A/*.png"
-        global_config.ns_istd = "E:/ISTD_Dataset/test/test_C/*.png"
-        global_config.mask_istd = "E:/ISTD_Dataset/test/test_B/*.png"
-        global_config.ws_srd = "E:/SRD_Test/srd/shadow/*.jpg"
-        global_config.ns_srd = "E:/SRD_Test/srd/shadow_free/*.jpg"
+        global_config.ws_istd = "X:/ISTD_Dataset/test/test_A/*.png"
+        global_config.ns_istd = "X:/ISTD_Dataset/test/test_C/*.png"
+        global_config.mask_istd = "X:/ISTD_Dataset/test/test_B/*.png"
+        global_config.ws_srd = "X:/SRD_Test/srd/shadow/*.jpg"
+        global_config.ns_srd = "X:/SRD_Test/srd/shadow_free/*.jpg"
         print("Using HOME RTX3090 configuration. Workers: ", global_config.num_workers)
 
 def train_shadow(device, opts):

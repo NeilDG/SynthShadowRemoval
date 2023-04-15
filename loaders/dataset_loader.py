@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 import global_config
 from config.network_config import ConfigHolder
-from loaders import image_dataset, shadow_datasets
+from loaders import shadow_datasets, image_datasets
 import os
 
 def assemble_unpaired_data(path_a, num_image_to_load=-1, force_complete=False):
@@ -376,69 +376,59 @@ def load_single_test_dataset(path_a, opts):
 
     return data_loader
 
-def load_da_dataset_train(imgx_dir, imgy_dir_list, opts):
-    sc_instance = iid_server_config.IIDServerConfig.getInstance()
-    network_config = sc_instance.interpret_style_transfer_config_from_version()
+def load_train_img2img_dataset(a_path, b_path):
+    network_config = ConfigHolder.getInstance().get_network_config()
+    a_list = glob.glob(a_path)
+    b_list = glob.glob(b_path)
+    a_list_dup = glob.glob(a_path)
+    b_list_dup = glob.glob(b_path)
 
-    initial_imgx_list = glob.glob(imgx_dir)
-    initial_imgy_list = glob.glob(imgy_dir_list[0])
-    for i in range(1, len(imgy_dir_list)):
-        initial_imgy_list += glob.glob(imgy_dir_list[i])
+    if (global_config.img_to_load > 0):
+        a_list = a_list[0: global_config.img_to_load]
+        b_list = b_list[0: global_config.img_to_load]
+        a_list_dup = a_list_dup[0: global_config.img_to_load]
+        b_list_dup = b_list_dup[0: global_config.img_to_load]
 
-    random.shuffle(initial_imgx_list)
-    random.shuffle(initial_imgy_list)
+    for i in range(0, network_config["dataset_a_repeats"]): #TEMP: formerly 0-1
+        a_list += a_list_dup
 
-    if(opts.img_to_load > 0):
-        initial_imgx_list = initial_imgx_list[0: opts.img_to_load]
-        initial_imgy_list = initial_imgy_list[0: opts.img_to_load]
+    for i in range(0, network_config["dataset_b_repeats"]): #TEMP: formerly 0-1
+        b_list += b_list_dup
 
-    imgx_list = []
-    imgy_list = []
-    for i in range(0, network_config["dataset_repeats"]):
-        imgx_list += initial_imgx_list
-        imgy_list += initial_imgy_list
+    random.shuffle(a_list)
+    random.shuffle(b_list)
 
-    print("Length of images: %d %d" % (len(imgx_list), len(imgy_list)))
+    img_length = len(a_list)
+    print("Length of images: %d %d"  % (img_length, len(b_list)))
 
-    if(len(imgx_list) == 0 or len(imgy_list) == 0):
-        return None
-
+    num_workers = global_config.num_workers
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.GenericPairedDataset(imgx_list, imgy_list, 1, network_config["patch_size"]),
-        batch_size=network_config["load_size"],
-        num_workers = opts.num_workers,
-        shuffle=False,
+        image_datasets.PairedImageDataset(a_list, b_list, 1),
+        batch_size=global_config.load_size,
+        num_workers=num_workers
     )
 
-    return data_loader, len(imgx_list)
+    return data_loader, img_length
 
+def load_test_img2img_dataset(a_path, b_path):
+    a_list = glob.glob(a_path)
+    b_list = glob.glob(b_path)
 
+    if (global_config.img_to_load > 0):
+        a_list = a_list[0: global_config.img_to_load]
+        b_list = b_list[0: global_config.img_to_load]
 
-def load_da_dataset_test(imgx_dir, imgy_dir_list, opts):
-    sc_instance = iid_server_config.IIDServerConfig.getInstance()
-    network_config = sc_instance.interpret_style_transfer_config_from_version()
+    random.shuffle(a_list)
+    random.shuffle(b_list)
 
-    imgx_list = glob.glob(imgx_dir)
-    imgy_list = glob.glob(imgy_dir_list[0])
-    for i in range(1, len(imgy_dir_list)):
-        imgy_list += glob.glob(imgy_dir_list[i])
-
-    random.shuffle(imgx_list)
-    random.shuffle(imgy_list)
-
-    if (opts.img_to_load > 0):
-        imgx_list = imgx_list[0: opts.img_to_load]
-        imgy_list = imgy_list[0: opts.img_to_load]
-
-    print("Length of images: %d %d" % (len(imgx_list), len(imgy_list)))
+    img_length = len(a_list)
+    print("Length of images: %d %d" % (img_length, len(b_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.GenericPairedDataset(imgx_list, imgy_list, 2, network_config["patch_size"]),
-        batch_size=4,
-        num_workers=1,
-        shuffle=False,
-        pin_memory=False
+        image_datasets.PairedImageDataset(a_list, b_list, 1),
+        batch_size=global_config.test_size,
+        num_workers=1
     )
 
-    return data_loader
+    return data_loader, img_length
 

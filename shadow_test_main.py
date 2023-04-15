@@ -52,7 +52,7 @@ def test_shadow_matte(dataset_tester, opts):
 
     if(global_config.dataset_target == "all" or global_config.dataset_target == "train"):
         shadow_loader, dataset_count = dataset_loader.load_shadow_test_dataset()
-        needed_progress = int(dataset_count / global_config.test_size)
+        needed_progress = int(dataset_count / global_config.test_size) + 1
         pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
         for i, (file_name, rgb_ws, _, _, shadow_matte) in enumerate(shadow_loader, 0):
             rgb_ws = rgb_ws.to(device)
@@ -68,7 +68,7 @@ def test_shadow_matte(dataset_tester, opts):
     # ISTD test dataset
     if (global_config.dataset_target == "all" or global_config.dataset_target == "istd"):
         shadow_loader, dataset_count = dataset_loader.load_istd_dataset()
-        needed_progress = int(dataset_count / global_config.test_size)
+        needed_progress = int(dataset_count / global_config.test_size) + 1
         pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
         for i, (file_name, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
             rgb_ws = rgb_ws.to(device)
@@ -83,7 +83,7 @@ def test_shadow_matte(dataset_tester, opts):
     #SRD test dataset
     if (global_config.dataset_target == "all" or global_config.dataset_target == "srd"):
         shadow_loader, dataset_count = dataset_loader.load_srd_dataset()
-        needed_progress = int(dataset_count / global_config.test_size)
+        needed_progress = int(dataset_count / global_config.test_size) + 1
         pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
         for i, (file_name, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
             rgb_ws = rgb_ws.to(device)
@@ -97,7 +97,7 @@ def test_shadow_matte(dataset_tester, opts):
 
     if (global_config.dataset_target == "all" or global_config.dataset_target == "usr"):
         shadow_loader, dataset_count = dataset_loader.load_usr_dataset()
-        needed_progress = int(dataset_count / global_config.test_size)
+        needed_progress = int(dataset_count / global_config.test_size) + 1
         pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
         for i, (file_name, rgb_ws) in enumerate(shadow_loader, 0):
             rgb_ws = rgb_ws.to(device)

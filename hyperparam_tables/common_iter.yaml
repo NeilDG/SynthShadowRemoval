@@ -15,3 +15,11 @@ hyperparams:
     l1_weight: 2.0
     adv_weight: 1.0
     is_bce: 0
+  5:
+    l1_weight: 10.0
+    adv_weight: 1.0
+    is_bce: 0
+  6:
+    l1_weight: 10.0
+    adv_weight: 1.0
+    is_bce: 1
