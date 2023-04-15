@@ -33,6 +33,9 @@ pip install PyYAML
 if [ $SERVER_CONFIG == 1 ]
 then
   srun python "gdown_download.py" --server_config=$SERVER_CONFIG
+elif [ $SERVER_CONFIG == 3]
+then
+  python3 "gdown_download.py" --server_config=$SERVER_CONFIG
 else
   python "gdown_download.py" --server_config=$SERVER_CONFIG
 fi
