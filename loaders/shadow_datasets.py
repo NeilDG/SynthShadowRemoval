@@ -21,7 +21,7 @@ class ShadowTrainDataset(data.Dataset):
 
         self.shadow_op = shadow_map_transforms.ShadowMapTransforms()
         self.norm_op = transforms.Normalize((0.5, ), (0.5, ))
-        self.network_config = global_config.network_config
+        self.network_config = global_config.loaded_network_config
 
         if(self.transform_config == 1):
             patch_size = self.network_config["patch_size"]

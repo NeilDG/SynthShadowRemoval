@@ -103,7 +103,7 @@ class TesterClass():
         if(prefix == "ISTD"):
             input_shape = np.shape(rgb2sm[0])
             transform_op = transforms.Compose([transforms.ToPILImage(), transforms.Resize((input_shape[1], input_shape[2])), transforms.ToTensor()])
-            mask_path = "E:/ISTD_Dataset/test/test_B/"
+            mask_path = "X:/ISTD_Dataset/test/test_B/"
 
             for i in range(0, np.size(file_name)):
                 shadow_mask = transform_op(cv2.cvtColor(cv2.imread(mask_path + file_name[i] + ".png"), cv2.COLOR_BGR2GRAY))
@@ -118,7 +118,7 @@ class TesterClass():
         elif (prefix == "SRD"):
             input_shape = np.shape(rgb2sm[0])
             transform_op = transforms.Compose([transforms.ToPILImage(), transforms.Resize((input_shape[1], input_shape[2])), transforms.ToTensor()])
-            mask_path = "E:/SRD_Test/srd/mask/"
+            mask_path = "X:/SRD_Test/srd/mask/"
 
             for i in range(0, np.size(file_name)):
                 temp = cv2.imread(mask_path + file_name[i] + ".jpg")

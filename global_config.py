@@ -70,6 +70,7 @@ sm_iteration = -1
 ns_network_version = "VXX.XX"
 ns_iteration = -1
 
+loaded_network_config = None
 sm_network_config = None
 ns_network_config = None
 
