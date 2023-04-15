@@ -49,12 +49,13 @@ def main(argv):
     id = direct_link.split("/d/")[1].split("/")[0]
     url = "https://drive.google.com/uc?id="+id
     gdown.download(url, output=output_dir, use_cookies=False)
-    #
-    # #z06
-    # direct_link = "https://drive.google.com/file/d/16yrpn7yQjwi8E4MQ5nXWQ7x_Dt1q4YCq/view?usp=share_link"
-    # id = direct_link.split("/d/")[1].split("/")[0]
-    # url = "https://drive.google.com/uc?id="+id
-    # gdown.download(url, output=output_dir, use_cookies=False)
+
+    #z06
+    direct_link = "https://drive.google.com/file/d/1liYCjJe1IPV-UZUvC2xaimZMwx9mA2Tm/view?usp=sharing"
+    id = direct_link.split("/d/")[1].split("/")[0]
+    url = "https://drive.google.com/uc?id="+id
+    gdown.download(url, output=output_dir, use_cookies=False)
+
     #
     # # z07
     # direct_link = "https://drive.google.com/file/d/16zOHdtkoYo0z5NzKbTgg7OCvz5eQo4rC/view?usp=share_link"

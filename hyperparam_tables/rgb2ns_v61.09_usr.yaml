@@ -16,8 +16,8 @@ d_lr: 0.0005
 min_epochs: 5
 max_epochs: 10
 
-dataset_version: "v46_places"
-dataset_repeats: 3
+dataset_version: "v2_usr"
+dataset_repeats: 1
 
 
 

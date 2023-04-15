@@ -110,16 +110,17 @@ def train_shadow(device, opts):
     network_config = ConfigHolder.getInstance().get_network_config()
     global_config.ns_network_version = opts.network_version
     global_config.ns_iteration = opts.iteration
+    global_config.test_size = 8
 
     tf = shadow_removal_trainer.ShadowTrainer(device)
 
     mode = "train_shadow"
     iteration = 0
-    start_epoch = global_config.last_epoch
+    start_epoch = global_config.last_epoch_ns
     print("---------------------------------------------------------------------------")
     print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
     print("Network config: ", network_config)
-    print("General config: ", global_config.ns_network_version, global_config.ns_iteration, global_config.img_to_load, global_config.load_size, global_config.batch_size, global_config.train_mode, global_config.last_epoch)
+    print("General config: ", global_config.ns_network_version, global_config.ns_iteration, global_config.img_to_load, global_config.load_size, global_config.batch_size, global_config.train_mode, global_config.last_epoch_ns)
     print("---------------------------------------------------------------------------")
 
     # assert dataset_version == "v17", "Cannot identify dataset version."
