@@ -18,7 +18,7 @@ from utils import tensor_utils
 import torchvision.utils as torchutils
 from loaders import dataset_loader
 import torchvision.transforms as transforms
-import constants
+import global_config
 from model import vanilla_cycle_gan as cycle_gan, usi3d_gan
 from model import ffa_gan
 from model import unet_gan

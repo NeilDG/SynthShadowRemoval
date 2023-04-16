@@ -1,11 +1,11 @@
 import torchvision.transforms.functional
 
-from config import iid_server_config
+from config.network_config import ConfigHolder
 from trainers import abstract_iid_trainer, early_stopper
 import kornia
 from model.modules import image_pool
 from model import vanilla_cycle_gan as cycle_gan
-import constants
+import global_config
 import torch
 import torch.cuda.amp as amp
 import itertools
@@ -15,105 +15,83 @@ from hyperparam_tables import shadow_iteration_table
 from transforms import iid_transforms, shadow_map_transforms
 from utils import plot_utils
 from utils import tensor_utils
-from custom_losses import ssim_loss, iid_losses
+from losses import ssim_loss, iid_losses, common_losses
 import lpips
 
 class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
-    def __init__(self, gpu_device, opts):
-        super().__init__(gpu_device, opts)
-        self.initialize_train_config(opts)
+    def __init__(self, gpu_device):
+        super().__init__(gpu_device)
+        self.initialize_train_config()
 
-    def initialize_train_config(self, opts):
-        self.iteration = opts.shadow_removal_iteration
-        self.it_table = shadow_iteration_table.ShadowIterationTable()
-        self.use_bce = self.it_table.is_bce_enabled(self.iteration)
-        self.adv_weight = self.it_table.get_adv_weight()
-
-        self.lpips_loss = lpips.LPIPS(net='vgg').to(self.gpu_device)
-        self.ssim_loss = kornia.losses.SSIMLoss(5)
-        self.l1_loss = nn.L1Loss()
-        self.mse_loss = nn.MSELoss()
-        self.bce_loss = nn.BCEWithLogitsLoss()
+    def initialize_train_config(self):
+        self.iteration = global_config.ns_iteration
+        config_holder = ConfigHolder.getInstance()
+        network_config = config_holder.get_network_config()
 
         self.D_SM_pool = image_pool.ImagePool(50)
-
         self.shadow_op = shadow_map_transforms.ShadowMapTransforms()
         self.fp16_scaler = amp.GradScaler()  # for automatic mixed precision
+        self.common_losses = common_losses.LossRepository(self.gpu_device, self.iteration)
+        self.l1_loss = nn.L1Loss()
 
         self.visdom_reporter = plot_utils.VisdomReporter.getInstance()
-        sc_instance = iid_server_config.IIDServerConfig.getInstance()
-        general_config = sc_instance.get_general_configs()
-        network_config = sc_instance.interpret_shadow_network_params_from_version()
+        self.load_size = global_config.load_size
+        self.batch_size = global_config.batch_size
 
-        self.load_size = network_config["load_size_z"]
-        self.batch_size = network_config["batch_size_z"]
-
-        self.stopper_method = early_stopper.EarlyStopper(general_config["train_shadow"]["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, 3000, 99999.9)
+        self.stopper_method = early_stopper.EarlyStopper(network_config["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, 3000, 99999.9)
         self.stop_result = False
 
         self.initialize_dict()
-        self.initialize_shadow_network(network_config["net_config"], network_config["num_blocks"], network_config["nc"])
+        self.initialize_shadow_network()
 
-        self.optimizerG = torch.optim.Adam(itertools.chain(self.G_SM_predictor.parameters()), lr=self.g_lr, weight_decay=network_config["weight_decay"])
-        self.optimizerD = torch.optim.Adam(itertools.chain(self.D_SM_discriminator.parameters()), lr=self.d_lr, weight_decay=network_config["weight_decay"])
+        self.optimizerG = torch.optim.Adam(itertools.chain(self.G_SM_predictor.parameters()), lr=network_config["g_lr"], weight_decay=network_config["weight_decay"])
+        self.optimizerD = torch.optim.Adam(itertools.chain(self.D_SM_discriminator.parameters()), lr=network_config["d_lr"], weight_decay=network_config["weight_decay"])
         self.schedulerG = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerG, patience=1000000 / self.batch_size, threshold=0.00005)
         self.schedulerD = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD, patience=1000000 / self.batch_size, threshold=0.00005)
 
-        self.NETWORK_VERSION = sc_instance.get_version_config("shadow_network_version", "network_z_name", self.iteration)
+        self.NETWORK_VERSION = config_holder.get_ns_version_name()
         self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
         self.load_saved_state()
 
-    def initialize_shadow_network(self, net_config, num_blocks, input_nc):
+    def initialize_shadow_network(self):
         network_creator = abstract_iid_trainer.NetworkCreator(self.gpu_device)
-        self.G_SM_predictor, self.D_SM_discriminator = network_creator.initialize_rgb_network(net_config, num_blocks, input_nc)  # shadow map (Shadow - Shadow-Free)
-
-    def adversarial_loss(self, pred, target):
-        if (self.use_bce == 0):
-            return self.mse_loss(pred, target)
-        else:
-            return self.bce_loss(pred, target)
-
-    def lpip_loss(self, pred, target):
-        result = torch.squeeze(self.lpips_loss(pred, target))
-        result = torch.mean(result)
-        return result
-
-    def ssim_loss(self, pred, target):
-        pred_normalized = (pred * 0.5) + 0.5
-        target_normalized = (target * 0.5) + 0.5
-
-        return self.ssim_loss(pred_normalized, target_normalized)
-
-    def masking_loss(self, pred, target):
-        pred_normalized = (pred * 0.5) + 0.5
-        target_normalized = (target * 0.5) + 0.5
-
-        pred_mask = pred_normalized + (pred_normalized > 0.0).type(target_normalized.dtype)
-        target_mask = target_normalized + (target_normalized > 0.0).type(target_normalized.dtype)
-
-        return self.l1_loss(pred_mask, target_mask)
+        self.G_SM_predictor, self.D_SM_discriminator = network_creator.initialize_rgb_network()  # shadow map (Shadow - Shadow-Free)
 
     def initialize_dict(self):
+        self.G_LOSS_KEY = "g_loss"
+        self.IDENTITY_LOSS_KEY = "id"
+        self.CYCLE_LOSS_KEY = "cyc"
+        self.G_ADV_LOSS_KEY = "g_adv"
+        self.LIKENESS_LOSS_KEY = "likeness"
+        self.LPIP_LOSS_KEY = "lpip"
+        self.SMOOTHNESS_LOSS_KEY = "smoothness"
+        self.D_OVERALL_LOSS_KEY = "d_loss"
+        self.D_A_REAL_LOSS_KEY = "d_real_a"
+        self.D_A_FAKE_LOSS_KEY = "d_fake_a"
+        self.D_B_REAL_LOSS_KEY = "d_real_b"
+        self.D_B_FAKE_LOSS_KEY = "d_fake_b"
+        self.MASK_LOSS_KEY = "MASK_LOSS_KEY"
+        self.ISTD_SM_LOSS_KEY = "ISTD_SM_LOSS_KEY"
+
         # what to store in visdom?
         self.losses_dict_s = {}
-        self.losses_dict_s[constants.G_LOSS_KEY] = []
-        self.losses_dict_s[constants.D_OVERALL_LOSS_KEY] = []
-        self.losses_dict_s[constants.LIKENESS_LOSS_KEY] = []
-        self.losses_dict_s[constants.LPIP_LOSS_KEY] = []
-        self.losses_dict_s[constants.G_ADV_LOSS_KEY] = []
-        self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY] = []
-        self.losses_dict_s[constants.D_A_REAL_LOSS_KEY] = []
-        self.MASK_LOSS_KEY = "MASK_LOSS_KEY"
+        self.losses_dict_s[self.G_LOSS_KEY] = []
+        self.losses_dict_s[self.D_OVERALL_LOSS_KEY] = []
+        self.losses_dict_s[self.LIKENESS_LOSS_KEY] = []
+        self.losses_dict_s[self.LPIP_LOSS_KEY] = []
+        self.losses_dict_s[self.G_ADV_LOSS_KEY] = []
+        self.losses_dict_s[self.D_A_FAKE_LOSS_KEY] = []
+        self.losses_dict_s[self.D_A_REAL_LOSS_KEY] = []
         self.losses_dict_s[self.MASK_LOSS_KEY] = []
 
         self.caption_dict_s = {}
-        self.caption_dict_s[constants.G_LOSS_KEY] = "Shadow G loss per iteration"
-        self.caption_dict_s[constants.D_OVERALL_LOSS_KEY] = "D loss per iteration"
-        self.caption_dict_s[constants.LIKENESS_LOSS_KEY] = "L1 loss per iteration"
-        self.caption_dict_s[constants.LPIP_LOSS_KEY] = "LPIPS loss per iteration"
-        self.caption_dict_s[constants.G_ADV_LOSS_KEY] = "G adv loss per iteration"
-        self.caption_dict_s[constants.D_A_FAKE_LOSS_KEY] = "D fake loss per iteration"
-        self.caption_dict_s[constants.D_A_REAL_LOSS_KEY] = "D real loss per iteration"
+        self.caption_dict_s[self.G_LOSS_KEY] = "Shadow G loss per iteration"
+        self.caption_dict_s[self.D_OVERALL_LOSS_KEY] = "D loss per iteration"
+        self.caption_dict_s[self.LIKENESS_LOSS_KEY] = "L1 loss per iteration"
+        self.caption_dict_s[self.LPIP_LOSS_KEY] = "LPIPS loss per iteration"
+        self.caption_dict_s[self.G_ADV_LOSS_KEY] = "G adv loss per iteration"
+        self.caption_dict_s[self.D_A_FAKE_LOSS_KEY] = "D fake loss per iteration"
+        self.caption_dict_s[self.D_A_REAL_LOSS_KEY] = "D real loss per iteration"
         self.caption_dict_s[self.MASK_LOSS_KEY] = "Mask loss per iteration"
 
         # what to store in visdom?
@@ -142,14 +120,14 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             # shadow map discriminator
             self.optimizerD.zero_grad()
             self.D_SM_discriminator.train()
+
             output = self.G_SM_predictor(input_ws)
 
             prediction = self.D_SM_discriminator(target_tensor)
             real_tensor = torch.ones_like(prediction)
             fake_tensor = torch.zeros_like(prediction)
-
-            D_SM_real_loss = self.adversarial_loss(self.D_SM_discriminator(target_tensor), real_tensor) * self.adv_weight
-            D_SM_fake_loss = self.adversarial_loss(self.D_SM_pool.query(self.D_SM_discriminator(output.detach())), fake_tensor) * self.adv_weight
+            D_SM_real_loss = self.common_losses.compute_adversarial_loss(self.D_SM_discriminator(target_tensor), real_tensor)
+            D_SM_fake_loss = self.common_losses.compute_adversarial_loss(self.D_SM_pool.query(self.D_SM_discriminator(output.detach())), fake_tensor)
 
             errD = D_SM_real_loss + D_SM_fake_loss
 
@@ -162,14 +140,14 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             self.optimizerG.zero_grad()
             self.G_SM_predictor.train()
             rgb2sm = self.G_SM_predictor(input_ws)
-            SM_likeness_loss = self.l1_loss(rgb2sm, target_tensor) * self.it_table.get_l1_weight(self.iteration)
-            SM_lpip_loss = self.lpip_loss(rgb2sm, target_tensor) * self.it_table.get_lpip_weight(self.iteration)
-            SM_masking_loss = self.masking_loss(rgb2sm, target_tensor) * self.it_table.get_masking_weight(self.iteration)
+            SM_likeness_loss = self.common_losses.compute_l1_loss(rgb2sm, target_tensor)
+            # SM_lpip_loss = self.lpip_loss(rgb2sm, target_tensor) * self.it_table.get_lpip_weight(self.iteration)
+            # SM_masking_loss = self.masking_loss(rgb2sm, target_tensor) * self.it_table.get_masking_weight(self.iteration)
             prediction = self.D_SM_discriminator(rgb2sm)
             real_tensor = torch.ones_like(prediction)
-            SM_adv_loss = self.adversarial_loss(prediction, real_tensor) * self.adv_weight
+            SM_adv_loss = self.common_losses.compute_adversarial_loss(prediction, real_tensor)
 
-            errG = SM_likeness_loss + SM_lpip_loss + SM_masking_loss + SM_adv_loss
+            errG = SM_likeness_loss + SM_adv_loss
 
             self.fp16_scaler.scale(errG).backward()
             if (accum_batch_size % self.batch_size == 0):
@@ -179,14 +157,14 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
                 # what to put to losses dict for visdom reporting?
                 if (iteration > 50):
-                    self.losses_dict_s[constants.G_LOSS_KEY].append(errG.item())
-                    self.losses_dict_s[constants.D_OVERALL_LOSS_KEY].append(errD.item())
-                    self.losses_dict_s[constants.LIKENESS_LOSS_KEY].append(SM_likeness_loss.item())
-                    self.losses_dict_s[constants.LPIP_LOSS_KEY].append(SM_lpip_loss.item())
-                    self.losses_dict_s[constants.G_ADV_LOSS_KEY].append(SM_adv_loss.item())
-                    self.losses_dict_s[constants.D_A_FAKE_LOSS_KEY].append(D_SM_fake_loss.item())
-                    self.losses_dict_s[constants.D_A_REAL_LOSS_KEY].append(D_SM_real_loss.item())
-                    self.losses_dict_s[self.MASK_LOSS_KEY].append(SM_masking_loss.item())
+                    self.losses_dict_s[self.G_LOSS_KEY].append(errG.item())
+                    self.losses_dict_s[self.D_OVERALL_LOSS_KEY].append(errD.item())
+                    self.losses_dict_s[self.LIKENESS_LOSS_KEY].append(SM_likeness_loss.item())
+                    # self.losses_dict_s[self.LPIP_LOSS_KEY].append(SM_lpip_loss.item())
+                    self.losses_dict_s[self.G_ADV_LOSS_KEY].append(SM_adv_loss.item())
+                    self.losses_dict_s[self.D_A_FAKE_LOSS_KEY].append(D_SM_fake_loss.item())
+                    self.losses_dict_s[self.D_A_REAL_LOSS_KEY].append(D_SM_real_loss.item())
+                    # self.losses_dict_s[self.MASK_LOSS_KEY].append(SM_masking_loss.item())
 
                 #perform validation test and early stopping
                 rgb2ns_istd = self.test_istd(input_map)
@@ -240,7 +218,6 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         self.visdom_reporter.plot_image(input_ws, str(label) + " RGB (With Shadows) Images - " + self.NETWORK_VERSION + str(self.iteration))
         self.visdom_reporter.plot_image(matte_tensor, str(label) + " Shadow Matte Images - " + self.NETWORK_VERSION + str(self.iteration))
-
         self.visdom_reporter.plot_image(rgb2ns, str(label) + " RGB (No Shadows-Like) images - " + self.NETWORK_VERSION + str(self.iteration))
         if("rgb_ns" in input_map):
             input_ns = input_map["rgb_ns"]
@@ -259,20 +236,20 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 print("No existing checkpoint file found. Creating new shadow network: ", self.NETWORK_CHECKPATH)
 
         if(checkpoint != None):
-            iid_server_config.IIDServerConfig.getInstance().store_epoch_from_checkpt("train_shadow", checkpoint["epoch"])
-            self.stopper_method.update_last_metric(checkpoint[constants.LAST_METRIC_KEY])
-            self.G_SM_predictor.load_state_dict(checkpoint[constants.GENERATOR_KEY + "Z"])
-            self.D_SM_discriminator.load_state_dict(checkpoint[constants.DISCRIMINATOR_KEY + "Z"])
+            global_config.last_epoch_ns = checkpoint["epoch"]
+            self.stopper_method.update_last_metric(checkpoint[global_config.LAST_METRIC_KEY])
+            self.G_SM_predictor.load_state_dict(checkpoint[global_config.GENERATOR_KEY + "Z"])
+            self.D_SM_discriminator.load_state_dict(checkpoint[global_config.DISCRIMINATOR_KEY + "Z"])
 
             print("Loaded shadow removal network: ", self.NETWORK_CHECKPATH, "Epoch: ", checkpoint["epoch"])
 
     def save_states(self, epoch, iteration, is_temp:bool):
-        save_dict = {'epoch': epoch, 'iteration': iteration, constants.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
+        save_dict = {'epoch': epoch, 'iteration': iteration, global_config.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
         netGNS_state_dict = self.G_SM_predictor.state_dict()
         netDNS_state_dict = self.D_SM_discriminator.state_dict()
 
-        save_dict[constants.GENERATOR_KEY + "Z"] = netGNS_state_dict
-        save_dict[constants.DISCRIMINATOR_KEY + "Z"] = netDNS_state_dict
+        save_dict[global_config.GENERATOR_KEY + "Z"] = netGNS_state_dict
+        save_dict[global_config.DISCRIMINATOR_KEY + "Z"] = netDNS_state_dict
 
         if (is_temp):
             torch.save(save_dict, self.NETWORK_CHECKPATH + ".checkpt")

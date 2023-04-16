@@ -11,9 +11,9 @@ import cv2
 import torchvision.transforms as transforms
 from tqdm import tqdm
 
-import constants
-from config import iid_server_config
-from loaders import image_dataset, shadow_datasets
+import global_config
+from config.network_config import ConfigHolder
+from loaders import shadow_datasets, image_datasets
 import os
 
 def assemble_unpaired_data(path_a, num_image_to_load=-1, force_complete=False):
@@ -39,11 +39,11 @@ def assemble_unpaired_data(path_a, num_image_to_load=-1, force_complete=False):
 
     return a_list
 
-def assemble_img_list(img_dir, opts):
+def assemble_img_list(img_dir):
     img_list = glob.glob(img_dir)
 
-    if (opts.img_to_load > 0):
-        img_list = img_list[0: opts.img_to_load]
+    if (global_config.img_to_load > 0):
+        img_list = img_list[0: global_config.img_to_load]
 
     for i in range(0, len(img_list)):
         img_list[i] = img_list[i].replace("\\", "/")
@@ -100,60 +100,6 @@ def load_iid_datasetv2_train(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, patc
     )
 
     return data_loader
-
-def load_shadow_train_dataset(ws_path, ns_path, ws_istd_path, ns_istd_path, load_size, opts):
-    initial_ws_list = assemble_img_list(ws_path, opts)
-    initial_ns_list = assemble_img_list(ns_path, opts)
-
-    print("Length: ", len(initial_ws_list), len(initial_ns_list))
-
-    temp_list = list(zip(initial_ws_list, initial_ns_list))
-    random.shuffle(temp_list)
-    initial_ws_list, initial_ns_list = zip(*temp_list)
-
-    initial_istd_ws_list = assemble_img_list(ws_istd_path, opts)
-    initial_istd_ns_list = assemble_img_list(ns_istd_path, opts)
-
-    temp_list = list(zip(initial_istd_ws_list, initial_istd_ns_list))
-    random.shuffle(temp_list)
-    initial_istd_ws_list, initial_istd_ns_list = zip(*temp_list)
-
-    ws_list = []
-    ns_list = []
-
-    sc_instance = iid_server_config.IIDServerConfig.getInstance()
-    if(opts.train_mode == "train_shadow_matte" or opts.train_mode == "all"):
-        network_config = sc_instance.interpret_shadow_matte_params_from_version()
-    else:
-        network_config = sc_instance.interpret_shadow_network_params_from_version()
-
-    for i in range(0, network_config["dataset_repeats"]): #TEMP: formerly 0-1
-        ws_list += initial_ws_list
-        ns_list += initial_ns_list
-
-    if(network_config["mix_istd"] > 0.0):
-        synth_len = int(len(ws_list) * network_config["mix_istd"]) #add N% istd
-        istd_len = 0
-        while istd_len < synth_len:
-            ws_list += initial_istd_ws_list
-            ns_list += initial_istd_ns_list
-            istd_len += len(initial_istd_ws_list)
-    else:
-        istd_len = 0
-
-    img_length = len(ws_list)
-    print("Length of images: %d %d. ISTD len: %d"  % (len(ws_list), len(ns_list), istd_len))
-
-    data_loader = torch.utils.data.DataLoader(
-        shadow_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 1, opts.train_mode),
-        batch_size=load_size,
-        num_workers=int(opts.num_workers / 2),
-        shuffle=False,
-        pin_memory=True,
-        pin_memory_device=opts.cuda_device
-    )
-
-    return data_loader, len(ws_list)
 
 def clean_dataset(ws_path, ns_path, filter_minimum):
     BASE_PATH = "E:/SynthWeather Dataset 10/"
@@ -219,7 +165,7 @@ def clean_dataset_using_std_mean(ws_path, ns_path, basis_mean, basis_std):
 
     tensor_op = transforms.Compose([
         transforms.ToPILImage(),
-        transforms.Resize(constants.TEST_IMAGE_SIZE),
+        transforms.Resize(global_config.TEST_IMAGE_SIZE),
         transforms.ToTensor()])
 
     num_saved = 0
@@ -262,293 +208,227 @@ def clean_dataset_using_std_mean(ws_path, ns_path, basis_mean, basis_std):
     print("Total images processed: " + str(len(ws_path)) + " Saved: " + str(num_saved) + " Discarded: " + str(num_discarded))
 
 
-def load_shadow_test_dataset(ws_path, ns_path, opts):
-    ws_list = assemble_img_list(ws_path, opts)
-    ns_list = assemble_img_list(ns_path, opts)
+def load_shadow_train_dataset():
+    initial_ws_list = glob.glob(global_config.rgb_dir_ws)
+    initial_ns_list = glob.glob(global_config.rgb_dir_ns)
+
+    if(global_config.img_to_load > 0):
+        initial_ws_list = initial_ws_list[:global_config.img_to_load]
+        initial_ns_list = initial_ns_list[:global_config.img_to_load]
+
+    print("Length: ", len(initial_ws_list), len(initial_ns_list))
+
+    temp_list = list(zip(initial_ws_list, initial_ns_list))
+    random.shuffle(temp_list)
+    initial_ws_list, initial_ns_list = zip(*temp_list)
+
+    initial_istd_ws_list = glob.glob(global_config.ws_istd)
+    initial_istd_ns_list = glob.glob(global_config.ns_istd)
+
+    temp_list = list(zip(initial_istd_ws_list, initial_istd_ns_list))
+    random.shuffle(temp_list)
+    initial_istd_ws_list, initial_istd_ns_list = zip(*temp_list)
+
+    ws_list = []
+    ns_list = []
+
+    network_config = ConfigHolder.getInstance().get_network_config()
+    for i in range(0, network_config["dataset_repeats"]): #TEMP: formerly 0-1
+        ws_list += initial_ws_list
+        ns_list += initial_ns_list
+
+    mix_istd = ConfigHolder.getInstance().get_network_attribute("mix_istd", 0.0)
+    if(mix_istd > 0.0):
+        synth_len = int(len(ws_list) * network_config["mix_istd"]) #add N% istd
+        istd_len = 0
+        while istd_len < synth_len:
+            ws_list += initial_istd_ws_list
+            ns_list += initial_istd_ns_list
+            istd_len += len(initial_istd_ws_list)
+    else:
+        istd_len = 0
+
+    img_length = len(ws_list)
+    print("Length of images: %d %d. ISTD len: %d"  % (len(ws_list), len(ns_list), istd_len))
+
+    data_loader = torch.utils.data.DataLoader(
+        shadow_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 1),
+        batch_size=global_config.load_size,
+        num_workers=int(global_config.num_workers / 2),
+        shuffle=False,
+    )
+
+    return data_loader, len(ws_list)
+
+def load_shadow_test_dataset():
+    ws_list = glob.glob(global_config.rgb_dir_ws)
+    ns_list = glob.glob(global_config.rgb_dir_ns)
+
+    if (global_config.img_to_load > 0):
+        ws_list = ws_list[:global_config.img_to_load]
+        ns_list = ns_list[:global_config.img_to_load]
 
     img_length = len(ws_list)
     print("Length of images: %d %d" % (len(ws_list), len(ns_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        shadow_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 2, opts.train_mode),
-        batch_size=8,
+        shadow_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 2),
+        batch_size=global_config.test_size,
         num_workers=1,
-        pin_memory=True,
-        pin_memory_device=opts.cuda_device,
         shuffle=False
     )
 
     return data_loader, len(ws_list)
 
-def load_shadow_matte_dataset(ws_path, sm_path, opts):
-    ws_list = assemble_img_list(ws_path, opts)
-    sm_list = assemble_img_list(sm_path, opts)
+def load_shadow_matte_dataset(ws_path, sm_path):
+    ws_list = glob.glob(ws_path)
+    sm_list = glob.glob(sm_path)
 
     img_length = len(ws_list)
     print("Length of images: %d %d" % (len(ws_list), len(sm_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        shadow_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 2, opts.train_mode),
+        shadow_datasets.ShadowTrainDataset(img_length, ws_list, sm_list, 2),
         batch_size=8,
         num_workers=1,
-        pin_memory=True,
-        pin_memory_device=opts.cuda_device,
         shuffle=False
     )
 
     return data_loader, len(ws_list)
 
-def load_istd_train_dataset(ws_path, ns_path, patch_size, load_size, opts):
-    ws_istd_list = assemble_img_list(ws_path, opts)
-    ns_istd_list = assemble_img_list(ns_path, opts)
+def load_istd_train_dataset():
+    ws_istd_list = glob.glob(global_config.ws_istd)
+    ns_istd_list = glob.glob(global_config.ns_istd)
 
     img_length = len(ws_istd_list)
     print("Length of images: %d %d" % (len(ws_istd_list), len(ns_istd_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        shadow_datasets.ShadowTrainDataset(img_length, ws_istd_list, ns_istd_list, 1, opts.train_mode),
-        batch_size=load_size,
+        shadow_datasets.ShadowTrainDataset(img_length, ws_istd_list, ns_istd_list, 1),
+        batch_size=global_config.load_size,
         num_workers=4,
-        pin_memory=True,
-        pin_memory_device=opts.cuda_device,
         shuffle=False
     )
 
     return data_loader, len(ws_istd_list)
 
-def load_istd_dataset(ws_path, ns_path, mask_path, load_size, opts):
-    ws_istd_list = assemble_img_list(ws_path, opts)
-    ns_istd_list = assemble_img_list(ns_path, opts)
-    mask_istd_list = assemble_img_list(mask_path, opts)
+def load_istd_dataset():
+    ws_istd_list = glob.glob(global_config.ws_istd)
+    ns_istd_list = glob.glob(global_config.ns_istd)
+    mask_istd_list = glob.glob(global_config.mask_istd)
 
     img_length = len(ws_istd_list)
     print("Length of images: %d %d %d" % (len(ws_istd_list), len(ns_istd_list), len(mask_istd_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        shadow_datasets.ShadowISTDDataset(img_length, ws_istd_list, ns_istd_list, mask_istd_list, 1, opts.train_mode),
-        batch_size=load_size,
+        shadow_datasets.ShadowISTDDataset(img_length, ws_istd_list, ns_istd_list, mask_istd_list, 1),
+        batch_size=global_config.test_size,
         num_workers=1,
-        pin_memory=True,
-        pin_memory_device=opts.cuda_device,
         shuffle=False
     )
 
     return data_loader, len(ws_istd_list)
 
-def load_srd_dataset(ws_path, ns_path, load_size, opts):
-    ws_istd_list = assemble_img_list(ws_path, opts)
-    ns_istd_list = assemble_img_list(ns_path, opts)
+def load_srd_dataset():
+    ws_istd_list = glob.glob(global_config.ws_srd)
+    ns_istd_list = glob.glob(global_config.ns_srd)
 
     img_length = len(ws_istd_list)
     print("Length of images: %d %d" % (len(ws_istd_list), len(ns_istd_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        shadow_datasets.ShadowSRDDataset(img_length, ws_istd_list, ns_istd_list, 1, opts.train_mode),
-        batch_size=load_size,
+        shadow_datasets.ShadowSRDDataset(img_length, ws_istd_list, ns_istd_list, 1),
+        batch_size=global_config.test_size,
         num_workers=1,
         shuffle=False
     )
 
     return data_loader, len(ws_istd_list)
 
-def load_iid_datasetv2_test(rgb_dir_ws, rgb_dir_ns, unlit_dir, albedo_dir, patch_size, opts):
-    rgb_list_ws = glob.glob(rgb_dir_ws)
-    random.shuffle(rgb_list_ws)
-    if (opts.img_to_load > 0):
-        rgb_list_ws = rgb_list_ws[0: opts.img_to_load]
+def load_usr_dataset():
+    ws_list = glob.glob(global_config.usr_test)
 
-    for i in range(0, len(rgb_list_ws)):
-        rgb_list_ws[i] = rgb_list_ws[i].replace("\\", "/")
-
-    img_length = len(rgb_list_ws)
-    print("Length of images: %d" % img_length)
+    img_length = len(ws_list)
+    print("Length of images: %d" % len(ws_list))
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.IIDDatasetV2(img_length, rgb_list_ws, rgb_dir_ns, unlit_dir, albedo_dir, 2, patch_size),
-        batch_size=4,
+        shadow_datasets.ShadowUSRTestDataset(img_length, ws_list, 1),
+        batch_size=global_config.test_size,
         num_workers=1,
         shuffle=False
     )
 
-    return data_loader
+    return data_loader, len(ws_list)
 
-def load_single_test_dataset(path_a):
+def load_single_test_dataset(path_a, opts):
     a_list = glob.glob(path_a)
+    random.shuffle(a_list)
+    if (opts.img_to_load > 0):
+        a_list = a_list[0: opts.img_to_load]
     print("Length of images: %d" % len(a_list))
 
     data_loader = torch.utils.data.DataLoader(
         image_dataset.RealWorldDataset(a_list),
-        batch_size=4,
+        batch_size=16,
         num_workers=1,
         shuffle=True
     )
 
     return data_loader
 
-def load_gta_dataset(rgb_dir, albedo_dir, opts):
-    rgb_list = assemble_unpaired_data(rgb_dir, opts.img_to_load)
-    albedo_list = assemble_unpaired_data(albedo_dir, opts.img_to_load)
-    print("Length of images: %d %d" % (len(rgb_list), len(albedo_list)))
+def load_train_img2img_dataset(a_path, b_path):
+    network_config = ConfigHolder.getInstance().get_network_config()
+    a_list = glob.glob(a_path)
+    b_list = glob.glob(b_path)
+    a_list_dup = glob.glob(a_path)
+    b_list_dup = glob.glob(b_path)
 
+    if (global_config.img_to_load > 0):
+        a_list = a_list[0: global_config.img_to_load]
+        b_list = b_list[0: global_config.img_to_load]
+        a_list_dup = a_list_dup[0: global_config.img_to_load]
+        b_list_dup = b_list_dup[0: global_config.img_to_load]
+
+    for i in range(0, network_config["dataset_a_repeats"]): #TEMP: formerly 0-1
+        a_list += a_list_dup
+
+    for i in range(0, network_config["dataset_b_repeats"]): #TEMP: formerly 0-1
+        b_list += b_list_dup
+
+    random.shuffle(a_list)
+    random.shuffle(b_list)
+
+    img_length = len(a_list)
+    print("Length of images: %d %d"  % (img_length, len(b_list)))
+
+    num_workers = global_config.num_workers
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.GTATestDataset(rgb_list, albedo_list, opts),
-        batch_size=4,
-        num_workers=1,
-        shuffle=False,
-        pin_memory=True
+        image_datasets.PairedImageDataset(a_list, b_list, 1),
+        batch_size=global_config.load_size,
+        num_workers=num_workers
     )
 
-    return data_loader
+    return data_loader, img_length
 
-def load_da_dataset_train(imgx_dir, imgy_dir_list, opts):
-    sc_instance = iid_server_config.IIDServerConfig.getInstance()
-    network_config = sc_instance.interpret_style_transfer_config_from_version()
+def load_test_img2img_dataset(a_path, b_path):
+    a_list = glob.glob(a_path)
+    b_list = glob.glob(b_path)
 
-    initial_imgx_list = glob.glob(imgx_dir)
-    initial_imgy_list = glob.glob(imgy_dir_list[0])
-    for i in range(1, len(imgy_dir_list)):
-        initial_imgy_list += glob.glob(imgy_dir_list[i])
+    if (global_config.img_to_load > 0):
+        a_list = a_list[0: global_config.img_to_load]
+        b_list = b_list[0: global_config.img_to_load]
 
-    random.shuffle(initial_imgx_list)
-    random.shuffle(initial_imgy_list)
+    random.shuffle(a_list)
+    random.shuffle(b_list)
 
-    if(opts.img_to_load > 0):
-        initial_imgx_list = initial_imgx_list[0: opts.img_to_load]
-        initial_imgy_list = initial_imgy_list[0: opts.img_to_load]
-
-    imgx_list = []
-    imgy_list = []
-    for i in range(0, network_config["dataset_repeats"]):
-        imgx_list += initial_imgx_list
-        imgy_list += initial_imgy_list
-
-    print("Length of images: %d %d" % (len(imgx_list), len(imgy_list)))
-
-    if(len(imgx_list) == 0 or len(imgy_list) == 0):
-        return None
+    img_length = len(a_list)
+    print("Length of images: %d %d" % (img_length, len(b_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.GenericPairedDataset(imgx_list, imgy_list, 1, network_config["patch_size"]),
-        batch_size=network_config["load_size"],
-        num_workers = opts.num_workers,
-        shuffle=False,
+        image_datasets.PairedImageDataset(a_list, b_list, 1),
+        batch_size=global_config.test_size,
+        num_workers=1
     )
 
-    return data_loader, len(imgx_list)
-
-def load_unlit_dataset_train(styled_dir, unlit_dir, opts):
-    styled_img_list = glob.glob(styled_dir)
-    random.shuffle(styled_img_list)
-
-    if (opts.img_to_load > 0):
-        styled_img_list = styled_img_list[0: opts.img_to_load]
-
-    print("Length of images: %d " % len(styled_img_list))
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.UnlitDataset(len(styled_img_list), styled_img_list, unlit_dir, 1, opts),
-        batch_size=opts.load_size,
-        num_workers=opts.num_workers,
-        shuffle=False
-    )
-
-    return data_loader
-
-def load_unlit_dataset_test(styled_dir, unlit_dir, opts):
-    styled_img_list = glob.glob(styled_dir)
-    random.shuffle(styled_img_list)
-
-    if (opts.img_to_load > 0):
-        styled_img_list = styled_img_list[0: opts.img_to_load]
-
-    print("Length of images: %d " % len(styled_img_list))
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.UnlitDataset(len(styled_img_list), styled_img_list, unlit_dir, 2, opts),
-        batch_size=4,
-        num_workers=1,
-        shuffle=False
-    )
-
-    return data_loader
-
-
-def load_da_dataset_test(imgx_dir, imgy_dir_list, opts):
-    sc_instance = iid_server_config.IIDServerConfig.getInstance()
-    network_config = sc_instance.interpret_style_transfer_config_from_version()
-
-    imgx_list = glob.glob(imgx_dir)
-    imgy_list = glob.glob(imgy_dir_list[0])
-    for i in range(1, len(imgy_dir_list)):
-        imgy_list += glob.glob(imgy_dir_list[i])
-
-    random.shuffle(imgx_list)
-    random.shuffle(imgy_list)
-
-    if (opts.img_to_load > 0):
-        imgx_list = imgx_list[0: opts.img_to_load]
-        imgy_list = imgy_list[0: opts.img_to_load]
-
-    print("Length of images: %d %d" % (len(imgx_list), len(imgy_list)))
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.GenericPairedDataset(imgx_list, imgy_list, 2, network_config["patch_size"]),
-        batch_size=4,
-        num_workers=1,
-        shuffle=False,
-        pin_memory=False
-    )
-
-    return data_loader
-
-def load_ffa_dataset_train(imgx_dir, imgy_dir, opts):
-    imgx_list = glob.glob(imgx_dir)
-    imgy_list = glob.glob(imgy_dir)
-
-    random.shuffle(imgx_list)
-    random.shuffle(imgy_list)
-
-    if(opts.img_to_load > 0):
-        imgx_list = imgx_list[0: opts.img_to_load]
-        imgy_list = imgy_list[0: opts.img_to_load]
-
-    print("Length of images: %d %d" % (len(imgx_list), len(imgy_list)))
-
-    if(len(imgx_list) == 0 or len(imgy_list) == 0):
-        return None
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.GenericPairedDataset(imgx_list, imgy_list, 1, opts),
-        batch_size=opts.load_size,
-        num_workers = opts.num_workers,
-        shuffle=False,
-        pin_memory=False
-
-    )
-
-    return data_loader
-
-
-def load_ffa_dataset_test(imgx_dir, imgy_dir, opts):
-    imgx_list = glob.glob(imgx_dir)
-    imgy_list = glob.glob(imgy_dir)
-
-    random.shuffle(imgx_list)
-    random.shuffle(imgy_list)
-
-    if (opts.img_to_load > 0):
-        imgx_list = imgx_list[0: opts.img_to_load]
-        imgy_list = imgy_list[0: opts.img_to_load]
-
-    print("Length of images: %d %d" % (len(imgx_list), len(imgy_list)))
-
-    data_loader = torch.utils.data.DataLoader(
-        image_dataset.GenericPairedDataset(imgx_list, imgy_list, 2, opts),
-        batch_size=4,
-        num_workers=1,
-        shuffle=False,
-        pin_memory=False
-    )
-
-    return data_loader
+    return data_loader, img_length
 

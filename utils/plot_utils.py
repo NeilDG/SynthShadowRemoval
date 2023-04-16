@@ -6,7 +6,7 @@ Created on Thu Jun 25 17:02:01 2020
 """
 from matplotlib.lines import Line2D
 
-import constants
+import global_config
 import numpy as np
 import matplotlib.pyplot as plt
 import torchvision.utils as vutils
@@ -26,9 +26,9 @@ class VisdomReporter:
         return VisdomReporter._sharedInstance
 
     def __init__(self):
-        if(constants.server_config == 1):
+        if(global_config.server_config == 1):
             self.vis = visdom.Visdom(SALIKSIK_SERVER, use_incoming_socket=False, port=8097) #TODO: Note that this is set to TRUE for observation.
-        elif(constants.server_config == 2):
+        elif(global_config.server_config == 2):
             self.vis = None
         else:
             self.vis= visdom.Visdom()
@@ -38,7 +38,7 @@ class VisdomReporter:
         self.text_windows = {}
     
     def plot_image(self, img_tensor, caption, normalize = True):
-        if(constants.plot_enabled == 0):
+        if(global_config.plot_enabled == 0):
             return
 
         img_group = vutils.make_grid(img_tensor[:16], nrow = 8, padding=2, normalize=normalize).cpu()
@@ -48,7 +48,7 @@ class VisdomReporter:
             self.vis.images(img_group, win = self.image_windows[hash(caption)], opts = dict(caption = caption))
 
     def plot_text(self, text):
-        if(constants.plot_enabled == 0):
+        if(global_config.plot_enabled == 0):
             return
 
         if(hash(text) not in self.text_windows):
@@ -90,7 +90,7 @@ class VisdomReporter:
             self.vis.matplot(plt, win = self.loss_windows[hash(caption)], opts = dict(caption = caption))
 
     def plot_finegrain_loss(self, loss_key, iteration, losses_dict, caption_dict, label):
-        if(constants.plot_enabled == 0):
+        if(global_config.plot_enabled == 0):
             return
         
         loss_keys = list(losses_dict.keys())
@@ -98,7 +98,7 @@ class VisdomReporter:
         colors = ['r', 'g', 'black', 'darkorange', 'olive', 'palevioletred', 'rosybrown', 'cyan', 'slategray', 'darkmagenta', 'linen', 'chocolate']
         index = 0
         
-        x = [i for i in range(iteration, iteration + len(losses_dict[constants.LIKENESS_LOSS_KEY]))]
+        x = [i for i in range(iteration, iteration + len(losses_dict["g_loss"]))]
         COLS = 3; ROWS = 4
         fig, ax = plt.subplots(ROWS, COLS, sharex=True)
         fig.set_size_inches(9, 9)
@@ -148,14 +148,14 @@ class VisdomReporter:
     #     plt.legend(loc='lower right')
     #
     #     if loss_key not in self.loss_windows:
-    #         self.loss_windows[loss_key] = self.vis.matplot(plt, opts=dict(caption="Losses" + " " + str(constants)))
+    #         self.loss_windows[loss_key] = self.vis.matplot(plt, opts=dict(caption="Losses" + " " + str(global_config)))
     #     else:
-    #         self.vis.matplot(plt, win=self.loss_windows[loss_key], opts=dict(caption="Losses" + " " + str(constants)))
+    #         self.vis.matplot(plt, win=self.loss_windows[loss_key], opts=dict(caption="Losses" + " " + str(global_config)))
     #
     #     plt.show()
 
     def plot_train_test_loss(self, loss_key, iteration, losses_dict, caption_dict, label):
-        if (constants.plot_enabled == 0):
+        if (global_config.plot_enabled == 0):
             return
         colors = ['r', 'g', 'black', 'darkorange', 'olive', 'palevioletred', 'rosybrown', 'cyan', 'slategray', 'darkmagenta', 'linen', 'chocolate']
 

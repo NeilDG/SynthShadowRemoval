@@ -5,16 +5,15 @@ import numpy as np
 from torch.utils import data
 import torchvision.transforms as transforms
 import torchvision.transforms.functional
-import constants
+import global_config
 import kornia
 from pathlib import Path
 import kornia.augmentation as K
 
-from config import iid_server_config
 from transforms import shadow_map_transforms
 
 class ShadowTrainDataset(data.Dataset):
-    def __init__(self, img_length, img_list_a, img_list_b, transform_config, train_mode):
+    def __init__(self, img_length, img_list_a, img_list_b, transform_config):
         self.img_length = img_length
         self.img_list_a = img_list_a
         self.img_list_b = img_list_b
@@ -22,31 +21,26 @@ class ShadowTrainDataset(data.Dataset):
 
         self.shadow_op = shadow_map_transforms.ShadowMapTransforms()
         self.norm_op = transforms.Normalize((0.5, ), (0.5, ))
-
-        sc_instance = iid_server_config.IIDServerConfig.getInstance()
-        if(train_mode == "train_shadow_matte"):
-            self.network_config = sc_instance.interpret_shadow_matte_params_from_version()
-        else:
-            self.network_config = sc_instance.interpret_shadow_network_params_from_version()
+        self.network_config = global_config.loaded_network_config
 
         if(self.transform_config == 1):
             patch_size = self.network_config["patch_size"]
             self.patch_size = (patch_size, patch_size)
         else:
-            self.patch_size = constants.TEST_IMAGE_SIZE
+            self.patch_size = global_config.TEST_IMAGE_SIZE
 
-        if ("augmix" in self.network_config["augment_mode"] and self.transform_config == 1):
+        if ("augmix" in self.network_config["augment_key"] and self.transform_config == 1):
             self.initial_op = transforms.Compose([
                 transforms.ToPILImage(),
-                transforms.Resize(constants.TEST_IMAGE_SIZE),
+                transforms.Resize(global_config.TEST_IMAGE_SIZE),
                 transforms.RandomHorizontalFlip(0.5),
                 transforms.RandomVerticalFlip(0.5),
                 transforms.AugMix(),
                 transforms.ToTensor()])
-        elif ("trivial_augment_wide" in self.network_config["augment_mode"] and self.transform_config == 1):
+        elif ("trivial_augment_wide" in self.network_config["augment_key"] and self.transform_config == 1):
             self.initial_op = transforms.Compose([
                 transforms.ToPILImage(),
-                transforms.Resize(constants.TEST_IMAGE_SIZE),
+                transforms.Resize(global_config.TEST_IMAGE_SIZE),
                 transforms.RandomHorizontalFlip(0.5),
                 transforms.RandomVerticalFlip(0.5),
                 transforms.TrivialAugmentWide(),
@@ -54,7 +48,7 @@ class ShadowTrainDataset(data.Dataset):
         else:
             self.initial_op = transforms.Compose([
                 transforms.ToPILImage(),
-                transforms.Resize(constants.TEST_IMAGE_SIZE),
+                transforms.Resize(global_config.TEST_IMAGE_SIZE),
                 transforms.ToTensor()])
 
     def __getitem__(self, idx):
@@ -65,18 +59,19 @@ class ShadowTrainDataset(data.Dataset):
             state = torch.get_rng_state()
             rgb_ws = self.initial_op(rgb_ws)
 
-            #add gaussian noise to WS
-            if("random_exposure" in self.network_config["augment_mode"]):
-                rgb_ws = rgb_ws * np.random.uniform(1.001, 1.25)
-
-            if ("random_noise" in self.network_config["augment_mode"]):
-                noise_op = K.RandomGaussianNoise(p=1.0, mean=0.0, std=np.random.uniform(0.0, 0.15))
-                rgb_ws = torch.squeeze(noise_op(rgb_ws))
-
             torch.set_rng_state(state)
             rgb_ns = cv2.imread(self.img_list_b[idx])
             rgb_ns = cv2.cvtColor(rgb_ns, cv2.COLOR_BGR2RGB)
             rgb_ns = self.initial_op(rgb_ns)
+
+            #add gaussian noise to WS
+            if("random_exposure" in self.network_config["augment_key"]):
+                rgb_ws = rgb_ws * np.random.uniform(1.000, 1.25)
+
+            if ("random_noise" in self.network_config["augment_key"]):
+                noise_op = K.RandomGaussianNoise(p=1.0, mean=np.random.uniform(0.0, 0.25), std=np.random.uniform(0.0, 0.25))
+                rgb_ws = torch.clip(torch.squeeze(noise_op(rgb_ws)), 0.0, 1.0)
+                rgb_ns = torch.clip(torch.squeeze(noise_op(rgb_ns, params=noise_op._params)), 0.0, 1.0) #TODO: Observe if it's wise to also add noise to RGB_ns. Hypothesis: Must add noise as well so SMs are clean.
 
             if (self.transform_config == 1):
                 crop_indices = transforms.RandomCrop.get_params(rgb_ws, output_size=self.patch_size)
@@ -87,9 +82,7 @@ class ShadowTrainDataset(data.Dataset):
 
             rgb_ws, rgb_ns, shadow_map, shadow_matte = self.shadow_op.generate_shadow_map(rgb_ws, rgb_ns, False)
 
-            rgb_ws_gray = kornia.color.rgb_to_grayscale(rgb_ws)
             rgb_ws = self.norm_op(rgb_ws)
-            rgb_ws_gray = self.norm_op(rgb_ws_gray)
             rgb_ns = self.norm_op(rgb_ns)
             shadow_map = self.norm_op(shadow_map)
             shadow_matte = self.norm_op(shadow_matte)
@@ -98,7 +91,6 @@ class ShadowTrainDataset(data.Dataset):
             print("Failed to load: ", self.img_list_a[idx], self.img_list_b[idx])
             print("ERROR: ", e)
             rgb_ws = None
-            rgb_ws_gray = None
             rgb_ns = None
             shadow_map = None
             shadow_matte = None
@@ -109,7 +101,7 @@ class ShadowTrainDataset(data.Dataset):
         return self.img_length
 
 class ShadowISTDDataset(data.Dataset):
-    def __init__(self, img_length, img_list_a, img_list_b, img_list_c, transform_config, train_mode):
+    def __init__(self, img_length, img_list_a, img_list_b, img_list_c, transform_config):
         self.img_length = img_length
         self.img_list_a = img_list_a
         self.img_list_b = img_list_b
@@ -118,21 +110,14 @@ class ShadowISTDDataset(data.Dataset):
 
         self.shadow_op = shadow_map_transforms.ShadowMapTransforms()
         self.norm_op = transforms.Normalize((0.5, ), (0.5, ))
-
         self.initial_op = transforms.Compose([
             transforms.ToPILImage(),
-            # transforms.Resize(constants.TEST_IMAGE_SIZE),
-            transforms.Resize((240, 320)),
+            transforms.Resize(global_config.TEST_IMAGE_SIZE),
+            # transforms.Resize((240, 320)),
             transforms.ToTensor()])
 
-        sc_instance = iid_server_config.IIDServerConfig.getInstance()
-        if (train_mode == "train_shadow_matte"):
-            self.network_config = sc_instance.interpret_shadow_matte_params_from_version()
-        else:
-            self.network_config = sc_instance.interpret_shadow_network_params_from_version()
-
     def __getitem__(self, idx):
-        file_name = self.img_list_a[idx].split("/")[-1].split(".png")[0]
+        file_name = self.img_list_a[idx].split("\\")[-1].split(".png")[0]
 
         try:
             rgb_ws = cv2.imread(self.img_list_a[idx])
@@ -169,7 +154,7 @@ class ShadowISTDDataset(data.Dataset):
         return self.img_length
 
 class ShadowSRDDataset(data.Dataset):
-    def __init__(self, img_length, img_list_a, img_list_b, transform_config, train_mode):
+    def __init__(self, img_length, img_list_a, img_list_b, transform_config):
         self.img_length = img_length
         self.img_list_a = img_list_a
         self.img_list_b = img_list_b
@@ -180,45 +165,91 @@ class ShadowSRDDataset(data.Dataset):
 
         self.initial_op = transforms.Compose([
             transforms.ToPILImage(),
-            transforms.Resize((160, 210)),
+            transforms.Resize(global_config.TEST_IMAGE_SIZE),
+            # transforms.Resize((160, 210)),
             transforms.ToTensor()])
 
-        sc_instance = iid_server_config.IIDServerConfig.getInstance()
-        if (train_mode == "train_shadow_matte"):
-            self.network_config = sc_instance.interpret_shadow_matte_params_from_version()
-        else:
-            self.network_config = sc_instance.interpret_shadow_network_params_from_version()
+    def __getitem__(self, idx):
+        file_name = self.img_list_a[idx].split("\\")[-1].split(".")[0]
+
+        rgb_ws = cv2.imread(self.img_list_a[idx])
+        rgb_ws = cv2.cvtColor(rgb_ws, cv2.COLOR_BGR2RGB)
+        rgb_ws = self.initial_op(rgb_ws)
+
+        rgb_ns = cv2.imread(self.img_list_b[idx])
+        rgb_ns = cv2.cvtColor(rgb_ns, cv2.COLOR_BGR2RGB)
+        rgb_ns = self.initial_op(rgb_ns)
+
+        shadow_map = rgb_ns - rgb_ws
+        shadow_matte = kornia.color.rgb_to_grayscale(shadow_map)
+
+        rgb_ws = self.norm_op(rgb_ws)
+        rgb_ns = self.norm_op(rgb_ns)
+        shadow_matte = self.norm_op(shadow_matte)
+
+        return file_name, rgb_ws, rgb_ns, shadow_matte
+
+    def __len__(self):
+        return self.img_length
+
+class ShadowUSRTestDataset(data.Dataset):
+    def __init__(self, img_length, img_list_a, transform_config):
+        self.img_length = img_length
+        self.img_list_a = img_list_a
+        self.transform_config = transform_config
+
+        self.shadow_op = shadow_map_transforms.ShadowMapTransforms()
+        self.norm_op = transforms.Normalize((0.5, ), (0.5, ))
+
+        self.initial_op = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize(global_config.TEST_IMAGE_SIZE),
+            transforms.ToTensor()])
 
     def __getitem__(self, idx):
-        file_name = self.img_list_a[idx].split("/")[-1].split(".")[0]
+        file_name = self.img_list_a[idx].split("\\")[-1].split(".")[0]
+
+        rgb_ws = cv2.imread(self.img_list_a[idx])
+        rgb_ws = cv2.cvtColor(rgb_ws, cv2.COLOR_BGR2RGB)
+        rgb_ws = self.initial_op(rgb_ws)
+
+        rgb_ws = self.norm_op(rgb_ws)
+
+        return file_name, rgb_ws
+
+    def __len__(self):
+        return self.img_length
+
+class PlacesDataset(data.Dataset):
+    def __init__(self, img_length, img_list_a, patch_size = 0):
+        self.img_length = img_length
+        self.img_list_a = img_list_a
+        self.patch_size = (patch_size, patch_size)
+
+        self.initial_op = transforms.Compose([
+            transforms.ToPILImage()])
+
+        self.final_transform_op = transforms.Compose([
+            transforms.Resize(global_config.TEST_IMAGE_SIZE),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5,), (0.5,))
+        ])
+
+    def __getitem__(self, idx):
+        file_name = self.img_list_a[idx].split("/")[-1].split(".png")[0]
 
         try:
             rgb_ws = cv2.imread(self.img_list_a[idx])
             rgb_ws = cv2.cvtColor(rgb_ws, cv2.COLOR_BGR2RGB)
             rgb_ws = self.initial_op(rgb_ws)
+            rgb_ws = self.final_transform_op(rgb_ws)
 
-            rgb_ns = cv2.imread(self.img_list_b[idx])
-            rgb_ns = cv2.cvtColor(rgb_ns, cv2.COLOR_BGR2RGB)
-            rgb_ns = self.initial_op(rgb_ns)
-
-            shadow_map = rgb_ns - rgb_ws
-            shadow_matte = kornia.color.rgb_to_grayscale(shadow_map)
-
-            rgb_ws_gray = kornia.color.rgb_to_grayscale(rgb_ws)
-            rgb_ws = self.norm_op(rgb_ws)
-            rgb_ws_gray = self.norm_op(rgb_ws_gray)
-            rgb_ns = self.norm_op(rgb_ns)
-            shadow_matte = self.norm_op(shadow_matte)
-
-        except Exception as e:
-            print("Failed to load: ", self.img_list_a[idx], self.img_list_b[idx])
-            print("ERROR: ", e)
+        except:
+            print("Failed to load: ", self.img_list_a[idx])
             rgb_ws = None
             rgb_ns = None
-            rgb_ws_gray = None
-            shadow_matte = None
 
-        return file_name, rgb_ws, rgb_ns, shadow_matte
+        return file_name, rgb_ws
 
     def __len__(self):
         return self.img_length
@@ -234,7 +265,7 @@ class ShadowTestDataset(data.Dataset):
             transforms.ToPILImage()])
 
         self.final_transform_op = transforms.Compose([
-            transforms.Resize(constants.TEST_IMAGE_SIZE),
+            transforms.Resize(global_config.TEST_IMAGE_SIZE),
             transforms.ToTensor(),
             transforms.Normalize((0.5,), (0.5,))
         ])
@@ -272,7 +303,8 @@ class ShadowMatteDataset(data.Dataset):
 
         self.transform_op = transforms.Compose([
             transforms.ToPILImage(),
-            transforms.Resize(constants.TEST_IMAGE_SIZE),
+            transforms.Resize(global_config.TEST_IMAGE_SIZE),
+            # transforms.Resize((240, 320)),
             transforms.ToTensor()])
 
     def __getitem__(self, idx):

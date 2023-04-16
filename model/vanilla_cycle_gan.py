@@ -73,12 +73,13 @@ class ResidualBlock(nn.Module):
         return x + self.conv_block(x)
 
 class Generator(nn.Module):
-    def __init__(self, input_nc=3, output_nc=3, downsampling_blocks = 2, n_residual_blocks=6, has_dropout = True,
+    def __init__(self, input_nc=3, output_nc=3, downsampling_blocks = 2, n_residual_blocks=6, dropout_rate = 0.0,
                  use_cbam = False, norm = "batch"):
         super(Generator, self).__init__()
 
-        print("Set CycleGAN norm to: ", norm)
-        # Initial convolution block       
+        print("Set CycleGAN norm to: ", norm, "Dropout rate: ", dropout_rate)
+
+        # Initial convolution block
         model = [   nn.ReflectionPad2d(2),
                     nn.Conv2d(input_nc, 64, 8),
                     NormBlock(64, norm),
@@ -93,8 +94,7 @@ class Generator(nn.Module):
                         nn.ReLU(inplace=True)
                     ]
 
-            if(has_dropout):
-                model +=[nn.Dropout2d(p = 0.4)]
+            model +=[nn.Dropout2d(p = dropout_rate)]
             in_features = out_features
             out_features = clamp(in_features*2, 32768)
 
@@ -105,9 +105,6 @@ class Generator(nn.Module):
             else:
                 model += [ResidualBlock(in_features, norm)]
 
-        # self.encoding = nn.Sequential(*model)
-        # model = []
-
         # Upsampling
         out_features = in_features//2
         for _ in range(downsampling_blocks):
@@ -115,8 +112,7 @@ class Generator(nn.Module):
                         NormBlock(out_features, norm),
                         nn.ReLU(inplace=True)]
 
-            if (has_dropout):
-                model += [nn.Dropout2d(p=0.4)]
+            model += [nn.Dropout2d(p=dropout_rate)]
             in_features = out_features
             out_features = in_features//2
 
@@ -125,16 +121,12 @@ class Generator(nn.Module):
                     nn.Conv2d(64, output_nc, 8),
                     nn.Tanh() ]
 
-        # self.decoding = nn.Sequential(*model)
-        # self.model = nn.Sequential(*[self.encoding, self.decoding])
         self.model = nn.Sequential(*model)
-        self.model.apply(xavier_weights_init)
+        self.model.apply(dc_gan_weights_init)
 
     def forward(self, x):
         return self.model(x)
 
-    # def get_embedding(self, x):
-    #     return self.encoding(x)
 
 class SynthDehazingResidualBlock(nn.Module):
     def __init__(self, in_features):

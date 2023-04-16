@@ -19,7 +19,7 @@ from utils import pytorch_colors
 import matplotlib.pyplot as plt
 # from skimage.metrics import structural_similarity
 import torchvision.transforms as transforms
-import constants
+import global_config
 from torchvision.transforms import functional as transform_functional
 
 # for attaching hooks on pretrained models

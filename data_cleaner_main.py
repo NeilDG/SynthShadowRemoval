@@ -4,7 +4,7 @@ import numpy as np
 import kornia.color
 from tqdm import tqdm
 
-import constants
+import global_config
 from config import iid_server_config
 from loaders import dataset_loader
 import torch
@@ -30,10 +30,10 @@ def quantify_datasets(opts):
 
     dataset_version = opts.dataset_version_to_refine
 
-    constants.rgb_dir_ws = "E:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
-    constants.rgb_dir_ns = "E:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
-    rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=dataset_version)
-    rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=dataset_version)
+    global_config.rgb_dir_ws = "E:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
+    global_config.rgb_dir_ns = "E:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
+    rgb_dir_ws = global_config.rgb_dir_ws.format(dataset_version=dataset_version)
+    rgb_dir_ns = global_config.rgb_dir_ns.format(dataset_version=dataset_version)
 
     ws_istd = "E:/ISTD_Dataset/test/test_A/*.png"
     ns_istd = "E:/ISTD_Dataset/test/test_C/*.png"
@@ -114,10 +114,10 @@ def quantify_datasets(opts):
     print("SYNTH HSV range: ", synth_hsv_analyzer.get_min(), synth_hsv_analyzer.get_max())
 
 def prepare_clean(opts):
-    constants.rgb_dir_ws = "E:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
-    constants.rgb_dir_ns = "E:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
-    rgb_dir_ws = constants.rgb_dir_ws.format(dataset_version=opts.dataset_version_to_refine)
-    rgb_dir_ns = constants.rgb_dir_ns.format(dataset_version=opts.dataset_version_to_refine)
+    global_config.rgb_dir_ws = "E:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
+    global_config.rgb_dir_ns = "E:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
+    rgb_dir_ws = global_config.rgb_dir_ws.format(dataset_version=opts.dataset_version_to_refine)
+    rgb_dir_ns = global_config.rgb_dir_ns.format(dataset_version=opts.dataset_version_to_refine)
 
     ws_istd = "E:/ISTD_Dataset/test/test_A/*.png"
     ns_istd = "E:/ISTD_Dataset/test/test_C/*.png"
@@ -141,8 +141,8 @@ def main(argv):
     (opts, args) = parser.parse_args(argv)
     print(opts)
 
-    constants.shadow_removal_version = opts.shadow_removal_version
-    constants.shadow_matte_network_version = opts.shadow_matte_network_version
+    global_config.shadow_removal_version = opts.shadow_removal_version
+    global_config.shadow_matte_network_version = opts.shadow_matte_network_version
     iid_server_config.IIDServerConfig.initialize()
 
     # quantify_datasets(opts)

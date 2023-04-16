@@ -12,7 +12,7 @@ from loaders import dataset_loader
 from trainers import iid_trainer
 from trainers import early_stopper
 from utils import tensor_utils
-import constants
+import global_config
 from trainers import domain_adapt_trainer
 from trainers import domain_adapt_trainer_2
 

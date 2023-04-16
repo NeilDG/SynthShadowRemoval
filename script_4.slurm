@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J Z4
+#SBATCH -J SR_6
 #SBATCH --partition=gpu
 #SBATCH --qos=12c-1h_2gpu
 #SBATCH --cpus-per-task=6
@@ -20,8 +20,7 @@ module load cuda/10.1_cudnn-7.6.5
 source activate NeilGAN_V2
 
 srun python iid_train_v3.py \
---version="v50.01" --iteration=$ITERATION \
---server_config=1 --plot_enabled=0 --img_to_load=-1
-
+--shadow_matte_network_version="v60.29_istd" --shadow_removal_version="v60.17_places" --shadow_matte_iteration=$ITERATION --shadow_removal_iteration=$ITERATION \
+--server_config=1 --plot_enabled=0 --img_to_load=-1 --train_mode=train_shadow_matte
 
 conda deactivate

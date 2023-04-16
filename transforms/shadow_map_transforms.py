@@ -10,8 +10,6 @@ import torch.nn as nn
 import kornia
 import numpy as np
 import torchvision.transforms as transforms
-
-from config import iid_server_config
 from utils import tensor_utils
 
 
