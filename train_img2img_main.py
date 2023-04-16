@@ -51,6 +51,8 @@ def update_config(opts):
         global_config.num_workers = 12
         global_config.a_path = "/home/jupyter-neil.delgallego/"
         global_config.b_path = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
+        global_config.batch_size = network_config["batch_size"][1]
+        global_config.load_size = network_config["load_size"][1]
         print("Using CCS configuration. Workers: ", global_config.num_workers)
 
     elif(global_config.server_config == 2): #RTX 2080Ti
