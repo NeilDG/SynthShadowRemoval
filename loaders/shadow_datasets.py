@@ -303,8 +303,8 @@ class ShadowMatteDataset(data.Dataset):
 
         self.transform_op = transforms.Compose([
             transforms.ToPILImage(),
-            # transforms.Resize(global_config.TEST_IMAGE_SIZE),
-            transforms.Resize((240, 320)),
+            transforms.Resize(global_config.TEST_IMAGE_SIZE),
+            # transforms.Resize((240, 320)),
             transforms.ToTensor()])
 
     def __getitem__(self, idx):

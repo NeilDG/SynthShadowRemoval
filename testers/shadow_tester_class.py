@@ -266,7 +266,7 @@ class TesterClass():
 
             input_shape = np.shape(rgb2ns[0])
             transform_op = transforms.Compose([transforms.ToPILImage(), transforms.Resize((input_shape[1], input_shape[2])), transforms.ToTensor()])
-            mask_path = "E:/ISTD_Dataset/test/test_B/"
+            mask_path = "X:/ISTD_Dataset/test/test_B/"
 
             for i in range(0, np.size(file_name)):
                 impath = path + file_name[i] + ".png"
@@ -331,7 +331,7 @@ class TesterClass():
 
             input_shape = np.shape(rgb2ns[0])
             transform_op = transforms.Compose([transforms.ToPILImage(), transforms.Resize((input_shape[1], input_shape[2])), transforms.ToTensor()])
-            mask_path = "E:/SRD_Test/srd/mask/"
+            mask_path = "X:/SRD_Test/srd/mask/"
 
             for i in range(0, np.size(file_name)):
                 impath = path + file_name[i] + ".png"
