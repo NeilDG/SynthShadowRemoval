@@ -238,7 +238,7 @@ def main(argv):
     elif(opts.train_mode == "train_shadow"):
         test_shadow_removal(dataset_tester, opts)
     else:
-        test_shadow_matte(dataset_tester, opts)
+        # test_shadow_matte(dataset_tester, opts)
         test_shadow_removal(dataset_tester, opts)
 
 
