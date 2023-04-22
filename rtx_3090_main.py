@@ -32,14 +32,13 @@ def train_shadow_removal():
 
 def train_img2img():
     os.system("python \"train_img2img_main.py\" --server_config=3 --img_to_load=-1 "
-              "--plot_enabled=1 --save_per_iter=50 --network_version=\"synth2srd_v01.00\" --iteration=1")
+              "--plot_enabled=1 --save_per_iter=50 --network_version=\"synth2istd_v01.00\" --iteration=1")
 
 def main():
     # train_shadow_matte()
-    train_shadow_removal()
-    # train_img2img()
-
-    os.system("shutdown /s /t 1")
+    # train_shadow_removal()
+    train_img2img()
+    # os.system("shutdown /s /t 1")
 
 
 if __name__ == "__main__":

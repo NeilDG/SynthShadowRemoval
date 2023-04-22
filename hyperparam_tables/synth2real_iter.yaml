@@ -19,3 +19,9 @@ hyperparams:
     cycle_weight: 10.0
     adv_weight: 1.0
     is_bce: 1
+  5:
+    id_weight: 0.01
+    cycle_weight: 10.0
+    adv_weight: 1.0
+    is_bce: 1
+   
