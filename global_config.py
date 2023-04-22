@@ -84,5 +84,6 @@ last_epoch_ns = 0
 last_epoch_st = 0
 dataset_target = ""
 cuda_device = ""
+save_images = 0
 
 
