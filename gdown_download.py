@@ -37,10 +37,10 @@ def main(argv):
     # gdown.download(url, output=output_dir, use_cookies=False)
 
     #z03
-    direct_link = "https://drive.google.com/file/d/1lhswYavVqAfi6YjjKxldQRqPtNgit4LT/view?usp=share_link"
-    id = direct_link.split("/d/")[1].split("/")[0]
-    url = "https://drive.google.com/uc?id="+id
-    gdown.download(url, output=output_dir, use_cookies=False)
+    # direct_link = "https://drive.google.com/file/d/1lhswYavVqAfi6YjjKxldQRqPtNgit4LT/view?usp=share_link"
+    # id = direct_link.split("/d/")[1].split("/")[0]
+    # url = "https://drive.google.com/uc?id="+id
+    # gdown.download(url, output=output_dir, use_cookies=False)
 
     # #z04
     # direct_link = "https://drive.google.com/file/d/1lhuLrwcL_vbifCr5am7je11GLw7p2LUQ/view?usp=share_link"
@@ -60,12 +60,12 @@ def main(argv):
     # url = "https://drive.google.com/uc?id="+id
     # gdown.download(url, output=output_dir, use_cookies=False)
 
-    #
-    # # z07
-    # direct_link = "https://drive.google.com/file/d/16zOHdtkoYo0z5NzKbTgg7OCvz5eQo4rC/view?usp=share_link"
-    # id = direct_link.split("/d/")[1].split("/")[0]
-    # url = "https://drive.google.com/uc?id="+id
-    # gdown.download(url, output=output_dir, use_cookies=False)
+
+    # z07
+    direct_link = "https://drive.google.com/file/d/1lipMqaY7NfNevhq5uC_S06Rf4swUK5RX/view?usp=share_link"
+    id = direct_link.split("/d/")[1].split("/")[0]
+    url = "https://drive.google.com/uc?id="+id
+    gdown.download(url, output=output_dir, use_cookies=False)
 
 if __name__ == "__main__":
     main(sys.argv)

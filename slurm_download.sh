@@ -10,7 +10,7 @@
 
 #About this script:
 #Download of dataset
-SERVER_CONFIG=3
+SERVER_CONFIG=2
 
 module load anaconda/3-2021.11
 module load cuda/10.1_cudnn-7.6.5
@@ -40,7 +40,7 @@ else
   python "gdown_download.py" --server_config=$SERVER_CONFIG
 fi
 
-DATASET_NAME="v46_places"
+DATASET_NAME="SRD_Train"
 
 if [ $SERVER_CONFIG == 0 ]
 then

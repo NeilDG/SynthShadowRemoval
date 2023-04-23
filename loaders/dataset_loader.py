@@ -432,3 +432,22 @@ def load_test_img2img_dataset(a_path, b_path):
 
     return data_loader, img_length
 
+def load_singleimg_dataset(a_path):
+    a_list = glob.glob(a_path)
+
+    if (global_config.img_to_load > 0):
+        a_list = a_list[0: global_config.img_to_load]
+
+    random.shuffle(a_list)
+
+    img_length = len(a_list)
+    print("Length of images: %d" % (img_length))
+
+    data_loader = torch.utils.data.DataLoader(
+        image_datasets.SingleImageDataset(a_list, 1),
+        batch_size=global_config.test_size,
+        num_workers=4
+    )
+
+    return data_loader, img_length
+

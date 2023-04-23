@@ -170,8 +170,6 @@ def test_shadow_removal(dataset_tester, opts):
             dataset_tester.test_usr(file_name, rgb_ws_tensor, opts.img_vis_enabled, 1)
             # break
 
-        dataset_tester.print_ave_shadow_performance("SRD")
-
     # PLACES test dataset
     # shadow_loader = dataset_loader.load_single_test_dataset(constants.imgx_dir, opts)  # load PLACES
     # for i, (file_name, rgb_ws) in enumerate(shadow_loader, 0):
@@ -240,7 +238,7 @@ def main(argv):
     elif(opts.train_mode == "train_shadow"):
         test_shadow_removal(dataset_tester, opts)
     else:
-        test_shadow_matte(dataset_tester, opts)
+        # test_shadow_matte(dataset_tester, opts)
         test_shadow_removal(dataset_tester, opts)
 
 

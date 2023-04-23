@@ -5,18 +5,13 @@ import random
 import torch
 import torch.nn.parallel
 import torch.utils.data
-import torchvision.utils as vutils
 import numpy as np
-import matplotlib.pyplot as plt
-
 from config.network_config import ConfigHolder
 from loaders import dataset_loader
 import global_config
 from utils import plot_utils
-from trainers import img2imgtrainer
+from testers import img2img_tester
 from tqdm import tqdm
-from tqdm.auto import trange
-from time import sleep
 import yaml
 from yaml.loader import SafeLoader
 
@@ -25,9 +20,9 @@ parser.add_option('--server_config', type=int, help="Is running on COARE?", defa
 parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:0")
 parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
 parser.add_option('--network_version', type=str, default="vXX.XX")
+parser.add_option('--save_images', type=int, default=0)
 parser.add_option('--iteration', type=int, default=1)
 parser.add_option('--plot_enabled', type=int, default=1)
-parser.add_option('--save_per_iter', type=int, default=500)
 
 def update_config(opts):
     global_config.server_config = opts.server_config
@@ -36,18 +31,21 @@ def update_config(opts):
     global_config.cuda_device = opts.cuda_device
     global_config.style_transfer_version = opts.network_version
     global_config.st_iteration = opts.iteration
-    global_config.test_size = 8
+    global_config.test_size = 64
+    global_config.save_images = opts.save_images
 
     network_config = ConfigHolder.getInstance().get_network_config()
     dataset_a_version = network_config["dataset_a_version"]
     dataset_b_version = network_config["dataset_b_version"]
-    if(global_config.server_config == 0): #COARE
+    global_config.dataset_target = dataset_a_version
+
+    if (global_config.server_config == 0):  # COARE
         global_config.num_workers = 6
         global_config.disable_progress_bar = True
         global_config.path = "/scratch1/scratch2/neil.delgallego/SynthV3_Raw/{dataset_version}/sequence.0/"
         print("Using COARE configuration. Workers: ", global_config.num_workers)
 
-    elif(global_config.server_config == 1): #CCS Cloud
+    elif (global_config.server_config == 1):  # CCS Cloud
         global_config.num_workers = 12
         global_config.a_path = "/home/jupyter-neil.delgallego/"
         global_config.b_path = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
@@ -55,7 +53,7 @@ def update_config(opts):
         global_config.load_size = network_config["load_size"][1]
         print("Using CCS configuration. Workers: ", global_config.num_workers)
 
-    elif(global_config.server_config == 2): #RTX 2080Ti
+    elif (global_config.server_config == 2):  # RTX 2080Ti
         global_config.num_workers = 6
         global_config.a_path = "C:/Datasets/Places Dataset/*.jpg"
         global_config.b_path = "C:/Datasets/SynthV3_Raw/{dataset_version}/sequence.0/*.camera.png"
@@ -63,7 +61,7 @@ def update_config(opts):
         global_config.load_size = network_config["load_size"][2]
         print("Using RTX 2080Ti configuration. Workers: ", global_config.num_workers)
 
-    elif(global_config.server_config == 3): #RTX 3090 PC
+    elif (global_config.server_config == 3):  # RTX 3090 PC
         global_config.num_workers = 12
         global_config.a_path = "X:"
         global_config.b_path = "X:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
@@ -71,7 +69,7 @@ def update_config(opts):
         global_config.load_size = network_config["load_size"][0]
         print("Using RTX 3090 configuration. Workers: ", global_config.num_workers)
 
-    elif (global_config.server_config == 4): #RTX 2070 PC @RL208
+    elif (global_config.server_config == 4):  # RTX 2070 PC @RL208
         global_config.num_workers = 4
         global_config.batch_size = network_config["batch_size"][0]
         global_config.load_size = network_config["load_size"][0]
@@ -131,54 +129,77 @@ def main(argv):
 
     plot_utils.VisdomReporter.initialize()
 
-    train_loader, train_count = dataset_loader.load_train_img2img_dataset(a_path, b_path)
-    test_loader, test_count = dataset_loader.load_test_img2img_dataset(a_path, b_path)
-    img2img_t = img2imgtrainer.Img2ImgTrainer(device)
+    test_loader_a, test_count = dataset_loader.load_test_img2img_dataset(a_path, b_path)
 
-    iteration = 0
+    img2img_t = img2img_tester.Img2ImgTester(device)
     start_epoch = global_config.last_epoch_st
     print("---------------------------------------------------------------------------")
-    print("Started Training loop for mode: synth2real", " Set start epoch: ", start_epoch)
+    print("Started synth test loop for mode: synth2real", " Set start epoch: ", start_epoch)
     print("---------------------------------------------------------------------------")
 
     # compute total progress
-    load_size = global_config.load_size
-    needed_progress = int((network_config["max_epochs"]) * (train_count / load_size))
-    current_progress = int(start_epoch * (train_count / load_size))
+    steps = global_config.test_size
+    needed_progress = int(test_count / steps) + 1
+    current_progress = 0
     pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
     pbar.update(current_progress)
 
-    for epoch in range(start_epoch, network_config["max_epochs"]):
-        for i, (a_batch, b_batch) in enumerate(train_loader, 0):
-            a_batch = a_batch.to(device, non_blocking = True)
-            b_batch = b_batch.to(device, non_blocking = True)
-            input_map = {"img_a" : a_batch, "img_b" : b_batch}
-            img2img_t.train(epoch, iteration, input_map, input_map)
+    with torch.no_grad():
+        for i, (file_name, a_batch, b_batch) in enumerate(test_loader_a, 0):
+            a_batch = a_batch.to(device)
+            b_batch = b_batch.to(device)
 
-            iteration = iteration + 1
+            input_map = {"file_name": file_name, "img_a" : a_batch, "img_b" : b_batch}
+            img2img_t.measure_and_store(input_map)
             pbar.update(1)
 
-            if(img2img_t.is_stop_condition_met()):
+            if((i + 1) % 4 == 0):
                 break
 
-            if(iteration % opts.save_per_iter == 0):
-                img2img_t.save_states(epoch, iteration, True)
+        pbar.close()
 
-                if(global_config.plot_enabled == 1):
-                    img2img_t.visdom_plot(iteration)
-                    img2img_t.visdom_visualize(input_map, "Train")
+        _, a_test_batch, b_test_batch = next(iter(test_loader_a))
+        a_test_batch = a_test_batch.to(device)
+        b_test_batch = b_test_batch.to(device)
+        input_map = {"img_a": a_test_batch, "img_b": b_test_batch}
+        if (global_config.plot_enabled == 1):
+            img2img_t.visualize_results(input_map, "Synth2Real")
+        img2img_t.report_metrics("Synth2Real")
 
-                    a_test_batch, b_test_batch = next(iter(test_loader))
-                    a_test_batch = a_test_batch.to(device, non_blocking = True)
-                    b_test_batch = b_test_batch.to(device, non_blocking = True)
+    network_config = ConfigHolder.getInstance().get_network_config()
+    dataset_b_version = network_config["dataset_b_version"]
 
-                    input_map = {"img_a": a_test_batch, "img_b": b_test_batch}
-                    img2img_t.visdom_visualize(input_map, "Test")
+    rgb_noshadows_path = "X:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
+    rgb_withshadows_path = "X:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.png"
+    rgb_noshadows_path = rgb_noshadows_path.format(dataset_version=dataset_b_version)
+    rgb_withshadows_path = rgb_withshadows_path.format(dataset_version=dataset_b_version)
 
-        if(img2img_t.is_stop_condition_met()):
-            break
+    test_rgb_noshadows, test_count = dataset_loader.load_singleimg_dataset(rgb_noshadows_path)
+    test_rgb_withshadows, test_count = dataset_loader.load_singleimg_dataset(rgb_withshadows_path)
 
-    pbar.close()
+    #compute total progress
+    steps = global_config.test_size
+    needed_progress = int(test_count / steps) + 1
+    current_progress = 0
+    pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
+    pbar.update(current_progress)
+
+    with torch.no_grad():
+        for i, (noshadows_data, withshadows_data) in enumerate(zip(test_rgb_noshadows, test_rgb_withshadows)):
+            file_name, img_batch = noshadows_data
+            img_batch = img_batch.to(device, non_blocking = True)
+            input_map_a = {"file_name": file_name, "img_a": img_batch, "img_b": img_batch}
+
+            file_name, img_batch = withshadows_data
+            img_batch = img_batch.to(device, non_blocking = True)
+            input_map_b = {"file_name": file_name, "img_a": img_batch, "img_b": img_batch}
+
+            img2img_t.save_images(input_map_a, input_map_b)
+            pbar.set_description("Successfully saved images for batch")
+            pbar.update(1)
+
+        pbar.close()
+
 
 if __name__ == "__main__":
     main(sys.argv)

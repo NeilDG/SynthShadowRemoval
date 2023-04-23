@@ -284,7 +284,7 @@ class Img2ImgTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 checkpoint = torch.load(checkpt_name, map_location=self.gpu_device)
             except:
                 checkpoint = None
-                print("No existing checkpoint file found. Creating new depth network: ", self.NETWORK_CHECKPATH)
+                print("No existing checkpoint file found. Creating new img2img network: ", self.NETWORK_CHECKPATH)
 
         if(checkpoint != None):
             global_config.last_epoch_st = checkpoint["epoch"]

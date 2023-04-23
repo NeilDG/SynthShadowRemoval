@@ -123,7 +123,7 @@ unzip "v28_istd_fixed.zip" -d "/home/neil_delgallego/SynthWeather Dataset 10/v28
 rm -rf "/home/neil_delgallego/SynthWeather Dataset 10/v26_base"
 rm -rf "/home/neil_delgallego/SynthWeather Dataset 10/v26"
 
-mv "/home/neil_delgallego/SynthWeather Dataset 10/v28_istd/v28_istd/" "/home/neil_delgallego/SynthWeather Dataset 10/v28_istd"
+mv "SynthWeather Dataset 10/SRD_Train/" "SRD_Train"
 
 //GCLOUD
 screen -S "MODEL_TRAINER"
