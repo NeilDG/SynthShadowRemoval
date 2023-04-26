@@ -86,4 +86,6 @@ dataset_target = ""
 cuda_device = ""
 save_images = 0
 
+load_per_epoch = False
+
 

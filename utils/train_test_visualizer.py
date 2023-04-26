@@ -26,10 +26,25 @@ def main():
     with open(plot_loss_path) as f:
         losses_dict = yaml.load(f, SafeLoader)
 
-    add_plot(losses_dict, "train", "Train (synth) loss", 0)
-    add_plot(losses_dict, "test_istd", "Test (istd) loss", 1)
-    plt.legend(loc = 'lower right')
+    # add_plot(losses_dict, "train", "Train (synth) - BMNet loss", 0)
+    add_plot(losses_dict, "test_istd", "Test (istd) - BMNet loss", 1)
 
+    plot_loss_path = "X:/GithubProjects/SG-ShadowNet/reports/train_test_loss.yaml"
+    with open(plot_loss_path) as f:
+        losses_dict = yaml.load(f, SafeLoader)
+
+    # add_plot(losses_dict, "train", "Train (synth) - SG-ShadowNet loss", 2)
+    add_plot(losses_dict, "test_istd", "Test (istd) - SG-ShadowNet loss", 3)
+
+    plot_loss_path = "X:/GithubProjects/NeuralNets-Experiment3/reports/train_test_loss.yaml"
+    with open(plot_loss_path) as f:
+        losses_dict = yaml.load(f, SafeLoader)
+
+    # add_plot(losses_dict, "train", "Train (synth) - Ours loss", 4)
+    add_plot(losses_dict, "test_istd", "Test (istd) - Ours loss", 5)
+
+    plt.legend(loc = 'lower right', bbox_to_anchor=(1.04, 0.25))
+    plt.tight_layout()
     plt.show()
 
 

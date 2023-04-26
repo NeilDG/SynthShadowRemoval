@@ -17,6 +17,8 @@ from utils import plot_utils
 from trainers import shadow_matte_trainer, shadow_removal_trainer
 from tqdm import tqdm
 
+#Only used for saving per N epoch of checkpts
+
 parser = OptionParser()
 parser.add_option('--server_config', type=int, help="Is running on COARE?", default=0)
 parser.add_option('--cuda_device', type=str, help="CUDA Device?", default="cuda:0")
@@ -129,16 +131,18 @@ def train_shadow(device, opts):
     global_config.ns_iteration = opts.iteration
     global_config.test_size = 8
 
-    tf = shadow_removal_trainer.ShadowTrainer(device)
-
     mode = "train_shadow"
+    start_epoch = 24
     iteration = 0
-    start_epoch = global_config.last_epoch_ns
+    global_config.load_per_epoch = True
     print("---------------------------------------------------------------------------")
     print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
     print("Network config: ", network_config)
     print("General config: ", global_config.ns_network_version, global_config.ns_iteration, global_config.img_to_load, global_config.load_size, global_config.batch_size, global_config.train_mode, global_config.last_epoch_ns)
     print("---------------------------------------------------------------------------")
+
+    tf = shadow_removal_trainer.ShadowTrainer(device)
+    tf.load_specific_epoch(start_epoch)
 
     # assert dataset_version == "v17", "Cannot identify dataset version."
     dataset_version = network_config["dataset_version"]
@@ -174,7 +178,6 @@ def train_shadow(device, opts):
         losses_dict["test_istd"] = []
 
     print("Losses dict: ", losses_dict["train"])
-    iteration = 7500
 
     for epoch in range(start_epoch, network_config["max_epochs"]):
         for i, (train_data, test_data) in enumerate(zip(train_loader, itertools.cycle(test_loader_istd))):
@@ -200,24 +203,21 @@ def train_shadow(device, opts):
             if (tf.is_stop_condition_met()):
                 break
 
-            if (i % opts.save_per_iter == 0):
-                tf.save_states(epoch, iteration, True)
+            if (i % opts.save_per_iter == 0 and global_config.plot_enabled == 1):
+                tf.visdom_plot(iteration)
+                tf.visdom_visualize(input_map, "Train")
 
-                if (global_config.plot_enabled == 1):
-                    tf.visdom_plot(iteration)
-                    tf.visdom_visualize(input_map, "Train")
+                _, rgb_ws, rgb_ns, shadow_map, shadow_matte = next(itertools.cycle(test_loader_train))
+                rgb_ws = rgb_ws.to(device)
+                rgb_ns = rgb_ns.to(device)
+                shadow_map = shadow_map.to(device)
+                shadow_matte = shadow_matte.to(device)
 
-                    _, rgb_ws, rgb_ns, shadow_map, shadow_matte = next(itertools.cycle(test_loader_train))
-                    rgb_ws = rgb_ws.to(device)
-                    rgb_ns = rgb_ns.to(device)
-                    shadow_map = shadow_map.to(device)
-                    shadow_matte = shadow_matte.to(device)
+                input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns , "shadow_map": shadow_map, "shadow_matte": shadow_matte}
+                tf.visdom_visualize(input_map, "Test Synthetic")
 
-                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns , "shadow_map": shadow_map, "shadow_matte": shadow_matte}
-                    tf.visdom_visualize(input_map, "Test Synthetic")
-
-                    input_map = {"rgb": rgb_ws_istd, "rgb_ns": rgb_ns_istd, "shadow_matte" : matte_istd}
-                    tf.visdom_visualize(input_map, "Test ISTD")
+                input_map = {"rgb": rgb_ws_istd, "rgb_ns": rgb_ns_istd, "shadow_matte" : matte_istd}
+                tf.visdom_visualize(input_map, "Test ISTD")
 
             if(global_config.plot_enabled == 1 and iteration % opts.save_per_iter == 0):
                 rgb2ns_like = tf.test(input_map)
@@ -234,7 +234,7 @@ def train_shadow(device, opts):
                 plot_loss_file.close()
                 print("Dumped train test loss to ", plot_loss_path)
 
-
+        tf.save_for_each_epoch(epoch, iteration)
         if (tf.is_stop_condition_met()):
             break
 
