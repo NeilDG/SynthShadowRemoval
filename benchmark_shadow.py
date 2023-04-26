@@ -386,15 +386,15 @@ def main(argv):
     "./comparison/ISTD Dataset/OURS/*.png"
     ]
 
-    ns_path = "E:/ISTD_Dataset/test/test_C/*.png"
-    mask_path = "E:/ISTD_Dataset/test/test_B/*.png"
+    ns_path = "X:/ISTD_Dataset/test/test_C/*.png"
+    mask_path = "X:/ISTD_Dataset/test/test_B/*.png"
 
     measure_performance(istd_all_list, ns_path, mask_path)
     # save_img_copies_for_results(istd_all_list, ns_path, "ISTD Dataset", (240, 320), opts)
 
     # for SRD
-    ns_path = "E:/SRD_Test/srd/shadow_free/*.jpg"
-    mask_path = "E:/SRD_Test/srd/mask/*.jpg"
+    ns_path = "X:/SRD_Test/srd/shadow_free/*.jpg"
+    mask_path = "X:/SRD_Test/srd/mask/*.jpg"
 
     srd_all_list = [
     # "E:/SRD_Test/srd/shadow/*.jpg",
@@ -410,7 +410,7 @@ def main(argv):
     ]
 
     measure_performance(srd_all_list, ns_path, mask_path)
-    save_img_copies_for_results(sbu_all_list, ns_path, "SRD Dataset", (160, 210), opts)
+    # save_img_copies_for_results(srd_all_list, ns_path, "SRD Dataset", (160, 210), opts)
 
 
 

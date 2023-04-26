@@ -132,7 +132,7 @@ def train_shadow(device, opts):
     global_config.test_size = 8
 
     mode = "train_shadow"
-    start_epoch = 24
+    start_epoch = 0
     iteration = 0
     global_config.load_per_epoch = True
     print("---------------------------------------------------------------------------")
@@ -234,7 +234,7 @@ def train_shadow(device, opts):
                 plot_loss_file.close()
                 print("Dumped train test loss to ", plot_loss_path)
 
-        tf.save_for_each_epoch(epoch, iteration)
+        tf.save_for_each_epoch(epoch + 1, iteration)
         if (tf.is_stop_condition_met()):
             break
 
