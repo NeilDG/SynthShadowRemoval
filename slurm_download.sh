@@ -10,7 +10,7 @@
 
 #About this script:
 #Download of dataset
-SERVER_CONFIG=2
+SERVER_CONFIG=1
 
 module load anaconda/3-2021.11
 module load cuda/10.1_cudnn-7.6.5
