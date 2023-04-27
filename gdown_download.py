@@ -18,6 +18,18 @@ def main(argv):
     else:
         output_dir = "/home/jupyter-neil.delgallego/SynthWeather Dataset 10/"
 
+    # z00
+    direct_link = "https://drive.google.com/file/d/1lle91xoeAzKMOMqLfc9fJ2Hm4nLUakbU/view?usp=sharing"
+    id = direct_link.split("/d/")[1].split("/")[0]
+    url = "https://drive.google.com/uc?id=" + id
+    gdown.download(url, output=output_dir, use_cookies=False)
+
+    # z01
+    direct_link = "https://drive.google.com/file/d/1llUOPHG2XTAh3XktEAAhDxR0fv1Bi1Gw/view?usp=sharing"
+    id = direct_link.split("/d/")[1].split("/")[0]
+    url = "https://drive.google.com/uc?id=" + id
+    gdown.download(url, output=output_dir, use_cookies=False)
+
     #z00
     direct_link = "https://drive.google.com/file/d/1ln8CHsnQc72hdJgD9cX-j2m4jRjtXFF9/view?usp=sharing"
     id = direct_link.split("/d/")[1].split("/")[0]
