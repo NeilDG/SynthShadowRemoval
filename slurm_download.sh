@@ -30,7 +30,7 @@ source activate NeilGAN_V2
 #pip install --upgrade --no-cache-dir gdown
 #pip install PyYAML
 
-if [ $SERVER_CONFIG == 1 ]
+if [ $SERVER_CONFIG == 0 ]
 then
   srun python "gdown_download.py" --server_config=$SERVER_CONFIG
 elif [ $SERVER_CONFIG == 3 ]
