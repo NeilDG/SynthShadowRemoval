@@ -4,8 +4,11 @@ import multiprocessing
 import time
 
 def train_proper(gpu_device):
-    os.system("python \"train_img2img_main.py\" --server_config=1 --cuda_device=" +gpu_device+ " --img_to_load=-1 "
-              "--plot_enabled=0 --save_per_iter=250 --network_version=\"synth2istd_v01.00\" --iteration=5")
+    # os.system("python \"train_img2img_main.py\" --server_config=1 --cuda_device=" +gpu_device+ " --img_to_load=-1 "
+    #           "--plot_enabled=0 --save_per_iter=250 --network_version=\"synth2istd_v01.00\" --iteration=5")
+
+    os.system("python \"shadow_train_main.py\" --server_config=1 --cuda_device=" +gpu_device+ " --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
+              "--plot_enabled=1 --save_per_iter=50 --network_version=\"rgb2sm_v61.15_istd\" --iteration=1")
 
 def main():
     EXECUTION_TIME_IN_HOURS = 48

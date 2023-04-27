@@ -40,7 +40,7 @@ else
   python "gdown_download.py" --server_config=$SERVER_CONFIG
 fi
 
-DATASET_NAME="SRD_Train"
+DATASET_NAME="v53_istd"
 
 if [ $SERVER_CONFIG == 0 ]
 then
@@ -62,7 +62,7 @@ unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
 mv "$OUTPUT_DIR/$DATASET_NAME+fixed" "$OUTPUT_DIR/$DATASET_NAME"
 rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 
-#if [ $SERVER_CONFIG == 2 ]
-#then
-#  python "ccs1_main.py"
-#fi
+if [ $SERVER_CONFIG == 1 ]
+then
+  python "ccs1_main.py"
+fi

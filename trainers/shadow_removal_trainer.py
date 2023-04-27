@@ -278,7 +278,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         network_file_name = self.NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_" + str(epoch) + ".pth"
         torch.save(save_dict, network_file_name)
-        print("Saved stable model state: %s Epoch: %d. Name: %s" % (len(save_dict), (epoch + 1), network_file_name))
+        print("Saved stable model state: %s Epoch: %d. Name: %s" % (len(save_dict), (epoch), network_file_name))
 
     def load_specific_epoch(self, epoch):
         network_file_name = self.NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_" + str(epoch) + ".pth"
