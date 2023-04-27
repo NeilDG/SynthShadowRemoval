@@ -261,7 +261,7 @@ class TesterClass():
         mae = nn.L1Loss()
         mse = nn.MSELoss()
         if(save_image_results == 1):
-            path = "./comparison/ISTD Dataset/OURS/"
+            path = "./comparison/ISTD/OURS/"
             matte_path = path + "/matte-like/"
 
             input_shape = np.shape(rgb2ns[0])
@@ -326,7 +326,7 @@ class TesterClass():
         mse = nn.MSELoss()
 
         if(save_image_results == 1):
-            path = "./comparison/SRD Dataset/OURS/"
+            path = "./comparison/SRD/OURS/"
             matte_path = path + "/matte-like/"
 
             input_shape = np.shape(rgb2ns[0])

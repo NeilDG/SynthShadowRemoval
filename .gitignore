@@ -133,6 +133,7 @@ checkpoint/*.pt
 checkpoint/*.pt.checkpt
 checkpoint/*.pth.checkpt
 checkpoint/*.pth
+checkpoint/by_epoch/
 iiw_temp/
 comparison/
 reports/

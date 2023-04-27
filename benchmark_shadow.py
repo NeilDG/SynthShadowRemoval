@@ -108,7 +108,7 @@ class ShadowSRDDataset(data.Dataset):
 
 def measure_performance(path_list, ns_path, mask_path):
     for ns_like_path in path_list:
-        model_name = ns_like_path.split("/")[-2]
+        model_name = ns_like_path.split("/")[2]
         ns_like_list = dataset_loader.assemble_img_list(ns_like_path)
         ns_list = dataset_loader.assemble_img_list(ns_path)
         mask_list = dataset_loader.assemble_img_list(mask_path)
@@ -383,13 +383,16 @@ def main(argv):
     # "./comparison/ISTD Dataset/SynShadow-SP+M/*.png",
     # "./comparison/ISTD Dataset/SynShadow-DHAN/*.png",
     # "./comparison/ISTD Dataset/BMNET_Synth/*.png",
-    "./comparison/ISTD Dataset/OURS/*.png"
+    # "./comparison/ISTD Dataset/OURS/*.png",
+    "X:/GithubProjects/BMNet/reports/30th/ISTD/*.png",
+    "X:/GithubProjects/SG-ShadowNet/reports/30th/ISTD/*.png",
+    "./comparison/30th/ISTD/OURS/*.png",
     ]
 
     ns_path = "X:/ISTD_Dataset/test/test_C/*.png"
     mask_path = "X:/ISTD_Dataset/test/test_B/*.png"
 
-    measure_performance(istd_all_list, ns_path, mask_path)
+    # measure_performance(istd_all_list, ns_path, mask_path)
     # save_img_copies_for_results(istd_all_list, ns_path, "ISTD Dataset", (240, 320), opts)
 
     # for SRD
@@ -406,7 +409,10 @@ def main(argv):
     # "./comparison/SRD Dataset/SynShadow-SP+M/*.png",
     # "./comparison/SRD Dataset/SynShadow-DHAN/*.png",
     # "./comparison/SRD Dataset/BMNET_Synth/*.png",
-    "./comparison/SRD Dataset/OURS/*.png"
+    # "./comparison/SRD Dataset/OURS/*.png"
+    "X:/GithubProjects/BMNet/reports/30th/SRD/*.png",
+    "X:/GithubProjects/SG-ShadowNet/reports/30th/SRD/*.png",
+    "./comparison/30th/SRD/OURS/*.png",
     ]
 
     measure_performance(srd_all_list, ns_path, mask_path)
