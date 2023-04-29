@@ -72,9 +72,9 @@ class TesterClass():
 
         if (save_image_results == 1):
             if(prefix == "ISTD"):
-                path = "./comparison/ISTD Dataset/OURS/"
+                path = "./comparison/ISTD/OURS/"
             elif(prefix == "SRD"):
-                path = "./comparison/SRD Dataset/OURS/"
+                path = "./comparison/SRD/OURS/"
             else:
                 path = "./comparison/USR Dataset/OURS/"
 

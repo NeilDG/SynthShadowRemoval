@@ -18,7 +18,7 @@ max_epochs: 65
 
 dataset_version: "v46_places"
 dataset_repeats: 1
-mix_istd: 0.0
+mix_istd: 0.25
 
 
 
