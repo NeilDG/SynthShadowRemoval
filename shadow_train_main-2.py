@@ -132,8 +132,8 @@ def train_shadow(device, opts):
     global_config.test_size = 8
 
     mode = "train_shadow"
-    start_epoch = 56
-    iteration = 0
+    start_epoch = 30
+    iteration = 36000
     global_config.load_per_epoch = True
     print("---------------------------------------------------------------------------")
     print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
@@ -179,7 +179,7 @@ def train_shadow(device, opts):
 
     print("Losses dict: ", losses_dict["train"])
 
-    for epoch in range(start_epoch, network_config["max_epochs"]):
+    for epoch in range(start_epoch, network_config["max_epochs"] + 1):
         for i, (train_data, test_data) in enumerate(zip(train_loader, itertools.cycle(test_loader_istd))):
             _, rgb_ws, rgb_ns, shadow_map, shadow_matte = train_data
             rgb_ws = rgb_ws.to(device)
@@ -204,7 +204,7 @@ def train_shadow(device, opts):
                 break
 
             if (i % opts.save_per_iter == 0 and global_config.plot_enabled == 1):
-                tf.visdom_plot(iteration)
+                # tf.visdom_plot(iteration)
                 tf.visdom_visualize(input_map, "Train")
 
                 _, rgb_ws, rgb_ns, shadow_map, shadow_matte = next(itertools.cycle(test_loader_train))
@@ -234,8 +234,8 @@ def train_shadow(device, opts):
                 plot_loss_file.close()
                 print("Dumped train test loss to ", plot_loss_path)
 
-        if(epoch % 4 == 0):
-            tf.save_for_each_epoch(epoch + 1, iteration)
+        if(epoch % 5 == 0):
+            tf.save_for_each_epoch(epoch, iteration)
 
         if (tf.is_stop_condition_met()):
             break
