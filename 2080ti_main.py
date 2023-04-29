@@ -15,8 +15,8 @@ def train_domain_adaptation():
 
 
 def main():
-    train_shadow_matte()
-    # train_shadow_removal()
+    # train_shadow_matte()
+    train_shadow_removal()
     # train_domain_adaptation()
     # os.system("shutdown /s /t 1")
 
