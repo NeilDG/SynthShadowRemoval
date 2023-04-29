@@ -17,8 +17,8 @@ norm_mode: "batch"
 
 g_lr: 0.0002
 d_lr: 0.0005
-min_epochs: 25
-max_epochs: 30
+min_epochs: 40
+max_epochs: 45
 
 dataset_a_version: "srd"
 dataset_a_repeats: 78

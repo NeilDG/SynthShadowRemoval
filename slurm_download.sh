@@ -10,7 +10,7 @@
 
 #About this script:
 #Download of dataset
-SERVER_CONFIG=1
+SERVER_CONFIG=$1
 
 module load anaconda/3-2021.11
 module load cuda/10.1_cudnn-7.6.5
@@ -30,15 +30,15 @@ source activate NeilGAN_V2
 #pip install --upgrade --no-cache-dir gdown
 #pip install PyYAML
 
-#if [ $SERVER_CONFIG == 0 ]
-#then
-#  srun python "gdown_download.py" --server_config=$SERVER_CONFIG
-#elif [ $SERVER_CONFIG == 3 ]
-#then
-#  python3 "gdown_download.py" --server_config=$SERVER_CONFIG
-#else
-#  python "gdown_download.py" --server_config=$SERVER_CONFIG
-#fi
+if [ $SERVER_CONFIG == 0 ]
+then
+  srun python "gdown_download.py" --server_config=$SERVER_CONFIG
+elif [ $SERVER_CONFIG == 5 ]
+then
+  python3 "gdown_download.py" --server_config=$SERVER_CONFIG
+else
+  python "gdown_download.py" --server_config=$SERVER_CONFIG
+fi
 
 
 if [ $SERVER_CONFIG == 0 ]
@@ -47,12 +47,19 @@ then
 elif [ $SERVER_CONFIG == 4 ]
 then
   OUTPUT_DIR="D:/NeilDG/Datasets/SynthWeather Dataset 10/"
-elif [ $SERVER_CONFIG == 3 ]
+elif [ $SERVER_CONFIG == 5 ]
 then
   OUTPUT_DIR="/home/neildelgallego/SynthWeather Dataset 10/"
 else
   OUTPUT_DIR="/home/jupyter-neil.delgallego/SynthWeather Dataset 10/"
 fi
+
+DATASET_NAME="v53_istd"
+echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
+unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
+mv "$OUTPUT_DIR/$DATASET_NAME+fixed" "$OUTPUT_DIR/$DATASET_NAME"
+rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 
 DATASET_NAME="v54_istd"
 echo "$OUTPUT_DIR/$DATASET_NAME.zip"
@@ -75,7 +82,10 @@ unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
 mv "$OUTPUT_DIR/$DATASET_NAME+fixed" "$OUTPUT_DIR/$DATASET_NAME"
 rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 
-#if [ $SERVER_CONFIG == 1 ]
-#then
-#  python "ccs1_main.py"
-#fi
+if [ $SERVER_CONFIG == 1 ]
+then
+  python "ccs1_main.py"
+elif [ $SERVER_CONFIG == 5 ]
+then
+  python3 "titan2_main.py"
+fi

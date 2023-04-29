@@ -41,17 +41,17 @@ def test_shadow():
 
 
 def test_img2img():
-    # os.system("python \"test_img2img_main.py\" --server_config=3 --img_to_load=-1 "
-    #           "--plot_enabled=0 --save_images=1 --network_version=\"synth2istd_v01.00\" "
-    #           "--iteration=4")
-    #
     os.system("python \"test_img2img_main.py\" --server_config=3 --img_to_load=-1 "
-              "--plot_enabled=0 --save_images=1 --network_version=\"synth2srd_v01.00\" "
-              "--iteration=4")
+              "--plot_enabled=1 --save_images=0 --network_version=\"synth2istd_v01.00\" "
+              "--iteration=5")
+
+    # os.system("python \"test_img2img_main.py\" --server_config=3 --img_to_load=-1 "
+    #           "--plot_enabled=0 --save_images=1 --network_version=\"synth2srd_v01.00\" "
+    #           "--iteration=4")
 
 def main():
-    test_shadow()
-    # test_img2img()
+    # test_shadow()
+    test_img2img()
 
 
 if __name__ == "__main__":
