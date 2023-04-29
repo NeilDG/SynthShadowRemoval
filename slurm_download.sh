@@ -54,35 +54,35 @@ else
   OUTPUT_DIR="/home/jupyter-neil.delgallego/SynthWeather Dataset 10/"
 fi
 
-DATASET_NAME="v46_places"
+#DATASET_NAME="v46_places"
+#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+#zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
+#unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
+#rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
+
+DATASET_NAME="v53_istd"
 echo "$OUTPUT_DIR/$DATASET_NAME.zip"
 zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
 rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 
-#DATASET_NAME="v53_istd"
-#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
-#zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
-#unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
-#rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
-#
-#DATASET_NAME="v54_istd"
-#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
-#zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
-#unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
-#rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
-#
-#DATASET_NAME="v55_istd"
-#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
-#zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
-#unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
-#rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
-#
-#DATASET_NAME="v56_istd"
-#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
-#zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
-#unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
-#rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
+DATASET_NAME="v54_istd"
+echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
+unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
+rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
+
+DATASET_NAME="v55_istd"
+echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
+unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
+rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
+
+DATASET_NAME="v56_istd"
+echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
+unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
+rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 
 if [ $SERVER_CONFIG == 1 ]
 then
