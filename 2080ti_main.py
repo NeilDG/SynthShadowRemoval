@@ -7,10 +7,10 @@ def train_shadow_matte():
 
 def train_shadow_removal():
     os.system("python \"shadow_train_main.py\" --server_config=3 --img_to_load=-1 --train_mode=\"train_shadow\" "
-              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.15_places\" --iteration=1")
+              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.17_places\" --iteration=1")
 
     os.system("python \"shadow_train_main.py\" --server_config=3 --img_to_load=-1 --train_mode=\"train_shadow\" "
-              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.16_places\" --iteration=1")
+              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.18_places\" --iteration=1")
 
 def train_domain_adaptation():
     os.system("python \"cyclegan_main.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
