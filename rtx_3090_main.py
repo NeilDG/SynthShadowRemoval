@@ -11,8 +11,8 @@ def train_shadow_matte():
     #           "--plot_enabled=1 --save_per_iter=50 --network_version=\"rgb2sm_v61.08\" --iteration=1")
 
 def train_shadow_removal():
-    os.system("python \"shadow_train_main-2.py\" --server_config=5 --img_to_load=10000 --train_mode=\"train_shadow\" "
-              "--plot_enabled=1 --save_per_iter=500 --network_version=\"rgb2ns_v61.14_places\" --iteration=1")
+    # os.system("python \"shadow_train_main-2.py\" --server_config=5 --img_to_load=10000 --train_mode=\"train_shadow\" "
+    #           "--plot_enabled=1 --save_per_iter=500 --network_version=\"rgb2ns_v61.14_places\" --iteration=1")
 
     os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow\" "
               "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.12_places\" --iteration=1")
@@ -33,7 +33,7 @@ def main():
     train_shadow_matte()
 
     # train_img2img()
-    # os.system("shutdown /s /t 1")
+    os.system("shutdown /s /t 1")
 
 
 if __name__ == "__main__":

@@ -163,18 +163,18 @@ def train_shadow(device, opts):
     pbar.update(current_progress)
 
     # plot utils
-    plot_loss_path = "./reports/train_test_loss.yaml"
-    l1_loss = nn.L1Loss()
-    if (os.path.exists(plot_loss_path)):
-        with open(plot_loss_path) as f:
-            losses_dict = yaml.load(f, SafeLoader)
-    else:
-        losses_dict = {}
-        losses_dict["train"] = []
-        losses_dict["test_istd"] = []
-
-    print("Losses dict: ", losses_dict["train"])
-    iteration = 7500
+    # plot_loss_path = "./reports/train_test_loss.yaml"
+    # l1_loss = nn.L1Loss()
+    # if (os.path.exists(plot_loss_path)):
+    #     with open(plot_loss_path) as f:
+    #         losses_dict = yaml.load(f, SafeLoader)
+    # else:
+    #     losses_dict = {}
+    #     losses_dict["train"] = []
+    #     losses_dict["test_istd"] = []
+    #
+    # print("Losses dict: ", losses_dict["train"])
+    # iteration = 7500
 
     for epoch in range(start_epoch, network_config["max_epochs"]):
         for i, (train_data, test_data) in enumerate(zip(train_loader, itertools.cycle(test_loader_istd))):
@@ -219,20 +219,20 @@ def train_shadow(device, opts):
                     input_map = {"rgb": rgb_ws_istd, "rgb_ns": rgb_ns_istd, "shadow_matte" : matte_istd}
                     tf.visdom_visualize(input_map, "Test ISTD")
 
-            if(global_config.plot_enabled == 1 and iteration % opts.save_per_iter == 0):
-                rgb2ns_like = tf.test(input_map)
-                train_loss = float(np.round(l1_loss(rgb2ns_like, rgb_ns).item(), 4))
-                losses_dict["train"].append({iteration : train_loss})
-
-                input_map = {"rgb": rgb_ws_istd, "rgb_ns": rgb_ns_istd, "shadow_matte" : matte_istd}
-                rgb2ns_like = tf.test(input_map)
-                test_loss = float(np.round(l1_loss(rgb2ns_like, rgb_ns_istd).item(), 4))
-                losses_dict["test_istd"].append({iteration: test_loss})
-
-                plot_loss_file = open(plot_loss_path, "w")
-                yaml.dump(losses_dict, plot_loss_file)
-                plot_loss_file.close()
-                print("Dumped train test loss to ", plot_loss_path)
+            # if(global_config.plot_enabled == 1 and iteration % opts.save_per_iter == 0):
+            #     rgb2ns_like = tf.test(input_map)
+            #     train_loss = float(np.round(l1_loss(rgb2ns_like, rgb_ns).item(), 4))
+            #     losses_dict["train"].append({iteration : train_loss})
+            #
+            #     input_map = {"rgb": rgb_ws_istd, "rgb_ns": rgb_ns_istd, "shadow_matte" : matte_istd}
+            #     rgb2ns_like = tf.test(input_map)
+            #     test_loss = float(np.round(l1_loss(rgb2ns_like, rgb_ns_istd).item(), 4))
+            #     losses_dict["test_istd"].append({iteration: test_loss})
+            #
+            #     plot_loss_file = open(plot_loss_path, "w")
+            #     yaml.dump(losses_dict, plot_loss_file)
+            #     plot_loss_file.close()
+            #     print("Dumped train test loss to ", plot_loss_path)
 
 
         if (tf.is_stop_condition_met()):
