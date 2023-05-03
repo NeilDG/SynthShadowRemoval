@@ -7,10 +7,19 @@ def train_shadow_matte():
 
 def train_shadow_removal():
     os.system("python \"shadow_train_main.py\" --server_config=3 --img_to_load=-1 --train_mode=\"train_shadow\" "
-              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.19_places\" --iteration=1")
+              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.21_places\" --iteration=1")
 
     os.system("python \"shadow_train_main.py\" --server_config=3 --img_to_load=-1 --train_mode=\"train_shadow\" "
-              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.20_places\" --iteration=1")
+              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.22_places\" --iteration=1")
+
+    os.system("python \"shadow_train_main.py\" --server_config=3 --img_to_load=-1 --train_mode=\"train_shadow\" "
+              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.23_places\" --iteration=1")
+
+    os.system("python \"shadow_train_main.py\" --server_config=3 --img_to_load=-1 --train_mode=\"train_shadow\" "
+              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.24_places\" --iteration=1")
+
+    os.system("python \"shadow_train_main.py\" --server_config=3 --img_to_load=-1 --train_mode=\"train_shadow\" "
+              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.25_places\" --iteration=1")
 
 def train_domain_adaptation():
     os.system("python \"cyclegan_main.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
