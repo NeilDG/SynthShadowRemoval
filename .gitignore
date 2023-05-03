@@ -134,6 +134,7 @@ checkpoint/*.pt.checkpt
 checkpoint/*.pth.checkpt
 checkpoint/*.pth
 checkpoint/by_epoch/
+checkpoint/by_sample/
 iiw_temp/
 comparison/
 reports/

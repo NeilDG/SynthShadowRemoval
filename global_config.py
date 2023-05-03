@@ -87,5 +87,6 @@ cuda_device = ""
 save_images = 0
 
 load_per_epoch = False
+load_per_sample = False
 
 
