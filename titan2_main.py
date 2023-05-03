@@ -11,10 +11,10 @@ def train_shadow_removal():
 
 def train_img2img():
     os.system("python3 \"train_img2img_main.py\" --server_config=5 --img_to_load=-1 "
-              "--plot_enabled=1 --save_per_iter=250 --network_version=\"synth2istd_v01.00\" --iteration=5")
+              "--plot_enabled=1 --save_per_iter=250 --network_version=\"synth2srd_v01.00\" --iteration=5")
 
     os.system("python3 \"train_img2img_main.py\" --server_config=5 --img_to_load=-1 "
-              "--plot_enabled=1 --save_per_iter=250 --network_version=\"synth2srd_v01.00\" --iteration=5")
+              "--plot_enabled=1 --save_per_iter=250 --network_version=\"synth2istd_v01.00\" --iteration=5")
 
 
 def main():
