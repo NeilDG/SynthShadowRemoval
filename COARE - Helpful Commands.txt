@@ -3,13 +3,13 @@
 clear
 
 //For directories
-cd scratch2/NeuralNets-GenerativeExperiment-V60.XX.XX
-cd scratch2/NeuralNets-GenerativeExperiment-V60.XX.XX-2
-cd scratch2/Visdom
-unzip "scratch2/SynthWeather Dataset 10.zip"
+cd scratch3/NeuralNets-GenerativeExperiment-V60.XX.XX
+cd scratch3/NeuralNets-GenerativeExperiment-V60.XX.XX-2
+cd scratch3/Visdom
+unzip "scratch3/SynthWeather Dataset 10.zip"
 
-git clone -b "workspace/V61.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "NeuralNets-GenerativeExperiment-V60.XX.XX"
-git clone -b "workspace/V60.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "NeuralNets-GenerativeExperiment-V60.XX.XX-2"
+git clone -b "workspace/V61.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "scratch3/NeuralNets-GenerativeExperiment-V60.XX.XX"
+git clone -b "workspace/V60.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "scratch3/NeuralNets-GenerativeExperiment-V60.XX.XX-2"
 rm -rf "/scratch1/scratch2/neil.delgallego/NeuralNets-GenerativeExperiment-V60.XX.XX"
 rm -rf "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
 
@@ -33,7 +33,7 @@ sbatch --dependency=afterany:338540 script_2.slurm
 
 
 sbatch script_debug.slurm
-sbatch slurm_download.sh
+sbatch slurm_download.sh 0
 sbatch script_1.slurm
 sbatch script_2.slurm
 sbatch script_3.slurm
