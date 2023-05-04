@@ -46,14 +46,14 @@ def update_config(opts):
         global_config.batch_size = network_config["batch_size"][0]
 
         print("Using COARE configuration. Workers: ", global_config.num_workers)
-        global_config.DATASET_PLACES_PATH = "/scratch1/scratch3/neil.delgallego/Places Dataset/*.jpg"
-        global_config.rgb_dir_ws = "/scratch1/scratch3/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
-        global_config.rgb_dir_ns = "/scratch1/scratch3/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
-        global_config.ws_istd = "/scratch1/scratch3/neil.delgallego/ISTD_Dataset/test/test_A/*.png"
-        global_config.ns_istd = "/scratch1/scratch3/neil.delgallego/ISTD_Dataset/test/test_C/*.png"
-        global_config.mask_istd = "/scratch1/scratch3/neil.delgallego/ISTD_Dataset/test/test_B/*.png"
-        global_config.ws_srd = "/scratch1/scratch3/neil.delgallego/SRD_Test/srd/shadow/*.jpg"
-        global_config.ns_srd = "/scratch1/scratch3/neil.delgallego/SRD_Test/srd/shadow_free/*.jpg"
+        global_config.DATASET_PLACES_PATH = "/scratch3/neil.delgallego/Places Dataset/*.jpg"
+        global_config.rgb_dir_ws = "/scratch3/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        global_config.rgb_dir_ns = "/scratch3/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
+        global_config.ws_istd = "/scratch3/neil.delgallego/ISTD_Dataset/test/test_A/*.png"
+        global_config.ns_istd = "/scratch3/neil.delgallego/ISTD_Dataset/test/test_C/*.png"
+        global_config.mask_istd = "/scratch3/neil.delgallego/ISTD_Dataset/test/test_B/*.png"
+        global_config.ws_srd = "/scratch3/neil.delgallego/SRD_Test/srd/shadow/*.jpg"
+        global_config.ns_srd = "/scratch3/neil.delgallego/SRD_Test/srd/shadow_free/*.jpg"
 
     # CCS JUPYTER
     elif (global_config.server_config == 1):
