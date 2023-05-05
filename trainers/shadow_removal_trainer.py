@@ -325,6 +325,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         if (checkpoint != None):
             global_config.last_epoch_ns = checkpoint["epoch"]
+            global_config.last_iteration_ns = checkpoint["iteration"]
             self.stopper_method.update_last_metric(checkpoint[global_config.LAST_METRIC_KEY])
             self.G_SM_predictor.load_state_dict(checkpoint[global_config.GENERATOR_KEY + "Z"])
             self.D_SM_discriminator.load_state_dict(checkpoint[global_config.DISCRIMINATOR_KEY + "Z"])

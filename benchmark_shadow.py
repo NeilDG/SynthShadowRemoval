@@ -306,7 +306,7 @@ def save_img_copies_for_results(results_list, ns_path, dataset_name, target_size
 
     results_list.append(ns_path)
     for img_dir in results_list:
-        img_list = dataset_loader.assemble_img_list(img_dir, opts)
+        img_list = dataset_loader.assemble_img_list(img_dir)
         img_dir_split = img_dir.split("/")
 
         folder_dir = BASE_SAVE_PATH + dataset_name + "/" + img_dir_split[3] + "/"
@@ -383,39 +383,41 @@ def main(argv):
     # "./comparison/ISTD Dataset/SynShadow-SP+M/*.png",
     # "./comparison/ISTD Dataset/SynShadow-DHAN/*.png",
     # "./comparison/ISTD Dataset/BMNET_Synth/*.png",
-    # "./comparison/ISTD Dataset/OURS/*.png",
-    "X:/GithubProjects/BMNet/reports/30th/ISTD/*.png",
-    "X:/GithubProjects/SG-ShadowNet/reports/30th/ISTD/*.png",
-    "./comparison/30th/ISTD/OURS/*.png",
+    "./comparison/ISTD/SG-ShadowNet_2022/*.png",
+    "./comparison/ISTD/OURS/*.png",
+    # "X:/GithubProjects/BMNet/reports/30th/ISTD/*.png",
+    # "X:/GithubProjects/SG-ShadowNet/reports/30th/ISTD/*.png",
+    # "./comparison/30th/ISTD/OURS/*.png",
     ]
 
     ns_path = "X:/ISTD_Dataset/test/test_C/*.png"
+    # ns_path = "E:/ISTD_Adjusted/test_C/*.png" #adjusted ISTD
     mask_path = "X:/ISTD_Dataset/test/test_B/*.png"
 
-    # measure_performance(istd_all_list, ns_path, mask_path)
-    # save_img_copies_for_results(istd_all_list, ns_path, "ISTD Dataset", (240, 320), opts)
+    measure_performance(istd_all_list, ns_path, mask_path)
+    save_img_copies_for_results(istd_all_list, ns_path, "ISTD", (240, 320), opts)
 
     # for SRD
     ns_path = "X:/SRD_Test/srd/shadow_free/*.jpg"
     mask_path = "X:/SRD_Test/srd/mask/*.jpg"
 
-    srd_all_list = [
-    # "E:/SRD_Test/srd/shadow/*.jpg",
-    # "./comparison/SRD Dataset/SID_PAMI/*.png",
-    # "./comparison/SRD Dataset/DC-ShadowNet/*.png",
-    # "./comparison/SRD Dataset/BMNET_2022/*.jpg",
-    # "./comparison/SRD Dataset/AAAI_2020_SRD/*.jpg",
-    # "./comparison/SRD Dataset/AAAI_2020+_SRD/*.jpg",
-    # "./comparison/SRD Dataset/SynShadow-SP+M/*.png",
-    # "./comparison/SRD Dataset/SynShadow-DHAN/*.png",
-    # "./comparison/SRD Dataset/BMNET_Synth/*.png",
-    # "./comparison/SRD Dataset/OURS/*.png"
-    "X:/GithubProjects/BMNet/reports/30th/SRD/*.png",
-    "X:/GithubProjects/SG-ShadowNet/reports/30th/SRD/*.png",
-    "./comparison/30th/SRD/OURS/*.png",
-    ]
-
-    measure_performance(srd_all_list, ns_path, mask_path)
+    # srd_all_list = [
+    # # "E:/SRD_Test/srd/shadow/*.jpg",
+    # # "./comparison/SRD Dataset/SID_PAMI/*.png",
+    # # "./comparison/SRD Dataset/DC-ShadowNet/*.png",
+    # # "./comparison/SRD Dataset/BMNET_2022/*.jpg",
+    # # "./comparison/SRD Dataset/AAAI_2020_SRD/*.jpg",
+    # # "./comparison/SRD Dataset/AAAI_2020+_SRD/*.jpg",
+    # # "./comparison/SRD Dataset/SynShadow-SP+M/*.png",
+    # # "./comparison/SRD Dataset/SynShadow-DHAN/*.png",
+    # # "./comparison/SRD Dataset/BMNET_Synth/*.png",
+    # # "./comparison/SRD Dataset/OURS/*.png"
+    # "X:/GithubProjects/BMNet/reports/30th/SRD/*.png",
+    # "X:/GithubProjects/SG-ShadowNet/reports/30th/SRD/*.png",
+    # "./comparison/30th/SRD/OURS/*.png",
+    # ]
+    #
+    # measure_performance(srd_all_list, ns_path, mask_path)
     # save_img_copies_for_results(srd_all_list, ns_path, "SRD Dataset", (160, 210), opts)
 
 
