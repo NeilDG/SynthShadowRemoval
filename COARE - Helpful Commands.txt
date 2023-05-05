@@ -27,15 +27,13 @@ sbatch visdom_run.slurm
 sbatch -w saliksik-cpu-23 visdom_run.slurm
 sbatch -w saliksik-cpu-23 --dependency=afterany:335892 visdom_run.slurm
 
-sbatch --dependency=afterany:412901 -w saliksik-gpu-05 script_1.slurm
-sbatch --dependency=afterany:412902 -w saliksik-gpu-06 script_2.slurm
-sbatch --dependency=afterany:338540 script_2.slurm
+sbatch --dependency=afterany:455102 script_1.slurm 1
 
 
-sbatch script_debug.slurm
+sbatch script_debug.slurm 1
 sbatch slurm_download.sh 0
-sbatch script_1.slurm
-sbatch script_2.slurm
+sbatch script_1.slurm 1
+sbatch script_2.slurm 1
 sbatch script_3.slurm
 sbatch script_4.slurm
 sbatch script_5.slurm
@@ -109,7 +107,7 @@ unzip "v26.zip" -d "SynthWeather Dataset 10/"
 rm -rf "NeuralNets-GenerativeExperiment-V59.XX.XX"
 rm -rf "NeuralNets-GenerativeExperiment-V60.XX.XX"
 rm -rf "Places Dataset"
-rm -rf "SynthWeather Dataset 10/v50_places"
+rm -rf "SynthWeather Dataset 10/v66_places"
 mkdir "SynthWeather Dataset 10"
 
 

@@ -60,17 +60,18 @@ fi
 #unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
 #rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 
-DATASET_NAME="v66_places"
+DATASET_NAME="v66_istd"
 echo "$OUTPUT_DIR/$DATASET_NAME.zip"
 zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
 rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 
-#DATASET_NAME="v54_istd"
-#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
-#zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
-#unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
-#rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
+DATASET_NAME="v66_srd"
+echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
+unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
+rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
+
 #
 #DATASET_NAME="v55_istd"
 #echo "$OUTPUT_DIR/$DATASET_NAME.zip"
@@ -84,10 +85,10 @@ rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 #unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
 #rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 
-if [ $SERVER_CONFIG == 1 ]
-then
-  python "ccs1_main.py"
-elif [ $SERVER_CONFIG == 5 ]
-then
-  python3 "titan3_main.py"
-fi
+#if [ $SERVER_CONFIG == 1 ]
+#then
+#  python "ccs1_main.py"
+#elif [ $SERVER_CONFIG == 5 ]
+#then
+#  python3 "titan3_main.py"
+#fi
