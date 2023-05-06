@@ -132,8 +132,8 @@ def train_shadow(device, opts):
     global_config.test_size = 8
 
     mode = "train_shadow"
-    start_epoch = 30
-    iteration = 36000
+    start_epoch = 55
+    iteration = 73500
     global_config.load_per_epoch = True
     print("---------------------------------------------------------------------------")
     print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)

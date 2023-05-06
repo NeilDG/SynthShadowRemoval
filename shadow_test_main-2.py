@@ -223,7 +223,7 @@ def main(argv):
     global_config.ns_iteration = opts.shadow_removal_iteration
     global_config.ns_network_config = ConfigHolder.getInstance().get_network_config()
     global_config.load_per_epoch = True
-    global_config.last_epoch_ns = 30
+    global_config.last_epoch_ns = 55
     shadow_t = shadow_removal_trainer.ShadowTrainer(device)
     shadow_t.load_specific_epoch(global_config.last_epoch_ns)
 
