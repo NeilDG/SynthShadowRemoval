@@ -7,22 +7,22 @@ def train_shadow_matte():
 
 def train_shadow_removal():
     os.system("python \"shadow_train_main.py\" --server_config=3 --img_to_load=-1 --train_mode=\"train_shadow\" "
-              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.27_places\" --iteration=1")
+              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.33_places\" --iteration=1")
 
     os.system("python \"shadow_train_main.py\" --server_config=3 --img_to_load=-1 --train_mode=\"train_shadow\" "
-              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.28_places\" --iteration=1")
+              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.34_places\" --iteration=1")
 
     os.system("python \"shadow_train_main.py\" --server_config=3 --img_to_load=-1 --train_mode=\"train_shadow\" "
-              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.29_places\" --iteration=1")
+              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.35_places\" --iteration=1")
 
     os.system("python \"shadow_train_main.py\" --server_config=3 --img_to_load=-1 --train_mode=\"train_shadow\" "
-              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.30_places\" --iteration=1")
+              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.36_places\" --iteration=1")
 
     os.system("python \"shadow_train_main.py\" --server_config=3 --img_to_load=-1 --train_mode=\"train_shadow\" "
-              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.31_places\" --iteration=1")
+              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.37_places\" --iteration=1")
 
     os.system("python \"shadow_train_main.py\" --server_config=3 --img_to_load=-1 --train_mode=\"train_shadow\" "
-              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.32_places\" --iteration=1")
+              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.38_places\" --iteration=1")
 
 def train_domain_adaptation():
     os.system("python \"cyclegan_main.py\" --server_config=5 --img_to_load=-1 --debug_run=0 "
