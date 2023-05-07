@@ -54,7 +54,7 @@ def test_shadow_matte(dataset_tester, opts):
         shadow_loader, dataset_count = dataset_loader.load_shadow_test_dataset()
         needed_progress = int(dataset_count / global_config.test_size) + 1
         pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
-        for i, (file_name, rgb_ws, _, _, shadow_matte) in enumerate(shadow_loader, 0):
+        for i, (file_name, rgb_ws, _, shadow_matte) in enumerate(shadow_loader, 0):
             rgb_ws = rgb_ws.to(device)
             shadow_matte = shadow_matte.to(device)
 
@@ -196,24 +196,6 @@ def main(argv):
     plot_utils.VisdomReporter.initialize()
 
     yaml_config = "./hyperparam_tables/{network_version}.yaml"
-    yaml_config = yaml_config.format(network_version=opts.shadow_matte_version)
-    hyperparam_path = "./hyperparam_tables/common_iter.yaml"
-    with open(yaml_config) as f, open(hyperparam_path) as h:
-        ConfigHolder.initialize(yaml.load(f, SafeLoader), yaml.load(h, SafeLoader))
-
-    global_config.sm_network_version = opts.shadow_matte_version
-    global_config.sm_iteration = opts.shadow_matte_iteration
-    global_config.sm_network_config = ConfigHolder.getInstance().get_network_config()
-    shadow_m = shadow_matte_trainer.ShadowMatteTrainer(device)
-
-    print("---------------------------------------------------------------------------")
-    print("Successfully loaded shadow matte network: ", opts.shadow_matte_version, str(opts.shadow_matte_iteration))
-    print("Network config: ", global_config.sm_network_config)
-    print("---------------------------------------------------------------------------")
-
-    ConfigHolder.destroy()  # for security, destroy config holder since it should no longer be needed
-
-    yaml_config = "./hyperparam_tables/{network_version}.yaml"
     yaml_config = yaml_config.format(network_version=opts.shadow_removal_version)
     hyperparam_path = "./hyperparam_tables/common_iter.yaml"
     with open(yaml_config) as f, open(hyperparam_path) as h:
@@ -229,7 +211,25 @@ def main(argv):
     print("Network config: ", global_config.ns_network_config)
     print("---------------------------------------------------------------------------")
 
-    ConfigHolder.destroy() #for security, destroy config holder since it should no longer be needed
+    ConfigHolder.destroy()  # for security, destroy config holder since it should no longer be needed
+
+    yaml_config = "./hyperparam_tables/{network_version}.yaml"
+    yaml_config = yaml_config.format(network_version=opts.shadow_matte_version)
+    hyperparam_path = "./hyperparam_tables/common_iter.yaml"
+    with open(yaml_config) as f, open(hyperparam_path) as h:
+        ConfigHolder.initialize(yaml.load(f, SafeLoader), yaml.load(h, SafeLoader))
+
+    global_config.sm_network_version = opts.shadow_matte_version
+    global_config.sm_iteration = opts.shadow_matte_iteration
+    global_config.sm_network_config = ConfigHolder.getInstance().get_network_config()
+    shadow_m = shadow_matte_trainer.ShadowMatteTrainer(device)
+
+    print("---------------------------------------------------------------------------")
+    print("Successfully loaded shadow matte network: ", opts.shadow_matte_version, str(opts.shadow_matte_iteration))
+    print("Network config: ", global_config.sm_network_config)
+    print("---------------------------------------------------------------------------")
+
+    # ConfigHolder.destroy()  # for security, destroy config holder since it should no longer be needed
 
     dataset_tester = TesterClass(shadow_m, shadow_t)
 

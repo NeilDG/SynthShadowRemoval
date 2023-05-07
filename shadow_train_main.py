@@ -291,17 +291,16 @@ def train_shadow_matte(device, opts):
 
     for epoch in range(start_epoch, max_epochs):
         for i, (train_data, test_data) in enumerate(zip(train_loader_synth, itertools.cycle(test_loader_istd))):
-            _, rgb_ws, rgb_ns, shadow_map, shadow_matte = train_data
+            _, rgb_ws, rgb_ns, shadow_matte = train_data
             rgb_ws = rgb_ws.to(device)
             rgb_ns = rgb_ns.to(device)
-            shadow_map = shadow_map.to(device)
             shadow_matte = shadow_matte.to(device)
 
             _, rgb_ws_istd, rgb_ns_istd, matte_istd = test_data
             rgb_ws_istd = rgb_ws_istd.to(device)
             matte_istd = matte_istd.to(device)
 
-            input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_map": shadow_map, "shadow_matte": shadow_matte,
+            input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_matte": shadow_matte,
                          "rgb_ws_istd": rgb_ws_istd, "rgb_ns_istd": rgb_ns_istd, "matte_istd": matte_istd}
             target_map = input_map
 
@@ -317,7 +316,7 @@ def train_shadow_matte(device, opts):
                     tf.visdom_plot(iteration)
                     tf.visdom_visualize(input_map, "Train")
 
-                    _, rgb_ws, rgb_ns, shadow_map, shadow_matte = next(itertools.cycle(test_loader_train))
+                    _, rgb_ws, rgb_ns, shadow_matte = next(itertools.cycle(test_loader_train))
                     rgb_ws = rgb_ws.to(device)
                     rgb_ns = rgb_ns.to(device)
                     shadow_matte = shadow_matte.to(device)

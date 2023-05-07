@@ -10,6 +10,7 @@ import kornia
 from pathlib import Path
 import kornia.augmentation as K
 
+from config.network_config import ConfigHolder
 from transforms import shadow_map_transforms
 
 class ShadowTrainDataset(data.Dataset):
@@ -22,6 +23,7 @@ class ShadowTrainDataset(data.Dataset):
         self.shadow_op = shadow_map_transforms.ShadowMapTransforms()
         self.norm_op = transforms.Normalize((0.5, ), (0.5, ))
         self.network_config = global_config.loaded_network_config
+        self.use_shadow_map = ConfigHolder.getInstance().get_network_attribute("use_shadow_map", False)
 
         if(self.transform_config == 1):
             patch_size = self.network_config["patch_size"]
@@ -53,49 +55,51 @@ class ShadowTrainDataset(data.Dataset):
 
     def __getitem__(self, idx):
         file_name = self.img_list_a[idx].split("/")[-1].split(".png")[0]
-        try:
-            rgb_ws = cv2.imread(self.img_list_a[idx])
-            rgb_ws = cv2.cvtColor(rgb_ws, cv2.COLOR_BGR2RGB)
-            state = torch.get_rng_state()
-            rgb_ws = self.initial_op(rgb_ws)
 
-            torch.set_rng_state(state)
-            rgb_ns = cv2.imread(self.img_list_b[idx])
-            rgb_ns = cv2.cvtColor(rgb_ns, cv2.COLOR_BGR2RGB)
-            rgb_ns = self.initial_op(rgb_ns)
+        rgb_ws = cv2.imread(self.img_list_a[idx])
+        rgb_ws = cv2.cvtColor(rgb_ws, cv2.COLOR_BGR2RGB)
+        state = torch.get_rng_state()
+        rgb_ws = self.initial_op(rgb_ws)
 
-            #add gaussian noise to WS
-            if("random_exposure" in self.network_config["augment_key"]):
-                rgb_ws = rgb_ws * np.random.uniform(1.000, 1.25)
+        torch.set_rng_state(state)
+        rgb_ns = cv2.imread(self.img_list_b[idx])
+        rgb_ns = cv2.cvtColor(rgb_ns, cv2.COLOR_BGR2RGB)
+        rgb_ns = self.initial_op(rgb_ns)
 
-            if ("random_noise" in self.network_config["augment_key"]):
-                noise_op = K.RandomGaussianNoise(p=1.0, mean=np.random.uniform(0.0, 0.25), std=np.random.uniform(0.0, 0.25))
-                rgb_ws = torch.clip(torch.squeeze(noise_op(rgb_ws)), 0.0, 1.0)
-                rgb_ns = torch.clip(torch.squeeze(noise_op(rgb_ns, params=noise_op._params)), 0.0, 1.0) #TODO: Observe if it's wise to also add noise to RGB_ns. Hypothesis: Must add noise as well so SMs are clean.
+        #add gaussian noise to WS
+        if("random_exposure" in self.network_config["augment_key"]):
+            rgb_ws = rgb_ws * np.random.uniform(1.000, 1.25)
 
-            if (self.transform_config == 1):
-                crop_indices = transforms.RandomCrop.get_params(rgb_ws, output_size=self.patch_size)
-                i, j, h, w = crop_indices
+        if ("random_noise" in self.network_config["augment_key"]):
+            noise_op = K.RandomGaussianNoise(p=1.0, mean=np.random.uniform(0.0, 0.25), std=np.random.uniform(0.0, 0.25))
+            rgb_ws = torch.clip(torch.squeeze(noise_op(rgb_ws)), 0.0, 1.0)
+            rgb_ns = torch.clip(torch.squeeze(noise_op(rgb_ns, params=noise_op._params)), 0.0, 1.0) #TODO: Observe if it's wise to also add noise to RGB_ns. Hypothesis: Must add noise as well so SMs are clean.
 
-                rgb_ws = transforms.functional.crop(rgb_ws, i, j, h, w)
-                rgb_ns = transforms.functional.crop(rgb_ns, i, j, h, w)
+        if (self.transform_config == 1):
+            crop_indices = transforms.RandomCrop.get_params(rgb_ws, output_size=self.patch_size)
+            i, j, h, w = crop_indices
 
-            rgb_ws, rgb_ns, shadow_map, shadow_matte = self.shadow_op.generate_shadow_map(rgb_ws, rgb_ns, False)
+            rgb_ws = transforms.functional.crop(rgb_ws, i, j, h, w)
+            rgb_ns = transforms.functional.crop(rgb_ns, i, j, h, w)
 
-            rgb_ws = self.norm_op(rgb_ws)
-            rgb_ns = self.norm_op(rgb_ns)
-            shadow_map = self.norm_op(shadow_map)
+        rgb_ws, rgb_ns, shadow_map, shadow_matte = self.shadow_op.generate_shadow_map(rgb_ws, rgb_ns, False)
+
+        rgb_ws = self.norm_op(rgb_ws)
+        rgb_ns = self.norm_op(rgb_ns)
+
+        if(self.use_shadow_map):
+            shadow_matte = self.norm_op(shadow_map)
+        else:
             shadow_matte = self.norm_op(shadow_matte)
 
-        except Exception as e:
-            print("Failed to load: ", self.img_list_a[idx], self.img_list_b[idx])
-            print("ERROR: ", e)
-            rgb_ws = None
-            rgb_ns = None
-            shadow_map = None
-            shadow_matte = None
+        # except Exception as e:
+        #     print("Failed to load: ", self.img_list_a[idx], self.img_list_b[idx])
+        #     print("ERROR: ", e)
+        #     rgb_ws = None
+        #     rgb_ns = None
+        #     shadow_matte = None
 
-        return file_name, rgb_ws, rgb_ns, shadow_map, shadow_matte
+        return file_name, rgb_ws, rgb_ns, shadow_matte
 
     def __len__(self):
         return self.img_length
@@ -107,6 +111,7 @@ class ShadowISTDDataset(data.Dataset):
         self.img_list_b = img_list_b
         self.img_list_c = img_list_c
         self.transform_config = transform_config
+        self.use_shadow_map = ConfigHolder.getInstance().get_network_attribute("use_shadow_map", False)
 
         self.shadow_op = shadow_map_transforms.ShadowMapTransforms()
         self.norm_op = transforms.Normalize((0.5, ), (0.5, ))
@@ -119,34 +124,30 @@ class ShadowISTDDataset(data.Dataset):
     def __getitem__(self, idx):
         file_name = self.img_list_a[idx].split("\\")[-1].split(".png")[0]
 
-        try:
-            rgb_ws = cv2.imread(self.img_list_a[idx])
-            rgb_ws = cv2.cvtColor(rgb_ws, cv2.COLOR_BGR2RGB)
-            rgb_ws = self.initial_op(rgb_ws)
+        rgb_ws = cv2.imread(self.img_list_a[idx])
+        rgb_ws = cv2.cvtColor(rgb_ws, cv2.COLOR_BGR2RGB)
+        rgb_ws = self.initial_op(rgb_ws)
 
-            rgb_ns = cv2.imread(self.img_list_b[idx])
-            rgb_ns = cv2.cvtColor(rgb_ns, cv2.COLOR_BGR2RGB)
-            rgb_ns = self.initial_op(rgb_ns)
+        rgb_ns = cv2.imread(self.img_list_b[idx])
+        rgb_ns = cv2.cvtColor(rgb_ns, cv2.COLOR_BGR2RGB)
+        rgb_ns = self.initial_op(rgb_ns)
 
-            # shadow_mask = cv2.imread(self.img_list_c[idx])
+        # shadow_mask = cv2.imread(self.img_list_c[idx])
 
-            shadow_map = rgb_ns - rgb_ws
-            shadow_matte = kornia.color.rgb_to_grayscale(shadow_map)
+        shadow_matte = rgb_ns - rgb_ws
+        if (self.use_shadow_map == False):
+            shadow_matte = kornia.color.rgb_to_grayscale(shadow_matte)
 
-            rgb_ws_gray = kornia.color.rgb_to_grayscale(rgb_ws)
-            rgb_ws = self.norm_op(rgb_ws)
-            rgb_ws_gray = self.norm_op(rgb_ws_gray)
-            rgb_ns = self.norm_op(rgb_ns)
-            shadow_matte = self.norm_op(shadow_matte)
+        rgb_ws = self.norm_op(rgb_ws)
+        rgb_ns = self.norm_op(rgb_ns)
+        shadow_matte = self.norm_op(shadow_matte)
 
-        except Exception as e:
-            print("Failed to load: ", self.img_list_a[idx], self.img_list_b[idx])
-            print("ERROR: ", e)
-            rgb_ws = None
-            rgb_ns = None
-            rgb_ws_gray = None
-            shadow_mask = None
-            shadow_matte = None
+        # except Exception as e:
+        #     print("Failed to load: ", self.img_list_a[idx], self.img_list_b[idx])
+        #     print("ERROR: ", e)
+        #     rgb_ws = None
+        #     rgb_ns = None
+        #     shadow_matte = None
 
         return file_name, rgb_ws, rgb_ns, shadow_matte
 
@@ -159,6 +160,7 @@ class ShadowSRDDataset(data.Dataset):
         self.img_list_a = img_list_a
         self.img_list_b = img_list_b
         self.transform_config = transform_config
+        self.use_shadow_map = ConfigHolder.getInstance().get_network_attribute("use_shadow_map", False)
 
         self.shadow_op = shadow_map_transforms.ShadowMapTransforms()
         self.norm_op = transforms.Normalize((0.5, ), (0.5, ))
@@ -180,8 +182,9 @@ class ShadowSRDDataset(data.Dataset):
         rgb_ns = cv2.cvtColor(rgb_ns, cv2.COLOR_BGR2RGB)
         rgb_ns = self.initial_op(rgb_ns)
 
-        shadow_map = rgb_ns - rgb_ws
-        shadow_matte = kornia.color.rgb_to_grayscale(shadow_map)
+        shadow_matte = rgb_ns - rgb_ws
+        if (self.use_shadow_map == False):
+            shadow_matte = kornia.color.rgb_to_grayscale(shadow_matte)
 
         rgb_ws = self.norm_op(rgb_ws)
         rgb_ns = self.norm_op(rgb_ns)
