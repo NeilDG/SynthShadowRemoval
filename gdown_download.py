@@ -168,7 +168,7 @@ def main(argv):
 
     #USR
     url="https://drive.google.com/drive/folders/1m2KBqGJGDl8vITVTp4tnjnrKX1hTEe1k"
-    gdown.download(url, output=output_dir, use_cookies=False)
+    gdown.download_folder(url, output=output_dir, use_cookies=False)
 
 if __name__ == "__main__":
     main(sys.argv)
