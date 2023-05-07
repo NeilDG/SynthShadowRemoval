@@ -34,7 +34,7 @@ sbatch script_debug.slurm 1
 sbatch slurm_download.sh 0
 sbatch script_1.slurm 1
 sbatch script_2.slurm 1
-sbatch script_3.slurm
+sbatch script_3.slurm 1
 sbatch script_4.slurm
 sbatch script_5.slurm
 sbatch script_6.slurm
