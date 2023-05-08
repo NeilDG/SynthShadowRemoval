@@ -12,7 +12,7 @@ def train_shadow_matte():
 
 def train_shadow_removal():
     os.system("python \"shadow_train_main-3.py\" --server_config=5 --img_to_load=200000 --train_mode=\"train_shadow\" "
-              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.26_istd\" --iteration=1")
+              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.26_srd\" --iteration=1")
     #
     # os.system("python \"shadow_train_main-3.py\" --server_config=5 --img_to_load=10000 --train_mode=\"train_shadow\" "
     #           "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2ns_v61.26_srd\" --iteration=1")

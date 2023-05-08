@@ -42,8 +42,8 @@ def update_config(opts):
     if (global_config.server_config == 0):
         global_config.num_workers = 6
         global_config.disable_progress_bar = True #disable progress bar logging in COARE
-        global_config.load_size = network_config["load_size"][0]
-        global_config.batch_size = network_config["batch_size"][0]
+        global_config.load_size = network_config["load_size"][0] - 4
+        global_config.batch_size = network_config["batch_size"][0] - 4
 
         print("Using COARE configuration. Workers: ", global_config.num_workers)
         global_config.DATASET_PLACES_PATH = "/scratch3/neil.delgallego/Places Dataset/*.jpg"

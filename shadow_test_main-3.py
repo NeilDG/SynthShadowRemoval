@@ -231,7 +231,7 @@ def main(argv):
     print("Network config: ", global_config.ns_network_config)
     print("---------------------------------------------------------------------------")
 
-    ConfigHolder.destroy() #for security, destroy config holder since it should no longer be needed
+    # ConfigHolder.destroy() #for security, destroy config holder since it should no longer be needed
 
     dataset_tester = TesterClass(shadow_m, shadow_t)
 
