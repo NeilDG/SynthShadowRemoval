@@ -34,24 +34,8 @@ sbatch script_debug.slurm 1
 sbatch slurm_download.sh 0
 sbatch script_1.slurm 1
 sbatch script_2.slurm 1
-sbatch script_3.slurm 1
-sbatch script_4.slurm
-sbatch script_5.slurm
-sbatch script_6.slurm
-sbatch script_7.slurm
-sbatch script_8.slurm
-sbatch script_9.slurm
-sbatch script_10.slurm
-sbatch script_11.slurm
-sbatch script_12.slurm
-sbatch script_13.slurm
-sbatch script_14.slurm
-sbatch script_15.slurm
-sbatch script_16.slurm
-sbatch script_17.slurm
-sbatch script_18.slurm
-sbatch script_19.slurm
-sbatch script_20.slurm
+sbatch script_3.slurm "rgb2sm_v61.23_places" 1 #FOR G_sm
+sbatch script_4.slurm 1 #FOR G_z
 
 sbatch --dependency=afterany:342338 script_debug.slurm
 sbatch --dependency=afterany:342351 script_1.slurm
@@ -107,7 +91,7 @@ unzip "v26.zip" -d "SynthWeather Dataset 10/"
 rm -rf "NeuralNets-GenerativeExperiment-V59.XX.XX"
 rm -rf "NeuralNets-GenerativeExperiment-V61.XX.XX-2"
 rm -rf "Places Dataset"
-rm -rf "SynthWeather Dataset 10/v66_places"
+rm -rf "SynthWeather Dataset 10/v66_usr_base"
 mkdir "SynthWeather Dataset 10"
 
 

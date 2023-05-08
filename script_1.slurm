@@ -9,7 +9,8 @@
 #SBATCH --mail-user=neil.delgallego@dlsu.edu.ph
 #SBATCH --mail-type=END
 
-ITERATION=$1
+NETWORK_VERSION=$1
+ITERATION=$2
 echo "CUDA_DEVICE=/dev/nvidia/$CUDA_VISIBLE_DEVICES"
 nvidia-smi
 
@@ -21,6 +22,6 @@ source activate NeilGAN_V2
 
 srun python shadow_train_main-3.py \
 --server_config=0 --img_to_load=200000 --train_mode="train_shadow" \
---plot_enabled=0 --save_per_iter=500 --network_version="rgb2ns_v61.26_places" --iteration=$ITERATION
+--plot_enabled=0 --save_per_iter=500 --network_version=$NETWORK_VERSION --iteration=$ITERATION
 
 conda deactivate
