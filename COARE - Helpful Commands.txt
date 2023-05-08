@@ -105,7 +105,7 @@ gdown https://drive.google.com/drive/folders/1CMz2flknC81dX3xlKBgNP34NJAQ651DB -
 unzip "v26.zip" -d "SynthWeather Dataset 10/"
 
 rm -rf "NeuralNets-GenerativeExperiment-V59.XX.XX"
-rm -rf "NeuralNets-GenerativeExperiment-V60.XX.XX"
+rm -rf "NeuralNets-GenerativeExperiment-V61.XX.XX-2"
 rm -rf "Places Dataset"
 rm -rf "SynthWeather Dataset 10/v66_places"
 mkdir "SynthWeather Dataset 10"
