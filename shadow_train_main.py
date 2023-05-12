@@ -86,14 +86,14 @@ def update_config(opts):
         global_config.num_workers = 4
         global_config.load_size = network_config["load_size"][2]
         global_config.batch_size = network_config["batch_size"][2]
-        global_config.DATASET_PLACES_PATH = "C:/Datasets/Places Dataset/*.jpg"
-        global_config.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
-        global_config.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
-        global_config.ws_istd ="C:/Datasets/ISTD_Dataset/test/test_A/*.png"
-        global_config.ns_istd = "C:/Datasets/ISTD_Dataset/test/test_C/*.png"
-        global_config.mask_istd = "C:/Datasets/ISTD_Dataset/test/test_B/*.png"
-        global_config.ws_srd = "C:/Datasets/SRD_Test/srd/shadow/*.jpg"
-        global_config.ns_srd = "C:/Datasets/SRD_Test/srd/shadow_free/*.jpg"
+        global_config.DATASET_PLACES_PATH = "/home/neildelgallego/Places Dataset/*.jpg"
+        global_config.rgb_dir_ws = "/home/neildelgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        global_config.rgb_dir_ns = "/home/neildelgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
+        global_config.ws_istd ="/home/neildelgallego/ISTD_Dataset/test/test_A/*.png"
+        global_config.ns_istd = "/home/neildelgallego/ISTD_Dataset/test/test_C/*.png"
+        global_config.mask_istd = "/home/neildelgallego/ISTD_Dataset/test/test_B/*.png"
+        global_config.ws_srd = "/home/neildelgallego/SRD_Test/srd/shadow/*.jpg"
+        global_config.ns_srd = "/home/neildelgallego/SRD_Test/srd/shadow_free/*.jpg"
 
         print("Using TITAN configuration. Workers: ", global_config.num_workers)
 
