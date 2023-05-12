@@ -28,31 +28,30 @@ class Img2ImgTester():
         self.psnr_results = []
 
     def save_images(self, input_map_a, input_map_b):
-        if (global_config.save_images == 1):
-            img_a2b, img_b2a = self.img2img_t.test(input_map_a)  # a2b --> real2synth, b2a --> synth2real
-            file_name = input_map_a["file_name"]
+        img_a2b, img_b2a = self.img2img_t.test(input_map_a)  # a2b --> real2synth, b2a --> synth2real
+        file_name = input_map_a["file_name"]
 
-            noshadows_path = "X:/GithubProjects/NeuralNets-Experiment3/reports/Synth2Real/rgb_noshadows/"
-            withshadows_path = "X:/GithubProjects/NeuralNets-Experiment3/reports/Synth2Real/rgb/"
+        noshadows_path = "X:/GithubProjects/NeuralNets-Experiment3/reports/Synth2Real/rgb_noshadows/"
+        withshadows_path = "X:/GithubProjects/NeuralNets-Experiment3/reports/Synth2Real/rgb/"
 
-            if not os.path.exists(noshadows_path):
-                os.makedirs(noshadows_path, exist_ok=True)
+        if not os.path.exists(noshadows_path):
+            os.makedirs(noshadows_path, exist_ok=True)
 
-            if not os.path.exists(withshadows_path):
-                os.makedirs(withshadows_path, exist_ok=True)
+        if not os.path.exists(withshadows_path):
+            os.makedirs(withshadows_path, exist_ok=True)
 
-            for i in range(0, len(file_name)):
-                impath = noshadows_path + file_name[i] + ".png"
-                torchvision.utils.save_image(img_b2a[i], impath, normalize = True)
-                # print("Saved image (no shadows) : ", impath)
+        for i in range(0, len(file_name)):
+            impath = noshadows_path + file_name[i] + ".png"
+            torchvision.utils.save_image(img_b2a[i], impath, normalize = True)
+            # print("Saved image (no shadows) : ", impath)
 
-            img_a2b, img_b2a = self.img2img_t.test(input_map_b)  # a2b --> real2synth, b2a --> synth2real
-            file_name = input_map_b["file_name"]
+        img_a2b, img_b2a = self.img2img_t.test(input_map_b)  # a2b --> real2synth, b2a --> synth2real
+        file_name = input_map_b["file_name"]
 
-            for i in range(0, len(file_name)):
-                impath = withshadows_path + file_name[i] + ".png"
-                torchvision.utils.save_image(img_b2a[i], impath, normalize = True)
-                # print("Saved image (with shadows) : ", impath)
+        for i in range(0, len(file_name)):
+            impath = withshadows_path + file_name[i] + ".png"
+            torchvision.utils.save_image(img_b2a[i], impath, normalize = True)
+            # print("Saved image (with shadows) : ", impath)
 
     #measures the performance of a given batch and stores it
     def measure_and_store(self, input_map):

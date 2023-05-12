@@ -230,9 +230,9 @@ class FFAConcat(nn.Module):
         x = self.post(out)
         return x + input
 
-class FFAGrey(nn.Module):
-    def __init__(self, blocks, dropout_rate=0.0, conv=default_conv):
-        super(FFAGrey, self).__init__()
+class DLSUFFANet(nn.Module):
+    def __init__(self, output_nc, blocks, dropout_rate=0.0, conv=default_conv):
+        super(DLSUFFANet, self).__init__()
         FFAGlobalConfig.initialize()
         FFAGlobalConfig.getInstance().DROPOUT_RATE = dropout_rate
         print("DROPOUT RATE? ", FFAGlobalConfig.getInstance().DROPOUT_RATE)
@@ -255,7 +255,7 @@ class FFAGrey(nn.Module):
 
         post_precess = [
             conv(self.dim, self.dim, kernel_size),
-            conv(self.dim, 1, kernel_size)]
+            conv(self.dim, output_nc, kernel_size)]
 
         self.pre = nn.Sequential(*pre_process)
         self.post = nn.Sequential(*post_precess)

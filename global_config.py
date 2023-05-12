@@ -82,8 +82,12 @@ train_mode = "all"
 last_epoch_sm = 0
 last_epoch_ns = 0
 last_epoch_st = 0
+last_iteration_ns = 0
 dataset_target = ""
 cuda_device = ""
 save_images = 0
+
+load_per_epoch = False
+load_per_sample = False
 
 

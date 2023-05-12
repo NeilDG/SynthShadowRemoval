@@ -184,21 +184,22 @@ def main(argv):
     pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
     pbar.update(current_progress)
 
-    with torch.no_grad():
-        for i, (noshadows_data, withshadows_data) in enumerate(zip(test_rgb_noshadows, test_rgb_withshadows)):
-            file_name, img_batch = noshadows_data
-            img_batch = img_batch.to(device, non_blocking = True)
-            input_map_a = {"file_name": file_name, "img_a": img_batch, "img_b": img_batch}
+    if (global_config.save_images == 1):
+        with torch.no_grad():
+            for i, (noshadows_data, withshadows_data) in enumerate(zip(test_rgb_noshadows, test_rgb_withshadows)):
+                file_name, img_batch = noshadows_data
+                img_batch = img_batch.to(device, non_blocking = True)
+                input_map_a = {"file_name": file_name, "img_a": img_batch, "img_b": img_batch}
 
-            file_name, img_batch = withshadows_data
-            img_batch = img_batch.to(device, non_blocking = True)
-            input_map_b = {"file_name": file_name, "img_a": img_batch, "img_b": img_batch}
+                file_name, img_batch = withshadows_data
+                img_batch = img_batch.to(device, non_blocking = True)
+                input_map_b = {"file_name": file_name, "img_a": img_batch, "img_b": img_batch}
 
-            img2img_t.save_images(input_map_a, input_map_b)
-            pbar.set_description("Successfully saved images for batch")
-            pbar.update(1)
+                img2img_t.save_images(input_map_a, input_map_b)
+                pbar.set_description("Successfully saved images for batch")
+                pbar.update(1)
 
-        pbar.close()
+            pbar.close()
 
 
 if __name__ == "__main__":

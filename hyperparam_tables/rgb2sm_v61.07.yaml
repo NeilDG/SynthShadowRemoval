@@ -13,12 +13,12 @@ augment_key: ["none"]
 
 g_lr: 0.0002
 d_lr: 0.0005
-min_epochs: 10
-max_epochs: 15
+min_epochs: 60
+max_epochs: 65
 
 dataset_version: "v46_places"
 dataset_repeats: 1
-mix_istd: 0.0
+mix_istd: 0.25
 
 
 

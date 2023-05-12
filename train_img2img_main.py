@@ -57,8 +57,8 @@ def update_config(opts):
 
     elif(global_config.server_config == 2): #RTX 2080Ti
         global_config.num_workers = 6
-        global_config.a_path = "C:/Datasets/Places Dataset/*.jpg"
-        global_config.b_path = "C:/Datasets/SynthV3_Raw/{dataset_version}/sequence.0/*.camera.png"
+        global_config.a_path = "C:/Datasets/"
+        global_config.b_path = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
         global_config.batch_size = network_config["batch_size"][2]
         global_config.load_size = network_config["load_size"][2]
         print("Using RTX 2080Ti configuration. Workers: ", global_config.num_workers)
@@ -80,10 +80,10 @@ def update_config(opts):
 
     elif (global_config.server_config == 5):  # @TITAN1 - 3
         global_config.num_workers = 4
+        global_config.a_path = "/home/neildelgallego/"
+        global_config.b_path = "/home/neildelgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.png"
         global_config.batch_size = network_config["batch_size"][2]
         global_config.load_size = network_config["load_size"][2]
-        global_config.a_path = "/home/neildelgallego/Places Dataset/*.jpg"
-        global_config.b_path = "/home/neildelgallego/SynthV3_Raw/{dataset_version}/sequence.0/*.camera.png"
         print("Using TITAN Workstation configuration. Workers: ", global_config.num_workers)
 
     if (dataset_a_version == "istd"):
@@ -149,7 +149,7 @@ def main(argv):
     pbar.update(current_progress)
 
     for epoch in range(start_epoch, network_config["max_epochs"]):
-        for i, (a_batch, b_batch) in enumerate(train_loader, 0):
+        for i, (_, a_batch, b_batch) in enumerate(train_loader, 0):
             a_batch = a_batch.to(device, non_blocking = True)
             b_batch = b_batch.to(device, non_blocking = True)
             input_map = {"img_a" : a_batch, "img_b" : b_batch}
@@ -168,7 +168,7 @@ def main(argv):
                     img2img_t.visdom_plot(iteration)
                     img2img_t.visdom_visualize(input_map, "Train")
 
-                    a_test_batch, b_test_batch = next(iter(test_loader))
+                    _, a_test_batch, b_test_batch = next(iter(test_loader))
                     a_test_batch = a_test_batch.to(device, non_blocking = True)
                     b_test_batch = b_test_batch.to(device, non_blocking = True)
 

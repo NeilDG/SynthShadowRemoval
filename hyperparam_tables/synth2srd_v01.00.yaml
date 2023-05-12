@@ -4,8 +4,8 @@ patch_size: 64
 
 #batch size for each GPU RAM available
 #24GB, 32GB, 10 - 12GB, 8GB
-batch_size: [256, 320, 96, 64] #amount of images to accumulate before backprop
-load_size: [256, 320, 96, 64] #amount of images to load in GPU. load_size <= batch_size
+batch_size: [256, 320, 112, 64] #amount of images to accumulate before backprop
+load_size: [256, 320, 112, 64] #amount of images to load in GPU. load_size <= batch_size
 
 num_blocks: 6
 weight_decay: 0.0
@@ -17,8 +17,8 @@ norm_mode: "batch"
 
 g_lr: 0.0002
 d_lr: 0.0005
-min_epochs: 25
-max_epochs: 30
+min_epochs: 40
+max_epochs: 45
 
 dataset_a_version: "srd"
 dataset_a_repeats: 78

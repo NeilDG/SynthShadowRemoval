@@ -1,4 +1,5 @@
 import itertools
+import os
 import sys
 from optparse import OptionParser
 import random
@@ -7,6 +8,7 @@ import torch.nn.parallel
 import torch.utils.data
 import numpy as np
 import yaml
+from torch import nn
 from yaml.loader import SafeLoader
 from config.network_config import ConfigHolder
 from loaders import dataset_loader
@@ -38,18 +40,18 @@ def update_config(opts):
     if (global_config.server_config == 0):
         global_config.num_workers = 6
         global_config.disable_progress_bar = True #disable progress bar logging in COARE
-        global_config.load_size = network_config["load_size"][0]
-        global_config.batch_size = network_config["batch_size"][0]
+        global_config.load_size = network_config["load_size"][0] - 4
+        global_config.batch_size = network_config["batch_size"][0] - 4
 
         print("Using COARE configuration. Workers: ", global_config.num_workers)
-        global_config.DATASET_PLACES_PATH = "/scratch1/scratch2/neil.delgallego/Places Dataset/*.jpg"
-        global_config.rgb_dir_ws = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
-        global_config.rgb_dir_ns = "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
-        global_config.ws_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_A/*.png"
-        global_config.ns_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_C/*.png"
-        global_config.mask_istd = "/scratch1/scratch2/neil.delgallego/ISTD_Dataset/test/test_B/*.png"
-        global_config.ws_srd = "/scratch1/scratch2/neil.delgallego/SRD_Test/srd/shadow/*.jpg"
-        global_config.ns_srd = "/scratch1/scratch2/neil.delgallego/SRD_Test/srd/shadow_free/*.jpg"
+        global_config.DATASET_PLACES_PATH = "/scratch3/neil.delgallego/Places Dataset/*.jpg"
+        global_config.rgb_dir_ws = "/scratch3/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        global_config.rgb_dir_ns = "/scratch3/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
+        global_config.ws_istd = "/scratch3/neil.delgallego/ISTD_Dataset/test/test_A/*.png"
+        global_config.ns_istd = "/scratch3/neil.delgallego/ISTD_Dataset/test/test_C/*.png"
+        global_config.mask_istd = "/scratch3/neil.delgallego/ISTD_Dataset/test/test_B/*.png"
+        global_config.ws_srd = "/scratch3/neil.delgallego/SRD_Test/srd/shadow/*.jpg"
+        global_config.ns_srd = "/scratch3/neil.delgallego/SRD_Test/srd/shadow_free/*.jpg"
 
     # CCS JUPYTER
     elif (global_config.server_config == 1):
@@ -84,14 +86,14 @@ def update_config(opts):
         global_config.num_workers = 4
         global_config.load_size = network_config["load_size"][2]
         global_config.batch_size = network_config["batch_size"][2]
-        global_config.DATASET_PLACES_PATH = "C:/Datasets/Places Dataset/*.jpg"
-        global_config.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
-        global_config.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
-        global_config.ws_istd ="C:/Datasets/ISTD_Dataset/test/test_A/*.png"
-        global_config.ns_istd = "C:/Datasets/ISTD_Dataset/test/test_C/*.png"
-        global_config.mask_istd = "C:/Datasets/ISTD_Dataset/test/test_B/*.png"
-        global_config.ws_srd = "C:/Datasets/SRD_Test/srd/shadow/*.jpg"
-        global_config.ns_srd = "C:/Datasets/SRD_Test/srd/shadow_free/*.jpg"
+        global_config.DATASET_PLACES_PATH = "/home/neildelgallego/Places Dataset/*.jpg"
+        global_config.rgb_dir_ws = "/home/neildelgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        global_config.rgb_dir_ns = "/home/neildelgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
+        global_config.ws_istd ="/home/neildelgallego/ISTD_Dataset/test/test_A/*.png"
+        global_config.ns_istd = "/home/neildelgallego/ISTD_Dataset/test/test_C/*.png"
+        global_config.mask_istd = "/home/neildelgallego/ISTD_Dataset/test/test_B/*.png"
+        global_config.ws_srd = "/home/neildelgallego/SRD_Test/srd/shadow/*.jpg"
+        global_config.ns_srd = "/home/neildelgallego/SRD_Test/srd/shadow_free/*.jpg"
 
         print("Using TITAN configuration. Workers: ", global_config.num_workers)
 
@@ -160,6 +162,20 @@ def train_shadow(device, opts):
     pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
     pbar.update(current_progress)
 
+    # plot utils
+    # plot_loss_path = "./reports/train_test_loss.yaml"
+    # l1_loss = nn.L1Loss()
+    # if (os.path.exists(plot_loss_path)):
+    #     with open(plot_loss_path) as f:
+    #         losses_dict = yaml.load(f, SafeLoader)
+    # else:
+    #     losses_dict = {}
+    #     losses_dict["train"] = []
+    #     losses_dict["test_istd"] = []
+    #
+    # print("Losses dict: ", losses_dict["train"])
+    # iteration = 7500
+
     for epoch in range(start_epoch, network_config["max_epochs"]):
         for i, (train_data, test_data) in enumerate(zip(train_loader, itertools.cycle(test_loader_istd))):
             _, rgb_ws, rgb_ns, shadow_map, shadow_matte = train_data
@@ -187,7 +203,7 @@ def train_shadow(device, opts):
             if (i % opts.save_per_iter == 0):
                 tf.save_states(epoch, iteration, True)
 
-                if (opts.plot_enabled == 1):
+                if (global_config.plot_enabled == 1):
                     tf.visdom_plot(iteration)
                     tf.visdom_visualize(input_map, "Train")
 
@@ -202,6 +218,21 @@ def train_shadow(device, opts):
 
                     input_map = {"rgb": rgb_ws_istd, "rgb_ns": rgb_ns_istd, "shadow_matte" : matte_istd}
                     tf.visdom_visualize(input_map, "Test ISTD")
+
+            # if(global_config.plot_enabled == 1 and iteration % opts.save_per_iter == 0):
+            #     rgb2ns_like = tf.test(input_map)
+            #     train_loss = float(np.round(l1_loss(rgb2ns_like, rgb_ns).item(), 4))
+            #     losses_dict["train"].append({iteration : train_loss})
+            #
+            #     input_map = {"rgb": rgb_ws_istd, "rgb_ns": rgb_ns_istd, "shadow_matte" : matte_istd}
+            #     rgb2ns_like = tf.test(input_map)
+            #     test_loss = float(np.round(l1_loss(rgb2ns_like, rgb_ns_istd).item(), 4))
+            #     losses_dict["test_istd"].append({iteration: test_loss})
+            #
+            #     plot_loss_file = open(plot_loss_path, "w")
+            #     yaml.dump(losses_dict, plot_loss_file)
+            #     plot_loss_file.close()
+            #     print("Dumped train test loss to ", plot_loss_path)
 
 
         if (tf.is_stop_condition_met()):
@@ -260,17 +291,16 @@ def train_shadow_matte(device, opts):
 
     for epoch in range(start_epoch, max_epochs):
         for i, (train_data, test_data) in enumerate(zip(train_loader_synth, itertools.cycle(test_loader_istd))):
-            _, rgb_ws, rgb_ns, shadow_map, shadow_matte = train_data
+            _, rgb_ws, rgb_ns, shadow_matte = train_data
             rgb_ws = rgb_ws.to(device)
             rgb_ns = rgb_ns.to(device)
-            shadow_map = shadow_map.to(device)
             shadow_matte = shadow_matte.to(device)
 
             _, rgb_ws_istd, rgb_ns_istd, matte_istd = test_data
             rgb_ws_istd = rgb_ws_istd.to(device)
             matte_istd = matte_istd.to(device)
 
-            input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_map": shadow_map, "shadow_matte": shadow_matte,
+            input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_matte": shadow_matte,
                          "rgb_ws_istd": rgb_ws_istd, "rgb_ns_istd": rgb_ns_istd, "matte_istd": matte_istd}
             target_map = input_map
 
@@ -286,7 +316,7 @@ def train_shadow_matte(device, opts):
                     tf.visdom_plot(iteration)
                     tf.visdom_visualize(input_map, "Train")
 
-                    _, rgb_ws, rgb_ns, shadow_map, shadow_matte = next(itertools.cycle(test_loader_train))
+                    _, rgb_ws, rgb_ns, shadow_matte = next(itertools.cycle(test_loader_train))
                     rgb_ws = rgb_ws.to(device)
                     rgb_ns = rgb_ns.to(device)
                     shadow_matte = shadow_matte.to(device)

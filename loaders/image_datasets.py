@@ -48,7 +48,7 @@ class PairedImageDataset(data.Dataset):
         self.norm_op = transforms.Normalize((0.5, ), (0.5, ))
 
     def __getitem__(self, idx):
-        file_name = self.b_list[idx].split("\\")[-1].split(".")[0]
+        file_name = self.b_list[idx % len(self.b_list)].split("\\")[-1].split(".")[0]
 
         a_img = cv2.imread(self.a_list[idx])
         a_img = cv2.cvtColor(a_img, cv2.COLOR_BGR2RGB)
