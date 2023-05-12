@@ -136,7 +136,7 @@ def train_shadow(device, opts):
     tf.load_state_for_specific_sample()
 
     mode = "train_shadow"
-    start_epoch = global_config.last_epoch_ns
+    start_epoch = global_config.last_epoch_ns + 1
     iteration = 0
     print("---------------------------------------------------------------------------")
     print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)

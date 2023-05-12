@@ -399,13 +399,20 @@ class TesterClass():
         ave_rmse_lab = np.round(np.mean(self.rmse_list_lab), 4)
         ave_rmse_lab_ws = np.round(np.mean(self.rmse_list_lab_ws), 4)
 
+        # display_text = prefix + " - Versions: " + global_config.sm_network_version + "_" + str(global_config.sm_iteration) + \
+        #                "<br>" + global_config.ns_network_version + "_" + str(global_config.ns_iteration) + \
+        #                 "<br> Epoch: " + str(global_config.last_epoch_ns) + " Dataset: " + global_config.ns_network_config["dataset_version"] + \
+        #                 "<br> Samples: " +str(global_config.img_to_load) + \
+        #                "<br> MAE Error (SM): " + str(ave_mae_sm) + "<br> MAE Error (RGB): " +str(ave_mae_rgb) + \
+        #                "<br> RGB Reconstruction PSNR: " + str(ave_psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ave_ssim_rgb) + \
+        #                "<br> Lab RMSE: " + str(ave_rmse_lab) + "<br> Lab RMSE WS: " +str(ave_rmse_lab_ws)
+
         display_text = prefix + " - Versions: " + global_config.sm_network_version + "_" + str(global_config.sm_iteration) + \
                        "<br>" + global_config.ns_network_version + "_" + str(global_config.ns_iteration) + \
-                        "<br> Epoch: " + str(global_config.last_epoch_ns) + " Dataset: " + global_config.ns_network_config["dataset_version"] + \
-                        "<br> Samples: " +str(global_config.img_to_load) + \
-                       "<br> MAE Error (SM): " + str(ave_mae_sm) + "<br> MAE Error (RGB): " +str(ave_mae_rgb) + \
+                       "<br> Epoch: " + str(global_config.last_epoch_ns) + " Dataset: " + global_config.ns_network_config["dataset_version"] + \
+                       "<br> Samples: " + str(global_config.img_to_load) + \
                        "<br> RGB Reconstruction PSNR: " + str(ave_psnr_rgb) + "<br> RGB Reconstruction SSIM: " + str(ave_ssim_rgb) + \
-                       "<br> Lab RMSE: " + str(ave_rmse_lab) + "<br> Lab RMSE WS: " +str(ave_rmse_lab_ws)
+                       "<br> Lab RMSE: " + str(ave_rmse_lab) + "<br> Lab RMSE WS: " + str(ave_rmse_lab_ws)
 
         self.visdom_reporter.plot_text(display_text)
 

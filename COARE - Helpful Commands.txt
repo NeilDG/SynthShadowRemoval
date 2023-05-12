@@ -27,12 +27,12 @@ sbatch visdom_run.slurm
 sbatch -w saliksik-cpu-23 visdom_run.slurm
 sbatch -w saliksik-cpu-23 --dependency=afterany:335892 visdom_run.slurm
 
-sbatch --dependency=afterany:455386 script_1.slurm 1
-sbatch --dependency=afterany:455966 script_3.slurm 1
+sbatch --dependency=afterany:456192 script_1.slurm "rgb2ns_v61.26_places" 1
+sbatch --dependency=afterany:456183 script_3.slurm "rgb2sm_v61.23_places" 1
 
 sbatch script_debug.slurm 1
 sbatch slurm_download.sh 0
-sbatch script_1.slurm 1
+sbatch script_1.slurm "rgb2ns_v61.26_places" 1
 sbatch script_2.slurm 1
 sbatch script_3.slurm "rgb2sm_v61.23_places" 1 #FOR G_sm
 sbatch script_4.slurm 1 #FOR G_z
@@ -74,6 +74,7 @@ cd NeuralNets-GenerativeExperiment-V61.XX.XX
 cd NeuralNets-GenerativeExperiment-V61.XX.XX-2
 python "ccs1_main.py"
 python "ccs2_main.py"
+python "ccs3_main.py"
 python3 "titan1_main.py"
 python3 "titan2_main.py"
 python3 "titan3_main.py"
