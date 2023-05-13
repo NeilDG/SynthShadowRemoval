@@ -25,21 +25,24 @@ def main(argv):
     # gdown.download(url, output=output_dir, use_cookies=False)
     #
 
-    # PLACES
-    url = "https://drive.google.com/drive/folders/1lu937F5oUq2ZpBHTOhXc1cdhRmIsQaoH?usp=sharing"
+    # v69 places
+    url = "https://drive.google.com/drive/folders/1m5vjcV09K3aG1yATy9hswnhmb3_X9Pef?usp=sharing"
     gdown.download_folder(url, output=output_dir, use_cookies=False)
 
-    # ISTD
-    url = "https://drive.google.com/drive/folders/1lw73Dg3xQFbAuGUSFRnzXa89B2fv3-Bo?usp=sharing"
-    gdown.download_folder(url, output=output_dir, use_cookies=False)
-
-    # SRD
-    url = "https://drive.google.com/drive/folders/1m-PbdSJPuGs_kWh-H0wMjjEvuvmXPg4g?usp=sharing"
-    gdown.download_folder(url, output=output_dir, use_cookies=False)
-
-    #USR
-    url="https://drive.google.com/drive/folders/1m2KBqGJGDl8vITVTp4tnjnrKX1hTEe1k"
-    gdown.download_folder(url, output=output_dir, use_cookies=False)
+    # url = "https://drive.google.com/drive/folders/1lu937F5oUq2ZpBHTOhXc1cdhRmIsQaoH?usp=sharing"
+    # gdown.download_folder(url, output=output_dir, use_cookies=False)
+    #
+    # # ISTD
+    # url = "https://drive.google.com/drive/folders/1lw73Dg3xQFbAuGUSFRnzXa89B2fv3-Bo?usp=sharing"
+    # gdown.download_folder(url, output=output_dir, use_cookies=False)
+    #
+    # # SRD
+    # url = "https://drive.google.com/drive/folders/1m-PbdSJPuGs_kWh-H0wMjjEvuvmXPg4g?usp=sharing"
+    # gdown.download_folder(url, output=output_dir, use_cookies=False)
+    #
+    # #USR
+    # url="https://drive.google.com/drive/folders/1m2KBqGJGDl8vITVTp4tnjnrKX1hTEe1k"
+    # gdown.download_folder(url, output=output_dir, use_cookies=False)
 
 if __name__ == "__main__":
     main(sys.argv)

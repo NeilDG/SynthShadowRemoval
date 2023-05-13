@@ -229,6 +229,13 @@ def load_shadow_train_dataset():
     random.shuffle(temp_list)
     initial_istd_ws_list, initial_istd_ns_list = zip(*temp_list)
 
+    initial_srd_ws_list = glob.glob(global_config.ws_srd)
+    initial_srd_ns_list = glob.glob(global_config.ns_srd)
+
+    temp_list = list(zip(initial_srd_ws_list, initial_srd_ns_list))
+    random.shuffle(temp_list)
+    initial_srd_ws_list, initial_srd_ns_list = zip(*temp_list)
+
     ws_list = []
     ns_list = []
 
@@ -248,8 +255,19 @@ def load_shadow_train_dataset():
     else:
         istd_len = 0
 
+    mix_srd = ConfigHolder.getInstance().get_network_attribute("mix_srd", 0.0)
+    if (mix_srd > 0.0):
+        synth_len = int(len(ws_list) * network_config["mix_srd"])  # add N% istd
+        srd_len = 0
+        while srd_len < synth_len:
+            ws_list += initial_srd_ws_list
+            ns_list += initial_srd_ns_list
+            srd_len += len(initial_srd_ws_list)
+    else:
+        srd_len = 0
+
     img_length = len(ws_list)
-    print("Length of images: %d %d. ISTD len: %d"  % (len(ws_list), len(ns_list), istd_len))
+    print("Length of images: %d %d. ISTD len: %d. SRD len: %d"  % (len(ws_list), len(ns_list), istd_len, srd_len))
 
     data_loader = torch.utils.data.DataLoader(
         shadow_datasets.ShadowTrainDataset(img_length, ws_list, ns_list, 1),
