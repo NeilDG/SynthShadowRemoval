@@ -260,9 +260,9 @@ def load_shadow_train_dataset():
         synth_len = int(len(ws_list) * network_config["mix_srd"])  # add N% istd
         srd_len = 0
         while srd_len < synth_len:
-            ws_list += initial_istd_ws_list
-            ns_list += initial_istd_ns_list
-            srd_len += len(initial_istd_ws_list)
+            ws_list += initial_srd_ws_list
+            ns_list += initial_srd_ns_list
+            srd_len += len(initial_srd_ws_list)
     else:
         srd_len = 0
 
