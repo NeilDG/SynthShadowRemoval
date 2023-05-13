@@ -64,6 +64,8 @@ def update_config(opts):
         global_config.ws_istd = "/home/jupyter-neil.delgallego/ISTD_Dataset/test/test_A/*.png"
         global_config.ns_istd = "/home/jupyter-neil.delgallego/ISTD_Dataset/test/test_C/*.png"
         global_config.mask_istd = "/home/jupyter-neil.delgallego/ISTD_Dataset/test/test_B/*.png"
+        global_config.ws_srd = "/home/jupyter-neil.delgallego/SRD_Train/srd/shadow/*.jpg"
+        global_config.ns_srd = "/home/jupyter-neil.delgallego/SRD_Train/srd/shadow_free/*.jpg"
 
         print("Using CCS configuration. Workers: ", global_config.num_workers)
 
