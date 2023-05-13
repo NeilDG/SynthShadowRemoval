@@ -21,7 +21,8 @@ def train_img2img():
 
 
 def main():
-    train_img2img()
+    train_shadow_matte()
+    # train_img2img()
     # os.system("shutdown /s /t 1")
 
 
