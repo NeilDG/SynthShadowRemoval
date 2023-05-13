@@ -94,8 +94,8 @@ def update_config(opts):
         global_config.ws_istd ="/home/neildelgallego/ISTD_Dataset/test/test_A/*.png"
         global_config.ns_istd = "/home/neildelgallego/ISTD_Dataset/test/test_C/*.png"
         global_config.mask_istd = "/home/neildelgallego/ISTD_Dataset/test/test_B/*.png"
-        global_config.ws_srd = "/home/neildelgallego/SRD_Test/srd/shadow/*.jpg"
-        global_config.ns_srd = "/home/neildelgallego/SRD_Test/srd/shadow_free/*.jpg"
+        global_config.ws_srd = "/home/neildelgallego/SRD_Train/shadow/*.jpg"
+        global_config.ns_srd = "/home/neildelgallego/SRD_Train/shadow_free/*.jpg"
 
         print("Using TITAN configuration. Workers: ", global_config.num_workers)
 
