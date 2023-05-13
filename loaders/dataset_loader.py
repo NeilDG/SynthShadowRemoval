@@ -229,7 +229,6 @@ def load_shadow_train_dataset():
     random.shuffle(temp_list)
     initial_istd_ws_list, initial_istd_ns_list = zip(*temp_list)
 
-    print("SRD list: ", global_config.ws_srd)
     initial_srd_ws_list = glob.glob(global_config.ws_srd)
     initial_srd_ns_list = glob.glob(global_config.ns_srd)
 
