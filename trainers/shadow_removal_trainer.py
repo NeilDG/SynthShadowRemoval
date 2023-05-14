@@ -18,7 +18,6 @@ from transforms import iid_transforms, shadow_map_transforms
 from utils import plot_utils
 from utils import tensor_utils
 from losses import ssim_loss, iid_losses, common_losses
-import lpips
 
 class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def __init__(self, gpu_device):
