@@ -231,8 +231,8 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         return rgb2sm
 
     def visdom_plot(self, iteration):
-        self.visdom_reporter.plot_finegrain_loss("a2b_loss_a", iteration, self.losses_dict_s, self.caption_dict_s, self.NETWORK_CHECKPATH)
-        self.visdom_reporter.plot_train_test_loss("train_test_loss", iteration, self.losses_dict_t, self.caption_dict_t, self.NETWORK_CHECKPATH)
+        self.visdom_reporter.plot_finegrain_loss("a2b_loss_a", iteration, self.losses_dict_s, self.caption_dict_s, self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_train_test_loss("train_test_loss", iteration, self.losses_dict_t, self.caption_dict_t, self.NETWORK_VERSION + str(self.iteration))
 
     def visdom_visualize(self, input_map, label="Train"):
         input_ws = input_map["rgb"]
