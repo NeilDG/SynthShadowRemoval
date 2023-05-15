@@ -18,7 +18,6 @@ from transforms import iid_transforms, shadow_map_transforms
 from utils import plot_utils
 from utils import tensor_utils
 from losses import ssim_loss, iid_losses, common_losses
-import lpips
 
 class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def __init__(self, gpu_device):
@@ -69,6 +68,12 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 path.mkdir(parents=True)
             except OSError as error:
                 print(self.NETWORK_SAVE_PATH + " already exists. Skipping.", error)
+
+        # model_parameters = filter(lambda p: p.requires_grad, self.G_SM_predictor.parameters())
+        # params = sum([np.prod(p.size()) for p in model_parameters])
+        # print("-----------------------")
+        # print("DSP-FFANet Shadow Removal total parameters: ", params)
+        # print("-----------------------")
 
     def initialize_shadow_network(self):
         network_creator = abstract_iid_trainer.NetworkCreator(self.gpu_device)

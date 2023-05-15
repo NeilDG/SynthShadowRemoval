@@ -26,6 +26,8 @@ parser.add_option('--img_to_load', type=int, help="Image to load?", default=-1)
 parser.add_option('--network_version', type=str, default="VXX.XX")
 parser.add_option('--iteration', type=int, default=1)
 parser.add_option('--save_per_iter', type=int, default=500)
+parser.add_option('--save_every_epoch', type=int, default=5)
+parser.add_option('--epoch_to_load', type=int)
 parser.add_option('--plot_enabled', type=int, help="Min epochs", default=1)
 parser.add_option('--train_mode', type=str, default="all") #all, train_shadow_matte, train_shadow
 
@@ -34,6 +36,10 @@ def update_config(opts):
     global_config.plot_enabled = opts.plot_enabled
     global_config.img_to_load = opts.img_to_load
     global_config.train_mode = opts.train_mode
+    global_config.save_every_epoch = opts.save_every_epoch
+    assert opts.epoch_to_load is not None, "Must provide epoch to load"
+    global_config.epoch_to_load = opts.epoch_to_load
+    global_config.load_per_epoch = True
 
     config_holder = ConfigHolder.getInstance()
     network_config = config_holder.get_network_config()
@@ -132,9 +138,8 @@ def train_shadow(device, opts):
     global_config.test_size = 8
 
     mode = "train_shadow"
-    start_epoch = 55
-    iteration = 73500
-    global_config.load_per_epoch = True
+    start_epoch = global_config.epoch_to_load
+    iteration = 0
     print("---------------------------------------------------------------------------")
     print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
     print("Network config: ", network_config)
@@ -200,8 +205,6 @@ def train_shadow(device, opts):
             pbar.update(1)
 
             tf.train(epoch, iteration, input_map, target_map)
-            if (tf.is_stop_condition_met()):
-                break
 
             if (i % opts.save_per_iter == 0 and global_config.plot_enabled == 1):
                 # tf.visdom_plot(iteration)
@@ -234,11 +237,8 @@ def train_shadow(device, opts):
                 plot_loss_file.close()
                 print("Dumped train test loss to ", plot_loss_path)
 
-        if(epoch % 5 == 0):
+        if(epoch % global_config.save_every_epoch == 0):
             tf.save_for_each_epoch(epoch, iteration)
-
-        if (tf.is_stop_condition_met()):
-            break
 
     pbar.close()
 
@@ -261,10 +261,11 @@ def train_shadow_matte(device, opts):
     global_config.test_size = 8
 
     tf = shadow_matte_trainer.ShadowMatteTrainer(device)
+    tf.load_specific_epoch(global_config.epoch_to_load)
 
     mode = "train_shadow_matte"
     iteration = 0
-    start_epoch = global_config.last_epoch_sm
+    start_epoch = global_config.epoch_to_load
     print("---------------------------------------------------------------------------")
     print("Started Training loop for mode: ", mode, " Set start epoch: ", start_epoch)
     print("Network config: ", network_config)
@@ -293,48 +294,41 @@ def train_shadow_matte(device, opts):
 
     for epoch in range(start_epoch, max_epochs):
         for i, (train_data, test_data) in enumerate(zip(train_loader_synth, itertools.cycle(test_loader_istd))):
-            _, rgb_ws, rgb_ns, shadow_map, shadow_matte = train_data
+            _, rgb_ws, rgb_ns, shadow_matte = train_data
             rgb_ws = rgb_ws.to(device)
             rgb_ns = rgb_ns.to(device)
-            shadow_map = shadow_map.to(device)
             shadow_matte = shadow_matte.to(device)
 
             _, rgb_ws_istd, rgb_ns_istd, matte_istd = test_data
             rgb_ws_istd = rgb_ws_istd.to(device)
             matte_istd = matte_istd.to(device)
 
-            input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_map": shadow_map, "shadow_matte": shadow_matte,
+            input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_matte": shadow_matte,
                          "rgb_ws_istd": rgb_ws_istd, "rgb_ns_istd": rgb_ns_istd, "matte_istd": matte_istd}
             target_map = input_map
-
-            tf.train(epoch, iteration, input_map, target_map)
-
-            if (tf.is_stop_condition_met()):
-                break
-
-            if (iteration % opts.save_per_iter == 0):
-                tf.save_states(epoch, iteration, True)
-
-                if (opts.plot_enabled == 1):
-                    tf.visdom_plot(iteration)
-                    tf.visdom_visualize(input_map, "Train")
-
-                    _, rgb_ws, rgb_ns, shadow_map, shadow_matte = next(itertools.cycle(test_loader_train))
-                    rgb_ws = rgb_ws.to(device)
-                    rgb_ns = rgb_ns.to(device)
-                    shadow_matte = shadow_matte.to(device)
-
-                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_matte": shadow_matte}
-                    tf.visdom_visualize(input_map, "Test Synthetic")
-
-                    input_map = {"rgb": rgb_ws_istd, "rgb_ns" : rgb_ns_istd, "shadow_matte": matte_istd}
-                    tf.visdom_visualize(input_map, "Test ISTD")
 
             iteration = iteration + 1
             pbar.update(1)
 
-        if (tf.is_stop_condition_met()):
-            break
+            tf.train(epoch, iteration, input_map, target_map)
+
+            if (iteration % opts.save_per_iter == 0 and global_config.plot_enabled == 1):
+                tf.visdom_plot(iteration)
+                tf.visdom_visualize(input_map, "Train")
+
+                _, rgb_ws, rgb_ns, shadow_matte = next(itertools.cycle(test_loader_train))
+                rgb_ws = rgb_ws.to(device)
+                rgb_ns = rgb_ns.to(device)
+                shadow_matte = shadow_matte.to(device)
+
+                input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_matte": shadow_matte}
+                tf.visdom_visualize(input_map, "Test Synthetic")
+
+                input_map = {"rgb": rgb_ws_istd, "rgb_ns" : rgb_ns_istd, "shadow_matte": matte_istd}
+                tf.visdom_visualize(input_map, "Test ISTD")
+
+        if(epoch % global_config.save_every_epoch == 0):
+            tf.save_for_each_epoch(epoch, iteration)
 
     pbar.close()
 
@@ -350,7 +344,6 @@ def main(argv):
 
     assert opts.train_mode == "train_shadow" or opts.train_mode == "train_shadow_matte", "Unrecognized train mode: " + opts.train_mode
     plot_utils.VisdomReporter.initialize()
-
 
     if (opts.train_mode == "train_shadow_matte"):
         train_shadow_matte(device, opts)

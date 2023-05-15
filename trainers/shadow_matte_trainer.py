@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import torchvision.transforms.functional
 
 from config.network_config import ConfigHolder
@@ -55,8 +57,29 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.schedulerD = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD, patience=1000000 / self.batch_size, threshold=0.00005)
 
         self.NETWORK_VERSION = config_holder.get_sm_version_name()
-        self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
-        self.load_saved_state()
+        if (global_config.load_per_epoch == False and global_config.load_per_sample == False):
+            self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
+            self.load_saved_state()
+        elif (global_config.load_per_epoch == True):
+            self.NETWORK_SAVE_PATH = "./checkpoint/by_epoch/"
+            try:
+                path = Path(self.NETWORK_SAVE_PATH)
+                path.mkdir(parents=True)
+            except OSError as error:
+                print(self.NETWORK_SAVE_PATH + " already exists. Skipping.", error)
+        else:
+            self.NETWORK_SAVE_PATH = "./checkpoint/by_sample/"
+            try:
+                path = Path(self.NETWORK_SAVE_PATH)
+                path.mkdir(parents=True)
+            except OSError as error:
+                print(self.NETWORK_SAVE_PATH + " already exists. Skipping.", error)
+
+        # model_parameters = filter(lambda p: p.requires_grad, self.G_SM_predictor.parameters())
+        # params = sum([np.prod(p.size()) for p in model_parameters])
+        # print("-----------------------")
+        # print("DSP-FFANet Shadow Matte total parameters: ", params)
+        # print("-----------------------")
 
     def initialize_shadow_network(self):
         network_creator = abstract_iid_trainer.NetworkCreator(self.gpu_device)
@@ -208,8 +231,8 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         return rgb2sm
 
     def visdom_plot(self, iteration):
-        self.visdom_reporter.plot_finegrain_loss("a2b_loss_a", iteration, self.losses_dict_s, self.caption_dict_s, self.NETWORK_CHECKPATH)
-        self.visdom_reporter.plot_train_test_loss("train_test_loss", iteration, self.losses_dict_t, self.caption_dict_t, self.NETWORK_CHECKPATH)
+        self.visdom_reporter.plot_finegrain_loss("a2b_loss_a", iteration, self.losses_dict_s, self.caption_dict_s, self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_train_test_loss("train_test_loss", iteration, self.losses_dict_t, self.caption_dict_t, self.NETWORK_VERSION + str(self.iteration))
 
     def visdom_visualize(self, input_map, label="Train"):
         input_ws = input_map["rgb"]
@@ -262,6 +285,63 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         else:
             torch.save(save_dict, self.NETWORK_CHECKPATH)
             print("Saved stable model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
+
+    def save_for_each_epoch(self, epoch, iteration):
+        save_dict = {'epoch': epoch, 'iteration': iteration, global_config.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
+        netGNS_state_dict = self.G_SM_predictor.state_dict()
+        netDNS_state_dict = self.D_SM_discriminator.state_dict()
+
+        save_dict[global_config.GENERATOR_KEY + "Z"] = netGNS_state_dict
+        save_dict[global_config.DISCRIMINATOR_KEY + "Z"] = netDNS_state_dict
+
+        network_file_name = self.NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_" + str(epoch) + ".pth"
+        torch.save(save_dict, network_file_name)
+        print("Saved stable model state: %s Epoch: %d. Name: %s" % (len(save_dict), (epoch), network_file_name))
+
+    def load_specific_epoch(self, epoch):
+        network_file_name = self.NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_" + str(epoch) + ".pth"
+        try:
+            checkpoint = torch.load(network_file_name, map_location=self.gpu_device)
+        except:
+            checkpoint = None
+            print("No existing checkpoint file found: ", network_file_name)
+
+        if (checkpoint != None):
+            global_config.last_epoch_ns = checkpoint["epoch"]
+            self.stopper_method.update_last_metric(checkpoint[global_config.LAST_METRIC_KEY])
+            self.G_SM_predictor.load_state_dict(checkpoint[global_config.GENERATOR_KEY + "Z"])
+            self.D_SM_discriminator.load_state_dict(checkpoint[global_config.DISCRIMINATOR_KEY + "Z"])
+
+            print("Loaded shadow matte network: ", network_file_name, "Epoch: ", checkpoint["epoch"])
+
+    def save_state_for_sample(self, epoch, iteration):
+        save_dict = {'epoch': epoch, 'iteration': iteration, global_config.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
+        netGNS_state_dict = self.G_SM_predictor.state_dict()
+        netDNS_state_dict = self.D_SM_discriminator.state_dict()
+
+        save_dict[global_config.GENERATOR_KEY + "Z"] = netGNS_state_dict
+        save_dict[global_config.DISCRIMINATOR_KEY + "Z"] = netDNS_state_dict
+
+        network_file_name = self.NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_" + str(global_config.img_to_load) + ".pth"
+        torch.save(save_dict, network_file_name)
+        print("Saved stable model state: %s Epoch: %d. Name: %s" % (len(save_dict), (epoch), network_file_name))
+
+    def load_state_for_specific_sample(self):
+        network_file_name = self.NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_" + str(global_config.img_to_load) + ".pth"
+        try:
+            checkpoint = torch.load(network_file_name, map_location=self.gpu_device)
+        except:
+            checkpoint = None
+            print("No existing checkpoint file found: ", network_file_name)
+
+        if (checkpoint != None):
+            global_config.last_epoch_ns = checkpoint["epoch"]
+            global_config.last_iteration_ns = checkpoint["iteration"]
+            self.stopper_method.update_last_metric(checkpoint[global_config.LAST_METRIC_KEY])
+            self.G_SM_predictor.load_state_dict(checkpoint[global_config.GENERATOR_KEY + "Z"])
+            self.D_SM_discriminator.load_state_dict(checkpoint[global_config.DISCRIMINATOR_KEY + "Z"])
+
+            print("Loaded shadow matte network: ", network_file_name, "Epoch: ", checkpoint["epoch"])
 
 
 

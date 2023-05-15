@@ -25,9 +25,21 @@ def main(argv):
     # gdown.download(url, output=output_dir, use_cookies=False)
     #
 
+    # ISTD train dataset
+    direct_link = "https://drive.google.com/file/d/1liYCjJe1IPV-UZUvC2xaimZMwx9mA2Tm/view?usp=sharing"
+    id = direct_link.split("/d/")[1].split("/")[0]
+    url = "https://drive.google.com/uc?id=" + id
+    gdown.download(url, output=output_dir, use_cookies=False)
+
+    #SRD Train dataset
+    direct_link = "https://drive.google.com/file/d/1lipMqaY7NfNevhq5uC_S06Rf4swUK5RX/view?usp=sharing"
+    id = direct_link.split("/d/")[1].split("/")[0]
+    url = "https://drive.google.com/uc?id=" + id
+    gdown.download(url, output=output_dir, use_cookies=False)
+
     # v69 places
-    url = "https://drive.google.com/drive/folders/1m5vjcV09K3aG1yATy9hswnhmb3_X9Pef?usp=sharing"
-    gdown.download_folder(url, output=output_dir, use_cookies=False)
+    # url = "https://drive.google.com/drive/folders/1m5vjcV09K3aG1yATy9hswnhmb3_X9Pef?usp=sharing"
+    # gdown.download_folder(url, output=output_dir, use_cookies=False)
 
     # url = "https://drive.google.com/drive/folders/1lu937F5oUq2ZpBHTOhXc1cdhRmIsQaoH?usp=sharing"
     # gdown.download_folder(url, output=output_dir, use_cookies=False)
