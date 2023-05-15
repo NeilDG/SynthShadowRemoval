@@ -69,6 +69,12 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             except OSError as error:
                 print(self.NETWORK_SAVE_PATH + " already exists. Skipping.", error)
 
+        # model_parameters = filter(lambda p: p.requires_grad, self.G_SM_predictor.parameters())
+        # params = sum([np.prod(p.size()) for p in model_parameters])
+        # print("-----------------------")
+        # print("DSP-FFANet Shadow Removal total parameters: ", params)
+        # print("-----------------------")
+
     def initialize_shadow_network(self):
         network_creator = abstract_iid_trainer.NetworkCreator(self.gpu_device)
         self.G_SM_predictor, self.D_SM_discriminator = network_creator.initialize_rgb_network()  # shadow map (Shadow - Shadow-Free)

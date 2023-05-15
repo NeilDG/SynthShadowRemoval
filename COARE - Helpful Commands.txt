@@ -27,8 +27,8 @@ sbatch visdom_run.slurm
 sbatch -w saliksik-cpu-23 visdom_run.slurm
 sbatch -w saliksik-cpu-23 --dependency=afterany:335892 visdom_run.slurm
 
-sbatch --dependency=afterany:457226 script_1.slurm "rgb2ns_v61.26_places" 1
-sbatch --dependency=afterany:457224 script_3.slurm "rgb2sm_v61.23_places" 1
+sbatch --dependency=afterany:458059 script_1.slurm "rgb2ns_v61.26_places" 1
+sbatch --dependency=afterany:458060 script_3.slurm "rgb2sm_v61.23_places" 1
 
 sbatch script_debug.slurm 1
 sbatch slurm_download.sh 0

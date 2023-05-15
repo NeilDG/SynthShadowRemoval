@@ -16,8 +16,8 @@ mix_srd: 0.0
 
 g_lr: 0.0002
 d_lr: 0.0005
-min_epochs: 10
-max_epochs: 15
+min_epochs: 20
+max_epochs: 25
 
 dataset_version: "v84_places"
 dataset_repeats: 3

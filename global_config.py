@@ -86,7 +86,8 @@ last_iteration_ns = 0
 dataset_target = ""
 cuda_device = ""
 save_images = 0
-
+save_every_epoch = 5
+epoch_to_load = 0
 load_per_epoch = False
 load_per_sample = False
 
