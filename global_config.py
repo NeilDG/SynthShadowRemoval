@@ -90,5 +90,6 @@ save_every_epoch = 5
 epoch_to_load = 0
 load_per_epoch = False
 load_per_sample = False
+load_best = False
 
 

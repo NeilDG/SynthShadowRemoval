@@ -59,7 +59,10 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         self.NETWORK_VERSION = config_holder.get_sm_version_name()
         if (global_config.load_per_epoch == False and global_config.load_per_sample == False):
-            self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
+            if(global_config.load_best):
+                self.NETWORK_CHECKPATH = 'checkpoint/best' + self.NETWORK_VERSION + '_best.pth'
+            else:
+                self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
             self.load_saved_state()
         elif (global_config.load_per_epoch == True):
             self.NETWORK_SAVE_PATH = "./checkpoint/by_epoch/"
@@ -81,7 +84,7 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             path = Path(self.BEST_NETWORK_SAVE_PATH)
             path.mkdir(parents=True)
         except OSError as error:
-            print(self.NETWORK_SAVE_PATH + " already exists. Skipping.", error)
+            print(self.BEST_NETWORK_SAVE_PATH + " already exists. Skipping.", error)
 
         network_file_name = self.BEST_NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_best" + ".pth"
         self.best_tracker = best_tracker.BestTracker(early_stopper.EarlyStopperMethod.L1_TYPE)

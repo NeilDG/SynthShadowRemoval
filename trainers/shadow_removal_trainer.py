@@ -3,7 +3,7 @@ from pathlib import Path
 import torchvision.transforms.functional
 
 from config.network_config import ConfigHolder
-from trainers import abstract_iid_trainer, early_stopper
+from trainers import abstract_iid_trainer, early_stopper, best_tracker
 import kornia
 from model.modules import image_pool
 from model import vanilla_cycle_gan as cycle_gan
@@ -68,6 +68,16 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 path.mkdir(parents=True)
             except OSError as error:
                 print(self.NETWORK_SAVE_PATH + " already exists. Skipping.", error)
+
+        self.BEST_NETWORK_SAVE_PATH = "./checkpoint/best/"
+        try:
+            path = Path(self.BEST_NETWORK_SAVE_PATH)
+            path.mkdir(parents=True)
+        except OSError as error:
+            print(self.BEST_NETWORK_SAVE_PATH + " already exists. Skipping.", error)
+        network_file_name = self.BEST_NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_best" + ".pth"
+        self.best_tracker = best_tracker.BestTracker(early_stopper.EarlyStopperMethod.L1_TYPE)
+        self.best_tracker.load_best_state(network_file_name)
 
         # model_parameters = filter(lambda p: p.requires_grad, self.G_SM_predictor.parameters())
         # params = sum([np.prod(p.size()) for p in model_parameters])
@@ -192,7 +202,10 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 rgb2ns_istd = self.test_istd(input_map)
                 istd_ns_test = input_map["rgb_ns_istd"]
 
-                #perform earlyu stopping
+                # check and save best state
+                self.try_save_best_state(rgb2ns_istd, istd_ns_test, epoch, iteration)
+
+                #perform early stopping
                 if(global_config.save_every_epoch == False):
                     self.stopper_method.register_metric(rgb2ns_istd, istd_ns_test, epoch)
                     self.stop_result = self.stopper_method.test(epoch)
@@ -339,6 +352,22 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             self.D_SM_discriminator.load_state_dict(checkpoint[global_config.DISCRIMINATOR_KEY + "Z"])
 
             print("Loaded shadow removal network: ", network_file_name, "Epoch: ", checkpoint["epoch"])
+
+    def try_save_best_state(self, input, target, epoch, iteration):
+        best_achieved = self.best_tracker.test(input, target)
+        best_metric = self.best_tracker.get_best_metric()
+        if(best_achieved):
+            network_file_name = self.BEST_NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_best" + ".pth"
+            save_dict = {'epoch': epoch, 'iteration': iteration, global_config.LAST_METRIC_KEY: self.stopper_method.get_last_metric(),
+                         'best_metric' : best_metric}
+            netGNS_state_dict = self.G_SM_predictor.state_dict()
+            netDNS_state_dict = self.D_SM_discriminator.state_dict()
+
+            save_dict[global_config.GENERATOR_KEY + "Z"] = netGNS_state_dict
+            save_dict[global_config.DISCRIMINATOR_KEY + "Z"] = netDNS_state_dict
+
+            torch.save(save_dict, network_file_name)
+            print("Saved best model state. Epoch: %d. Name: %s. Best metric: %f" % (epoch, network_file_name, best_metric))
 
 
 
