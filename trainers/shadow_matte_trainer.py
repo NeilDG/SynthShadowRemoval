@@ -58,34 +58,19 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.schedulerD = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD, patience=1000000 / self.batch_size, threshold=0.00005)
 
         self.NETWORK_VERSION = config_holder.get_sm_version_name()
+        self.BEST_NETWORK_SAVE_PATH = "./checkpoint/best/"
         if (global_config.load_per_epoch == False and global_config.load_per_sample == False):
-            if(global_config.load_best):
-                self.NETWORK_CHECKPATH = 'checkpoint/best' + self.NETWORK_VERSION + '_best.pth'
+            if (global_config.load_best):
+                self.NETWORK_CHECKPATH = self.BEST_NETWORK_SAVE_PATH + self.NETWORK_VERSION + '_best.pth'
             else:
-                self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
+                self.NETWORK_CHECKPATH = './checkpoint/' + self.NETWORK_VERSION + '.pt'
             self.load_saved_state()
         elif (global_config.load_per_epoch == True):
             self.NETWORK_SAVE_PATH = "./checkpoint/by_epoch/"
-            try:
-                path = Path(self.NETWORK_SAVE_PATH)
-                path.mkdir(parents=True)
-            except OSError as error:
-                print(self.NETWORK_SAVE_PATH + " already exists. Skipping.", error)
         else:
             self.NETWORK_SAVE_PATH = "./checkpoint/by_sample/"
-            try:
-                path = Path(self.NETWORK_SAVE_PATH)
-                path.mkdir(parents=True)
-            except OSError as error:
-                print(self.NETWORK_SAVE_PATH + " already exists. Skipping.", error)
 
         self.BEST_NETWORK_SAVE_PATH = "./checkpoint/best/"
-        try:
-            path = Path(self.BEST_NETWORK_SAVE_PATH)
-            path.mkdir(parents=True)
-        except OSError as error:
-            print(self.BEST_NETWORK_SAVE_PATH + " already exists. Skipping.", error)
-
         network_file_name = self.BEST_NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_best" + ".pth"
         self.best_tracker = best_tracker.BestTracker(early_stopper.EarlyStopperMethod.L1_TYPE)
         self.best_tracker.load_best_state(network_file_name)
@@ -214,12 +199,12 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 self.try_save_best_state(rgb2sm_istd, istd_sm_test, epoch, iteration)
 
                 #perform early stopping
-                if (global_config.save_every_epoch == False):
-                    self.stopper_method.register_metric(rgb2sm_istd, istd_sm_test, epoch)
-                    self.stop_result = self.stopper_method.test(epoch)
-
-                    if (self.stopper_method.has_reset()):
-                        self.save_states(epoch, iteration, False)
+                # if (global_config.save_every_epoch == False):
+                #     self.stopper_method.register_metric(rgb2sm_istd, istd_sm_test, epoch)
+                #     self.stop_result = self.stopper_method.test(epoch)
+                #
+                #     if (self.stopper_method.has_reset()):
+                #         self.save_states(epoch, iteration, False)
 
                 #plot train-test loss
                 rgb2sm = self.test(input_map)
@@ -279,7 +264,7 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             try:
                 checkpt_name = 'checkpoint/' + self.NETWORK_VERSION + ".pt.checkpt"
                 checkpoint = torch.load(checkpt_name, map_location=self.gpu_device)
-                print("Loaded shadow network: ", checkpt_name)
+                print("No available .pt/pth file found. Loading .checkpt file: ", checkpt_name)
             except:
                 checkpoint = None
                 print("No existing checkpoint file found. Creating new shadow network: ", self.NETWORK_CHECKPATH)
@@ -312,8 +297,8 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         netGNS_state_dict = self.G_SM_predictor.state_dict()
         netDNS_state_dict = self.D_SM_discriminator.state_dict()
 
-        save_dict[global_config.GENERATOR_KEY + "Z"] = netGNS_state_dict
-        save_dict[global_config.DISCRIMINATOR_KEY + "Z"] = netDNS_state_dict
+        save_dict[global_config.GENERATOR_KEY + "M"] = netGNS_state_dict
+        save_dict[global_config.DISCRIMINATOR_KEY + "M"] = netDNS_state_dict
 
         network_file_name = self.NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_" + str(epoch) + ".pth"
         torch.save(save_dict, network_file_name)
@@ -340,8 +325,8 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         netGNS_state_dict = self.G_SM_predictor.state_dict()
         netDNS_state_dict = self.D_SM_discriminator.state_dict()
 
-        save_dict[global_config.GENERATOR_KEY + "Z"] = netGNS_state_dict
-        save_dict[global_config.DISCRIMINATOR_KEY + "Z"] = netDNS_state_dict
+        save_dict[global_config.GENERATOR_KEY + "M"] = netGNS_state_dict
+        save_dict[global_config.DISCRIMINATOR_KEY + "M"] = netDNS_state_dict
 
         network_file_name = self.NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_" + str(global_config.img_to_load) + ".pth"
         torch.save(save_dict, network_file_name)
@@ -374,8 +359,8 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             netGNS_state_dict = self.G_SM_predictor.state_dict()
             netDNS_state_dict = self.D_SM_discriminator.state_dict()
 
-            save_dict[global_config.GENERATOR_KEY + "Z"] = netGNS_state_dict
-            save_dict[global_config.DISCRIMINATOR_KEY + "Z"] = netDNS_state_dict
+            save_dict[global_config.GENERATOR_KEY + "M"] = netGNS_state_dict
+            save_dict[global_config.DISCRIMINATOR_KEY + "M"] = netDNS_state_dict
 
             torch.save(save_dict, network_file_name)
             print("Saved best model state. Epoch: %d. Name: %s. Best metric: %f" % (epoch, network_file_name, best_metric))
