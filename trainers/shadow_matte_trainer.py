@@ -191,14 +191,17 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                     # self.losses_dict_s[self.MASK_LOSS_KEY].append(SM_masking_loss.item())
                     # self.losses_dict_s[self.ISTD_SM_LOSS_KEY].append(SM_istd_loss.item())
 
-                #perform validation test and early stopping
+                #perform validation test
                 rgb2sm_istd = self.test_istd(input_map)
                 istd_sm_test = input_map["matte_istd"]
-                self.stopper_method.register_metric(rgb2sm_istd, istd_sm_test, epoch)
-                self.stop_result = self.stopper_method.test(epoch)
 
-                if (self.stopper_method.has_reset()):
-                    self.save_states(epoch, iteration, False)
+                #perform early stopping
+                if (global_config.save_every_epoch == False):
+                    self.stopper_method.register_metric(rgb2sm_istd, istd_sm_test, epoch)
+                    self.stop_result = self.stopper_method.test(epoch)
+
+                    if (self.stopper_method.has_reset()):
+                        self.save_states(epoch, iteration, False)
 
                 #plot train-test loss
                 rgb2sm = self.test(input_map)

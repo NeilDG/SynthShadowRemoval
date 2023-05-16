@@ -188,14 +188,17 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                     self.losses_dict_s[self.D_A_REAL_LOSS_KEY].append(D_SM_real_loss.item())
                     # self.losses_dict_s[self.MASK_LOSS_KEY].append(SM_masking_loss.item())
 
-                #perform validation test and early stopping
+                #perform validation test
                 rgb2ns_istd = self.test_istd(input_map)
                 istd_ns_test = input_map["rgb_ns_istd"]
-                self.stopper_method.register_metric(rgb2ns_istd, istd_ns_test, epoch)
-                self.stop_result = self.stopper_method.test(epoch)
 
-                if (self.stopper_method.has_reset()):
-                    self.save_states(epoch, iteration, False)
+                #perform earlyu stopping
+                if(global_config.save_every_epoch == False):
+                    self.stopper_method.register_metric(rgb2ns_istd, istd_ns_test, epoch)
+                    self.stop_result = self.stopper_method.test(epoch)
+
+                    if (self.stopper_method.has_reset()):
+                        self.save_states(epoch, iteration, False)
 
                 #plot train-test loss
                 rgb2ns = self.test(input_map)
@@ -230,8 +233,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         return rgb2ns
 
     def visdom_plot(self, iteration):
-        self.visdom_reporter.plot_finegrain_loss("a2b_loss_a", iteration, self.losses_dict_s, self.caption_dict_s, self.NETWORK_CHECKPATH)
-        self.visdom_reporter.plot_train_test_loss("train_test_loss", iteration, self.losses_dict_t, self.caption_dict_t, self.NETWORK_CHECKPATH)
+        self.visdom_reporter.plot_finegrain_loss("a2b_loss_a", iteration, self.losses_dict_s, self.caption_dict_s, self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_train_test_loss("train_test_loss", iteration, self.losses_dict_t, self.caption_dict_t, self.NETWORK_VERSION + str(self.iteration))
 
     def visdom_visualize(self, input_map, label="Train"):
         input_ws = input_map["rgb"]

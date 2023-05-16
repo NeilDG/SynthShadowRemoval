@@ -165,7 +165,7 @@ def train_shadow(device, opts):
         test_loader_istd, _ = dataset_loader.load_istd_dataset()
 
     # compute total progress
-    max_epochs = network_config["max_epochs"]
+    max_epochs = network_config["max_epochs"] + 1
     needed_progress = int(max_epochs * (dataset_count / global_config.load_size))
     current_progress = int(start_epoch * (dataset_count / global_config.load_size))
     pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
@@ -184,12 +184,11 @@ def train_shadow(device, opts):
 
     print("Losses dict: ", losses_dict["train"])
 
-    for epoch in range(start_epoch, network_config["max_epochs"] + 1):
+    for epoch in range(start_epoch, max_epochs):
         for i, (train_data, test_data) in enumerate(zip(train_loader, itertools.cycle(test_loader_istd))):
-            _, rgb_ws, rgb_ns, shadow_map, shadow_matte = train_data
+            _, rgb_ws, rgb_ns, shadow_matte = train_data
             rgb_ws = rgb_ws.to(device)
             rgb_ns = rgb_ns.to(device)
-            shadow_map = shadow_map.to(device)
             shadow_matte = shadow_matte.to(device)
 
             _, rgb_ws_istd, rgb_ns_istd, matte_istd = test_data
@@ -197,7 +196,7 @@ def train_shadow(device, opts):
             rgb_ns_istd = rgb_ns_istd.to(device)
             matte_istd = matte_istd.to(device)
 
-            input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns , "shadow_map" : shadow_map, "shadow_matte" : shadow_matte,
+            input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_matte" : shadow_matte,
                          "rgb_ws_istd" : rgb_ws_istd, "rgb_ns_istd" : rgb_ns_istd, "matte_istd" : matte_istd}
             target_map = input_map
 
@@ -207,16 +206,15 @@ def train_shadow(device, opts):
             tf.train(epoch, iteration, input_map, target_map)
 
             if (i % opts.save_per_iter == 0 and global_config.plot_enabled == 1):
-                # tf.visdom_plot(iteration)
+                tf.visdom_plot(iteration)
                 tf.visdom_visualize(input_map, "Train")
 
-                _, rgb_ws, rgb_ns, shadow_map, shadow_matte = next(itertools.cycle(test_loader_train))
+                _, rgb_ws, rgb_ns, shadow_matte = next(itertools.cycle(test_loader_train))
                 rgb_ws = rgb_ws.to(device)
                 rgb_ns = rgb_ns.to(device)
-                shadow_map = shadow_map.to(device)
                 shadow_matte = shadow_matte.to(device)
 
-                input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns , "shadow_map": shadow_map, "shadow_matte": shadow_matte}
+                input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_matte": shadow_matte}
                 tf.visdom_visualize(input_map, "Test Synthetic")
 
                 input_map = {"rgb": rgb_ws_istd, "rgb_ns": rgb_ns_istd, "shadow_matte" : matte_istd}
@@ -237,6 +235,7 @@ def train_shadow(device, opts):
                 plot_loss_file.close()
                 print("Dumped train test loss to ", plot_loss_path)
 
+        print("Current epoch: ", epoch)
         if(epoch % global_config.save_every_epoch == 0):
             tf.save_for_each_epoch(epoch, iteration)
 
@@ -286,7 +285,7 @@ def train_shadow_matte(device, opts):
         test_loader_istd, _ = dataset_loader.load_istd_dataset()
 
     #compute total progress
-    max_epochs = network_config["max_epochs"]
+    max_epochs = network_config["max_epochs"] + 1
     needed_progress = int(max_epochs * (dataset_count / global_config.load_size))
     current_progress = int(start_epoch * (dataset_count / global_config.load_size))
     pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
@@ -327,6 +326,7 @@ def train_shadow_matte(device, opts):
                 input_map = {"rgb": rgb_ws_istd, "rgb_ns" : rgb_ns_istd, "shadow_matte": matte_istd}
                 tf.visdom_visualize(input_map, "Test ISTD")
 
+        print("Current epoch: ", epoch, " Max epoch: ", max_epochs)
         if(epoch % global_config.save_every_epoch == 0):
             tf.save_for_each_epoch(epoch, iteration)
 
