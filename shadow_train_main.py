@@ -201,7 +201,7 @@ def train_shadow(device, opts):
 
             tf.train(epoch, iteration, input_map, target_map)
 
-            if (i % opts.save_per_iter == 0):
+            if (iteration % opts.save_per_iter == 0):
                 tf.save_states(epoch, iteration, True)
 
                 if (global_config.plot_enabled == 1):
