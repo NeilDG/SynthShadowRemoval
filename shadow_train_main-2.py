@@ -235,7 +235,6 @@ def train_shadow(device, opts):
                 plot_loss_file.close()
                 print("Dumped train test loss to ", plot_loss_path)
 
-        print("Current epoch: ", epoch)
         if(epoch % global_config.save_every_epoch == 0):
             tf.save_for_each_epoch(epoch, iteration)
 
@@ -326,7 +325,6 @@ def train_shadow_matte(device, opts):
                 input_map = {"rgb": rgb_ws_istd, "rgb_ns" : rgb_ns_istd, "shadow_matte": matte_istd}
                 tf.visdom_visualize(input_map, "Test ISTD")
 
-        print("Current epoch: ", epoch, " Max epoch: ", max_epochs)
         if(epoch % global_config.save_every_epoch == 0):
             tf.save_for_each_epoch(epoch, iteration)
 

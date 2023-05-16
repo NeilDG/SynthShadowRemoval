@@ -19,6 +19,7 @@ from utils import plot_utils
 from utils import tensor_utils
 from losses import common_losses
 from model.modules import shadow_matte_pool
+from trainers import best_tracker
 
 class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def __init__(self, gpu_device):
@@ -74,6 +75,17 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 path.mkdir(parents=True)
             except OSError as error:
                 print(self.NETWORK_SAVE_PATH + " already exists. Skipping.", error)
+
+        self.BEST_NETWORK_SAVE_PATH = "./checkpoint/best/"
+        try:
+            path = Path(self.BEST_NETWORK_SAVE_PATH)
+            path.mkdir(parents=True)
+        except OSError as error:
+            print(self.NETWORK_SAVE_PATH + " already exists. Skipping.", error)
+
+        network_file_name = self.BEST_NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_best" + ".pth"
+        self.best_tracker = best_tracker.BestTracker(early_stopper.EarlyStopperMethod.L1_TYPE)
+        self.best_tracker.load_best_state(network_file_name)
 
         # model_parameters = filter(lambda p: p.requires_grad, self.G_SM_predictor.parameters())
         # params = sum([np.prod(p.size()) for p in model_parameters])
@@ -195,6 +207,9 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 rgb2sm_istd = self.test_istd(input_map)
                 istd_sm_test = input_map["matte_istd"]
 
+                #check and save best state
+                self.try_save_best_state(rgb2sm_istd, istd_sm_test, epoch, iteration)
+
                 #perform early stopping
                 if (global_config.save_every_epoch == False):
                     self.stopper_method.register_metric(rgb2sm_istd, istd_sm_test, epoch)
@@ -299,7 +314,7 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         network_file_name = self.NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_" + str(epoch) + ".pth"
         torch.save(save_dict, network_file_name)
-        print("Saved stable model state: %s Epoch: %d. Name: %s" % (len(save_dict), (epoch), network_file_name))
+        print("Saved stable model state. Epoch: %d. Name: %s" % (epoch, network_file_name))
 
     def load_specific_epoch(self, epoch):
         network_file_name = self.NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_" + str(epoch) + ".pth"
@@ -345,6 +360,23 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             self.D_SM_discriminator.load_state_dict(checkpoint[global_config.DISCRIMINATOR_KEY + "Z"])
 
             print("Loaded shadow matte network: ", network_file_name, "Epoch: ", checkpoint["epoch"])
+
+    def try_save_best_state(self, input, target, epoch, iteration):
+        best_achieved = self.best_tracker.test(input, target)
+        best_metric = self.best_tracker.get_best_metric()
+        if(best_achieved):
+            network_file_name = self.BEST_NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_best" + ".pth"
+            save_dict = {'epoch': epoch, 'iteration': iteration, global_config.LAST_METRIC_KEY: self.stopper_method.get_last_metric(),
+                         'best_metric' : best_metric}
+            netGNS_state_dict = self.G_SM_predictor.state_dict()
+            netDNS_state_dict = self.D_SM_discriminator.state_dict()
+
+            save_dict[global_config.GENERATOR_KEY + "Z"] = netGNS_state_dict
+            save_dict[global_config.DISCRIMINATOR_KEY + "Z"] = netDNS_state_dict
+
+            torch.save(save_dict, network_file_name)
+            print("Saved best model state. Epoch: %d. Name: %s. Best metric: %f" % (epoch, network_file_name, best_metric))
+
 
 
 
