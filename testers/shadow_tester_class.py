@@ -160,8 +160,8 @@ class TesterClass():
 
         display_text = prefix + " - Versions: " + global_config.sm_network_version + "_" + str(global_config.sm_iteration) + \
                         "<br> Epoch: " +str(global_config.last_epoch_sm) + \
-                       "<br> MAE Error (SM): " + str(ave_mae_sm) + "<br> MAE Error (SM WS): " + str(ave_mae_sm_ws)
-                       # "<br> RMSE Error (SM): " + str(ave_rmse_sm) + "<br> RMSE Error (SM WS): " + str(ave_rmse_sm_ws)
+                       "<br> MAE Error (SM): " + str(ave_mae_sm) + "<br> MAE Error (SM WS): " + str(ave_mae_sm_ws) + \
+                       "<br> RMSE Error (SM): " + str(ave_rmse_sm) + "<br> RMSE Error (SM WS): " + str(ave_rmse_sm_ws)
 
         self.visdom_reporter.plot_text(display_text)
 
