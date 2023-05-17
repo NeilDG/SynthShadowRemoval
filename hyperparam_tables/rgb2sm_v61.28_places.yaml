@@ -11,8 +11,6 @@ weight_decay: 0.0
 dropout_rate: 0.0
 augment_key: ["random_noise", "random_exposure"]
 use_shadow_map: False
-mix_istd: 0.0
-mix_srd: 0.0
 
 g_lr: 0.0002
 d_lr: 0.0005
