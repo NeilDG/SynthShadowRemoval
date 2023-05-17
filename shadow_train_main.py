@@ -3,6 +3,8 @@ import os
 import sys
 from optparse import OptionParser
 import random
+from pathlib import Path
+
 import torch
 import torch.nn.parallel
 import torch.utils.data
@@ -94,8 +96,8 @@ def update_config(opts):
         global_config.ws_istd ="/home/neildelgallego/ISTD_Dataset/test/test_A/*.png"
         global_config.ns_istd = "/home/neildelgallego/ISTD_Dataset/test/test_C/*.png"
         global_config.mask_istd = "/home/neildelgallego/ISTD_Dataset/test/test_B/*.png"
-        global_config.ws_srd = "/home/neildelgallego/SRD_Test/srd/shadow/*.jpg"
-        global_config.ns_srd = "/home/neildelgallego/SRD_Test/srd/shadow_free/*.jpg"
+        global_config.ws_srd = "/home/neildelgallego/SRD_Train/shadow/*.jpg"
+        global_config.ns_srd = "/home/neildelgallego/SRD_Train/shadow_free/*.jpg"
 
         print("Using TITAN configuration. Workers: ", global_config.num_workers)
 
@@ -180,10 +182,9 @@ def train_shadow(device, opts):
 
     for epoch in range(start_epoch, network_config["max_epochs"]):
         for i, (train_data, test_data) in enumerate(zip(train_loader, itertools.cycle(test_loader_istd))):
-            _, rgb_ws, rgb_ns, shadow_map, shadow_matte = train_data
+            _, rgb_ws, rgb_ns, shadow_matte = train_data
             rgb_ws = rgb_ws.to(device)
             rgb_ns = rgb_ns.to(device)
-            shadow_map = shadow_map.to(device)
             shadow_matte = shadow_matte.to(device)
 
             _, rgb_ws_istd, rgb_ns_istd, matte_istd = test_data
@@ -191,7 +192,7 @@ def train_shadow(device, opts):
             rgb_ns_istd = rgb_ns_istd.to(device)
             matte_istd = matte_istd.to(device)
 
-            input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns , "shadow_map" : shadow_map, "shadow_matte" : shadow_matte,
+            input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_matte" : shadow_matte,
                          "rgb_ws_istd" : rgb_ws_istd, "rgb_ns_istd" : rgb_ns_istd, "matte_istd" : matte_istd}
             target_map = input_map
 
@@ -199,27 +200,26 @@ def train_shadow(device, opts):
             pbar.update(1)
 
             tf.train(epoch, iteration, input_map, target_map)
-            if (tf.is_stop_condition_met()):
-                break
 
-            if (i % opts.save_per_iter == 0):
+            if (iteration % opts.save_per_iter == 0):
                 tf.save_states(epoch, iteration, True)
 
                 if (global_config.plot_enabled == 1):
                     tf.visdom_plot(iteration)
                     tf.visdom_visualize(input_map, "Train")
 
-                    _, rgb_ws, rgb_ns, shadow_map, shadow_matte = next(itertools.cycle(test_loader_train))
+                    _, rgb_ws, rgb_ns, shadow_matte = next(itertools.cycle(test_loader_train))
                     rgb_ws = rgb_ws.to(device)
                     rgb_ns = rgb_ns.to(device)
-                    shadow_map = shadow_map.to(device)
                     shadow_matte = shadow_matte.to(device)
 
-                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns , "shadow_map": shadow_map, "shadow_matte": shadow_matte}
+                    input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_matte": shadow_matte}
                     tf.visdom_visualize(input_map, "Test Synthetic")
 
                     input_map = {"rgb": rgb_ws_istd, "rgb_ns": rgb_ns_istd, "shadow_matte" : matte_istd}
                     tf.visdom_visualize(input_map, "Test ISTD")
+
+        tf.save_states(epoch, iteration, True)
 
             # if(global_config.plot_enabled == 1 and iteration % opts.save_per_iter == 0):
             #     rgb2ns_like = tf.test(input_map)
@@ -235,10 +235,6 @@ def train_shadow(device, opts):
             #     yaml.dump(losses_dict, plot_loss_file)
             #     plot_loss_file.close()
             #     print("Dumped train test loss to ", plot_loss_path)
-
-
-        if (tf.is_stop_condition_met()):
-            break
 
     pbar.close()
 
@@ -307,9 +303,8 @@ def train_shadow_matte(device, opts):
             target_map = input_map
 
             tf.train(epoch, iteration, input_map, target_map)
-
-            if (tf.is_stop_condition_met()):
-                break
+            iteration = iteration + 1
+            pbar.update(1)
 
             if (iteration % opts.save_per_iter == 0):
                 tf.save_states(epoch, iteration, True)
@@ -329,13 +324,31 @@ def train_shadow_matte(device, opts):
                     input_map = {"rgb": rgb_ws_istd, "rgb_ns" : rgb_ns_istd, "shadow_matte": matte_istd}
                     tf.visdom_visualize(input_map, "Test ISTD")
 
-            iteration = iteration + 1
-            pbar.update(1)
-
-        if (tf.is_stop_condition_met()):
-            break
+        tf.save_states(epoch, iteration, True)
 
     pbar.close()
+
+def prepare_training():
+    NETWORK_SAVE_PATH = "./checkpoint/by_epoch/"
+    try:
+        path = Path(NETWORK_SAVE_PATH)
+        path.mkdir(parents=True)
+    except OSError as error:
+        print(NETWORK_SAVE_PATH + " already exists. Skipping.", error)
+
+    NETWORK_SAVE_PATH = "./checkpoint/by_sample/"
+    try:
+        path = Path(NETWORK_SAVE_PATH)
+        path.mkdir(parents=True)
+    except OSError as error:
+        print(NETWORK_SAVE_PATH + " already exists. Skipping.", error)
+
+    BEST_NETWORK_SAVE_PATH = "./checkpoint/best/"
+    try:
+        path = Path(BEST_NETWORK_SAVE_PATH)
+        path.mkdir(parents=True)
+    except OSError as error:
+        print(BEST_NETWORK_SAVE_PATH + " already exists. Skipping.", error)
 
 def main(argv):
     (opts, args) = parser.parse_args(argv)
@@ -350,6 +363,7 @@ def main(argv):
     assert opts.train_mode == "train_shadow" or opts.train_mode == "train_shadow_matte", "Unrecognized train mode: " + opts.train_mode
     plot_utils.VisdomReporter.initialize()
 
+    prepare_training()
 
     if (opts.train_mode == "train_shadow_matte"):
         train_shadow_matte(device, opts)

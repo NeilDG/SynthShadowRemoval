@@ -216,7 +216,7 @@ def load_shadow_train_dataset():
         initial_ws_list = initial_ws_list[:global_config.img_to_load]
         initial_ns_list = initial_ns_list[:global_config.img_to_load]
 
-    print("Length: ", len(initial_ws_list), len(initial_ns_list))
+    # print("Length: ", len(initial_ws_list), len(initial_ns_list))
 
     temp_list = list(zip(initial_ws_list, initial_ns_list))
     random.shuffle(temp_list)
