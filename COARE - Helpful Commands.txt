@@ -35,7 +35,7 @@ sbatch slurm_download.sh 0
 sbatch script_1.slurm "rgb2ns_v61.26_places" 1
 sbatch script_2.slurm 1
 sbatch script_3.slurm "rgb2sm_v61.23_places" 1 #FOR G_sm
-sbatch script_4.slurm 1 #FOR G_z
+sbatch script_4.slurm "rgb2sm_v61.22_places" 1 #FOR G_sm
 
 sbatch --dependency=afterany:342338 script_debug.slurm
 sbatch --dependency=afterany:342351 script_1.slurm
