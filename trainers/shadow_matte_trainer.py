@@ -192,8 +192,8 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                     # self.losses_dict_s[self.ISTD_SM_LOSS_KEY].append(SM_istd_loss.item())
 
                 #perform validation test
-                rgb2sm_istd = self.test_istd(input_map)
-                istd_sm_test = input_map["matte_istd"]
+                rgb2sm_istd = self.validation_test(input_map)
+                istd_sm_test = input_map["matte_val"]
 
                 #check and save best state
                 self.try_save_best_state(rgb2sm_istd, istd_sm_test, epoch, iteration)
@@ -218,11 +218,11 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def is_stop_condition_met(self):
         return self.stop_result
 
-    def test_istd(self, input_map):
+    def validation_test(self, input_map):
         # print("Testing on ISTD dataset.")
 
-        input_map_new = {"rgb": input_map["rgb_ws_istd"],
-                         "shadow_matte": input_map["matte_istd"]}
+        input_map_new = {"rgb": input_map["rgb_ws_val"],
+                         "shadow_matte": input_map["matte_val"]}
 
         return self.test(input_map_new)
 

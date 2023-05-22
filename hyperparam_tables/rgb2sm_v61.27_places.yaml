@@ -11,13 +11,11 @@ weight_decay: 0.0
 dropout_rate: 0.0
 augment_key: ["none"]
 use_shadow_map: False
-mix_istd: 0.0
-mix_srd: 0.0
 
 g_lr: 0.0002
 d_lr: 0.0005
-min_epochs: 20
-max_epochs: 25
+min_epochs: 40
+max_epochs: 40
 
 dataset_version: "v84_places"
 dataset_repeats: 3

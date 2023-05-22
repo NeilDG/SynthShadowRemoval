@@ -37,7 +37,7 @@ def update_config(opts):
     global_config.img_to_load = opts.img_to_load
     global_config.dataset_target = opts.dataset_target
     global_config.num_workers = 12
-    global_config.test_size = 128
+    global_config.test_size = 64
     global_config.load_best = bool(opts.load_best)
     global_config.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
     global_config.rgb_dir_ws = "X:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"

@@ -273,12 +273,16 @@ def train_shadow_matte(device, opts):
     print("Dataset path WS: ", global_config.rgb_dir_ws)
     print("Dataset path NS: ", global_config.rgb_dir_ns)
 
+    dataset_val = ConfigHolder.getInstance().get_network_attribute("dataset_val_ref", "istd")
+
     train_loader_synth, dataset_count = dataset_loader.load_shadow_train_dataset()
     test_loader_train, _ = dataset_loader.load_shadow_test_dataset()
-    if (dataset_version == "v_srd"):
-        test_loader_istd, _ = dataset_loader.load_istd_dataset()
+    if (dataset_val == "istd"):
+        print("Loading ISTD as validation dataset")
+        test_loader, _ = dataset_loader.load_istd_dataset()
     else:
-        test_loader_istd, _ = dataset_loader.load_istd_dataset()
+        print("Loading SRD as validation dataset")
+        test_loader, _ = dataset_loader.load_srd_dataset()
 
     #compute total progress
     max_epochs = network_config["max_epochs"]
@@ -288,18 +292,19 @@ def train_shadow_matte(device, opts):
     pbar.update(current_progress)
 
     for epoch in range(start_epoch, max_epochs):
-        for i, (train_data, test_data) in enumerate(zip(train_loader_synth, itertools.cycle(test_loader_istd))):
+        for i, (train_data, test_data) in enumerate(zip(train_loader_synth, itertools.cycle(test_loader))):
             _, rgb_ws, rgb_ns, shadow_matte = train_data
             rgb_ws = rgb_ws.to(device)
             rgb_ns = rgb_ns.to(device)
             shadow_matte = shadow_matte.to(device)
 
-            _, rgb_ws_istd, rgb_ns_istd, matte_istd = test_data
-            rgb_ws_istd = rgb_ws_istd.to(device)
-            matte_istd = matte_istd.to(device)
+            _, rgb_ws_val, rgb_ns_val, matte_val = test_data
+            rgb_ws_val = rgb_ws_val.to(device)
+            rgb_ns_val = rgb_ns_val.to(device)
+            matte_val = matte_val.to(device)
 
             input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_matte": shadow_matte,
-                         "rgb_ws_istd": rgb_ws_istd, "rgb_ns_istd": rgb_ns_istd, "matte_istd": matte_istd}
+                         "rgb_ws_val": rgb_ws_val, "matte_val": matte_val}
             target_map = input_map
 
             tf.train(epoch, iteration, input_map, target_map)
@@ -321,7 +326,7 @@ def train_shadow_matte(device, opts):
                     input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_matte": shadow_matte}
                     tf.visdom_visualize(input_map, "Test Synthetic")
 
-                    input_map = {"rgb": rgb_ws_istd, "rgb_ns" : rgb_ns_istd, "shadow_matte": matte_istd}
+                    input_map = {"rgb": rgb_ws_val, "rgb_ns" : rgb_ns_val, "shadow_matte": matte_val}
                     tf.visdom_visualize(input_map, "Test ISTD")
 
         tf.save_states(epoch, iteration, True)
