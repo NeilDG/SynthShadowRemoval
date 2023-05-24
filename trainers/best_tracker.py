@@ -36,6 +36,6 @@ class BestTracker():
             checkpoint = None
             print("No existing checkpoint file found. Not updating best state. ", network_file_name)
 
-        if(checkpoint != None):
+        if(checkpoint != None and "best_metric" in checkpoint):
             self.best_metric = checkpoint["best_metric"]
             print("Updated best metric from file: ", self.best_metric)
