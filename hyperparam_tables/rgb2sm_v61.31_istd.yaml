@@ -1,5 +1,5 @@
-model_type: 6 #1 = vanilla cycle gan, 2 = u-net, 3 = ffa-net
-input_nc: 4
+model_type: 5
+input_nc: 3
 patch_size: 256
 
 #0 - 24GB, 1 - 32GB, 2 - 10 - 12GB, 3 - 8GB
@@ -10,11 +10,12 @@ num_blocks: 3
 weight_decay: 0.0
 dropout_rate: 0.0
 augment_key: ["none"]
+use_shadow_map: True
 
 g_lr: 0.0002
 d_lr: 0.0005
-min_epochs: 10
-max_epochs: 10
+min_epochs: 40
+max_epochs: 40
 
-dataset_version: "v66_places"
-dataset_repeats: 3
+dataset_version: "v_istd"
+dataset_repeats: 10

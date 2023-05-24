@@ -3,7 +3,7 @@ from pathlib import Path
 import torchvision.transforms.functional
 
 from config.network_config import ConfigHolder
-from trainers import abstract_iid_trainer, early_stopper
+from trainers import abstract_iid_trainer, early_stopper, best_tracker
 import kornia
 from model.modules import image_pool
 from model import vanilla_cycle_gan as cycle_gan
@@ -51,23 +51,21 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.schedulerD = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizerD, patience=1000000 / self.batch_size, threshold=0.00005)
 
         self.NETWORK_VERSION = config_holder.get_ns_version_name()
-        if(global_config.load_per_epoch == False and global_config.load_per_sample == False):
-            self.NETWORK_CHECKPATH = 'checkpoint/' + self.NETWORK_VERSION + '.pt'
+        self.BEST_NETWORK_SAVE_PATH = "./checkpoint/best/"
+        if (global_config.load_per_epoch == False and global_config.load_per_sample == False):
+            if (global_config.load_best):
+                self.NETWORK_CHECKPATH = self.BEST_NETWORK_SAVE_PATH + self.NETWORK_VERSION + '_best.pth'
+            else:
+                self.NETWORK_CHECKPATH = './checkpoint/' + self.NETWORK_VERSION + '.pt'
             self.load_saved_state()
-        elif(global_config.load_per_epoch == True):
+        elif (global_config.load_per_epoch == True):
             self.NETWORK_SAVE_PATH = "./checkpoint/by_epoch/"
-            try:
-                path = Path(self.NETWORK_SAVE_PATH)
-                path.mkdir(parents=True)
-            except OSError as error:
-                print(self.NETWORK_SAVE_PATH + " already exists. Skipping.", error)
         else:
             self.NETWORK_SAVE_PATH = "./checkpoint/by_sample/"
-            try:
-                path = Path(self.NETWORK_SAVE_PATH)
-                path.mkdir(parents=True)
-            except OSError as error:
-                print(self.NETWORK_SAVE_PATH + " already exists. Skipping.", error)
+
+        network_file_name = self.BEST_NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_best" + ".pth"
+        self.best_tracker = best_tracker.BestTracker(early_stopper.EarlyStopperMethod.L1_TYPE)
+        self.best_tracker.load_best_state(network_file_name)
 
         # model_parameters = filter(lambda p: p.requires_grad, self.G_SM_predictor.parameters())
         # params = sum([np.prod(p.size()) for p in model_parameters])
@@ -137,7 +135,6 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         accum_batch_size = self.load_size * iteration
 
-
         with amp.autocast():
             # shadow map discriminator
             self.optimizerD.zero_grad()
@@ -188,14 +185,20 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                     self.losses_dict_s[self.D_A_REAL_LOSS_KEY].append(D_SM_real_loss.item())
                     # self.losses_dict_s[self.MASK_LOSS_KEY].append(SM_masking_loss.item())
 
-                #perform validation test and early stopping
+                #perform validation test
                 rgb2ns_istd = self.test_istd(input_map)
                 istd_ns_test = input_map["rgb_ns_istd"]
-                self.stopper_method.register_metric(rgb2ns_istd, istd_ns_test, epoch)
-                self.stop_result = self.stopper_method.test(epoch)
 
-                if (self.stopper_method.has_reset()):
-                    self.save_states(epoch, iteration, False)
+                # check and save best state
+                self.try_save_best_state(rgb2ns_istd, istd_ns_test, epoch, iteration)
+
+                #perform early stopping
+                # if(global_config.save_every_epoch == False):
+                #     self.stopper_method.register_metric(rgb2ns_istd, istd_ns_test, epoch)
+                #     self.stop_result = self.stopper_method.test(epoch)
+                #
+                #     if (self.stopper_method.has_reset()):
+                #         self.save_states(epoch, iteration, False)
 
                 #plot train-test loss
                 rgb2ns = self.test(input_map)
@@ -230,8 +233,8 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         return rgb2ns
 
     def visdom_plot(self, iteration):
-        self.visdom_reporter.plot_finegrain_loss("a2b_loss_a", iteration, self.losses_dict_s, self.caption_dict_s, self.NETWORK_CHECKPATH)
-        self.visdom_reporter.plot_train_test_loss("train_test_loss", iteration, self.losses_dict_t, self.caption_dict_t, self.NETWORK_CHECKPATH)
+        self.visdom_reporter.plot_finegrain_loss("a2b_loss_a", iteration, self.losses_dict_s, self.caption_dict_s, self.NETWORK_VERSION + str(self.iteration))
+        self.visdom_reporter.plot_train_test_loss("train_test_loss", iteration, self.losses_dict_t, self.caption_dict_t, self.NETWORK_VERSION + str(self.iteration))
 
     def visdom_visualize(self, input_map, label="Train"):
         input_ws = input_map["rgb"]
@@ -290,7 +293,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         network_file_name = self.NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_" + str(epoch) + ".pth"
         torch.save(save_dict, network_file_name)
-        print("Saved stable model state: %s Epoch: %d. Name: %s" % (len(save_dict), (epoch), network_file_name))
+        print("Saved stable model state. Epoch: %d. Name: %s" % (epoch, network_file_name))
 
     def load_specific_epoch(self, epoch):
         network_file_name = self.NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_" + str(epoch) + ".pth"
@@ -336,6 +339,22 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             self.D_SM_discriminator.load_state_dict(checkpoint[global_config.DISCRIMINATOR_KEY + "Z"])
 
             print("Loaded shadow removal network: ", network_file_name, "Epoch: ", checkpoint["epoch"])
+
+    def try_save_best_state(self, input, target, epoch, iteration):
+        best_achieved = self.best_tracker.test(input, target)
+        best_metric = self.best_tracker.get_best_metric()
+        if(best_achieved):
+            network_file_name = self.BEST_NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_best" + ".pth"
+            save_dict = {'epoch': epoch, 'iteration': iteration, global_config.LAST_METRIC_KEY: self.stopper_method.get_last_metric(),
+                         'best_metric' : best_metric}
+            netGNS_state_dict = self.G_SM_predictor.state_dict()
+            netDNS_state_dict = self.D_SM_discriminator.state_dict()
+
+            save_dict[global_config.GENERATOR_KEY + "Z"] = netGNS_state_dict
+            save_dict[global_config.DISCRIMINATOR_KEY + "Z"] = netDNS_state_dict
+
+            torch.save(save_dict, network_file_name)
+            print("Saved best model state. Epoch: %d. Name: %s. Best metric: %f" % (epoch, network_file_name, best_metric))
 
 
 

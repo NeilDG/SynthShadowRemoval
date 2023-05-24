@@ -41,7 +41,7 @@ class EarlyStopper():
 
     def update_last_metric(self, last_metric):
         self.last_metric = last_metric
-        print("Updated last metric to: ", self.last_metric)
+        # print("Updated early stopping last metric to: ", self.last_metric)
 
     def register_metric(self, input, target, epoch):
         if(epoch >= self.min_epochs):

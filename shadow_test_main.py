@@ -28,6 +28,7 @@ parser.add_option('--shadow_matte_version', type=str, default="VXX.XX")
 parser.add_option('--shadow_removal_version', type=str, default="VXX.XX")
 parser.add_option('--shadow_matte_iteration', type=int, default="1")
 parser.add_option('--shadow_removal_iteration', type=int, default="1")
+parser.add_option('--load_best', type=int, default=0)
 parser.add_option('--train_mode', type=str, default="all") #all, train_shadow_matte, train_shadow
 parser.add_option('--dataset_target', type=str, default="all") #all, train, istd, srd, usr
 
@@ -36,7 +37,8 @@ def update_config(opts):
     global_config.img_to_load = opts.img_to_load
     global_config.dataset_target = opts.dataset_target
     global_config.num_workers = 12
-    global_config.test_size = 128
+    global_config.test_size = 64
+    global_config.load_best = bool(opts.load_best)
     global_config.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
     global_config.rgb_dir_ws = "X:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
     global_config.rgb_dir_ns = "X:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"

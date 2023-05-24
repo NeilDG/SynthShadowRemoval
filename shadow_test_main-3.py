@@ -124,7 +124,7 @@ def test_shadow_removal(dataset_tester, opts):
         shadow_loader, dataset_count = dataset_loader.load_shadow_test_dataset()
         needed_progress = int(dataset_count / global_config.test_size)
         pbar = tqdm(total=needed_progress, disable=global_config.disable_progress_bar)
-        for i, (_, rgb_ws, rgb_ns, _, shadow_matte) in enumerate(shadow_loader, 0):
+        for i, (_, rgb_ws, rgb_ns, shadow_matte) in enumerate(shadow_loader, 0):
             rgb_ws = rgb_ws.to(device)
             rgb_ns = rgb_ns.to(device)
             shadow_matte = shadow_matte.to(device)

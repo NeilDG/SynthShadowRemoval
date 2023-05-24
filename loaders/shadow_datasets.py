@@ -51,6 +51,8 @@ class ShadowTrainDataset(data.Dataset):
             self.initial_op = transforms.Compose([
                 transforms.ToPILImage(),
                 transforms.Resize(global_config.TEST_IMAGE_SIZE),
+                transforms.RandomHorizontalFlip(0.5),
+                transforms.RandomVerticalFlip(0.5),
                 transforms.ToTensor()])
 
     def __getitem__(self, idx):
@@ -117,8 +119,8 @@ class ShadowISTDDataset(data.Dataset):
         self.norm_op = transforms.Normalize((0.5, ), (0.5, ))
         self.initial_op = transforms.Compose([
             transforms.ToPILImage(),
-            transforms.Resize(global_config.TEST_IMAGE_SIZE),
-            # transforms.Resize((240, 320)),
+            # transforms.Resize(global_config.TEST_IMAGE_SIZE),
+            transforms.Resize((240, 320)),
             transforms.ToTensor()])
 
     def __getitem__(self, idx):

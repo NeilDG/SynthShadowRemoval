@@ -133,6 +133,7 @@ checkpoint/*.pt
 checkpoint/*.pt.checkpt
 checkpoint/*.pth.checkpt
 checkpoint/*.pth
+checkpoint/best/
 checkpoint/by_epoch/
 checkpoint/by_sample/
 iiw_temp/
