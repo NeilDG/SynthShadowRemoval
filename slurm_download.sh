@@ -66,11 +66,11 @@ fi
 #unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
 #rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 
-#DATASET_NAME="v69_places_base/v69_places"
-#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
-#zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
-#unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
-#rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
+DATASET_NAME="v69_places_base/v69_places"
+echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
+unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
+rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 
 #DATASET_NAME="v66_istd_base/v66_istd"
 #echo "$OUTPUT_DIR/$DATASET_NAME.zip"
