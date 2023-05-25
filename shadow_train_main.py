@@ -75,14 +75,14 @@ def update_config(opts):
         global_config.num_workers = 6
         global_config.load_size = network_config["load_size"][2]
         global_config.batch_size = network_config["batch_size"][2]
-        global_config.DATASET_PLACES_PATH = "C:/Datasets/Places Dataset/*.jpg"
-        global_config.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
-        global_config.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
-        global_config.ws_istd ="C:/Datasets/ISTD_Dataset/test/test_A/*.png"
-        global_config.ns_istd = "C:/Datasets/ISTD_Dataset/test/test_C/*.png"
-        global_config.mask_istd = "C:/Datasets/ISTD_Dataset/test/test_B/*.png"
-        global_config.ws_srd = "C:/Datasets/SRD_Test/srd/shadow/*.jpg"
-        global_config.ns_srd = "C:/Datasets/SRD_Test/srd/shadow_free/*.jpg"
+        global_config.DATASET_PLACES_PATH = "X:/Datasets/Places Dataset/*.jpg"
+        global_config.rgb_dir_ws = "X:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        global_config.rgb_dir_ns = "X:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
+        global_config.ws_istd ="X:/Datasets/ISTD_Dataset/test/test_A/*.png"
+        global_config.ns_istd = "X:/Datasets/ISTD_Dataset/test/test_C/*.png"
+        global_config.mask_istd = "X:/Datasets/ISTD_Dataset/test/test_B/*.png"
+        global_config.ws_srd = "X:/Datasets/SRD_Test/srd/shadow/*.jpg"
+        global_config.ns_srd = "X:/Datasets/SRD_Test/srd/shadow_free/*.jpg"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", global_config.num_workers)
 
