@@ -13,7 +13,7 @@ git clone -b "workspace/V60.XX.XX" "https://github.com/NeilDG/NeuralNets-Experim
 rm -rf "/scratch1/scratch2/neil.delgallego/NeuralNets-GenerativeExperiment-V60.XX.XX"
 rm -rf "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
 
-rm -rf "/scratch2/neil.delgallego/NeuralNets-GenerativeExperiment-V60.XX.XX"
+rm -rf "scratch3/NeuralNets-Experiment5-V01.XX.XX/"
 
 gdown https://drive.google.com/uc?id=1B6erEfeB2_n_KYP5GtCQU-DHGE1bKEVE --o "scratch2/SynthWeather Dataset 10/"
 mv "/scratch1/scratch2/neil.delgallego/NeuralNets-GenerativeExperiment-V58.XX.XX/v26" "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/v26"
@@ -35,20 +35,14 @@ sbatch script_debug.slurm 1
 sbatch slurm_download.sh 0
 sbatch script_1.slurm "rgb2ns_v61.26_places" 1
 sbatch script_2.slurm 1
-sbatch script_3.slurm "rgb2sm_v61.23_places" 1 #FOR G_sm
-sbatch script_4.slurm "rgb2sm_v61.22_places" 1 #FOR G_sm
 
 sbatch --dependency=afterany:342338 script_debug.slurm
 sbatch --dependency=afterany:342351 script_1.slurm
 sbatch -w saliksik-gpu-06 slurm_install_gpu.slurm
 sbatch -w saliksik-gpu-05 script_1.slurm
 sbatch -w saliksik-gpu-06 script_2.slurm
-sbatch -w saliksik-gpu-05 script_3.slurm
-sbatch -w saliksik-gpu-06 script_4.slurm
-sbatch -w saliksik-gpu-05 script_5.slurm
-sbatch -w saliksik-gpu-06 script_6.slurm
-sbatch -w saliksik-gpu-05 script_7.slurm
-sbatch -w saliksik-gpu-04 script_8.slurm
+sbatch -w saliksik-gpu-09 script_3.slurm "rgb2sm_v61.40_istd" 1 #FOR G_sm
+sbatch -w saliksik-gpu-10 script_4.slurm "rgb2sm_v61.40_srd" 1 #FOR G_sm
 
 //Check status of job
 clear
@@ -56,7 +50,7 @@ clear
 //Check all
 squeue -a
 squeue -u neil.delgallego
-squeue -w "saliksik-gpu-01, saliksik-gpu-02, saliksik-gpu-03, saliksik-gpu-04, saliksik-gpu-05, saliksik-gpu-06"
+squeue -w "saliksik-gpu-01, saliksik-gpu-02, saliksik-gpu-03, saliksik-gpu-04, saliksik-gpu-05, saliksik-gpu-06, saliksik-gpu-09, saliksik-gpu-10"
 //For cancelling job
 scancel <jobid>
 
