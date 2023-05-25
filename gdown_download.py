@@ -42,8 +42,8 @@ def main(argv):
     gdown.download_folder(url, output=output_dir, use_cookies=False)
 
     # v69 places
-    # url = "https://drive.google.com/drive/folders/1m5vjcV09K3aG1yATy9hswnhmb3_X9Pef?usp=sharing"
-    # gdown.download_folder(url, output=output_dir, use_cookies=False)
+    url = "https://drive.google.com/drive/folders/1m8ReRR5tCajLqICnfNJmOW1ccF7c2f8p?usp=share_link"
+    gdown.download_folder(url, output=output_dir, use_cookies=False)
 
     # url = "https://drive.google.com/drive/folders/1lu937F5oUq2ZpBHTOhXc1cdhRmIsQaoH?usp=sharing"
     # gdown.download_folder(url, output=output_dir, use_cookies=False)
