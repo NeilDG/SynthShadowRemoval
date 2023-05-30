@@ -57,6 +57,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 self.NETWORK_CHECKPATH = self.BEST_NETWORK_SAVE_PATH + self.NETWORK_VERSION + '_best.pth'
             else:
                 self.NETWORK_CHECKPATH = './checkpoint/' + self.NETWORK_VERSION + '.pt'
+            self.load_last_epoch_val()
             self.load_saved_state()
         elif (global_config.load_per_epoch == True):
             self.NETWORK_SAVE_PATH = "./checkpoint/by_epoch/"
@@ -261,12 +262,23 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 print("No existing checkpoint file found. Creating new shadow network: ", self.NETWORK_CHECKPATH)
 
         if(checkpoint != None):
-            global_config.last_epoch_ns = checkpoint["epoch"]
+            # global_config.last_epoch_ns = checkpoint["epoch"]
             self.stopper_method.update_last_metric(checkpoint[global_config.LAST_METRIC_KEY])
             self.G_SM_predictor.load_state_dict(checkpoint[global_config.GENERATOR_KEY + "Z"])
             self.D_SM_discriminator.load_state_dict(checkpoint[global_config.DISCRIMINATOR_KEY + "Z"])
 
             print("Loaded shadow removal network: ", self.NETWORK_CHECKPATH, "Epoch: ", checkpoint["epoch"])
+
+    def load_last_epoch_val(self):
+        try:
+            checkpt_name = 'checkpoint/' + self.NETWORK_VERSION + ".pt.checkpt"
+            checkpoint = torch.load(checkpt_name, map_location=self.gpu_device)
+        except:
+            checkpoint = None
+            print("No existing checkpoint file found. Creating new shadow network: ", self.NETWORK_CHECKPATH)
+
+        if (checkpoint != None):
+            global_config.last_epoch_ns = checkpoint["epoch"]
 
     def save_states(self, epoch, iteration, is_temp:bool):
         save_dict = {'epoch': epoch, 'iteration': iteration, global_config.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
