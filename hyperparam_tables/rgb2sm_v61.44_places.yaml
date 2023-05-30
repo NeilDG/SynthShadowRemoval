@@ -8,7 +8,7 @@ load_size: [192, 256, 64, 32] #amount of images to load in GPU. load_size <= bat
 
 num_blocks: 6
 weight_decay: 0.0
-dropout_rate: 0.0
+dropout_rate: 0.4
 augment_key: ["random_noise", "random_exposure"]
 use_shadow_map: False
 
