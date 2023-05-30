@@ -103,7 +103,7 @@ def update_config(opts):
 
     ## COARE - 40GB/A100
     elif (global_config.server_config == 4):
-        global_config.num_workers = 64
+        global_config.num_workers = 12
         global_config.disable_progress_bar = True  # disable progress bar logging in COARE
         global_config.load_size = network_config["load_size"][1]
         global_config.batch_size = network_config["batch_size"][1]
