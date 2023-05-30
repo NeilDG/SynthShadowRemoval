@@ -2,14 +2,11 @@
 
 import os
 def train_shadow_matte():
-    # os.system("python \"shadow_train_main.py\" --server_config=2 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
-    #           "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2sm_v61.22_srd\" --iteration=1")
-
-    # os.system("python \"shadow_train_main.py\" --server_config=2 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
-    #           "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2sm_v61.23_srd\" --iteration=1")
-
     os.system("python \"shadow_train_main.py\" --server_config=2 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
               "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2sm_v61.39_places\" --iteration=1")
+
+    os.system("python \"shadow_train_main.py\" --server_config=2 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
+              "--plot_enabled=0 --save_per_iter=500 --network_version=\"rgb2sm_v61.42_places\" --iteration=1")
 
 
 def train_shadow_removal():
@@ -40,7 +37,7 @@ def main():
     train_shadow_matte()
     # train_shadow_removal()
     # train_domain_adaptation()
-    os.system("shutdown /s /t 1")
+    # os.system("shutdown /s /t 1")
 
 
 if __name__ == "__main__":
