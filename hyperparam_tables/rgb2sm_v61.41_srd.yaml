@@ -14,8 +14,8 @@ use_shadow_map: False
 
 g_lr: 0.0002
 d_lr: 0.0005
-min_epochs: 40
-max_epochs: 40
+min_epochs: 150
+max_epochs: 150
 
 dataset_version: "v66_srd"
 dataset_repeats: 3
