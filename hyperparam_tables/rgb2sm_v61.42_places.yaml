@@ -1,10 +1,10 @@
 model_type: 5
 input_nc: 3
-patch_size: 256
+patch_size: 64
 
 #0 - 24GB, 1 - 32GB, 2 - 10 - 12GB, 3 - 8GB
-batch_size: [24, 32, 12, 8] #amount of images to accumulate before backprop
-load_size: [24, 32, 12, 8] #amount of images to load in GPU. load_size <= batch_size
+batch_size: [320, 512, 128, 8] #amount of images to accumulate before backprop
+load_size: [320, 512, 128, 8] #amount of images to load in GPU. load_size <= batch_size
 
 num_blocks: 3
 weight_decay: 0.0
@@ -17,5 +17,5 @@ d_lr: 0.0005
 min_epochs: 80
 max_epochs: 80
 
-dataset_version: "v84_places"
+dataset_version: "v69_places"
 dataset_repeats: 3

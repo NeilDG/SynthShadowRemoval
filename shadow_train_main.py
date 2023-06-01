@@ -38,7 +38,7 @@ def update_config(opts):
     config_holder = ConfigHolder.getInstance()
     network_config = config_holder.get_network_config()
 
-    ## COARE
+    ## COARE - 24GB/P40
     if (global_config.server_config == 0):
         global_config.num_workers = 6
         global_config.disable_progress_bar = True #disable progress bar logging in COARE
@@ -75,14 +75,14 @@ def update_config(opts):
         global_config.num_workers = 6
         global_config.load_size = network_config["load_size"][2]
         global_config.batch_size = network_config["batch_size"][2]
-        global_config.DATASET_PLACES_PATH = "C:/Datasets/Places Dataset/*.jpg"
-        global_config.rgb_dir_ws = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
-        global_config.rgb_dir_ns = "C:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
-        global_config.ws_istd ="C:/Datasets/ISTD_Dataset/test/test_A/*.png"
-        global_config.ns_istd = "C:/Datasets/ISTD_Dataset/test/test_C/*.png"
-        global_config.mask_istd = "C:/Datasets/ISTD_Dataset/test/test_B/*.png"
-        global_config.ws_srd = "C:/Datasets/SRD_Test/srd/shadow/*.jpg"
-        global_config.ns_srd = "C:/Datasets/SRD_Test/srd/shadow_free/*.jpg"
+        global_config.DATASET_PLACES_PATH = "X:/Datasets/Places Dataset/*.jpg"
+        global_config.rgb_dir_ws = "X:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        global_config.rgb_dir_ns = "X:/Datasets/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
+        global_config.ws_istd ="X:/Datasets/ISTD_Dataset/test/test_A/*.png"
+        global_config.ns_istd = "X:/Datasets/ISTD_Dataset/test/test_C/*.png"
+        global_config.mask_istd = "X:/Datasets/ISTD_Dataset/test/test_B/*.png"
+        global_config.ws_srd = "X:/Datasets/SRD_Test/srd/shadow/*.jpg"
+        global_config.ns_srd = "X:/Datasets/SRD_Test/srd/shadow_free/*.jpg"
 
         print("Using HOME RTX2080Ti configuration. Workers: ", global_config.num_workers)
 
@@ -101,6 +101,22 @@ def update_config(opts):
 
         print("Using TITAN configuration. Workers: ", global_config.num_workers)
 
+    ## COARE - 40GB/A100
+    elif (global_config.server_config == 4):
+        global_config.num_workers = 12
+        global_config.disable_progress_bar = True  # disable progress bar logging in COARE
+        global_config.load_size = network_config["load_size"][1]
+        global_config.batch_size = network_config["batch_size"][1]
+
+        print("Using COARE configuration. Workers: ", global_config.num_workers)
+        global_config.DATASET_PLACES_PATH = "/scratch3/neil.delgallego/Places Dataset/*.jpg"
+        global_config.rgb_dir_ws = "/scratch3/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
+        global_config.rgb_dir_ns = "/scratch3/neil.delgallego/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
+        global_config.ws_istd = "/scratch3/neil.delgallego/ISTD_Dataset/test/test_A/*.png"
+        global_config.ns_istd = "/scratch3/neil.delgallego/ISTD_Dataset/test/test_C/*.png"
+        global_config.mask_istd = "/scratch3/neil.delgallego/ISTD_Dataset/test/test_B/*.png"
+        global_config.ws_srd = "/scratch3/neil.delgallego/SRD_Test/srd/shadow/*.jpg"
+        global_config.ns_srd = "/scratch3/neil.delgallego/SRD_Test/srd/shadow_free/*.jpg"
     else:
         global_config.num_workers = 12
         global_config.load_size = network_config["load_size"][0]

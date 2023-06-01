@@ -16,14 +16,9 @@ def test_shadow():
     #           "--shadow_matte_iteration=4 --shadow_removal_iteration=1")
 
     os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 "
-              "--img_vis_enabled=0 --train_mode=train_shadow_matte --dataset_target=all "
-              "--shadow_matte_version=\"rgb2sm_v61.35_places\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
+              "--img_vis_enabled=1 --train_mode=train_shadow_matte --dataset_target=all "
+              "--shadow_matte_version=\"rgb2sm_v61.25_places\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
               "--shadow_matte_iteration=1 --shadow_removal_iteration=1 --load_best=1")
-
-    # os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 "
-    #           "--img_vis_enabled=0 --train_mode=train_shadow --dataset_target=all "
-    #           "--shadow_matte_version=\"rgb2sm_v61.28_places\" --shadow_removal_version=\"rgb2ns_v61.39_places\" "
-    #           "--shadow_matte_iteration=1 --shadow_removal_iteration=1 --load_best=1")
 
     # os.system("python \"shadow_test_main-2.py\" --server_config=5 --img_to_load=-1 "
     #           "--img_vis_enabled=1 --train_mode=train_shadow --dataset_target=istd "
