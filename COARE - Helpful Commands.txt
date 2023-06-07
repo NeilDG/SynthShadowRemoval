@@ -33,7 +33,7 @@ sbatch --dependency=afterany:459331 script_4.slurm "rgb2sm_v61.22_places" 1
 
 sbatch script_debug.slurm 1
 sbatch slurm_download.sh 0
-sbatch script_1.slurm "rgb2ns_v61.26_places" 1
+sbatch script_1.slurm "rgb2sm_v61.41_usr" 1
 sbatch script_2.slurm 1
 
 sbatch --dependency=afterany:342338 script_debug.slurm
@@ -41,8 +41,8 @@ sbatch --dependency=afterany:342351 script_1.slurm
 sbatch -w saliksik-gpu-06 slurm_install_gpu.slurm
 sbatch -w saliksik-gpu-05 script_1.slurm
 sbatch -w saliksik-gpu-06 script_2.slurm
-sbatch -w saliksik-gpu-09  script_3.slurm "rgb2sm_v61.40_istd" 1
-sbatch -w saliksik-gpu-10 script_4.slurm "rgb2sm_v61.40_srd" 1
+sbatch -w saliksik-gpu-09 script_3.slurm "rgb2sm_v61.41_usr" 1
+sbatch -w saliksik-gpu-10 script_4.slurm "rgb2sm_v61.41_usr" 1
 sbatch -w saliksik-gpu-09 --dependency=afterany:463863 script_3.slurm "rgb2sm_v61.40_usr" 1
 sbatch -w saliksik-gpu-10 script_4.slurm "rgb2sm_v61.41_usr" 1
 
