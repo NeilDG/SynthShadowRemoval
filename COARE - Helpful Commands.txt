@@ -41,8 +41,8 @@ sbatch --dependency=afterany:342351 script_1.slurm
 sbatch -w saliksik-gpu-06 slurm_install_gpu.slurm
 sbatch -w saliksik-gpu-05 script_1.slurm
 sbatch -w saliksik-gpu-06 script_2.slurm
-sbatch -w saliksik-gpu-09 script_3.slurm "rgb2sm_v61.41_usr" 1
-sbatch -w saliksik-gpu-10 script_4.slurm "rgb2sm_v61.41_usr" 1
+sbatch -w saliksik-gpu-09 script_3.slurm "rgb2sm_V61.45_istd+srd" 1
+sbatch -w saliksik-gpu-10 script_4.slurm "rgb2sm_V61.46_istd+srd" 1
 sbatch -w saliksik-gpu-09 --dependency=afterany:463863 script_3.slurm "rgb2sm_v61.40_usr" 1
 sbatch -w saliksik-gpu-10 script_4.slurm "rgb2sm_v61.41_usr" 1
 
