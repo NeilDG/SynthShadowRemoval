@@ -27,24 +27,21 @@ sbatch visdom_run.slurm
 sbatch -w saliksik-cpu-23 visdom_run.slurm
 sbatch -w saliksik-cpu-23 --dependency=afterany:335892 visdom_run.slurm
 
-sbatch --dependency=afterany:458059 script_1.slurm "rgb2ns_v61.26_places" 1
-sbatch --dependency=afterany:459330 script_3.slurm "rgb2sm_v61.23_places" 1
-sbatch --dependency=afterany:459331 script_4.slurm "rgb2sm_v61.22_places" 1
+sbatch --dependency=afterany:466262 script_1.slurm "rgb2sm_V61.51_istd+srd" 1
+sbatch --dependency=afterany:466264 script_2.slurm "rgb2sm_V61.52_istd+srd" 1
 
 sbatch script_debug.slurm 1
 sbatch slurm_download.sh 0
-sbatch script_1.slurm "rgb2ns_v61.26_places" 1
-sbatch script_2.slurm 1
+sbatch script_1.slurm "rgb2sm_V61.51_istd+srd" 1
+sbatch script_2.slurm "rgb2sm_V61.52_istd+srd" 1
 
 sbatch --dependency=afterany:342338 script_debug.slurm
 sbatch --dependency=afterany:342351 script_1.slurm
 sbatch -w saliksik-gpu-06 slurm_install_gpu.slurm
-sbatch -w saliksik-gpu-05 script_1.slurm
-sbatch -w saliksik-gpu-06 script_2.slurm
-sbatch -w saliksik-gpu-09  script_3.slurm "rgb2sm_v61.40_istd" 1
-sbatch -w saliksik-gpu-10 --dependency=afterany:463557 script_4.slurm "rgb2sm_v61.40_srd" 1
-sbatch -w saliksik-gpu-09 --dependency=afterany:463863 script_3.slurm "rgb2sm_v61.40_usr" 1
-sbatch -w saliksik-gpu-10 --dependency=afterany:463864 script_4.slurm "rgb2sm_v61.41_usr" 1
+sbatch -w saliksik-gpu-02 script_1.slurm "rgb2sm_V61.51_istd+srd" 1
+sbatch -w saliksik-gpu-03 script_2.slurm "rgb2sm_V61.52_istd+srd" 1
+sbatch -w saliksik-gpu-09 script_3.slurm "rgb2sm_V61.51_istd+srd" 1
+sbatch -w saliksik-gpu-10 script_4.slurm "rgb2sm_V61.52_istd+srd" 1
 
 //Check status of job
 clear
@@ -86,10 +83,13 @@ gdown https://drive.google.com/uc?id=1B6erEfeB2_n_KYP5GtCQU-DHGE1bKEVE
 gdown https://drive.google.com/drive/folders/1CMz2flknC81dX3xlKBgNP34NJAQ651DB --fuzzy --o "./v26_base/"
 unzip "v26.zip" -d "SynthWeather Dataset 10/"
 
-rm -rf "NeuralNets-GenerativeExperiment-V59.XX.XX"
-rm -rf "NeuralNets-GenerativeExperiment-V61.XX.XX-2"
+rm -rf "NeuralNets-Experiment4-V01.XX.XX"
+rm -rf "NeuralNets-GenerativeExperiment-V61.XX.XX"
 rm -rf "Places Dataset"
-rm -rf "SynthWeather Dataset 10/v66_usr_base"
+rm -rf "SynthWeather Dataset 10/v53_istd"
+rm -rf "SynthWeather Dataset 10/v54_istd"
+rm -rf "SynthWeather Dataset 10/v55_istd"
+rm -rf "SynthWeather Dataset 10/v56_istd"
 mkdir "SynthWeather Dataset 10"
 
 

@@ -54,6 +54,7 @@ else
   OUTPUT_DIR="/home/jupyter-neil.delgallego/SynthWeather Dataset 10/"
 fi
 
+
 #DATASET_NAME="ISTD_Dataset"
 #echo "$OUTPUT_DIR/$DATASET_NAME.zip"
 #zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
@@ -66,47 +67,15 @@ fi
 #unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
 #rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 
-DATASET_NAME="v69_places_base/v69_places"
+DATASET_NAME="v_istd+srd"
 echo "$OUTPUT_DIR/$DATASET_NAME.zip"
-zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
-unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
-rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
+unzip "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
 
-#DATASET_NAME="v66_istd_base/v66_istd"
-#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
-#zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
-#unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
-#rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
-#
-#DATASET_NAME="v66_srd_base/v66_srd"
-#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
-#zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
-#unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
-#rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
-#
-DATASET_NAME="v66_usr_base/v66_usr"
-echo "$OUTPUT_DIR/$DATASET_NAME.zip"
-zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
-unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
-rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
-
-#
-#DATASET_NAME="v55_istd"
-#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
-#zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
-#unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
-#rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
-#
-#DATASET_NAME="v56_istd"
-#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
-#zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
-#unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
-#rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 
 if [ $SERVER_CONFIG == 1 ]
 then
   python "ccs1_main.py"
 elif [ $SERVER_CONFIG == 5 ]
 then
-  python3 "titan3_main.py"
+  python3 "titan1_main.py"
 fi
