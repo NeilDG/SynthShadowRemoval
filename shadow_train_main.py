@@ -171,7 +171,7 @@ def train_shadow(device, opts):
     test_loader_train, _ = dataset_loader.load_shadow_test_dataset()
 
     if(dataset_version == "v_srd"):
-        test_loader_istd, _ = dataset_loader.load_istd_dataset()
+        test_loader_istd, _ = dataset_loader.load_srd_dataset()
     else:
         test_loader_istd, _ = dataset_loader.load_istd_dataset()
 
