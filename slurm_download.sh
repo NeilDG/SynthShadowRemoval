@@ -67,7 +67,7 @@ fi
 #unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
 #rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 
-DATASET_NAME="v_istd+srd"
+DATASET_NAME="v86_srd"
 echo "$OUTPUT_DIR/$DATASET_NAME.zip"
 unzip "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
 
