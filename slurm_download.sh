@@ -77,5 +77,5 @@ then
   python "ccs1_main.py"
 elif [ $SERVER_CONFIG == 5 ]
 then
-  python3 "titan2_main.py"
+  python3 "titan3_main.py"
 fi
