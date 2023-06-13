@@ -3,8 +3,8 @@ input_nc: 3
 patch_size: 256
 
 #0 - 24GB, 1 - 32GB, 2 - 10 - 12GB, 3 - 8GB
-batch_size: [24, 32, 12, 8] #amount of images to accumulate before backprop
-load_size: [24, 32, 12, 8] #amount of images to load in GPU. load_size <= batch_size
+batch_size: [24, 32, 8, 8] #amount of images to accumulate before backprop
+load_size: [24, 32, 8, 8] #amount of images to load in GPU. load_size <= batch_size
 
 num_blocks: 3
 weight_decay: 0.0
@@ -14,8 +14,8 @@ use_shadow_map: False
 
 g_lr: 0.0002
 d_lr: 0.0005
-min_epochs: 150
-max_epochs: 150
+min_epochs: 300
+max_epochs: 300
 
 dataset_version: "v_istd+srd"
 dataset_repeats: 10

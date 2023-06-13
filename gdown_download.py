@@ -37,7 +37,7 @@ def main(argv):
     # url = "https://drive.google.com/uc?id=" + id
     # gdown.download(url, output=output_dir, use_cookies=False)
 
-    direct_link = "https://drive.google.com/file/d/1mNhojJSHkdOAVKEnW55zLO3AXANyLwwb/view?pli=1"
+    direct_link = "https://drive.google.com/file/d/1mOR6GEAkMwrNi6FAyqFFsh_vBOr2LM_Z/view?usp=sharing"
     id = direct_link.split("/d/")[1].split("/")[0]
     url = "https://drive.google.com/uc?id=" + id
     gdown.download(url, output=output_dir, use_cookies=False)
