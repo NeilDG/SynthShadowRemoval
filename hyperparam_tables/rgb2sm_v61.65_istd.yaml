@@ -14,8 +14,8 @@ use_shadow_map: False
 
 g_lr: 0.0002
 d_lr: 0.0005
-min_epochs: 80
-max_epochs: 80
+min_epochs: 20
+max_epochs: 20
 
 dataset_version: "v53_istd"
 dataset_repeats: 3
