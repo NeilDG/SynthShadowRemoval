@@ -1,8 +1,13 @@
+import torch
 import yaml
+from tqdm import tqdm
 from yaml import SafeLoader
 from matplotlib.lines import Line2D
 import numpy as np
 import matplotlib.pyplot as plt
+import global_config
+from loaders import dataset_loader
+
 
 def add_plot(losses_dict, key, label, color_index):
     colors = ['r', 'g', 'black', 'darkorange', 'olive', 'palevioletred', 'rosybrown', 'cyan', 'slategray', 'darkmagenta', 'linen', 'chocolate']

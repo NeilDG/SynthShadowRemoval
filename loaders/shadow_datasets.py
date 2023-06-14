@@ -134,7 +134,8 @@ class ShadowISTDDataset(data.Dataset):
         rgb_ns = cv2.cvtColor(rgb_ns, cv2.COLOR_BGR2RGB)
         rgb_ns = self.initial_op(rgb_ns)
 
-        # shadow_mask = cv2.imread(self.img_list_c[idx])
+        # shadow_mask = cv2.cvtColor(cv2.imread(self.img_list_c[idx]), cv2.COLOR_BGR2GRAY)
+        # shadow_mask = self.initial_op(shadow_mask)
 
         shadow_matte = rgb_ns - rgb_ws
         if (self.use_shadow_map == False):
