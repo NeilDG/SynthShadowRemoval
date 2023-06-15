@@ -16,20 +16,22 @@ class BestTracker():
 
         self.start_epoch = current_epoch
         self.max_epoch_tolerance = 5
+        self.best_metric_replaced = False
 
     def test(self, input, target):
         loss_result = self.loss_op(input, target).item()
 
         if(loss_result < self.best_metric):
             self.best_metric = loss_result
+            self.best_metric_replaced = True
             return True
         else:
             return False
 
-    def has_plateau(self, epoch, input, target):
-        result = self.test(input, target)
-        if(result is True):
+    def has_plateau(self, epoch):
+        if(self.best_metric_replaced == True):
             self.start_epoch = epoch
+            self.best_metric_replaced = False
 
         max_epoch = self.start_epoch + self.max_epoch_tolerance
         if(epoch >= self.start_epoch + self.max_epoch_tolerance):

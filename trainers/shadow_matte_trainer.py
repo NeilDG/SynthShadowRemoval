@@ -301,16 +301,14 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         network_name = ConfigHolder.getInstance().get_sm_version_name()
         if (is_temp):
             torch.save(save_dict, self.NETWORK_CHECKPATH + ".checkpt")
-            print("Saved checkpoint state: %s, Epoch: %d" % (network_name, epoch + 1))
+            print("Saved checkpoint state: %s, Epoch: %d" % (network_name, epoch))
         else:
             torch.save(save_dict, self.NETWORK_CHECKPATH)
-            print("Saved stable model state: %s, Epoch: %d" % (network_name, epoch + 1))
+            print("Saved stable model state: %s, Epoch: %d" % (network_name, epoch))
 
     # check if plateued
     def has_plateau(self, epoch):
-        rgb2sm_istd = self.validation_test()
-        istd_sm_test = self.input_map["matte_val"]
-        return self.best_tracker.has_plateau(epoch, rgb2sm_istd, istd_sm_test)
+        return self.best_tracker.has_plateau(epoch)
 
     def save_for_each_epoch(self, epoch, iteration):
         save_dict = {'epoch': epoch, 'iteration': iteration, global_config.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
