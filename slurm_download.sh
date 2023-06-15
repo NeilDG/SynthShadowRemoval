@@ -67,15 +67,18 @@ fi
 #unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
 #rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 
-DATASET_NAME="v86_istd"
+DATASET_NAME="v87_istd"
 echo "$OUTPUT_DIR/$DATASET_NAME.zip"
 unzip "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
 
+DATASET_NAME="v88_istd"
+echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+unzip "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
 
-if [ $SERVER_CONFIG == 1 ]
-then
-  python "ccs1_main.py"
-elif [ $SERVER_CONFIG == 5 ]
-then
-  python3 "titan2_main.py"
-fi
+#if [ $SERVER_CONFIG == 1 ]
+#then
+#  python "ccs1_main.py"
+#elif [ $SERVER_CONFIG == 5 ]
+#then
+#  python3 "titan2_main.py"
+#fi

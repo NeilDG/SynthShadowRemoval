@@ -37,7 +37,12 @@ def main(argv):
     # url = "https://drive.google.com/uc?id=" + id
     # gdown.download(url, output=output_dir, use_cookies=False)
 
-    direct_link = "https://drive.google.com/file/d/1mOR6GEAkMwrNi6FAyqFFsh_vBOr2LM_Z/view?usp=sharing"
+    direct_link = "https://drive.google.com/file/d/1mPPsQp4zamilbHPbUY0EL05IIaaLFVga/view?pli=1"
+    id = direct_link.split("/d/")[1].split("/")[0]
+    url = "https://drive.google.com/uc?id=" + id
+    gdown.download(url, output=output_dir, use_cookies=False)
+
+    direct_link = "https://drive.google.com/file/d/1mPQlfiDjvHEAtLEOwyhsPtO-3GN8_B3w/view?usp=sharing"
     id = direct_link.split("/d/")[1].split("/")[0]
     url = "https://drive.google.com/uc?id=" + id
     gdown.download(url, output=output_dir, use_cookies=False)

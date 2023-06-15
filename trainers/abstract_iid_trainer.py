@@ -166,10 +166,6 @@ class AbstractIIDTrainer():
         pass
 
     @abstractmethod
-    def is_stop_condition_met(self):
-        pass
-
-    @abstractmethod
     def test(self, input_map):
         pass
 

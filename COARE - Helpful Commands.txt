@@ -61,8 +61,8 @@ export XDG_RUNTIME_DIR=/scratch1/scratch2/neil.delgallego/Visdom/
 saliksik.asti.dost.gov.ph:8097
 
 //CCS SERVER-JUPYTERHUB
-git clone -b "workspace/V61.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "NeuralNets-GenerativeExperiment-V61.XX.XX"
-git clone -b "workspace/V61.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "NeuralNets-GenerativeExperiment-V61.XX.XX-2"
+git clone --depth 1 -b "workspace/V61.XX.XX" "https://github.com/NeilDG/SynthShadowRemoval.git" "NeuralNets-GenerativeExperiment-V61.XX.XX"
+git clone -b "workspace/V61.XX.XX" "https://github.com/NeilDG/SynthShadowRemoval.git" "NeuralNets-GenerativeExperiment-V61.XX.XX-2"
 git switch "workspace/V44.XX.XX"
 cd NeuralNets-GenerativeExperiment-V61.XX.XX
 cd NeuralNets-GenerativeExperiment-V61.XX.XX-2
