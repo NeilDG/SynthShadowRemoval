@@ -321,9 +321,8 @@ def train_shadow_matte(device, opts):
 
             input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_matte": shadow_matte,
                          "rgb_ws_val": rgb_ws_val, "matte_val": matte_val}
-            target_map = input_map
 
-            tf.train(epoch, iteration, input_map, target_map)
+            tf.train(epoch, iteration, input_map)
             iteration = iteration + 1
             pbar.update(1)
 
@@ -346,6 +345,8 @@ def train_shadow_matte(device, opts):
                     tf.visdom_visualize(input_map, "Test ISTD")
 
         tf.save_states(epoch, iteration, True)
+        if(tf.has_plateau(epoch)):
+            break
 
     pbar.close()
 

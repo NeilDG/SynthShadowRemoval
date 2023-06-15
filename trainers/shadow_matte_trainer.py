@@ -73,7 +73,7 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         self.BEST_NETWORK_SAVE_PATH = "./checkpoint/best/"
         network_file_name = self.BEST_NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_best" + ".pth"
-        self.best_tracker = best_tracker.BestTracker(early_stopper.EarlyStopperMethod.L1_TYPE)
+        self.best_tracker = best_tracker.BestTracker(global_config.last_epoch_sm, early_stopper.EarlyStopperMethod.L1_TYPE)
         self.best_tracker.load_best_state(network_file_name)
 
         # model_parameters = filter(lambda p: p.requires_grad, self.G_SM_predictor.parameters())
@@ -137,9 +137,10 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.caption_dict_t[self.TRAIN_LOSS_KEY] = "Train L1 loss per iteration"
         self.caption_dict_t[self.TEST_LOSS_KEY] = "Test L1 loss per iteration"
 
-    def train(self, epoch, iteration, input_map, target_map):
-        input_ws = input_map["rgb"]
-        target_tensor = target_map["shadow_matte"]
+    def train(self, epoch, iteration, input_map):
+        self.input_map = input_map
+        input_ws = self.input_map["rgb"]
+        target_tensor = self.input_map["shadow_matte"]
         accum_batch_size = self.load_size * iteration
 
         with amp.autocast():
@@ -193,8 +194,8 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                     # self.losses_dict_s[self.ISTD_SM_LOSS_KEY].append(SM_istd_loss.item())
 
                 #perform validation test
-                rgb2sm_istd = self.validation_test(input_map)
-                istd_sm_test = input_map["matte_val"]
+                rgb2sm_istd = self.validation_test()
+                istd_sm_test = self.input_map["matte_val"]
 
                 #check and save best state
                 self.try_save_best_state(rgb2sm_istd, istd_sm_test, epoch, iteration)
@@ -219,11 +220,11 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
     def is_stop_condition_met(self):
         return self.stop_result
 
-    def validation_test(self, input_map):
+    def validation_test(self):
         # print("Testing on ISTD dataset.")
 
-        input_map_new = {"rgb": input_map["rgb_ws_val"],
-                         "shadow_matte": input_map["matte_val"]}
+        input_map_new = {"rgb": self.input_map["rgb_ws_val"],
+                         "shadow_matte": self.input_map["matte_val"]}
 
         return self.test(input_map_new)
 
@@ -299,10 +300,16 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         if (is_temp):
             torch.save(save_dict, self.NETWORK_CHECKPATH + ".checkpt")
-            print("Saved checkpoint state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
+            print("Saved checkpoint state. Epoch: %d" % (epoch + 1))
         else:
             torch.save(save_dict, self.NETWORK_CHECKPATH)
-            print("Saved stable model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
+            print("Saved stable model state. Epoch: %d" % (epoch + 1))
+
+    # check if plateued
+    def has_plateau(self, epoch):
+        rgb2sm_istd = self.validation_test()
+        istd_sm_test = self.input_map["matte_val"]
+        return self.best_tracker.has_plateau(epoch, rgb2sm_istd, istd_sm_test)
 
     def save_for_each_epoch(self, epoch, iteration):
         save_dict = {'epoch': epoch, 'iteration': iteration, global_config.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
@@ -342,7 +349,7 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         network_file_name = self.NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_" + str(global_config.img_to_load) + ".pth"
         torch.save(save_dict, network_file_name)
-        print("Saved stable model state: %s Epoch: %d. Name: %s" % (len(save_dict), (epoch), network_file_name))
+        print("Saved stable model state. Epoch: %d. Name: %s" % ((epoch), network_file_name))
 
     def load_state_for_specific_sample(self):
         network_file_name = self.NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_" + str(global_config.img_to_load) + ".pth"

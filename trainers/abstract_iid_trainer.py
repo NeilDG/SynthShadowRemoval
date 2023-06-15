@@ -162,7 +162,7 @@ class AbstractIIDTrainer():
 
     @abstractmethod
     #follows a hashmap style lookup
-    def train(self, epoch, iteration, input_map, target_map):
+    def train(self, epoch, iteration, input_map):
         pass
 
     @abstractmethod

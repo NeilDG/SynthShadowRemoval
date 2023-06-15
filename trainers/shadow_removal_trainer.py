@@ -65,7 +65,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             self.NETWORK_SAVE_PATH = "./checkpoint/by_sample/"
 
         network_file_name = self.BEST_NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_best" + ".pth"
-        self.best_tracker = best_tracker.BestTracker(early_stopper.EarlyStopperMethod.L1_TYPE)
+        self.best_tracker = best_tracker.BestTracker(global_config.last_epoch_ns, early_stopper.EarlyStopperMethod.L1_TYPE)
         self.best_tracker.load_best_state(network_file_name)
 
         # model_parameters = filter(lambda p: p.requires_grad, self.G_SM_predictor.parameters())

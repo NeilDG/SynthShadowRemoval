@@ -22,12 +22,12 @@ def test_shadow():
 
     os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 "
               "--img_vis_enabled=0 --train_mode=train_shadow_matte --dataset_target=all "
-              "--shadow_matte_version=\"rgb2sm_v61.64_istd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
+              "--shadow_matte_version=\"rgb2sm_v61.55_istd+srd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
               "--shadow_matte_iteration=1 --shadow_removal_iteration=1 --load_best=1")
-
+    #
     # os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 "
     #           "--img_vis_enabled=0 --train_mode=train_shadow_matte --dataset_target=all "
-    #           "--shadow_matte_version=\"rgb2sm_v61.48_istd+srd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
+    #           "--shadow_matte_version=\"rgb2sm_v61.67_istd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
     #           "--shadow_matte_iteration=1 --shadow_removal_iteration=1 --load_best=1")
 
     # os.system("python \"shadow_test_main-2.py\" --server_config=5 --img_to_load=-1 "
@@ -56,6 +56,11 @@ def test_shadow():
     #           "--shadow_matte_iteration=1 --shadow_removal_iteration=1")
 
 
+def analyze():
+    os.system("python \"shadow_analyzer_main.py\" --server_config=5 --img_to_load=-1 "
+              "--img_vis_enabled=1 --train_mode=train_shadow_matte --dataset_target=all "
+              "--shadow_matte_version=\"rgb2sm_v61.64_istd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
+              "--shadow_matte_iteration=1 --shadow_removal_iteration=1 --load_best=0")
 def test_img2img():
     os.system("python \"test_img2img_main.py\" --server_config=3 --img_to_load=-1 "
               "--plot_enabled=1 --save_images=0 --network_version=\"synth2srd_v01.00\" "
@@ -66,6 +71,7 @@ def test_img2img():
     #           "--iteration=4")
 
 def main():
+    # analyze()
     test_shadow()
     # test_img2img()
 
