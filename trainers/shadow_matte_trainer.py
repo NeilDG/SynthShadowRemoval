@@ -298,12 +298,13 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         save_dict[global_config.GENERATOR_KEY + "M"] = netGNS_state_dict
         save_dict[global_config.DISCRIMINATOR_KEY + "M"] = netDNS_state_dict
 
+        network_name = ConfigHolder.getInstance().get_sm_version_name()
         if (is_temp):
             torch.save(save_dict, self.NETWORK_CHECKPATH + ".checkpt")
-            print("Saved checkpoint state. Epoch: %d" % (epoch + 1))
+            print("Saved checkpoint state: %s, Epoch: %d" % (network_name, epoch + 1))
         else:
             torch.save(save_dict, self.NETWORK_CHECKPATH)
-            print("Saved stable model state. Epoch: %d" % (epoch + 1))
+            print("Saved stable model state: %s, Epoch: %d" % (network_name, epoch + 1))
 
     # check if plateued
     def has_plateau(self, epoch):
