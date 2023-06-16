@@ -46,9 +46,6 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             shadow_matte_pool.ShadowMattePool.initialize()
             self.ISTD_SM_pool = shadow_matte_pool.ShadowMattePool().getInstance()
 
-        self.stopper_method = early_stopper.EarlyStopper(network_config["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, 3000, 99999.9)
-        self.stop_result = False
-
         self.initialize_dict()
         self.initialize_shadow_network()
 
@@ -73,7 +70,7 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         self.BEST_NETWORK_SAVE_PATH = "./checkpoint/best/"
         network_file_name = self.BEST_NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_best" + ".pth"
-        self.best_tracker = best_tracker.BestTracker(early_stopper.EarlyStopperMethod.L1_TYPE)
+        self.best_tracker = best_tracker.BestTracker(global_config.last_epoch_sm, early_stopper.EarlyStopperMethod.L1_TYPE)
         self.best_tracker.load_best_state(network_file_name)
 
         # model_parameters = filter(lambda p: p.requires_grad, self.G_SM_predictor.parameters())
@@ -137,9 +134,10 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.caption_dict_t[self.TRAIN_LOSS_KEY] = "Train L1 loss per iteration"
         self.caption_dict_t[self.TEST_LOSS_KEY] = "Test L1 loss per iteration"
 
-    def train(self, epoch, iteration, input_map, target_map):
-        input_ws = input_map["rgb"]
-        target_tensor = target_map["shadow_matte"]
+    def train(self, epoch, iteration, input_map):
+        self.input_map = input_map
+        input_ws = self.input_map["rgb"]
+        target_tensor = self.input_map["shadow_matte"]
         accum_batch_size = self.load_size * iteration
 
         with amp.autocast():
@@ -193,8 +191,8 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                     # self.losses_dict_s[self.ISTD_SM_LOSS_KEY].append(SM_istd_loss.item())
 
                 #perform validation test
-                rgb2sm_istd = self.validation_test(input_map)
-                istd_sm_test = input_map["matte_val"]
+                rgb2sm_istd = self.validation_test()
+                istd_sm_test = self.input_map["matte_val"]
 
                 #check and save best state
                 self.try_save_best_state(rgb2sm_istd, istd_sm_test, epoch, iteration)
@@ -216,14 +214,11 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 self.losses_dict_t[self.TRAIN_LOSS_KEY].append(self.common_losses.compute_l1_loss(rgb2sm, target_tensor).item())
                 self.losses_dict_t[self.TEST_LOSS_KEY].append(self.common_losses.compute_l1_loss(rgb2sm_istd, istd_sm_test).item())
 
-    def is_stop_condition_met(self):
-        return self.stop_result
-
-    def validation_test(self, input_map):
+    def validation_test(self):
         # print("Testing on ISTD dataset.")
 
-        input_map_new = {"rgb": input_map["rgb_ws_val"],
-                         "shadow_matte": input_map["matte_val"]}
+        input_map_new = {"rgb": self.input_map["rgb_ws_val"],
+                         "shadow_matte": self.input_map["matte_val"]}
 
         return self.test(input_map_new)
 
@@ -283,29 +278,33 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         if(checkpoint != None):
             # global_config.last_epoch_sm = checkpoint["epoch"]
-            self.stopper_method.update_last_metric(checkpoint[global_config.LAST_METRIC_KEY])
             self.G_SM_predictor.load_state_dict(checkpoint[global_config.GENERATOR_KEY + "M"])
             self.D_SM_discriminator.load_state_dict(checkpoint[global_config.DISCRIMINATOR_KEY + "M"])
 
             print("Loaded shadow matte network: ", self.NETWORK_CHECKPATH, "Epoch: ", checkpoint["epoch"])
 
     def save_states(self, epoch, iteration, is_temp:bool):
-        save_dict = {'epoch': epoch, 'iteration': iteration, global_config.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
+        save_dict = {'epoch': epoch, 'iteration': iteration}
         netGNS_state_dict = self.G_SM_predictor.state_dict()
         netDNS_state_dict = self.D_SM_discriminator.state_dict()
 
         save_dict[global_config.GENERATOR_KEY + "M"] = netGNS_state_dict
         save_dict[global_config.DISCRIMINATOR_KEY + "M"] = netDNS_state_dict
 
+        network_name = ConfigHolder.getInstance().get_sm_version_name()
         if (is_temp):
             torch.save(save_dict, self.NETWORK_CHECKPATH + ".checkpt")
-            print("Saved checkpoint state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
+            print("Saved checkpoint state: %s, Epoch: %d" % (network_name, epoch))
         else:
             torch.save(save_dict, self.NETWORK_CHECKPATH)
-            print("Saved stable model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
+            print("Saved stable model state: %s, Epoch: %d" % (network_name, epoch))
+
+    # check if plateued
+    def has_plateau(self, epoch):
+        return self.best_tracker.has_plateau(epoch)
 
     def save_for_each_epoch(self, epoch, iteration):
-        save_dict = {'epoch': epoch, 'iteration': iteration, global_config.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
+        save_dict = {'epoch': epoch, 'iteration': iteration}
         netGNS_state_dict = self.G_SM_predictor.state_dict()
         netDNS_state_dict = self.D_SM_discriminator.state_dict()
 
@@ -326,14 +325,13 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         if (checkpoint != None):
             global_config.last_epoch_sm = checkpoint["epoch"]
-            self.stopper_method.update_last_metric(checkpoint[global_config.LAST_METRIC_KEY])
             self.G_SM_predictor.load_state_dict(checkpoint[global_config.GENERATOR_KEY + "Z"])
             self.D_SM_discriminator.load_state_dict(checkpoint[global_config.DISCRIMINATOR_KEY + "Z"])
 
             print("Loaded shadow matte network: ", network_file_name, "Epoch: ", checkpoint["epoch"])
 
     def save_state_for_sample(self, epoch, iteration):
-        save_dict = {'epoch': epoch, 'iteration': iteration, global_config.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
+        save_dict = {'epoch': epoch, 'iteration': iteration}
         netGNS_state_dict = self.G_SM_predictor.state_dict()
         netDNS_state_dict = self.D_SM_discriminator.state_dict()
 
@@ -342,7 +340,7 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         network_file_name = self.NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_" + str(global_config.img_to_load) + ".pth"
         torch.save(save_dict, network_file_name)
-        print("Saved stable model state: %s Epoch: %d. Name: %s" % (len(save_dict), (epoch), network_file_name))
+        print("Saved stable model state. Epoch: %d. Name: %s" % ((epoch), network_file_name))
 
     def load_state_for_specific_sample(self):
         network_file_name = self.NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_" + str(global_config.img_to_load) + ".pth"
@@ -355,7 +353,6 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         if (checkpoint != None):
             global_config.last_epoch_ns = checkpoint["epoch"]
             global_config.last_iteration_ns = checkpoint["iteration"]
-            self.stopper_method.update_last_metric(checkpoint[global_config.LAST_METRIC_KEY])
             self.G_SM_predictor.load_state_dict(checkpoint[global_config.GENERATOR_KEY + "Z"])
             self.D_SM_discriminator.load_state_dict(checkpoint[global_config.DISCRIMINATOR_KEY + "Z"])
 
@@ -366,8 +363,7 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         best_metric = self.best_tracker.get_best_metric()
         if(best_achieved):
             network_file_name = self.BEST_NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_best" + ".pth"
-            save_dict = {'epoch': epoch, 'iteration': iteration, global_config.LAST_METRIC_KEY: self.stopper_method.get_last_metric(),
-                         'best_metric' : best_metric}
+            save_dict = {'epoch': epoch, 'iteration': iteration, 'best_metric' : best_metric}
             netGNS_state_dict = self.G_SM_predictor.state_dict()
             netDNS_state_dict = self.D_SM_discriminator.state_dict()
 

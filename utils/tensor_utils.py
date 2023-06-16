@@ -108,6 +108,16 @@ def gram_matrix(y):
     gram = features.bmm(features_t) / (ch * h * w)
     return gram
 
+def get_luminance(rgb_tensor):
+    rgb_tensor = rgb_tensor.transpose(0, 1)
+    rgb_tensor = normalize_to_01(rgb_tensor)
+    (r, g, b) = torch.chunk(rgb_tensor, 3)
+
+    #luminance formula
+    y = (0.2126 * r) + (0.7152 * g) + (0.0722 * b)
+
+    return y.transpose(0, 1)
+
 
 def preprocess_batch(batch):
     batch = batch.transpose(0, 1)

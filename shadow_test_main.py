@@ -178,7 +178,6 @@ def test_shadow_removal(dataset_tester, opts):
     #     rgb_ws = rgb_ws.to(device)
     #     dataset_tester.test_any_image(file_name, rgb_ws, "Places-365", opts.img_vis_enabled, 1, opts)
 
-
 def main(argv):
     (opts, args) = parser.parse_args(argv)
     update_config(opts)

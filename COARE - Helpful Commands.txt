@@ -3,12 +3,12 @@
 clear
 
 //For directories
-cd scratch3/NeuralNets-GenerativeExperiment-V60.XX.XX
+cd scratch3/NeuralNets-GenerativeExperiment-V61.XX.XX
 cd scratch3/NeuralNets-GenerativeExperiment-V61.XX.XX-2
 cd scratch3/Visdom
 unzip "scratch3/SynthWeather Dataset 10.zip"
 
-git clone -b "workspace/V61.XX.XX" "https://github.com/NeilDG/SynthShadowRemoval.git" "scratch3/NeuralNets-GenerativeExperiment-V61.XX.XX"
+git clone --depth 1 -b "workspace/V61.XX.XX" "https://github.com/NeilDG/SynthShadowRemoval.git" "scratch3/NeuralNets-GenerativeExperiment-V61.XX.XX"
 git clone -b "workspace/V61.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "scratch3/NeuralNets-GenerativeExperiment-V61.XX.XX-2"
 rm -rf "/scratch1/scratch2/neil.delgallego/NeuralNets-GenerativeExperiment-V60.XX.XX"
 rm -rf "/scratch1/scratch2/neil.delgallego/SynthWeather Dataset 10/"
@@ -32,8 +32,8 @@ sbatch --dependency=afterany:466264 script_2.slurm "rgb2sm_v61.52_istd+srd" 1
 
 sbatch script_debug.slurm 1
 sbatch slurm_download.sh 0
-sbatch script_1.slurm "rgb2sm_V61.51_istd+srd" 1
-sbatch script_2.slurm "rgb2sm_V61.52_istd+srd" 1
+sbatch script_1.slurm "rgb2sm_v61.40_usr" 1
+sbatch script_2.slurm "rgb2sm_v61.41_usr" 1
 
 sbatch --dependency=afterany:342338 script_debug.slurm
 sbatch --dependency=afterany:342351 script_1.slurm
@@ -61,8 +61,8 @@ export XDG_RUNTIME_DIR=/scratch1/scratch2/neil.delgallego/Visdom/
 saliksik.asti.dost.gov.ph:8097
 
 //CCS SERVER-JUPYTERHUB
-git clone -b "workspace/V61.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "NeuralNets-GenerativeExperiment-V61.XX.XX"
-git clone -b "workspace/V61.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "NeuralNets-GenerativeExperiment-V61.XX.XX-2"
+git clone --depth 1 -b "workspace/V61.XX.XX" "https://github.com/NeilDG/SynthShadowRemoval.git" "NeuralNets-GenerativeExperiment-V61.XX.XX"
+git clone -b "workspace/V61.XX.XX" "https://github.com/NeilDG/SynthShadowRemoval.git" "NeuralNets-GenerativeExperiment-V61.XX.XX-2"
 git switch "workspace/V44.XX.XX"
 cd NeuralNets-GenerativeExperiment-V61.XX.XX
 cd NeuralNets-GenerativeExperiment-V61.XX.XX-2
