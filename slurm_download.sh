@@ -67,11 +67,11 @@ fi
 #unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
 #rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 
-DATASET_NAME="v87_istd"
+DATASET_NAME="v87_istd_base/v87_istd"
 echo "$OUTPUT_DIR/$DATASET_NAME.zip"
 unzip "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
 
-DATASET_NAME="v88_istd"
+DATASET_NAME="v88_istd_base/v88_istd"
 echo "$OUTPUT_DIR/$DATASET_NAME.zip"
 unzip "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
 

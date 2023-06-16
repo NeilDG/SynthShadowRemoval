@@ -37,15 +37,11 @@ def main(argv):
     # url = "https://drive.google.com/uc?id=" + id
     # gdown.download(url, output=output_dir, use_cookies=False)
 
-    direct_link = "https://drive.google.com/file/d/1mPPsQp4zamilbHPbUY0EL05IIaaLFVga/view?pli=1"
-    id = direct_link.split("/d/")[1].split("/")[0]
-    url = "https://drive.google.com/uc?id=" + id
-    gdown.download(url, output=output_dir, use_cookies=False)
+    url = "https://drive.google.com/drive/folders/1mhKmxwDODP4aCccG39FyQLlR0QVBvNA2?usp=sharing"
+    gdown.download_folder(url, output=output_dir, use_cookies=False)
 
-    direct_link = "https://drive.google.com/file/d/1mPQlfiDjvHEAtLEOwyhsPtO-3GN8_B3w/view?usp=sharing"
-    id = direct_link.split("/d/")[1].split("/")[0]
-    url = "https://drive.google.com/uc?id=" + id
-    gdown.download(url, output=output_dir, use_cookies=False)
+    url = "https://drive.google.com/drive/folders/1mhLqCankhs2i2sH2MGHea9kUCAbsiDy_?usp=sharing"
+    gdown.download_folder(url, output=output_dir, use_cookies=False)
 
     #v66_usr dataset
     # url = "https://drive.google.com/drive/folders/1m2KBqGJGDl8vITVTp4tnjnrKX1hTEe1k?usp=sharing"

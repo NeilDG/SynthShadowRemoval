@@ -4,10 +4,10 @@ import os
 
 def train_shadow_matte():
     os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
-              "--plot_enabled=0 --save_per_iter=1000 --network_version=\"rgb2sm_v61.68_istd\" --iteration=1")
+              "--plot_enabled=0 --save_per_iter=1000 --network_version=\"rgb2sm_v61.69_istd\" --iteration=1")
 
     os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
-              "--plot_enabled=0 --save_per_iter=1000 --network_version=\"rgb2sm_v61.69_istd\" --iteration=1")
+              "--plot_enabled=0 --save_per_iter=1000 --network_version=\"rgb2sm_v61.68_istd\" --iteration=1")
 
     os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
               "--plot_enabled=0 --save_per_iter=1000 --network_version=\"rgb2sm_v61.66_istd\" --iteration=1")
