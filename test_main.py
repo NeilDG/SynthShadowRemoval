@@ -28,14 +28,14 @@ def test_shadow():
     #           "--shadow_matte_iteration=1 --shadow_removal_iteration=1 --load_best=1")
 
     os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 "
-              "--img_vis_enabled=1 --train_mode=train_shadow_matte --dataset_target=all "
-              "--shadow_matte_version=\"rgb2sm_v61.69_istd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
+              "--img_vis_enabled=0 --train_mode=train_shadow_matte --dataset_target=all "
+              "--shadow_matte_version=\"rgb2sm_v61.66_istd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
               "--shadow_matte_iteration=1 --shadow_removal_iteration=1 --load_best=1")
 
-    # os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 "
-    #           "--img_vis_enabled=0 --train_mode=train_shadow_matte --dataset_target=all "
-    #           "--shadow_matte_version=\"rgb2sm_v61.59_istd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
-    #           "--shadow_matte_iteration=1 --shadow_removal_iteration=1 --load_best=1")
+    os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 "
+              "--img_vis_enabled=0 --train_mode=train_shadow_matte --dataset_target=all "
+              "--shadow_matte_version=\"rgb2sm_v61.67_istd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
+              "--shadow_matte_iteration=1 --shadow_removal_iteration=1 --load_best=1")
     #
     # os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 "
     #           "--img_vis_enabled=0 --train_mode=train_shadow_matte --dataset_target=all "
@@ -58,8 +58,8 @@ def test_shadow():
     #           "--shadow_matte_version=\"rgb2sm_v58.28_istd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
     #           "--shadow_matte_iteration=1 --shadow_removal_iteration=1")
     #
-
-    os.system("python \"benchmark_shadow.py\" --img_to_load=-1")
+    #
+    # os.system("python \"benchmark_shadow.py\" --img_to_load=-1")
 
     #FOR TESTING
     # os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 "
