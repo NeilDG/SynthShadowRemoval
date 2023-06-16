@@ -3,7 +3,7 @@
 clear
 
 //For directories
-cd scratch3/NeuralNets-GenerativeExperiment-V61.XX.XX
+cd scratch3/NeuralNets-GenerativeExperiment-V60.XX.XX
 cd scratch3/NeuralNets-GenerativeExperiment-V61.XX.XX-2
 cd scratch3/Visdom
 unzip "scratch3/SynthWeather Dataset 10.zip"
@@ -89,7 +89,7 @@ rm -rf "Places Dataset"
 rm -rf "SynthWeather Dataset 10/v53_istd"
 rm -rf "SynthWeather Dataset 10/v54_istd"
 rm -rf "SynthWeather Dataset 10/v55_istd"
-rm -rf "SynthWeather Dataset 10/v56_istd"
+rm -rf "SynthWeather Dataset 10/v88_istd_base"
 mkdir "SynthWeather Dataset 10"
 
 

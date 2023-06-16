@@ -37,8 +37,8 @@ def main(argv):
     # url = "https://drive.google.com/uc?id=" + id
     # gdown.download(url, output=output_dir, use_cookies=False)
 
-    url = "https://drive.google.com/drive/folders/1mhKmxwDODP4aCccG39FyQLlR0QVBvNA2?usp=sharing"
-    gdown.download_folder(url, output=output_dir, use_cookies=False)
+    # url = "https://drive.google.com/drive/folders/1mhKmxwDODP4aCccG39FyQLlR0QVBvNA2?usp=sharing"
+    # gdown.download_folder(url, output=output_dir, use_cookies=False)
 
     url = "https://drive.google.com/drive/folders/1mhLqCankhs2i2sH2MGHea9kUCAbsiDy_?usp=sharing"
     gdown.download_folder(url, output=output_dir, use_cookies=False)
