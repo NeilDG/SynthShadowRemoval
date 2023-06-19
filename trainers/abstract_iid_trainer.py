@@ -103,7 +103,7 @@ class NetworkCreator():
 
         num_blocks = network_config["num_blocks"]
         dropout_rate = network_config["dropout_rate"]
-        use_cbam = network_config["use_cbam"]
+        use_cbam = config_holder.get_network_attribute("use_cbam", False)
         norm_mode = config_holder.get_network_attribute("norm_mode", "batch")
 
         if (net_config == 1):
