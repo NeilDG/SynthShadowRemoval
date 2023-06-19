@@ -23,11 +23,11 @@ class NetworkCreator():
         dropout_rate = network_config["dropout_rate"]
 
         if (net_config == 1):
-            G_A = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks).to(self.gpu_device)
+            G_A = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, dropout_rate=dropout_rate).to(self.gpu_device)
         elif (net_config == 2):
             G_A = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
-            G_A = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
+            G_A = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, dropout_rate=dropout_rate, use_cbam=True).to(self.gpu_device)
         elif(net_config == 4):
             params = {'dim': 64,                     # number of filters in the bottommost layer
                       'mlp_dim': 256,                # number of filters in MLP
@@ -67,11 +67,12 @@ class NetworkCreator():
         input_nc = network_config["input_nc"]
         num_blocks = network_config["num_blocks"]
         dropout_rate = network_config["dropout_rate"]
+        norm_mode = config_holder.get_network_attribute("norm_mode", "batch")
 
         D_A = cycle_gan.Discriminator(input_nc=3).to(self.gpu_device)  # use CycleGAN's discriminator
 
         if (net_config == 1):
-            G_A = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, dropout_rate=dropout_rate, use_cbam=network_config["use_cbam"], norm=network_config["norm_mode"]).to(self.gpu_device)
+            G_A = cycle_gan.Generator(input_nc=input_nc, output_nc=3, n_residual_blocks=num_blocks, dropout_rate=dropout_rate, use_cbam=network_config["use_cbam"], norm=norm_mode).to(self.gpu_device)
         elif (net_config == 2):
             G_A = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=3, num_downs=num_blocks).to(self.gpu_device)
         else:
@@ -102,13 +103,15 @@ class NetworkCreator():
 
         num_blocks = network_config["num_blocks"]
         dropout_rate = network_config["dropout_rate"]
+        use_cbam = network_config["use_cbam"]
+        norm_mode = config_holder.get_network_attribute("norm_mode", "batch")
 
         if (net_config == 1):
-            G_Z = cycle_gan.Generator(input_nc=input_nc, output_nc=output_nc, n_residual_blocks=num_blocks).to(self.gpu_device)
+            G_Z = cycle_gan.Generator(input_nc=input_nc, output_nc=output_nc, n_residual_blocks=num_blocks, dropout_rate=dropout_rate, use_cbam=use_cbam, norm=norm_mode).to(self.gpu_device)
         elif (net_config == 2):
             G_Z = unet_gan.UnetGenerator(input_nc=input_nc, output_nc=output_nc, num_downs=num_blocks).to(self.gpu_device)
         elif (net_config == 3):
-            G_Z = cycle_gan.Generator(input_nc=input_nc, output_nc=output_nc, n_residual_blocks=num_blocks, has_dropout=False, use_cbam=True).to(self.gpu_device)
+            G_Z = cycle_gan.Generator(input_nc=input_nc, output_nc=output_nc, n_residual_blocks=num_blocks, dropout_rate=dropout_rate, use_cbam=True).to(self.gpu_device)
         elif (net_config == 4):
             params = {'dim': 64,  # number of filters in the bottommost layer
                       'mlp_dim': 256,  # number of filters in MLP
