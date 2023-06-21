@@ -72,10 +72,30 @@ fi
 #zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 #unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
 
-DATASET_NAME="v88_istd_base/v88_istd"
+#DATASET_NAME="v88_istd_base/v88_istd"
+#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+#zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
+#unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
+
+DATASET_NAME="v86_istd"
 echo "$OUTPUT_DIR/$DATASET_NAME.zip"
-zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
-unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
+unzip "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
+
+DATASET_NAME="v86_srd"
+echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+unzip "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
+
+DATASET_NAME="v87_istd"
+echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+unzip "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
+
+DATASET_NAME="v88_istd"
+echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+unzip "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
+
+DATASET_NAME="v89_istd"
+echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+unzip "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
 
 #if [ $SERVER_CONFIG == 1 ]
 #then

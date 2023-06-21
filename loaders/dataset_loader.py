@@ -330,7 +330,7 @@ def load_istd_train_dataset():
 
     return data_loader, len(ws_istd_list)
 
-def load_istd_dataset():
+def load_istd_dataset(with_shadow_mask = False):
     ws_istd_list = glob.glob(global_config.ws_istd)
     ns_istd_list = glob.glob(global_config.ns_istd)
     mask_istd_list = glob.glob(global_config.mask_istd)
@@ -339,7 +339,7 @@ def load_istd_dataset():
     print("Length of images: %d %d %d" % (len(ws_istd_list), len(ns_istd_list), len(mask_istd_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        shadow_datasets.ShadowISTDDataset(img_length, ws_istd_list, ns_istd_list, mask_istd_list, 1),
+        shadow_datasets.ShadowISTDDataset(img_length, ws_istd_list, ns_istd_list, mask_istd_list, 1, with_shadow_mask),
         batch_size=global_config.test_size,
         num_workers=1,
         shuffle=False
@@ -347,21 +347,22 @@ def load_istd_dataset():
 
     return data_loader, len(ws_istd_list)
 
-def load_srd_dataset():
-    ws_istd_list = glob.glob(global_config.ws_srd)
-    ns_istd_list = glob.glob(global_config.ns_srd)
+def load_srd_dataset(with_shadow_mask = False):
+    ws_list = glob.glob(global_config.ws_srd)
+    ns_list = glob.glob(global_config.ns_srd)
+    mask_list = glob.glob(global_config.mask_srd)
 
-    img_length = len(ws_istd_list)
-    print("Length of images: %d %d" % (len(ws_istd_list), len(ns_istd_list)))
+    img_length = len(ws_list)
+    print("Length of images: %d %d %d" % (len(ws_list), len(ns_list), len(mask_list)))
 
     data_loader = torch.utils.data.DataLoader(
-        shadow_datasets.ShadowSRDDataset(img_length, ws_istd_list, ns_istd_list, 1),
+        shadow_datasets.ShadowSRDDataset(img_length, ws_list, ns_list, mask_list, 1, with_shadow_mask),
         batch_size=global_config.test_size,
         num_workers=1,
         shuffle=False
     )
 
-    return data_loader, len(ws_istd_list)
+    return data_loader, len(ws_list)
 
 def load_usr_dataset():
     ws_list = glob.glob(global_config.usr_test)

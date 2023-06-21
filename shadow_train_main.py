@@ -210,12 +210,11 @@ def train_shadow(device, opts):
 
             input_map = {"rgb": rgb_ws, "rgb_ns": rgb_ns, "shadow_matte" : shadow_matte,
                          "rgb_ws_istd" : rgb_ws_istd, "rgb_ns_istd" : rgb_ns_istd, "matte_istd" : matte_istd}
-            target_map = input_map
 
             iteration = iteration + 1
             pbar.update(1)
 
-            tf.train(epoch, iteration, input_map, target_map)
+            tf.train(epoch, iteration, input_map)
 
             if (iteration % opts.save_per_iter == 0):
                 tf.save_states(epoch, iteration, True)
@@ -236,6 +235,8 @@ def train_shadow(device, opts):
                     tf.visdom_visualize(input_map, "Test ISTD")
 
         tf.save_states(epoch, iteration, True)
+        if (tf.has_plateau(epoch)):
+            break
 
             # if(global_config.plot_enabled == 1 and iteration % opts.save_per_iter == 0):
             #     rgb2ns_like = tf.test(input_map)

@@ -351,8 +351,8 @@ class ShadowMatteTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             print("No existing checkpoint file found: ", network_file_name)
 
         if (checkpoint != None):
-            global_config.last_epoch_ns = checkpoint["epoch"]
-            global_config.last_iteration_ns = checkpoint["iteration"]
+            global_config.last_epoch_sm = checkpoint["epoch"]
+            global_config.last_iteration_sm = checkpoint["iteration"]
             self.G_SM_predictor.load_state_dict(checkpoint[global_config.GENERATOR_KEY + "Z"])
             self.D_SM_discriminator.load_state_dict(checkpoint[global_config.DISCRIMINATOR_KEY + "Z"])
 
