@@ -83,19 +83,19 @@ fi
 
 DATASET_NAME="v86_srd"
 echo "$OUTPUT_DIR/$DATASET_NAME.zip"
-unzip "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR" -q
+unzip -q "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
 
 DATASET_NAME="v87_istd"
 echo "$OUTPUT_DIR/$DATASET_NAME.zip"
-unzip "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR" -q
+unzip -q "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
 
 DATASET_NAME="v88_istd"
 echo "$OUTPUT_DIR/$DATASET_NAME.zip"
-unzip "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR" -q
+unzip -q "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
 
 DATASET_NAME="v89_istd"
 echo "$OUTPUT_DIR/$DATASET_NAME.zip"
-unzip "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR" -q
+unzip -q "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
 
 #if [ $SERVER_CONFIG == 1 ]
 #then

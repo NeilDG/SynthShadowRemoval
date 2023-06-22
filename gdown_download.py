@@ -65,7 +65,7 @@ def main(argv):
     direct_link = "https://drive.google.com/file/d/1mlDSgKT_TZKSqpt6taETHKaOVHpGzRuy/view?usp=sharing"
     id = direct_link.split("/d/")[1].split("/")[0]
     url = "https://drive.google.com/uc?id=" + id
-    gdown.download(url, output=output_dir, use_cookies=False)
+    gdown.download(url, output=output_dir, use_cookies=False, quiet=True)
 
     # url = "https://drive.google.com/drive/folders/1mhKmxwDODP4aCccG39FyQLlR0QVBvNA2?usp=sharing"
     # gdown.download_folder(url, output=output_dir, use_cookies=False)
