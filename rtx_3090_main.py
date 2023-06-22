@@ -4,13 +4,32 @@ import os
 
 def train_shadow_matte():
     # os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
-    #           "--plot_enabled=0 --save_per_iter=1000 --network_version=\"rgb2sm_v61.69_istd\" --iteration=1")
+    #           "--plot_enabled=0 --save_per_iter=1000 --network_version=\"rgb2sm_v61.80_srd\" --iteration=1")
+    #
+    # os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
+    #           "--plot_enabled=0 --save_per_iter=1000 --network_version=\"rgb2sm_v61.81_srd\" --iteration=1")
 
     # os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
-    #           "--plot_enabled=0 --save_per_iter=1000 --network_version=\"rgb2sm_v61.68_istd\" --iteration=1")
+    #           "--plot_enabled=0 --save_per_iter=1000 --network_version=\"rgb2sm_v61.82_srd\" --iteration=1")
 
-    # os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
-    #           "--plot_enabled=0 --save_per_iter=1000 --network_version=\"rgb2sm_v61.65_istd\" --iteration=1")
+
+    os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
+              "--plot_enabled=0 --save_per_iter=1000 --network_version=\"rgb2sm_v61.82_istd\" --iteration=1")
+
+    os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
+              "--plot_enabled=0 --save_per_iter=1000 --network_version=\"rgb2sm_v61.80_istd\" --iteration=1")
+
+    os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
+              "--plot_enabled=0 --save_per_iter=1000 --network_version=\"rgb2sm_v61.81_istd\" --iteration=1")
+
+    os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
+              "--plot_enabled=0 --save_per_iter=1000 --network_version=\"rgb2sm_v61.68_istd\" --iteration=1")
+
+    os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
+              "--plot_enabled=0 --save_per_iter=1000 --network_version=\"rgb2sm_v61.65_istd\" --iteration=1")
+
+    os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
+              "--plot_enabled=0 --save_per_iter=1000 --network_version=\"rgb2sm_v61.69_istd\" --iteration=1")
 
     # os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=-1 --train_mode=\"train_shadow_matte\" "
     #           "--plot_enabled=0 --save_per_iter=1000 --network_version=\"rgb2sm_v61.77_places\" --iteration=1")
@@ -22,8 +41,8 @@ def train_shadow_matte():
     #           "--plot_enabled=0 --save_per_iter=1000 --network_version=\"rgb2sm_v61.50_istd+srd\" --iteration=1")
 
     # FOR TESTING
-    os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=1000 --train_mode=\"train_shadow_matte\" "
-              "--plot_enabled=1 --save_per_iter=20 --network_version=\"rgb2sm_v61.79_istd+srd\" --iteration=1")
+    # os.system("python \"shadow_train_main.py\" --server_config=5 --img_to_load=1000 --train_mode=\"train_shadow_matte\" "
+    #           "--plot_enabled=1 --save_per_iter=20 --network_version=\"rgb2sm_v61.79_istd+srd\" --iteration=1")
 
     # #
     # os.system("python \"shadow_train_main-2.py\" --server_config=5 --img_to_load=50 --train_mode=\"train_shadow\" "
