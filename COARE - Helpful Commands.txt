@@ -37,7 +37,7 @@ sbatch --dependency=afterany:466264 script_2.slurm "rgb2sm_v61.52_istd+srd" 1
 sbatch script_debug.slurm 1
 sbatch slurm_download.sh 0
 sbatch script_1.slurm "rgb2sm_v61.76_istd+srd" 1
-sbatch script_2.slurm "rgb2sm_v61.75_istd+srd" 1
+sbatch script_2.slurm "rgb2sm_v61.50_istd+srd" 1
 
 sbatch --dependency=afterany:342338 script_debug.slurm
 sbatch --dependency=afterany:342351 script_1.slurm
@@ -76,6 +76,8 @@ python "ccs3_main.py"
 python3 "titan1_main.py"
 python3 "titan2_main.py"
 python3 "titan3_main.py"
+
+zip -r checkpoint.zip "checkpoint"
 
 export http_proxy=http://proxy.dlsu.edu.ph:80
 export https_proxy=http://proxy.dlsu.edu.ph:80
