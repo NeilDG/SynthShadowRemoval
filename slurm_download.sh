@@ -2,7 +2,7 @@
 #SBATCH -J DOWNLOAD
 #SBATCH --partition=serial
 #SBATCH --qos=84c-1d_serial
-#SBATCH --cpus-per-task=2
+#SBATCH --cpus-per-task=1
 #SBATCH --ntasks=1
 #SBATCH --output=script_download.out
 #SBATCH --mail-user=neil.delgallego@dlsu.edu.ph
