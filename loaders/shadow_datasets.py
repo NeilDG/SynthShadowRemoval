@@ -107,20 +107,21 @@ class ShadowTrainDataset(data.Dataset):
         return self.img_length
 
 class ShadowISTDDataset(data.Dataset):
-    def __init__(self, img_length, img_list_a, img_list_b, img_list_c, transform_config):
+    def __init__(self, img_length, img_list_a, img_list_b, img_list_c, transform_config, with_shadow_mask = False):
         self.img_length = img_length
         self.img_list_a = img_list_a
         self.img_list_b = img_list_b
         self.img_list_c = img_list_c
         self.transform_config = transform_config
+        self.with_shadow_mask = with_shadow_mask
         self.use_shadow_map = ConfigHolder.getInstance().get_network_attribute("use_shadow_map", False)
 
         self.shadow_op = shadow_map_transforms.ShadowMapTransforms()
         self.norm_op = transforms.Normalize((0.5, ), (0.5, ))
         self.initial_op = transforms.Compose([
             transforms.ToPILImage(),
-            # transforms.Resize(global_config.TEST_IMAGE_SIZE),
-            transforms.Resize((240, 320)),
+            transforms.Resize(global_config.TEST_IMAGE_SIZE),
+            # transforms.Resize((240, 320)),
             transforms.ToTensor()])
 
     def __getitem__(self, idx):
@@ -133,9 +134,6 @@ class ShadowISTDDataset(data.Dataset):
         rgb_ns = cv2.imread(self.img_list_b[idx])
         rgb_ns = cv2.cvtColor(rgb_ns, cv2.COLOR_BGR2RGB)
         rgb_ns = self.initial_op(rgb_ns)
-
-        # shadow_mask = cv2.cvtColor(cv2.imread(self.img_list_c[idx]), cv2.COLOR_BGR2GRAY)
-        # shadow_mask = self.initial_op(shadow_mask)
 
         shadow_matte = rgb_ns - rgb_ws
         if (self.use_shadow_map == False):
@@ -152,17 +150,24 @@ class ShadowISTDDataset(data.Dataset):
         #     rgb_ns = None
         #     shadow_matte = None
 
-        return file_name, rgb_ws, rgb_ns, shadow_matte
+        if(self.with_shadow_mask):
+            shadow_mask = cv2.cvtColor(cv2.imread(self.img_list_c[idx]), cv2.COLOR_BGR2GRAY)
+            shadow_mask = self.initial_op(shadow_mask)
+            return file_name, rgb_ws, rgb_ns, shadow_matte, shadow_mask
+        else:
+            return file_name, rgb_ws, rgb_ns, shadow_matte
 
     def __len__(self):
         return self.img_length
 
 class ShadowSRDDataset(data.Dataset):
-    def __init__(self, img_length, img_list_a, img_list_b, transform_config):
+    def __init__(self, img_length, img_list_a, img_list_b, img_list_c, transform_config, with_shadow_mask = False):
         self.img_length = img_length
         self.img_list_a = img_list_a
         self.img_list_b = img_list_b
+        self.img_list_c = img_list_c
         self.transform_config = transform_config
+        self.with_shadow_mask = with_shadow_mask
         self.use_shadow_map = ConfigHolder.getInstance().get_network_attribute("use_shadow_map", False)
 
         self.shadow_op = shadow_map_transforms.ShadowMapTransforms()
@@ -193,7 +198,12 @@ class ShadowSRDDataset(data.Dataset):
         rgb_ns = self.norm_op(rgb_ns)
         shadow_matte = self.norm_op(shadow_matte)
 
-        return file_name, rgb_ws, rgb_ns, shadow_matte
+        if (self.with_shadow_mask):
+            shadow_mask = cv2.cvtColor(cv2.imread(self.img_list_c[idx]), cv2.COLOR_BGR2GRAY)
+            shadow_mask = self.initial_op(shadow_mask)
+            return file_name, rgb_ws, rgb_ns, shadow_matte, shadow_mask
+        else:
+            return file_name, rgb_ws, rgb_ns, shadow_matte
 
     def __len__(self):
         return self.img_length

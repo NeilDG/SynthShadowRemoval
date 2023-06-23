@@ -45,6 +45,7 @@ mask_istd = "X:/ISTD_Dataset/test/test_B/*.png"
 
 ws_srd = "X:/SRD_Test/srd/shadow/*.jpg"
 ns_srd = "X:/SRD_Test/srd/shadow_free/*.jpg"
+mask_srd = "X:/SRD_Test/srd/mask/*.jpg"
 # ws_srd = "E:/SRD_REMOVAL_RESULTS/rawA/*.png"
 # ns_srd = "E:/SRD_REMOVAL_RESULTS/rawC/*.png"
 

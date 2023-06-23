@@ -14,7 +14,6 @@ use_shadow_map: False
 
 g_lr: 0.0002
 d_lr: 0.0005
-min_epochs: 80
 max_epochs: 80
 
 dataset_version: "v_istd"
