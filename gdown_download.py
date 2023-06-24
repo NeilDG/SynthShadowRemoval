@@ -62,7 +62,13 @@ def main(argv):
     # gdown.download(url, output=output_dir, use_cookies=False)
 
     # v89_istd
-    direct_link = "https://drive.google.com/file/d/1mlDSgKT_TZKSqpt6taETHKaOVHpGzRuy/view?usp=sharing"
+    # direct_link = "https://drive.google.com/file/d/1mlDSgKT_TZKSqpt6taETHKaOVHpGzRuy/view?usp=sharing"
+    # id = direct_link.split("/d/")[1].split("/")[0]
+    # url = "https://drive.google.com/uc?id=" + id
+    # gdown.download(url, output=output_dir, use_cookies=False, quiet=False)
+
+    #v_istd+srd
+    direct_link = "https://drive.google.com/file/d/1mmI14uOtZzXzVX3P2AwRmdfkmNvJCUQe/view?usp=sharing"
     id = direct_link.split("/d/")[1].split("/")[0]
     url = "https://drive.google.com/uc?id=" + id
     gdown.download(url, output=output_dir, use_cookies=False, quiet=False)
