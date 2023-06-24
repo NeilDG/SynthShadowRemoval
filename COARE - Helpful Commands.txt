@@ -9,8 +9,8 @@ cd scratch3/Visdom
 unzip "scratch3/SynthWeather Dataset 10.zip"
 
 git clone --depth 1 -b "workspace/V61.XX.XX" "https://github.com/NeilDG/SynthShadowRemoval.git" "scratch3/NeuralNets-GenerativeExperiment-V61.XX.XX"
-git clone -b "workspace/V61.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "scratch3/NeuralNets-GenerativeExperiment-V61.XX.XX-2"
-rm -rf "/scratch1/scratch2/neil.delgallego/NeuralNets-GenerativeExperiment-V60.XX.XX"
+git clone --depth 1 -b "workspace/V61.XX.XX" "https://github.com/NeilDG/NeuralNets-Experiment3.git" "scratch3/NeuralNets-GenerativeExperiment-V61.XX.XX-2"
+rm -rf "/scratch3/neil.delgallego/NeuralNets-GenerativeExperiment-V60.XX.XX"
 rm -rf "/scratch3/neil.delgallego/SynthWeather Dataset 10/"
 rm -rf "/scratch3/neil.delgallego/SynthWeather Dataset 10/v66_usr_base"
 rm -rf "/scratch3/neil.delgallego/SynthWeather Dataset 10/v66_usr"
@@ -36,6 +36,8 @@ sbatch --dependency=afterany:466264 script_2.slurm "rgb2sm_v61.52_istd+srd" 1
 
 sbatch script_debug.slurm 1
 sbatch slurm_download.sh 0
+sbatch script_1.slurm "rgb2sm_v61.53_istd+srd" 1
+sbatch script_2.slurm "rgb2sm_v61.75_istd+srd" 1
 sbatch script_1.slurm "rgb2sm_v61.76_istd+srd" 1
 sbatch script_2.slurm "rgb2sm_v61.79_istd+srd" 1
 
