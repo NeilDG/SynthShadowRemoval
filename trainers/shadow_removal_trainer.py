@@ -39,9 +39,6 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.load_size = global_config.load_size
         self.batch_size = global_config.batch_size
 
-        self.stopper_method = early_stopper.EarlyStopper(network_config["min_epochs"], early_stopper.EarlyStopperMethod.L1_TYPE, 3000, 99999.9)
-        self.stop_result = False
-
         self.initialize_dict()
         self.initialize_shadow_network()
 
@@ -127,12 +124,12 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         self.caption_dict_t[self.TRAIN_LOSS_KEY] = "Train L1 loss per iteration"
         self.caption_dict_t[self.TEST_LOSS_KEY] = "Test L1 loss per iteration"
 
-    def train(self, epoch, iteration, input_map, target_map):
+    def train(self, epoch, iteration, input_map):
         input_ws = input_map["rgb"]
         matte_tensor = input_map["shadow_matte"]
 
         input_ws = torch.cat([input_ws, matte_tensor], 1)
-        target_tensor = target_map["rgb_ns"]
+        target_tensor = input_map["rgb_ns"]
 
         accum_batch_size = self.load_size * iteration
 
@@ -210,8 +207,9 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
                 self.losses_dict_t[self.TRAIN_LOSS_KEY].append(self.l1_loss(rgb2ns, target_tensor).item())
                 self.losses_dict_t[self.TEST_LOSS_KEY].append(self.l1_loss(rgb2ns_istd, istd_ns_test).item())
 
-    def is_stop_condition_met(self):
-        return self.stop_result
+    # check if plateued
+    def has_plateau(self, epoch):
+        return self.best_tracker.has_plateau(epoch)
 
     def test_istd(self, input_map):
         # print("Testing on ISTD dataset.")
@@ -263,7 +261,6 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         if(checkpoint != None):
             # global_config.last_epoch_ns = checkpoint["epoch"]
-            self.stopper_method.update_last_metric(checkpoint[global_config.LAST_METRIC_KEY])
             self.G_SM_predictor.load_state_dict(checkpoint[global_config.GENERATOR_KEY + "Z"])
             self.D_SM_discriminator.load_state_dict(checkpoint[global_config.DISCRIMINATOR_KEY + "Z"])
 
@@ -281,22 +278,23 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
             global_config.last_epoch_ns = checkpoint["epoch"]
 
     def save_states(self, epoch, iteration, is_temp:bool):
-        save_dict = {'epoch': epoch, 'iteration': iteration, global_config.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
+        save_dict = {'epoch': epoch, 'iteration': iteration}
         netGNS_state_dict = self.G_SM_predictor.state_dict()
         netDNS_state_dict = self.D_SM_discriminator.state_dict()
 
         save_dict[global_config.GENERATOR_KEY + "Z"] = netGNS_state_dict
         save_dict[global_config.DISCRIMINATOR_KEY + "Z"] = netDNS_state_dict
 
+        network_name = ConfigHolder.getInstance().get_ns_version_name()
         if (is_temp):
             torch.save(save_dict, self.NETWORK_CHECKPATH + ".checkpt")
-            print("Saved checkpoint state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
+            print("Saved checkpoint state: %s, Epoch: %d" % (network_name, epoch))
         else:
             torch.save(save_dict, self.NETWORK_CHECKPATH)
-            print("Saved stable model state: %s Epoch: %d" % (len(save_dict), (epoch + 1)))
+            print("Saved stable model state: %s, Epoch: %d" % (network_name, epoch))
 
     def save_for_each_epoch(self, epoch, iteration):
-        save_dict = {'epoch': epoch, 'iteration': iteration, global_config.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
+        save_dict = {'epoch': epoch, 'iteration': iteration}
         netGNS_state_dict = self.G_SM_predictor.state_dict()
         netDNS_state_dict = self.D_SM_discriminator.state_dict()
 
@@ -317,14 +315,13 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         if (checkpoint != None):
             global_config.last_epoch_ns = checkpoint["epoch"]
-            self.stopper_method.update_last_metric(checkpoint[global_config.LAST_METRIC_KEY])
             self.G_SM_predictor.load_state_dict(checkpoint[global_config.GENERATOR_KEY + "Z"])
             self.D_SM_discriminator.load_state_dict(checkpoint[global_config.DISCRIMINATOR_KEY + "Z"])
 
             print("Loaded shadow removal network: ", network_file_name, "Epoch: ", checkpoint["epoch"])
 
     def save_state_for_sample(self, epoch, iteration):
-        save_dict = {'epoch': epoch, 'iteration': iteration, global_config.LAST_METRIC_KEY: self.stopper_method.get_last_metric()}
+        save_dict = {'epoch': epoch, 'iteration': iteration}
         netGNS_state_dict = self.G_SM_predictor.state_dict()
         netDNS_state_dict = self.D_SM_discriminator.state_dict()
 
@@ -333,7 +330,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
 
         network_file_name = self.NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_" + str(global_config.img_to_load) + ".pth"
         torch.save(save_dict, network_file_name)
-        print("Saved stable model state: %s Epoch: %d. Name: %s" % (len(save_dict), (epoch), network_file_name))
+        print("Saved stable model state. Epoch: %d. Name: %s" % ((epoch), network_file_name))
 
     def load_state_for_specific_sample(self):
         network_file_name = self.NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_" + str(global_config.img_to_load) + ".pth"
@@ -346,7 +343,6 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         if (checkpoint != None):
             global_config.last_epoch_ns = checkpoint["epoch"]
             global_config.last_iteration_ns = checkpoint["iteration"]
-            self.stopper_method.update_last_metric(checkpoint[global_config.LAST_METRIC_KEY])
             self.G_SM_predictor.load_state_dict(checkpoint[global_config.GENERATOR_KEY + "Z"])
             self.D_SM_discriminator.load_state_dict(checkpoint[global_config.DISCRIMINATOR_KEY + "Z"])
 
@@ -357,8 +353,7 @@ class ShadowTrainer(abstract_iid_trainer.AbstractIIDTrainer):
         best_metric = self.best_tracker.get_best_metric()
         if(best_achieved):
             network_file_name = self.BEST_NETWORK_SAVE_PATH + self.NETWORK_VERSION + "_best" + ".pth"
-            save_dict = {'epoch': epoch, 'iteration': iteration, global_config.LAST_METRIC_KEY: self.stopper_method.get_last_metric(),
-                         'best_metric' : best_metric}
+            save_dict = {'epoch': epoch, 'iteration': iteration, 'best_metric' : best_metric}
             netGNS_state_dict = self.G_SM_predictor.state_dict()
             netDNS_state_dict = self.D_SM_discriminator.state_dict()
 

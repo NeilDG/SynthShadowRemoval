@@ -1,15 +1,15 @@
-model_type: 5
+model_type: 2
 input_nc: 3
 patch_size: 256
 
 #0 - 24GB, 1 - 32GB, 2 - 10 - 12GB, 3 - 8GB
-batch_size: [24, 32, 8, 8] #amount of images to accumulate before backprop
-load_size: [24, 32, 8, 8] #amount of images to load in GPU. load_size <= batch_size
+batch_size: [256, 256, 128, 64] #amount of images to accumulate before backprop
+load_size: [256, 256, 128, 64] #amount of images to load in GPU. load_size <= batch_size
 
 num_blocks: 3
 weight_decay: 0.0
 dropout_rate: 0.0
-augment_key: "none"
+augment_key: ["augmix"]
 use_shadow_map: False
 
 g_lr: 0.0002

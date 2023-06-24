@@ -4,6 +4,7 @@ import numpy as np
 import torch
 from torch import nn
 
+from config.network_config import ConfigHolder
 from trainers.early_stopper import EarlyStopperMethod
 
 class BestTracker():
@@ -15,7 +16,7 @@ class BestTracker():
             self.loss_op = kornia.losses.SSIMLoss(5)
 
         self.start_epoch = current_epoch
-        self.max_epoch_tolerance = 5
+        self.max_epoch_tolerance = ConfigHolder.getInstance().get_network_attribute("epoch_tolerance", 5)
         self.best_metric_replaced = False
 
     def test(self, input, target):

@@ -2,7 +2,7 @@
 #SBATCH -J DOWNLOAD
 #SBATCH --partition=serial
 #SBATCH --qos=84c-1d_serial
-#SBATCH --cpus-per-task=2
+#SBATCH --cpus-per-task=1
 #SBATCH --ntasks=1
 #SBATCH --output=script_download.out
 #SBATCH --mail-user=neil.delgallego@dlsu.edu.ph
@@ -67,18 +67,45 @@ fi
 #unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
 #rm -rf "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 
-DATASET_NAME="v87_istd"
-echo "$OUTPUT_DIR/$DATASET_NAME.zip"
-unzip "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
+#DATASET_NAME="v87_istd_base/v87_istd"
+#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+#zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
+#unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
 
-DATASET_NAME="v88_istd"
-echo "$OUTPUT_DIR/$DATASET_NAME.zip"
-unzip "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
+#DATASET_NAME="v88_istd_base/v88_istd"
+#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+#zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
+#unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
 
-#if [ $SERVER_CONFIG == 1 ]
-#then
-#  python "ccs1_main.py"
-#elif [ $SERVER_CONFIG == 5 ]
-#then
-#  python3 "titan2_main.py"
-#fi
+#DATASET_NAME="v86_istd"
+#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+#unzip "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR" -q
+
+#DATASET_NAME="v86_srd"
+#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+#unzip -q "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
+#
+#DATASET_NAME="v87_istd"
+#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+#unzip -q "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
+#
+#DATASET_NAME="v88_istd"
+#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+#unzip -q "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
+
+#DATASET_NAME="v89_istd"
+#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+#unzip -q "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
+
+DATASET_NAME="v_istd+srd"
+echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+unzip -q "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
+
+
+if [ $SERVER_CONFIG == 1 ]
+then
+  python "ccs1_main.py"
+elif [ $SERVER_CONFIG == 5 ]
+then
+  python3 "titan1_main.py"
+fi

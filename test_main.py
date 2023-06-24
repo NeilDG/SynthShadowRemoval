@@ -17,29 +17,45 @@ def test_shadow():
 
     # FOR TESTING NEW SM + SR COMBINATION - ISTD
     # os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 "
-    #           "--img_vis_enabled=1 --train_mode=all --dataset_target=istd "
-    #           "--shadow_matte_version=\"rgb2sm_v61.50_istd+srd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
+    #           "--img_vis_enabled=0 --train_mode=all --dataset_target=istd "
+    #           "--shadow_matte_version=\"rgb2sm_v61.32_istd\" --shadow_removal_version=\"rgb2ns_v61.40_synshadow\" "
     #           "--shadow_matte_iteration=1 --shadow_removal_iteration=1 --load_best=1")
-
-    # FOR TESTING NEW SM + SR COMBINATION - SRD
+    #
+    # # FOR TESTING NEW SM + SR COMBINATION - SRD
     # os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 "
-    #           "--img_vis_enabled=1 --train_mode=all --dataset_target=srd "
-    #           "--shadow_matte_version=\"rgb2sm_v61.32_srd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
+    #           "--img_vis_enabled=0 --train_mode=all --dataset_target=srd "
+    #           "--shadow_matte_version=\"rgb2sm_v61.32_srd\" --shadow_removal_version=\"rgb2ns_v61.40_synshadow\" "
     #           "--shadow_matte_iteration=1 --shadow_removal_iteration=1 --load_best=1")
+    #
 
     os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 "
-              "--img_vis_enabled=1 --train_mode=train_shadow_matte --dataset_target=all "
-              "--shadow_matte_version=\"rgb2sm_v61.68_istd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
+              "--img_vis_enabled=0 --train_mode=train_shadow_matte --dataset_target=all "
+              "--shadow_matte_version=\"rgb2sm_v61.53_istd+srd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
+              "--shadow_matte_iteration=1 --shadow_removal_iteration=1 --load_best=1")
+
+    os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 "
+              "--img_vis_enabled=0 --train_mode=train_shadow_matte --dataset_target=all "
+              "--shadow_matte_version=\"rgb2sm_v61.75_istd+srd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
+              "--shadow_matte_iteration=1 --shadow_removal_iteration=1 --load_best=1")
+
+    os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 "
+              "--img_vis_enabled=0 --train_mode=train_shadow_matte --dataset_target=all "
+              "--shadow_matte_version=\"rgb2sm_v61.76_istd+srd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
               "--shadow_matte_iteration=1 --shadow_removal_iteration=1 --load_best=1")
 
     # os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 "
-    #           "--img_vis_enabled=0 --train_mode=train_shadow_matte --dataset_target=all "
-    #           "--shadow_matte_version=\"rgb2sm_v61.59_istd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
+    #           "--img_vis_enabled=0 --train_mode=train_shadow_matte --dataset_target=srd "
+    #           "--shadow_matte_version=\"rgb2sm_v61.83_srd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
     #           "--shadow_matte_iteration=1 --shadow_removal_iteration=1 --load_best=1")
     #
     # os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 "
-    #           "--img_vis_enabled=0 --train_mode=train_shadow_matte --dataset_target=all "
-    #           "--shadow_matte_version=\"rgb2sm_v61.47_istd+srd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
+    #           "--img_vis_enabled=0 --train_mode=train_shadow_matte --dataset_target=istd "
+    #           "--shadow_matte_version=\"rgb2sm_v61.81_istd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
+    #           "--shadow_matte_iteration=1 --shadow_removal_iteration=1 --load_best=1")
+    #
+    # os.system("python \"shadow_test_main.py\" --server_config=5 --img_to_load=-1 "
+    #           "--img_vis_enabled=0 --train_mode=train_shadow_matte --dataset_target=istd "
+    #           "--shadow_matte_version=\"rgb2sm_v61.82_istd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
     #           "--shadow_matte_iteration=1 --shadow_removal_iteration=1 --load_best=1")
 
     # os.system("python \"shadow_test_main-2.py\" --server_config=5 --img_to_load=-1 "
@@ -58,7 +74,7 @@ def test_shadow():
     #           "--shadow_matte_version=\"rgb2sm_v58.28_istd\" --shadow_removal_version=\"rgb2ns_v61.26_places\" "
     #           "--shadow_matte_iteration=1 --shadow_removal_iteration=1")
     #
-
+    #
     os.system("python \"benchmark_shadow.py\" --img_to_load=-1")
 
     #FOR TESTING
