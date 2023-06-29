@@ -364,6 +364,37 @@ def load_srd_dataset(with_shadow_mask = False):
 
     return data_loader, len(ws_list)
 
+def load_istd_srd_dataset(with_shadow_mask = False):
+    ws_istd_list = glob.glob(global_config.ws_istd)
+    ns_istd_list = glob.glob(global_config.ns_istd)
+    mask_istd_list = glob.glob(global_config.mask_istd)
+
+    ws_list = glob.glob(global_config.ws_srd)
+    ns_list = glob.glob(global_config.ns_srd)
+    mask_list = glob.glob(global_config.mask_srd)
+
+    ws_list = ws_istd_list + ws_list
+    ns_list = ns_istd_list + ns_list
+    mask_list = mask_istd_list + mask_list
+
+    #Mix together
+    temp_list = list(zip(ws_list, ns_list, mask_list))
+    random.shuffle(temp_list)
+    ws_list, ns_list, mask_list = zip(*temp_list)
+
+    img_length = len(ws_list)
+    print("Length of images: %d %d %d" % (len(ws_list), len(ns_list), len(mask_list)))
+
+    data_loader = torch.utils.data.DataLoader(
+        shadow_datasets.ShadowISTDDataset(img_length, ws_list, ns_list, mask_list, 1, with_shadow_mask),
+        batch_size=global_config.test_size,
+        num_workers=1,
+        shuffle=False
+    )
+
+    return data_loader, len(ws_list)
+
+
 def load_usr_dataset():
     ws_list = glob.glob(global_config.usr_test)
 
@@ -380,15 +411,19 @@ def load_usr_dataset():
     return data_loader, len(ws_list)
 
 def load_single_test_dataset(path_a, opts):
+    print("Dataset path: ", path_a)
     a_list = glob.glob(path_a)
     random.shuffle(a_list)
     if (opts.img_to_load > 0):
         a_list = a_list[0: opts.img_to_load]
+
+    # a_list = a_list[100000:328497] #TODO: Temp only
+
     print("Length of images: %d" % len(a_list))
 
     data_loader = torch.utils.data.DataLoader(
-        image_dataset.RealWorldDataset(a_list),
-        batch_size=16,
+        image_datasets.SingleImageDataset(a_list, 2),
+        batch_size=128,
         num_workers=1,
         shuffle=True
     )

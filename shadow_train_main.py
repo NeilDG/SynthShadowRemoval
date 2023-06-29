@@ -290,11 +290,14 @@ def train_shadow_matte(device, opts):
     print("Dataset path WS: ", global_config.rgb_dir_ws)
     print("Dataset path NS: ", global_config.rgb_dir_ns)
 
-    dataset_val = ConfigHolder.getInstance().get_network_attribute("dataset_val_ref", "istd")
+    dataset_val = ConfigHolder.getInstance().get_network_attribute("dataset_val_ref", "istd+srd")
 
     train_loader_synth, dataset_count = dataset_loader.load_shadow_train_dataset()
     test_loader_train, _ = dataset_loader.load_shadow_test_dataset()
-    if (dataset_val == "istd"):
+    if(dataset_val == "istd+srd"):
+        print("Loading ISTD + SRD as validation dataset")
+        test_loader, _ = dataset_loader.load_istd_srd_dataset()
+    elif (dataset_val == "istd"):
         print("Loading ISTD as validation dataset")
         test_loader, _ = dataset_loader.load_istd_dataset()
     else:

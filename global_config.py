@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 
-DATASET_PLACES_PATH = "E:/Places Dataset/"
+DATASET_PLACES_PATH = "X:/Places Dataset/"
 TEST_IMAGE_SIZE = (256, 256)
 
 #========================================================================#

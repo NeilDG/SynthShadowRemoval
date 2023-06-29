@@ -188,16 +188,17 @@ class TesterClass():
 
         if (save_image_results == 1):
             path = "./comparison/"
-            matte_path = path + "/matte-like/"
+            matte_path = path + "/Places Dataset/matte-like/"
 
             for i in range(0, np.size(file_name)):
-                impath = path + file_name[i]
+                impath = path + file_name[i] + ".jpg"
                 torchvision.utils.save_image(rgb2ns[i], impath)
 
-                # shadow_matte_path = matte_path + file_name[i] + ".jpeg"
-                # torchvision.utils.save_image(shadow_matte[i], shadow_matte_path)
+                file_name_sm = file_name[i].split("\\")[1]
+                shadow_matte_path = matte_path + file_name_sm + ".png"
+                torchvision.utils.save_image(rgb2sm[i], shadow_matte_path, normalize=True)
 
-                # print("Saving ISTD result as: ", file_name[i])
+                print("Saved Places result:", impath, shadow_matte_path)
 
 
     def test_shadow(self, rgb_ws, rgb_ns, shadow_matte, prefix, show_images, mode):
