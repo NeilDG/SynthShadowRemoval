@@ -237,10 +237,9 @@ class ShadowUSRTestDataset(data.Dataset):
         return self.img_length
 
 class PlacesDataset(data.Dataset):
-    def __init__(self, img_length, img_list_a, patch_size = 0):
+    def __init__(self, img_length, img_list_a):
         self.img_length = img_length
         self.img_list_a = img_list_a
-        self.patch_size = (patch_size, patch_size)
 
         self.initial_op = transforms.Compose([
             transforms.ToPILImage()])

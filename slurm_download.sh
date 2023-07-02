@@ -93,14 +93,19 @@ fi
 #echo "$OUTPUT_DIR/$DATASET_NAME.zip"
 #unzip -q "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
 
-DATASET_NAME="v89_istd"
+#DATASET_NAME="v89_istd"
+#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+#unzip -q "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
+
+DATASET_NAME="v_istd+srd"
 echo "$OUTPUT_DIR/$DATASET_NAME.zip"
 unzip -q "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
 
-#if [ $SERVER_CONFIG == 1 ]
-#then
-#  python "ccs1_main.py"
-#elif [ $SERVER_CONFIG == 5 ]
-#then
-#  python3 "titan2_main.py"
-#fi
+
+if [ $SERVER_CONFIG == 1 ]
+then
+  python "ccs1_main.py"
+elif [ $SERVER_CONFIG == 5 ]
+then
+  python3 "titan1_main.py"
+fi

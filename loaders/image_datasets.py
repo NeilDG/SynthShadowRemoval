@@ -74,7 +74,7 @@ class SingleImageDataset(data.Dataset):
 
         config_holder = ConfigHolder.getInstance()
         self.augment_mode = config_holder.get_network_attribute("augment_key", "none")
-        self.use_tanh = config_holder.get_network_attribute("use_tanh", False)
+        self.use_tanh = config_holder.get_network_attribute("use_tanh", True)
 
         if (self.transform_config == 1):
             patch_size = config_holder.get_network_attribute("patch_size", 32)
@@ -91,7 +91,7 @@ class SingleImageDataset(data.Dataset):
         self.norm_op = transforms.Normalize((0.5, ), (0.5, ))
 
     def __getitem__(self, idx):
-        file_name = self.a_list[idx].split("\\")[-1].split(".")[0]
+        file_name = self.a_list[idx].split("/")[-1].split(".")[0]
 
         a_img = cv2.imread(self.a_list[idx])
         a_img = cv2.cvtColor(a_img, cv2.COLOR_BGR2RGB)

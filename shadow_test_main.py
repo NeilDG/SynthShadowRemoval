@@ -37,9 +37,9 @@ def update_config(opts):
     global_config.img_to_load = opts.img_to_load
     global_config.dataset_target = opts.dataset_target
     global_config.num_workers = 12
-    global_config.test_size = 64
+    global_config.test_size = 128
     global_config.load_best = bool(opts.load_best)
-    global_config.DATASET_PLACES_PATH = "E:/Places Dataset/*.jpg"
+    global_config.DATASET_PLACES_PATH = "X:/Places Dataset/*.jpg"
     global_config.rgb_dir_ws = "X:/SynthWeather Dataset 10/{dataset_version}/rgb/*/*.*"
     global_config.rgb_dir_ns = "X:/SynthWeather Dataset 10/{dataset_version}/rgb_noshadows/*/*.*"
     print("Using HOME RTX3090 configuration. Workers: ", global_config.num_workers)
@@ -173,10 +173,11 @@ def test_shadow_removal(dataset_tester, opts):
             # break
 
     # PLACES test dataset
-    # shadow_loader = dataset_loader.load_single_test_dataset(constants.imgx_dir, opts)  # load PLACES
-    # for i, (file_name, rgb_ws) in enumerate(shadow_loader, 0):
-    #     rgb_ws = rgb_ws.to(device)
-    #     dataset_tester.test_any_image(file_name, rgb_ws, "Places-365", opts.img_vis_enabled, 1, opts)
+    if(global_config.dataset_target == "places"):
+        shadow_loader = dataset_loader.load_single_test_dataset(global_config.DATASET_PLACES_PATH, opts)  # load PLACES
+        for i, (file_name, rgb_ws) in enumerate(shadow_loader, 0):
+            rgb_ws = rgb_ws.to(device)
+            dataset_tester.test_any_image(file_name, rgb_ws, "Places-365", opts.img_vis_enabled, 1, opts)
 
 def main(argv):
     (opts, args) = parser.parse_args(argv)
