@@ -92,7 +92,8 @@ export ftp_proxy=http://proxy.dlsu.edu.ph:80
 //FOR DOWNLOAD DATASET, TRY GDRIVE
 gdown https://drive.google.com/uc?id=1B6erEfeB2_n_KYP5GtCQU-DHGE1bKEVE
 gdown https://drive.google.com/drive/folders/1CMz2flknC81dX3xlKBgNP34NJAQ651DB --fuzzy --o "./v26_base/"
-unzip "v26.zip" -d "SynthWeather Dataset 10/"
+unzip "v_srd.zip" -d "SynthWeather Dataset 10/"
+cd "SynthWeather Dataset 10"
 
 rm -rf "NeuralNets-Experiment4-V01.XX.XX"
 rm -rf "NeuralNets-GenerativeExperiment-V61.XX.XX"
