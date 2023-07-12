@@ -1,4 +1,4 @@
-model_type: 1
+model_type: 3
 input_nc: 4
 patch_size: 256
 
