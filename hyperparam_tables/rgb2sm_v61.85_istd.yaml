@@ -19,4 +19,4 @@ epoch_tolerance: 50
 
 dataset_version: "v_istd"
 dataset_repeats: 10
-dataset_val: "istd"
+dataset_val_ref: "istd"

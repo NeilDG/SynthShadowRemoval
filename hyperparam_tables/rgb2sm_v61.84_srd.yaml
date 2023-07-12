@@ -19,4 +19,4 @@ epoch_tolerance: 50
 
 dataset_version: "v_srd"
 dataset_repeats: 10
-dataset_val: "srd"
+dataset_val_ref: "srd"
