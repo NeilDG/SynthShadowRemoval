@@ -14,8 +14,9 @@ use_shadow_map: False
 
 g_lr: 0.0002
 d_lr: 0.0005
-max_epochs: 30
-epoch_tolerance: 3
+max_epochs: 300
+epoch_tolerance: 50
 
-dataset_version: "v87_istd"
-dataset_repeats: 3
+dataset_version: "v_srd"
+dataset_repeats: 10
+dataset_val_ref: "srd"

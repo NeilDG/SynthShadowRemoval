@@ -7,15 +7,16 @@ batch_size: [12, 16, 4, 4] #amount of images to accumulate before backprop
 load_size: [12, 16, 4, 4] #amount of images to load in GPU. load_size <= batch_size
 
 num_blocks: 6
-weight_decay: 0.0
+weight_decay: 0.001
 dropout_rate: 0.4
 augment_key: ["augmix"]
 use_shadow_map: False
 
 g_lr: 0.0002
 d_lr: 0.0005
-max_epochs: 30
-epoch_tolerance: 3
+max_epochs: 300
+epoch_tolerance: 50
 
-dataset_version: "v87_istd"
-dataset_repeats: 3
+dataset_version: "v_istd"
+dataset_repeats: 10
+dataset_val_ref: "istd"
