@@ -38,10 +38,10 @@ def main(argv):
     # gdown.download(url, output=output_dir, use_cookies=False)
 
     # v88_istd
-    direct_link = "https://drive.google.com/file/d/1BPNQOn6ss0eOLYMWk3iEeQg_n6vE3JuJ/view?usp=sharing"
-    id = direct_link.split("/d/")[1].split("/")[0]
-    url = "https://drive.google.com/uc?id=" + id
-    gdown.download(url, output=output_dir, use_cookies=False)
+    # direct_link = "https://drive.google.com/file/d/1BPNQOn6ss0eOLYMWk3iEeQg_n6vE3JuJ/view?usp=sharing"
+    # id = direct_link.split("/d/")[1].split("/")[0]
+    # url = "https://drive.google.com/uc?id=" + id
+    # gdown.download(url, output=output_dir, use_cookies=False)
 
     # v89_istd
     direct_link = "https://drive.google.com/file/d/1BT4BwvEYTjsz_wCG0CfHY5upr_wf19mY/view?usp=sharing"

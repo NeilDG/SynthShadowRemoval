@@ -81,9 +81,9 @@ DATASET_NAME="v88_istd"
 echo "$OUTPUT_DIR/$DATASET_NAME.zip"
 unzip "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR" -q
 
-#DATASET_NAME="v89_istd"
-#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
-#unzip -q "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
+DATASET_NAME="v89_istd"
+echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+unzip -q "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
 
 #DATASET_NAME="v_istd+srd"
 #echo "$OUTPUT_DIR/$DATASET_NAME.zip"
