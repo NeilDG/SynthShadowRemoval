@@ -44,7 +44,19 @@ def main(argv):
     # gdown.download(url, output=output_dir, use_cookies=False)
 
     # v89_istd
-    direct_link = "https://drive.google.com/file/d/1BT4BwvEYTjsz_wCG0CfHY5upr_wf19mY/view?usp=sharing"
+    # direct_link = "https://drive.google.com/file/d/1BT4BwvEYTjsz_wCG0CfHY5upr_wf19mY/view?usp=sharing"
+    # id = direct_link.split("/d/")[1].split("/")[0]
+    # url = "https://drive.google.com/uc?id=" + id
+    # gdown.download(url, output=output_dir, use_cookies=False, quiet=False)
+
+    # v90_istd
+    direct_link = "https://drive.google.com/file/d/1BUWt-uS-LkwE86ICnbQncdbe6kG2wZwR/view?usp=sharing"
+    id = direct_link.split("/d/")[1].split("/")[0]
+    url = "https://drive.google.com/uc?id=" + id
+    gdown.download(url, output=output_dir, use_cookies=False, quiet=False)
+
+    # v91_istd
+    direct_link = "https://drive.google.com/file/d/1BVRFiJxgyxOZaCyAjdjux1yzmj-iHyF9/view?usp=drive_link"
     id = direct_link.split("/d/")[1].split("/")[0]
     url = "https://drive.google.com/uc?id=" + id
     gdown.download(url, output=output_dir, use_cookies=False, quiet=False)

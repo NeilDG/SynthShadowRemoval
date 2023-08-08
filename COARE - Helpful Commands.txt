@@ -97,7 +97,7 @@ rm -rf "Places Dataset"
 rm -rf "SynthWeather Dataset 10/"
 rm -rf "SynthWeather Dataset 10/v54_istd"
 rm -rf "SynthWeather Dataset 10/v86_srd"
-rm -rf "SynthWeather Dataset 10/v88_istd_base"
+rm -rf "SynthV3_Raw/v06_iid"
 mkdir "SynthWeather Dataset 10"
 
 

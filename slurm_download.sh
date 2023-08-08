@@ -77,11 +77,11 @@ fi
 #zip -F "$OUTPUT_DIR/$DATASET_NAME.zip" --out "$OUTPUT_DIR/$DATASET_NAME+fixed.zip"
 #unzip "$OUTPUT_DIR/$DATASET_NAME+fixed.zip" -d "$OUTPUT_DIR"
 
-#DATASET_NAME="v88_istd"
-#echo "$OUTPUT_DIR/$DATASET_NAME.zip"
-#unzip "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR" -q
+DATASET_NAME="v90_istd"
+echo "$OUTPUT_DIR/$DATASET_NAME.zip"
+unzip "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR" -q
 
-DATASET_NAME="v89_istd"
+DATASET_NAME="v91_istd"
 echo "$OUTPUT_DIR/$DATASET_NAME.zip"
 unzip -q "$OUTPUT_DIR/$DATASET_NAME.zip" -d "$OUTPUT_DIR"
 
