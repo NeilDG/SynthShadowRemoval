@@ -9,7 +9,7 @@ load_size: [12, 16, 6, 4] #amount of images to load in GPU. load_size <= batch_s
 num_blocks: 6
 weight_decay: 0.0
 dropout_rate: 0.0
-augment_key: ["augmix"]
+augment_key: ["random_noise", "random_exposure"]
 use_shadow_map: False
 
 g_lr: 0.0002
@@ -17,5 +17,5 @@ d_lr: 0.0005
 max_epochs: 100
 epoch_tolerance: 20
 
-dataset_version: "v90_istd"
+dataset_version: "v91_istd"
 dataset_repeats: 3
