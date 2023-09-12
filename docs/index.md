@@ -27,7 +27,7 @@ Training images used in our paper: <a href = "">DLSU-SynthPlaces100K Dataset </a
 All images are numbered and paired. You can find each of these images, in their corresponding folders. Example: ```synth_0.png``` <br>
 
   
-### DLSU-SYNSIDE Pre-Trained Models
+### Pre-Trained Models
 COMING SOON.
 
 <br>
