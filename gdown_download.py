@@ -37,41 +37,35 @@ def main(argv):
     # url = "https://drive.google.com/uc?id=" + id
     # gdown.download(url, output=output_dir, use_cookies=False)
 
-    # v86_istd
-    # direct_link = "https://drive.google.com/file/d/1mO7E_6y0kW7Z67sBK8R89dVS0FamfXbh/view?usp=sharing"
-    # id = direct_link.split("/d/")[1].split("/")[0]
-    # url = "https://drive.google.com/uc?id=" + id
-    # gdown.download(url, output=output_dir, use_cookies=False)
-    #
-    # # v86_srd
-    # direct_link = "https://drive.google.com/file/d/1mOR6GEAkMwrNi6FAyqFFsh_vBOr2LM_Z/view?usp=sharing"
-    # id = direct_link.split("/d/")[1].split("/")[0]
-    # url = "https://drive.google.com/uc?id=" + id
-    # gdown.download(url, output=output_dir, use_cookies=False)
-    #
-    # # v87_istd
-    # direct_link = "https://drive.google.com/file/d/1mPPsQp4zamilbHPbUY0EL05IIaaLFVga/view?usp=sharing"
-    # id = direct_link.split("/d/")[1].split("/")[0]
-    # url = "https://drive.google.com/uc?id=" + id
-    # gdown.download(url, output=output_dir, use_cookies=False)
-    #
-    # # v88_istd
-    # direct_link = "https://drive.google.com/file/d/1mPQlfiDjvHEAtLEOwyhsPtO-3GN8_B3w/view?usp=sharing"
+    # v88_istd
+    # direct_link = "https://drive.google.com/file/d/1BPNQOn6ss0eOLYMWk3iEeQg_n6vE3JuJ/view?usp=sharing"
     # id = direct_link.split("/d/")[1].split("/")[0]
     # url = "https://drive.google.com/uc?id=" + id
     # gdown.download(url, output=output_dir, use_cookies=False)
 
     # v89_istd
-    # direct_link = "https://drive.google.com/file/d/1mlDSgKT_TZKSqpt6taETHKaOVHpGzRuy/view?usp=sharing"
+    # direct_link = "https://drive.google.com/file/d/1BT4BwvEYTjsz_wCG0CfHY5upr_wf19mY/view?usp=sharing"
     # id = direct_link.split("/d/")[1].split("/")[0]
     # url = "https://drive.google.com/uc?id=" + id
     # gdown.download(url, output=output_dir, use_cookies=False, quiet=False)
 
-    #v_istd+srd
-    direct_link = "https://drive.google.com/file/d/1mmI14uOtZzXzVX3P2AwRmdfkmNvJCUQe/view?usp=sharing"
+    # v90_istd
+    direct_link = "https://drive.google.com/file/d/1BUWt-uS-LkwE86ICnbQncdbe6kG2wZwR/view?usp=sharing"
     id = direct_link.split("/d/")[1].split("/")[0]
     url = "https://drive.google.com/uc?id=" + id
     gdown.download(url, output=output_dir, use_cookies=False, quiet=False)
+
+    # v91_istd
+    direct_link = "https://drive.google.com/file/d/1BVRFiJxgyxOZaCyAjdjux1yzmj-iHyF9/view?usp=drive_link"
+    id = direct_link.split("/d/")[1].split("/")[0]
+    url = "https://drive.google.com/uc?id=" + id
+    gdown.download(url, output=output_dir, use_cookies=False, quiet=False)
+
+    #v_istd+srd
+    # direct_link = "https://drive.google.com/file/d/1mmI14uOtZzXzVX3P2AwRmdfkmNvJCUQe/view?usp=sharing"
+    # id = direct_link.split("/d/")[1].split("/")[0]
+    # url = "https://drive.google.com/uc?id=" + id
+    # gdown.download(url, output=output_dir, use_cookies=False, quiet=False)
 
     # url = "https://drive.google.com/drive/folders/1mhKmxwDODP4aCccG39FyQLlR0QVBvNA2?usp=sharing"
     # gdown.download_folder(url, output=output_dir, use_cookies=False)

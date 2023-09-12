@@ -1,0 +1,21 @@
+model_type: 5
+input_nc: 3
+patch_size: 256
+
+#0 - 24GB, 1 - 32GB, 2 - 10 - 12GB, 3 - 8GB
+batch_size: [12, 16, 6, 4] #amount of images to accumulate before backprop
+load_size: [12, 16, 6, 4] #amount of images to load in GPU. load_size <= batch_size
+
+num_blocks: 6
+weight_decay: 0.0
+dropout_rate: 0.0
+augment_key: ["random_noise", "random_exposure"]
+use_shadow_map: False
+
+g_lr: 0.0002
+d_lr: 0.0005
+max_epochs: 100
+epoch_tolerance: 20
+
+dataset_version: "v88_istd"
+dataset_repeats: 3

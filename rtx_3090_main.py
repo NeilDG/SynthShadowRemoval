@@ -51,7 +51,7 @@ def train_img2img():
               "--plot_enabled=1 --save_per_iter=50 --network_version=\"synth2istd_v01.00\" --iteration=1")
 
 def main():
-    train_shadow_removal()
+    # train_shadow_removal()
     train_shadow_matte()
     # train_shadow_removal()
 
