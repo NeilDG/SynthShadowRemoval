@@ -1,13 +1,13 @@
-# <center> Training a shadow removal network using only 3D primitive occluders
+<!--# <center> Training a shadow removal network using only 3D primitive occluders -->
 <!--### <center>In The Visual Computer - Springer*/ -->
-### <center>Neil Patrick Del Gallego, Joel Ilao, Macario Cordel II, Conrado Ruiz Jr.</center>
-### <center>De La Salle University, Grup de Recerca en Tecnologies Media, La Salle - Universitat Ramon Llull</center>
+## <center>Neil Patrick Del Gallego, Joel Ilao, Macario Cordel II, Conrado Ruiz Jr.</center>
+## <center>De La Salle University, Grup de Recerca en Tecnologies Media, La Salle - Universitat Ramon Llull</center>
 
 <center><img src="web_img/logo_1.png" width="387"></center>
 
 <br>
 
-/*### <strong><a href = "https://doi.org/10.1016/j.sigpro.2022.108631"> Paper (in Signal Processing - Elsevier)</a> | <a href = "https://github.com/NeilDG/SynthDehazing">Source code</a> </strong>*/
+<!--### <strong><a href = "https://doi.org/10.1016/j.sigpro.2022.108631"> Paper (in Signal Processing - Elsevier)</a> | <a href = "https://github.com/NeilDG/SynthDehazing">Source code</a> </strong>-->
 
 ### <strong>Paper (coming soon)| <a href = "https://github.com/NeilDG/SynthShadowRemoval">Source code</a> </strong>
 <img src="web_img/results_1.png">
