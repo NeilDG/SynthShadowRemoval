@@ -28,3 +28,4 @@ pip install gputil
 pip install matplotlib
 pip install --upgrade --no-cache-dir gdown
 pip install PyYAML
+pip install ITTR_pytorch

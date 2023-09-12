@@ -384,6 +384,7 @@ def main(argv):
     # "./comparison/ISTD Dataset/SynShadow-DHAN/*.png",
     # "./comparison/ISTD Dataset/BMNET_Synth/*.png",
     # "./comparison/ISTD/SG-ShadowNet_2022/*.png",
+    "./comparison/ISTD/DMTN_ISTD/*.png",
     "./comparison/ISTD/OURS/*.png"
     # "X:/GithubProjects/BMNet/reports/60th/ISTD/*.png",
     # "X:/GithubProjects/SG-ShadowNet/reports/60th/ISTD/*.png",
@@ -395,7 +396,7 @@ def main(argv):
     # ns_path = "E:/ISTD_Adjusted/test_C/*.png" #adjusted ISTD
     mask_path = "X:/ISTD_Dataset/test/test_B/*.png"
 
-    measure_performance(istd_all_list, ns_path, mask_path)
+    # measure_performance(istd_all_list, ns_path, mask_path)
     # save_img_copies_for_results(istd_all_list, ns_path, "ISTD", (240, 320), opts)
 
     # for SRD
@@ -412,6 +413,7 @@ def main(argv):
     # "./comparison/SRD Dataset/SynShadow-SP+M/*.png",
     # "./comparison/SRD Dataset/SynShadow-DHAN/*.png",
     # "./comparison/SRD Dataset/BMNET_Synth/*.png",
+    "./comparison/SRD/DMTN_SRD/*.jpg",
     "./comparison/SRD/OURS/*.png"
     # "X:/GithubProjects/BMNet/reports/60th/SRD/*.png",
     # "X:/GithubProjects/SG-ShadowNet/reports/60th/SRD/*.png",
@@ -419,7 +421,7 @@ def main(argv):
     ]
 
     measure_performance(srd_all_list, ns_path, mask_path)
-    # save_img_copies_for_results(srd_all_list, ns_path, "SRD Dataset", (160, 210), opts)
+    save_img_copies_for_results(srd_all_list, ns_path, "SRD", (160, 210), opts)
 
 
 

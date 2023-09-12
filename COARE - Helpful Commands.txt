@@ -24,9 +24,6 @@ mv "/scratch1/scratch2/neil.delgallego/NeuralNets-GenerativeExperiment-V58.XX.XX
 
 //Execute job
 sbatch --dependency=afterany:361283 slurm_download.slurm
-sbatch slurm_download.slurm
-sbatch slurm_install.slurm
-sbatch slurm_visdom_test.slurm
 sbatch visdom_run.slurm
 sbatch -w saliksik-cpu-23 visdom_run.slurm
 sbatch -w saliksik-cpu-23 --dependency=afterany:335892 visdom_run.slurm
