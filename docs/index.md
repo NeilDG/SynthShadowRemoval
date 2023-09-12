@@ -10,7 +10,7 @@
 <!--### <strong><a href = "https://doi.org/10.1016/j.sigpro.2022.108631"> Paper (in Signal Processing - Elsevier)</a> | <a href = "https://github.com/NeilDG/SynthDehazing">Source code</a> </strong>-->
 
 ### <strong>Paper (coming soon)| <a href = "https://github.com/NeilDG/SynthShadowRemoval">Source code</a> </strong>
-<img src="web_img/results_1.png" style="width:1949px;"/>
+<img src="web_img/results_1.png" width=1949px/>
 <img src="web_img/results_22.png"/>
 ### Abstract
 
