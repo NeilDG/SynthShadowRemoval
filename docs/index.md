@@ -7,8 +7,6 @@
 
 <br>
 
-<!--### <strong><a href = "https://doi.org/10.1016/j.sigpro.2022.108631"> Paper (in Signal Processing - Elsevier)</a> | <a href = "https://github.com/NeilDG/SynthDehazing">Source code</a> </strong>-->
-
 ### <strong><a href = "https://link.springer.com/article/10.1007/s00371-024-03536-7"> Paper </a> | <a href = "https://github.com/NeilDG/SynthShadowRemoval">Source code</a> </strong>
 <img src="web_img/results_1.png" width=1949px/>
 <img src="web_img/results_22.png"/>
@@ -20,7 +18,7 @@
 We provide our shadow-free image results on the ISTD and SRD datasets.
 
 <br>
-<a href = "https://drive.google.com/file/d/1w4ENpcU1y1zEOY24yGAlIURLrzB7ppKw/view">ISTD and SRD image results</a> </strong>
+<a href = "https://drive.google.com/file/d/1w4ENpcU1y1zEOY24yGAlIURLrzB7ppKw/view">ISTD and SRD image results</a>
   
 ### DLSU-SynthPlaces100K (SYNthetic Shadows on Places-365)
 Training images used in our paper: <a href = "">DLSU-SynthPlaces100K Dataset (COMING SOON) </a> <br>
@@ -36,11 +34,20 @@ Shadow removal pre-trained network - labelled Gz, in our paper: <a href = "https
 Assuming you have the source project, place all models in <b>"./checkpoint" </b> directory.
 
 ### Training
-TODO
+Our training pipeline is divided into two: training the shadow-matte network (```shadow_train_main.py```), then training the shadow removal network (```shadow_test_main.py```). 
+A sample training sequence can be found in ```rtx_3090_main.py``` <br>
+
+We do not train the networks in the cloud, and have used several RTX-based PCs. Thus, several configurations (e.g. directories, batch sizes) are hard-coded as such configurations are known and fixed beforehand.
+We believe our code is readable enough to understand our training pipeline.
 
 ### Inference
-TODO
-  
+Assuming you already have the pre-trained models, you can perform inference by running 
+```
+python  shadow_test_main.py  --...<check parameters supported in our source code>"
+```
+
+An example inference script is located in ```test_main.py```.
+
 ### Citation
 ```
 @article{gallego2024training,
