@@ -267,7 +267,7 @@ class TesterClass():
 
             input_shape = np.shape(rgb2ns[0])
             transform_op = transforms.Compose([transforms.ToPILImage(), transforms.Resize((input_shape[1], input_shape[2])), transforms.ToTensor()])
-            mask_path = "X:/ISTD_Dataset/test/test_B/"
+            mask_path = "C:/Datasets/Shadow Dataset/ISTD_Dataset/test/test_B/"
 
             for i in range(0, np.size(file_name)):
                 impath = path + file_name[i] + ".png"
@@ -341,7 +341,8 @@ class TesterClass():
                 # shadow_matte_path = matte_path + file_name[i]
                 # torchvision.utils.save_image(shadow_matte[i], shadow_matte_path)
 
-                shadow_mask = cv2.imread(mask_path + file_name[i] + ".jpg")
+                # shadow_mask = cv2.imread(mask_path + file_name[i] + ".jpg")
+                shadow_mask = None
                 if(shadow_mask is not None):
                     # print("Mask path: " + (mask_path + file_name[i] + ".jpg"))
                     shadow_mask = transform_op(cv2.cvtColor(shadow_mask, cv2.COLOR_BGR2GRAY))
