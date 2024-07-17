@@ -34,7 +34,7 @@ Shadow removal pre-trained network - labelled Gz, in our paper: <a href = "https
 Assuming you have the source project, place all models in <b>"./checkpoint" </b> directory.
 
 ### Training
-Our training pipeline is divided into two: training the shadow-matte network (```shadow_train_main.py```), then training the shadow removal network (```shadow_test_main.py```). 
+Our training pipeline is divided into two: training the shadow-matte network (```shadow_train_main.py train_shadow_matte()```), then training the shadow removal network (```shadow_train_main.py train_shadow()```). 
 A sample training sequence can be found in ```rtx_3090_main.py``` <br>
 
 We do not train the networks in the cloud, and have used several RTX-based PCs. Thus, several configurations (e.g. directories, batch sizes) are hard-coded as such configurations are known and fixed beforehand.
