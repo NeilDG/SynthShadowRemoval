@@ -1,5 +1,5 @@
 # <center> Training a shadow removal network using only 3D primitive occluders
-<!--### <center>In The Visual Computer - Springer*/ -->
+### <center>In The Visual Computer - Springer</center>
 ### <center>Neil Patrick Del Gallego, Joel Ilao, Macario Cordel II, Conrado Ruiz Jr.</center>
 ### <center>De La Salle University, Grup de Recerca en Tecnologies Media, La Salle - Universitat Ramon Llull</center>
 
@@ -9,7 +9,7 @@
 
 <!--### <strong><a href = "https://doi.org/10.1016/j.sigpro.2022.108631"> Paper (in Signal Processing - Elsevier)</a> | <a href = "https://github.com/NeilDG/SynthDehazing">Source code</a> </strong>-->
 
-### <strong>Paper (coming soon)| <a href = "https://github.com/NeilDG/SynthShadowRemoval">Source code</a> </strong>
+### <strong><a href = "https://link.springer.com/article/10.1007/s00371-024-03536-7"> Paper </a> | <a href = "https://github.com/NeilDG/SynthShadowRemoval">Source code</a> </strong>
 <img src="web_img/results_1.png" width=1949px/>
 <img src="web_img/results_22.png"/>
 ### Abstract
@@ -20,15 +20,17 @@
 We provide our shadow-free image results on the ISTD and SRD datasets.
 
 <br>
-(COMING SOON)
+<a href = "https://drive.google.com/file/d/1w4ENpcU1y1zEOY24yGAlIURLrzB7ppKw/view">ISTD and SRD image results</a> </strong>
   
 ### DLSU-SynthPlaces100K (SYNthetic Shadows on Places-365)
-Training images used in our paper: <a href = "">DLSU-SynthPlaces100K Dataset </a> <br>
+Training images used in our paper: <a href = "">DLSU-SynthPlaces100K Dataset (COMING SOON) </a> <br>
 All images are numbered and paired. You can find each of these images, in their corresponding folders. Example: ```synth_0.png``` <br>
 
   
 ### Pre-Trained Models
-COMING SOON.
+Shadow-matte pre-trained network - labelled Gm, in our paper: <a href = "https://drive.google.com/file/d/1wtyN271B7jKaLfQ1En0cVOr0VAJmFxl5/view?usp=sharing">rgb2sm.pth </a>
+<br>
+Shadow removal pre-trained network - labelled Gz, in our paper: <a href = "https://drive.google.com/file/d/1wmwcRv5olkBum0FUwMc4Z_Jy9oUp6rQB/view?usp=sharing">rgb2ns.pth </a>
 
 <br>
 Assuming you have the source project, place all models in <b>"./checkpoint" </b> directory.
@@ -40,21 +42,16 @@ TODO
 TODO
   
 ### Citation
-TODO
-
-<!--```
-@article{DELGALLEGO2022108631,
-        title = {A new approach for training a physics-based dehazing network using synthetic images},
-        journal = {Signal Processing},
-        volume = {199},
-        pages = {108631},
-        year = {2022},
-        issn = {0165-1684},
-        doi = {https://doi.org/10.1016/j.sigpro.2022.108631},
-        url = {https://www.sciencedirect.com/science/article/pii/S0165168422001712},
-        author = {Neil Patrick {Del Gallego} and Joel Ilao and Macario Cordel and Conrado Ruiz}
+```
+@article{gallego2024training,
+  title={Training a shadow removal network using only 3D primitive occluders},
+  author={Gallego, Neil Patrick Del and Ilao, Joel and Cordel, Macario II and Ruiz, Conrado},
+  journal={The Visual Computer},
+  pages={1--38},
+  year={2024},
+  publisher={Springer}
 }
-```-->
+```
 
 ### Acknowledgements
 We would like to acknowledge De La Salle University (DLSU), Department of Science and Technology (DOST), and the Google Cloud Research program, for funding this research.
